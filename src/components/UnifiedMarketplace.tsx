@@ -586,7 +586,7 @@ export const UnifiedMarketplace: React.FC = () => {
                       className="text-xs text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-1.5 underline underline-offset-2"
                     >
                       <QrCode className="w-3.5 h-3.5" />
-                      Lihat Stiker Barcode & Simulasi Scan Spesifikasi Lot
+                      Lihat Stiker Barcode & Pratinjau Spesifikasi Lot
                     </button>
                   </div>
                 </div>

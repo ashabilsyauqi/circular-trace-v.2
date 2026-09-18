@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useCoffee } from '../context/CoffeeContext';
-import { UserRole } from '../types/coffee';
 import { ROLE_DETAILS } from '../constants/roles';
 import {
   Coffee,
@@ -13,7 +12,6 @@ import {
   ChevronRight,
   Menu,
   X,
-  UserCheck,
   ShieldCheck,
   Wallet,
 } from 'lucide-react';
@@ -25,7 +23,6 @@ interface AdminLayoutProps {
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const {
     currentUser,
-    loginAsRole,
     logout,
     activeView,
     setActiveView,
@@ -206,34 +203,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <span>Buku Besar Transaksi</span>
             </button>
           </nav>
-
-          {/* Scope Switcher / Demo Role Switcher */}
-          <div className="px-5 pt-4 pb-2">
-            <div className="border-t border-stone-800/80 pt-3">
-              <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider block mb-2 px-1">
-                Pindah Panel Akun (Demo Switcher):
-              </span>
-              <div className="grid grid-cols-2 gap-1.5">
-                {(Object.keys(ROLE_DETAILS) as UserRole[]).map((roleKey) => {
-                  const isActive = currentUser.role === roleKey;
-                  return (
-                    <button
-                      key={roleKey}
-                      onClick={() => loginAsRole(roleKey)}
-                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-between ${
-                        isActive
-                          ? 'bg-amber-500 text-stone-950 font-black shadow-xs'
-                          : 'bg-stone-800/60 hover:bg-stone-800 text-stone-400 hover:text-white'
-                      }`}
-                    >
-                      <span className="truncate">{ROLE_DETAILS[roleKey].label.split(' ')[0]}</span>
-                      {isActive && <UserCheck className="w-3 h-3 shrink-0 ml-1" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Sidebar Footer: User Card & Logout */}

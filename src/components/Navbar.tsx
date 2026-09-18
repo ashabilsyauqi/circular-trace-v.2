@@ -1,12 +1,9 @@
 import React from 'react';
 import { useCoffee } from '../context/CoffeeContext';
-import { UserRole } from '../types/coffee';
 import { ROLE_DETAILS } from '../constants/roles';
 import {
   Coffee,
   LogOut,
-  RotateCcw,
-  UserCheck,
   LayoutDashboard,
   History,
   Store,
@@ -16,9 +13,7 @@ import {
 export const Navbar: React.FC = () => {
   const {
     currentUser,
-    loginAsRole,
     logout,
-    resetToDefaultData,
     activeView,
     setActiveView,
     unifiedMarketplaceItems,
@@ -28,55 +23,6 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-xs">
-      {/* Top Demo Bar to easily switch between roles */}
-      <div className="bg-[#2B1810] text-stone-300 text-xs py-1.5 px-4">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 font-semibold text-amber-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Peralihan Akun Demo (Scope Switcher):
-            </span>
-            <span className="text-stone-400 hidden sm:inline">
-              Pilih peran untuk membuka akses panel admin:
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            {(Object.keys(ROLE_DETAILS) as UserRole[]).map((roleKey) => {
-              const isActive = currentUser?.role === roleKey;
-              return (
-                <button
-                  key={roleKey}
-                  onClick={() => loginAsRole(roleKey)}
-                  className={`px-2.5 py-0.5 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
-                    isActive
-                      ? 'bg-amber-500 text-stone-950 font-bold shadow-xs scale-105'
-                      : 'bg-stone-800/80 hover:bg-stone-700 text-stone-300 hover:text-white'
-                  }`}
-                  title={ROLE_DETAILS[roleKey].description}
-                >
-                  {ROLE_DETAILS[roleKey].label.split(' ')[0]}
-                  {isActive && <UserCheck className="w-3 h-3 ml-0.5" />}
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => {
-                if (window.confirm('Reset semua data kembali ke default simulasi?')) {
-                  resetToDefaultData();
-                }
-              }}
-              className="ml-2 text-stone-400 hover:text-red-400 p-1 rounded transition-colors flex items-center gap-1 text-[11px]"
-              title="Reset data demo ke awal"
-            >
-              <RotateCcw className="w-3 h-3" />
-              Reset
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Main E-Commerce Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-16 flex items-center justify-between gap-4">
@@ -184,7 +130,7 @@ export const Navbar: React.FC = () => {
             ) : (
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => loginAsRole('petani')}
+                  onClick={() => setActiveView('dashboard')}
                   className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs shadow-xs"
                 >
                   Masuk Panel Admin

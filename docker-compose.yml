@@ -1,0 +1,11 @@
+services:
+  cct-coffee:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cct-coffee-app
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production

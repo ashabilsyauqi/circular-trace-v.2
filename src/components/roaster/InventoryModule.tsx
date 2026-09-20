@@ -18,6 +18,8 @@ import {
 import { useCoffee } from '../../context/CoffeeContext';
 import { MetricCard } from '../admin/MetricCard';
 import { RoasterPackagingItem } from '../../types/roasterErp';
+import { OdooControlPanel } from '../odoo/OdooControlPanel';
+import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
 
 export const InventoryModule: React.FC = () => {
   const {
@@ -50,6 +52,23 @@ export const InventoryModule: React.FC = () => {
   );
 
   const grandTotalValue = totalGreenValue + totalRoastedValue + totalPackagingValue;
+
+  const filteredWarehouseLots = warehouseLots.filter((l) =>
+    l.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.variety.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredRoastedLots = roastedLots.filter((r) =>
+    r.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.roastLevel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredPackaging = packagingInventory.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -89,62 +108,75 @@ export const InventoryModule: React.FC = () => {
         />
       </div>
 
-      {/* Tabs & Search */}
-      <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl border border-stone-200">
-          <button
-            onClick={() => setActiveCategory('green')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeCategory === 'green'
-                ? 'bg-white text-stone-900 shadow-xs'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            <Warehouse className="w-4 h-4" />
-            <span>Green Coffee ({warehouseLots.length} Lot)</span>
-          </button>
-          <button
-            onClick={() => setActiveCategory('roasted')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeCategory === 'roasted'
-                ? 'bg-white text-stone-900 shadow-xs'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            <Coffee className="w-4 h-4" />
-            <span>Roasted Bulk ({roastedLots.length} SKU)</span>
-          </button>
-          <button
-            onClick={() => setActiveCategory('packaging')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeCategory === 'packaging'
-                ? 'bg-white text-stone-900 shadow-xs'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            <Package className="w-4 h-4" />
-            <span>Packaging & Bahan ({packagingInventory.length} Item)</span>
-          </button>
-        </div>
+      {/* Subtab Toggle Buttons */}
+      <div className="flex items-center gap-2 border-b border-stone-200 pb-2">
+        <button
+          onClick={() => setActiveCategory('green')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeCategory === 'green'
+              ? 'bg-[#714B67] text-white shadow-xs'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <Warehouse className="w-4 h-4" />
+          <span>Green Coffee Silo ({warehouseLots.length} Lot)</span>
+        </button>
 
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari item inventaris..."
-            className="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
-          />
-        </div>
+        <button
+          onClick={() => setActiveCategory('roasted')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeCategory === 'roasted'
+              ? 'bg-[#714B67] text-white shadow-xs'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <Coffee className="w-4 h-4" />
+          <span>Roasted Bulk Coffee ({roastedLots.length} SKU)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveCategory('packaging')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeCategory === 'packaging'
+              ? 'bg-[#714B67] text-white shadow-xs'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <Package className="w-4 h-4" />
+          <span>Packaging & Consumables ({packagingInventory.length} Item)</span>
+        </button>
       </div>
+
+      {/* Odoo 19 Control Panel */}
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: 'Gudang & Inventaris' },
+          {
+            label:
+              activeCategory === 'green'
+                ? 'Green Coffee Silo'
+                : activeCategory === 'roasted'
+                ? 'Roasted Beans Ready'
+                : 'Packaging & Valves',
+          },
+        ]}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        recordCount={
+          activeCategory === 'green'
+            ? filteredWarehouseLots.length
+            : activeCategory === 'roasted'
+            ? filteredRoastedLots.length
+            : filteredPackaging.length
+        }
+      />
 
       {/* CATEGORY 1: GREEN COFFEE TABLE */}
       {activeCategory === 'green' && (
-        <div className="bg-white rounded-3xl border border-stone-200 shadow-xs overflow-hidden">
+        <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+              <thead className="bg-[#F8F9FA] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4">Lot ID</th>
                   <th className="py-3.5 px-4">Origin & Varietas</th>
@@ -157,18 +189,20 @@ export const InventoryModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {warehouseLots.map((lot) => {
+                {filteredWarehouseLots.map((lot) => {
                   const isLow = lot.availableWeightKg < 50;
                   return (
                     <tr key={lot.id} className="hover:bg-stone-50/70 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-stone-900">{lot.id}</td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#714B67]">{lot.id}</td>
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-stone-900">{lot.origin}</div>
                         <div className="text-[10px] text-stone-400">{lot.variety} • {lot.altitude}</div>
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-stone-800">{lot.processMethod}</div>
-                        <div className="text-[10px] text-amber-700 font-mono">SCA {lot.verifiedScaScore} (KA: {lot.moistureContentPercent || 11.2}%)</div>
+                        <div className="text-[10px] text-amber-800 font-mono font-bold">
+                          SCA {lot.verifiedScaScore} (KA: {lot.moistureContentPercent || 11.2}%)
+                        </div>
                       </td>
                       <td className="py-3.5 px-4 text-stone-600">{lot.storageLocation}</td>
                       <td className="py-3.5 px-4 font-mono font-black text-stone-900 text-sm">
@@ -177,7 +211,7 @@ export const InventoryModule: React.FC = () => {
                       <td className="py-3.5 px-4 text-stone-800">
                         Rp {lot.purchasePricePerKg.toLocaleString()}
                       </td>
-                      <td className="py-3.5 px-4 font-black text-amber-950">
+                      <td className="py-3.5 px-4 font-black text-[#714B67]">
                         Rp {(lot.availableWeightKg * lot.purchasePricePerKg).toLocaleString()}
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -202,10 +236,10 @@ export const InventoryModule: React.FC = () => {
 
       {/* CATEGORY 2: ROASTED BULK COFFEE TABLE */}
       {activeCategory === 'roasted' && (
-        <div className="bg-white rounded-3xl border border-stone-200 shadow-xs overflow-hidden">
+        <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+              <thead className="bg-[#F8F9FA] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4">Lot Sangrai</th>
                   <th className="py-3.5 px-4">Nama Produk & Asal</th>
@@ -218,20 +252,22 @@ export const InventoryModule: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {roastedLots.map((rLot) => (
+                {filteredRoastedLots.map((rLot) => (
                   <tr key={rLot.id} className="hover:bg-stone-50/70 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-stone-900">{rLot.id}</td>
+                    <td className="py-3.5 px-4 font-mono font-bold text-[#714B67]">{rLot.id}</td>
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-stone-900">{rLot.origin} ({rLot.variety})</div>
                       <div className="text-[10px] text-stone-400">{rLot.processMethod}</div>
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-stone-800">{rLot.roastLevel}</div>
-                      <div className="text-[10px] text-amber-700 font-mono">Agtron #{rLot.agtronNumber} (DTR: {rLot.developmentTimeRatio}%)</div>
+                      <div className="text-[10px] text-amber-800 font-mono font-bold">
+                        Agtron #{rLot.agtronNumber} (DTR: {rLot.developmentTimeRatio}%)
+                      </div>
                     </td>
                     <td className="py-3.5 px-4 text-stone-600">{rLot.roastDate}</td>
                     <td className="py-3.5 px-4 font-mono text-stone-800">{rLot.packageWeightGrams}g Pack</td>
-                    <td className="py-3.5 px-4 font-mono font-black text-amber-900 text-sm">
+                    <td className="py-3.5 px-4 font-mono font-black text-[#714B67] text-sm">
                       {rLot.availablePacks} / {rLot.totalPacks} Pack
                     </td>
                     <td className="py-3.5 px-4 font-bold text-stone-900">
@@ -251,24 +287,24 @@ export const InventoryModule: React.FC = () => {
       {/* CATEGORY 3: PACKAGING & CONSUMABLES */}
       {activeCategory === 'packaging' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {packagingInventory.map((pack) => {
+          {filteredPackaging.map((pack) => {
             const isLow = pack.stockQuantity <= pack.reorderPoint;
             return (
               <div
                 key={pack.id}
-                className="bg-white rounded-2xl p-5 border border-stone-200 shadow-xs flex flex-col justify-between"
+                className="bg-white rounded-3xl p-5 border border-stone-200/90 shadow-xs flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200">
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200">
                       {pack.category}
                     </span>
                     {isLow ? (
-                      <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300 flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" /> Reorder Soon
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
                         In Stock
                       </span>
                     )}
@@ -279,14 +315,14 @@ export const InventoryModule: React.FC = () => {
                     <p className="text-xs text-stone-500 mt-0.5">{pack.materialSpec}</p>
                   </div>
 
-                  <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-xs space-y-1">
+                  <div className="bg-[#F8F9FA] p-3 rounded-2xl border border-stone-200/80 text-xs space-y-1.5">
                     <div className="flex justify-between">
                       <span className="text-stone-500">Biaya Satuan:</span>
-                      <strong className="text-stone-800">Rp {pack.unitCost.toLocaleString()} / pcs</strong>
+                      <strong className="text-stone-800 font-mono">Rp {pack.unitCost.toLocaleString()} / pcs</strong>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-stone-500">Ambang Reorder:</span>
-                      <strong className="text-stone-800">{pack.reorderPoint} pcs</strong>
+                      <strong className="text-stone-800 font-mono">{pack.reorderPoint} pcs</strong>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-stone-500">Supplier:</span>
@@ -296,23 +332,23 @@ export const InventoryModule: React.FC = () => {
                 </div>
 
                 {/* Stock Adjuster */}
-                <div className="pt-4 border-t border-stone-100 mt-4 flex items-center justify-between">
+                <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-stone-400 block font-medium">Stok Saat Ini:</span>
-                    <span className="text-base font-black text-stone-900 font-mono">{pack.stockQuantity} Pcs</span>
+                    <span className="text-base font-black text-[#714B67] font-mono">{pack.stockQuantity} Pcs</span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => updatePackagingStock(pack.id, -20)}
-                      className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 flex items-center justify-center font-black transition-colors"
+                      className="w-8 h-8 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 flex items-center justify-center font-black transition-colors"
                       title="Kurangi 20 pcs"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => updatePackagingStock(pack.id, 50)}
-                      className="w-8 h-8 rounded-lg bg-stone-900 hover:bg-amber-800 text-white flex items-center justify-center font-black transition-colors shadow-xs"
+                      className="w-8 h-8 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white flex items-center justify-center font-black transition-colors shadow-2xs"
                       title="Tambah 50 pcs"
                     >
                       <Plus className="w-3.5 h-3.5" />

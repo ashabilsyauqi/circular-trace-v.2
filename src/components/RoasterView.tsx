@@ -22,8 +22,9 @@ import {
   PlusCircle,
   Activity,
   ArrowRight,
+  Zap,
 } from 'lucide-react';
-import { WarehouseLot, RoastedBeanLot, WarehouseGradeTier } from '../types/coffee';
+import { WarehouseLot, RoastedBeanLot } from '../types/coffee';
 import { WorkOrder } from '../types/roasterErp';
 import { TraceabilityModal } from './TraceabilityModal';
 import { CoffeeSensorySpiderChart } from './CoffeeSensorySpiderChart';
@@ -75,36 +76,36 @@ export const RoasterView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Qrema Header Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 rounded-3xl border border-stone-800 p-6 lg:p-8 text-white shadow-xl">
+      {/* Odoo 19 Roastery MRP Hero Header Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#5A3950] via-[#714B67] to-[#3B2234] rounded-3xl border border-[#714B67]/30 p-6 lg:p-8 text-white shadow-xl">
         <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-3 backdrop-blur-sm">
-            <Flame className="w-3.5 h-3.5 text-amber-400" />
-            <span>Qrema Specialty Coffee Roastery ERP Suite</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-xs font-semibold mb-3 backdrop-blur-sm">
+            <Flame className="w-3.5 h-3.5 text-amber-300" />
+            <span className="font-bold tracking-wide">CCT ERP 19 • Roastery Manufacturing Suite</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00A09D] animate-pulse" />
           </div>
 
           <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-white">
             Pusat Operasional & Komando Roastery
           </h1>
-          <p className="mt-2 text-stone-300 text-xs lg:text-sm leading-relaxed">
+          <p className="mt-2 text-stone-200 text-xs lg:text-sm leading-relaxed">
             Kelola alur kerja sangrai presisi dari pengadaan green bean, penjadwalan <em>Work Orders</em>, sinkronisasi kurva suhu Artisan, uji mutu <em>SCA Cupping Lab</em>, hingga pemenuhan <em>Sales Orders</em> ke kedai kopi mitra.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
             <button
               onClick={() => setActiveTab('work_orders')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition-all shadow-md shadow-amber-500/20 active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00A09D] hover:bg-[#008986] text-white font-bold text-xs transition-all shadow-md shadow-[#00A09D]/30 active:scale-95"
             >
-              <Flame className="w-4 h-4 fill-current" />
+              <Flame className="w-4 h-4" />
               Buka Work Orders ({activeWOsCount} Aktif)
             </button>
             <button
               onClick={() => setActiveView('marketplace')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/10 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 transition-all backdrop-blur-sm"
             >
               <ShoppingCart className="w-4 h-4 text-amber-300" />
-              Marketplace Pengadaan Biji
+              Marketplace Biji Kopi
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -116,26 +117,28 @@ export const RoasterView: React.FC = () => {
         </div>
       </div>
 
-      {/* Qrema AI Assistant Command Palette */}
+      {/* AI Assistant Command Palette */}
       <QremaAIAssistant
         onNavigateTab={(tab) => setActiveTab(tab as any)}
         onTriggerCreateWO={() => setActiveTab('work_orders')}
       />
 
-      {/* Master ERP Navigation Tabs Bar */}
-      <div className="bg-white rounded-2xl p-1.5 border border-stone-200 shadow-xs flex items-center gap-1 overflow-x-auto">
+      {/* Odoo 19 Master ERP Navigation Tabs Bar */}
+      <div className="bg-white rounded-2xl p-1.5 border border-stone-200/90 shadow-xs flex items-center gap-1 overflow-x-auto">
         <button
           onClick={() => setActiveTab('work_orders')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'work_orders'
-              ? 'bg-stone-900 text-white shadow-xs'
+              ? 'bg-[#714B67] text-white shadow-xs'
               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <Flame className="w-4 h-4 text-amber-400" />
+          <Flame className={`w-4 h-4 ${activeTab === 'work_orders' ? 'text-amber-300' : 'text-amber-500'}`} />
           <span>Work Orders ({workOrders.length})</span>
           {activeWOsCount > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-stone-950 text-[10px] font-black">
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              activeTab === 'work_orders' ? 'bg-[#00A09D] text-white' : 'bg-amber-100 text-amber-900'
+            }`}>
               {activeWOsCount}
             </span>
           )}
@@ -145,14 +148,16 @@ export const RoasterView: React.FC = () => {
           onClick={() => setActiveTab('purchasing')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'purchasing'
-              ? 'bg-stone-900 text-white shadow-xs'
+              ? 'bg-[#714B67] text-white shadow-xs'
               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <ShoppingCart className="w-4 h-4 text-blue-400" />
+          <ShoppingCart className={`w-4 h-4 ${activeTab === 'purchasing' ? 'text-blue-300' : 'text-blue-500'}`} />
           <span>Purchasing ({purchaseOrders.length})</span>
           {activePOsCount > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-blue-500 text-white text-[10px] font-black">
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              activeTab === 'purchasing' ? 'bg-blue-400 text-stone-900' : 'bg-blue-100 text-blue-900'
+            }`}>
               {activePOsCount}
             </span>
           )}
@@ -162,11 +167,11 @@ export const RoasterView: React.FC = () => {
           onClick={() => setActiveTab('production')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'production'
-              ? 'bg-stone-900 text-white shadow-xs'
+              ? 'bg-[#714B67] text-white shadow-xs'
               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <Sliders className="w-4 h-4 text-orange-400" />
+          <Sliders className={`w-4 h-4 ${activeTab === 'production' ? 'text-orange-300' : 'text-orange-500'}`} />
           <span>Productions ({masterProfiles.length})</span>
         </button>
 
@@ -174,11 +179,11 @@ export const RoasterView: React.FC = () => {
           onClick={() => setActiveTab('qc')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'qc'
-              ? 'bg-stone-900 text-white shadow-xs'
+              ? 'bg-[#714B67] text-white shadow-xs'
               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <Award className="w-4 h-4 text-purple-400" />
+          <Award className={`w-4 h-4 ${activeTab === 'qc' ? 'text-purple-300' : 'text-purple-500'}`} />
           <span>Quality Control ({activeQcCount})</span>
         </button>
 
@@ -186,11 +191,11 @@ export const RoasterView: React.FC = () => {
           onClick={() => setActiveTab('inventory')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'inventory'
-              ? 'bg-stone-900 text-white shadow-xs'
+              ? 'bg-[#714B67] text-white shadow-xs'
               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <Warehouse className="w-4 h-4 text-emerald-400" />
+          <Warehouse className={`w-4 h-4 ${activeTab === 'inventory' ? 'text-emerald-300' : 'text-emerald-500'}`} />
           <span>Inventory ({warehouseLots.length} Lot)</span>
         </button>
 
@@ -198,14 +203,16 @@ export const RoasterView: React.FC = () => {
           onClick={() => setActiveTab('selling')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'selling'
-              ? 'bg-stone-900 text-white shadow-xs'
+              ? 'bg-[#714B67] text-white shadow-xs'
               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <Store className="w-4 h-4 text-amber-300" />
+          <Store className={`w-4 h-4 ${activeTab === 'selling' ? 'text-amber-300' : 'text-amber-500'}`} />
           <span>Selling Wholesale ({salesOrders.length})</span>
           {activeSalesCount > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-white text-[10px] font-black">
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              activeTab === 'selling' ? 'bg-[#00A09D] text-white' : 'bg-emerald-100 text-emerald-900'
+            }`}>
               {activeSalesCount}
             </span>
           )}
@@ -215,7 +222,7 @@ export const RoasterView: React.FC = () => {
           onClick={() => setActiveTab('history')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'history'
-              ? 'bg-stone-900 text-white shadow-xs'
+              ? 'bg-[#714B67] text-white shadow-xs'
               : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
@@ -245,14 +252,14 @@ export const RoasterView: React.FC = () => {
       {activeTab === 'selling' && <SellingModule />}
 
       {activeTab === 'history' && (
-        <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs space-y-4">
+        <div className="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-stone-100">
             <h3 className="text-base font-bold text-stone-900 flex items-center gap-2">
-              <History className="w-5 h-5 text-stone-800" />
+              <History className="w-5 h-5 text-[#714B67]" />
               Buku Kas & Riwayat Transaksi Roastery
             </h3>
             <span className="text-xs text-stone-500 font-medium">
-              Total Transaksi: <strong>{myRoasterTransactions.length} Rekam</strong>
+              Total Transaksi: <strong className="text-stone-900">{myRoasterTransactions.length} Rekam</strong>
             </span>
           </div>
 
@@ -261,7 +268,7 @@ export const RoasterView: React.FC = () => {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+                <thead className="bg-[#F8F9FA] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                   <tr>
                     <th className="py-3 px-4">No. TRX</th>
                     <th className="py-3 px-4">Tanggal</th>
@@ -275,8 +282,8 @@ export const RoasterView: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {myRoasterTransactions.map((trx) => (
-                    <tr key={trx.id} className="hover:bg-stone-50/50 transition-colors">
-                      <td className="py-3 px-4 font-mono font-bold text-stone-800">{trx.id}</td>
+                    <tr key={trx.id} className="hover:bg-stone-50/70 transition-colors">
+                      <td className="py-3 px-4 font-mono font-bold text-[#714B67]">{trx.id}</td>
                       <td className="py-3 px-4 text-stone-600">{trx.date}</td>
                       <td className="py-3 px-4 font-semibold text-stone-900">{trx.fromName}</td>
                       <td className="py-3 px-4 font-semibold text-stone-900">{trx.toName}</td>

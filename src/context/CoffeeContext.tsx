@@ -53,9 +53,17 @@ interface CoffeeContextType {
   users: AppUser[];
   loginAsRole: (role: UserRole) => void;
   loginAsUser: (userId: string) => void;
+  registerUser?: (userData: {
+    name: string;
+    role: UserRole;
+    organization: string;
+    location: string;
+    phone: string;
+    bio?: string;
+  }) => AppUser;
   logout: () => void;
-  activeView: 'dashboard' | 'marketplace' | 'transactions';
-  setActiveView: (view: 'dashboard' | 'marketplace' | 'transactions') => void;
+  activeView: 'landing' | 'dashboard' | 'marketplace' | 'transactions';
+  setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
   farmerLots: FarmerHarvestLot[];
   processedLots: ProcessedGreenBeanLot[];
   warehouseLots: WarehouseLot[];
@@ -189,7 +197,16 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return MOCK_USERS[0];
   });
 
-  const [activeView, setActiveView] = useState<'dashboard' | 'marketplace' | 'transactions'>('marketplace');
+  const [users, setUsers] = useState<AppUser[]>(() => {
+    const saved = localStorage.getItem('cct_users');
+    return saved ? JSON.parse(saved) : MOCK_USERS;
+  });
+
+  const [activeView, setActiveView] = useState<'landing' | 'dashboard' | 'marketplace' | 'transactions'>('landing');
+
+  useEffect(() => {
+    localStorage.setItem('cct_users', JSON.stringify(users));
+  }, [users]);
 
   const [farmerLots, setFarmerLots] = useState<FarmerHarvestLot[]>(() => {
     const saved = localStorage.getItem('cct_farmerLots');
@@ -337,7 +354,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [roasterMachines]);
 
   const loginAsRole = (role: UserRole) => {
-    const matched = MOCK_USERS.find((u) => u.role === role);
+    const matched = users.find((u) => u.role === role) || MOCK_USERS.find((u) => u.role === role);
     if (matched) {
       setCurrentUser(matched);
       setActiveView('dashboard');
@@ -345,11 +362,45 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const loginAsUser = (userId: string) => {
-    const matched = MOCK_USERS.find((u) => u.id === userId);
+    const matched = users.find((u) => u.id === userId) || MOCK_USERS.find((u) => u.id === userId);
     if (matched) {
       setCurrentUser(matched);
       setActiveView('dashboard');
     }
+  };
+
+  const registerUser = (userData: {
+    name: string;
+    role: UserRole;
+    organization: string;
+    location: string;
+    phone: string;
+    bio?: string;
+  }): AppUser => {
+    const defaultAvatars: Record<UserRole, string> = {
+      petani: 'https://images.unsplash.com/photo-1595273670150-bd0c3c392e46?w=150&auto=format&fit=crop&q=80',
+      pengolah: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      gudang: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      roaster: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80',
+      cafe: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    };
+
+    const newUser: AppUser = {
+      id: `user-${userData.role}-${Date.now().toString().slice(-4)}`,
+      name: userData.name,
+      role: userData.role,
+      organization: userData.organization,
+      location: userData.location,
+      phone: userData.phone,
+      avatar: defaultAvatars[userData.role] || defaultAvatars.roaster,
+      balance: 50000000,
+      bio: userData.bio || `Pengguna terdaftar baru sebagai ${userData.role}`,
+    };
+
+    setUsers((prev) => [newUser, ...prev]);
+    setCurrentUser(newUser);
+    setActiveView('dashboard');
+    return newUser;
   };
 
   const logout = () => {
@@ -1393,9 +1444,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <CoffeeContext.Provider
       value={{
         currentUser,
-        users: MOCK_USERS,
+        users,
         loginAsRole,
         loginAsUser,
+        registerUser,
         logout,
         activeView,
         setActiveView,

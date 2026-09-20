@@ -115,7 +115,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             }`}
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-black shadow-md shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#714B67] to-[#5A3950] text-white flex items-center justify-center font-black shadow-md shrink-0 border border-[#714B67]/30">
                 <Coffee className="w-6 h-6" />
               </div>
               {!collapsed && (
@@ -124,12 +124,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     <span className="font-black text-white text-base tracking-tight truncate block">
                       CCT-Coffee
                     </span>
-                    <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      PRO
+                    <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-[#714B67]/30 text-purple-300 border border-[#714B67]/40">
+                      ODOO 19
                     </span>
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block truncate">
-                    Cruip Enterprise Dashboard
+                    Enterprise Coffee ERP
                   </span>
                 </div>
               )}

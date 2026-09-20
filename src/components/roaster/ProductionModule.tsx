@@ -15,15 +15,19 @@ import {
   Thermometer,
   Wrench,
   Search,
+  Filter,
 } from 'lucide-react';
 import { MasterRoastProfile, RoasterMachine } from '../../types/roasterErp';
 import { useCoffee } from '../../context/CoffeeContext';
 import { MetricCard } from '../admin/MetricCard';
+import { OdooControlPanel } from '../odoo/OdooControlPanel';
+import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
 
 export const ProductionModule: React.FC = () => {
   const { masterProfiles, roasterMachines, createMasterProfile } = useCoffee();
 
   const [activeTab, setActiveTab] = useState<'profiles' | 'machines'>('profiles');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
 
   // Form State for Master Profile
@@ -68,6 +72,19 @@ export const ProductionModule: React.FC = () => {
     return 'bg-[#311608] text-white'; // Dark
   };
 
+  const filteredProfiles = masterProfiles.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.targetRoastLevel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.flavorProfile.some((f) => f.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const filteredMachines = roasterMachines.filter(
+    (m) =>
+      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.model.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       {/* Metric Cards */}
@@ -106,51 +123,53 @@ export const ProductionModule: React.FC = () => {
         />
       </div>
 
-      {/* Tabs & Add Profile Button */}
-      <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl border border-stone-200">
-          <button
-            onClick={() => setActiveTab('profiles')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeTab === 'profiles'
-                ? 'bg-white text-stone-900 shadow-xs'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-            <span>Master Roast Profiles ({masterProfiles.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('machines')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeTab === 'machines'
-                ? 'bg-white text-stone-900 shadow-xs'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            <Flame className="w-4 h-4 text-amber-600" />
-            <span>Armada Mesin Sangrai ({roasterMachines.length})</span>
-          </button>
-        </div>
+      {/* Subtab Toggle Buttons */}
+      <div className="flex items-center gap-2 border-b border-stone-200 pb-2">
+        <button
+          onClick={() => setActiveTab('profiles')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeTab === 'profiles'
+              ? 'bg-[#714B67] text-white shadow-xs'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <Sliders className="w-4 h-4" />
+          <span>Master Roast Profiles ({masterProfiles.length})</span>
+        </button>
 
-        {activeTab === 'profiles' && (
-          <button
-            onClick={() => setIsCreateProfileOpen(true)}
-            className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-amber-800 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-xs"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>+ Buat Master Profile Baru</span>
-          </button>
-        )}
+        <button
+          onClick={() => setActiveTab('machines')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeTab === 'machines'
+              ? 'bg-[#714B67] text-white shadow-xs'
+              : 'text-stone-600 hover:bg-stone-100'
+          }`}
+        >
+          <Flame className="w-4 h-4" />
+          <span>Armada Mesin Sangrai ({roasterMachines.length})</span>
+        </button>
       </div>
+
+      {/* Odoo 19 Control Panel */}
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: 'Produksi & Resep' },
+          { label: activeTab === 'profiles' ? 'Master Profiles' : 'Mesin Roaster' },
+        ]}
+        primaryActionLabel={activeTab === 'profiles' ? '+ Master Profile' : undefined}
+        onPrimaryAction={activeTab === 'profiles' ? () => setIsCreateProfileOpen(true) : undefined}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        recordCount={activeTab === 'profiles' ? filteredProfiles.length : filteredMachines.length}
+      />
 
       {/* TAB 1: MASTER PROFILES */}
       {activeTab === 'profiles' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {masterProfiles.map((prof) => (
+          {filteredProfiles.map((prof) => (
             <div
               key={prof.id}
-              className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
+              className="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -167,7 +186,7 @@ export const ProductionModule: React.FC = () => {
                     </span>
                   </div>
 
-                  <span className="text-xs font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                  <span className="text-xs font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                     Target DTR: {prof.targetDtr}%
                   </span>
                 </div>
@@ -178,7 +197,7 @@ export const ProductionModule: React.FC = () => {
                 </p>
 
                 {/* Phase Milestones */}
-                <div className="grid grid-cols-3 gap-2 mt-4 bg-stone-50 p-3 rounded-2xl border border-stone-100 text-xs">
+                <div className="grid grid-cols-3 gap-2 mt-4 bg-[#F8F9FA] p-3 rounded-2xl border border-stone-200/80 text-xs">
                   <div>
                     <span className="text-[10px] text-stone-400 block font-medium">Charge Temp:</span>
                     <strong className="text-stone-900 font-mono">{prof.chargeTemp}°C</strong>
@@ -202,7 +221,7 @@ export const ProductionModule: React.FC = () => {
                   {prof.flavorProfile.map((flv, i) => (
                     <span
                       key={i}
-                      className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-900 border border-amber-200/70"
+                      className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#714B67]/10 text-[#714B67] border border-[#714B67]/20"
                     >
                       {flv}
                     </span>
@@ -212,7 +231,7 @@ export const ProductionModule: React.FC = () => {
 
               {/* Recommended Brew */}
               <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
-                <span>Rekomendasi Seduh: <strong>{prof.recommendedBrew.join(', ')}</strong></span>
+                <span>Rekomendasi Seduh: <strong className="text-stone-800">{prof.recommendedBrew.join(', ')}</strong></span>
                 <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   Ready to Roast
                 </span>
@@ -225,17 +244,17 @@ export const ProductionModule: React.FC = () => {
       {/* TAB 2: ROASTING MACHINES */}
       {activeTab === 'machines' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {roasterMachines.map((m) => (
+          {filteredMachines.map((m) => (
             <div
               key={m.id}
-              className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs flex flex-col justify-between"
+              className="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-xs flex flex-col justify-between space-y-4"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
                     <Activity className="w-3 h-3 text-emerald-600" /> Artisan Online
                   </span>
-                  <span className="font-mono text-xs font-bold text-stone-400">
+                  <span className="font-mono text-xs font-bold text-stone-500">
                     {m.capacityKg} kg / batch
                   </span>
                 </div>
@@ -245,27 +264,34 @@ export const ProductionModule: React.FC = () => {
                   <p className="text-xs text-stone-500 mt-0.5">{m.model}</p>
                 </div>
 
-                <div className="bg-stone-50 p-3 rounded-2xl border border-stone-100 text-xs space-y-1.5">
+                <div className="bg-[#F8F9FA] p-3 rounded-2xl border border-stone-200/80 text-xs space-y-1.5">
                   <div className="flex justify-between">
                     <span className="text-stone-500">Sumber Panas:</span>
                     <strong className="text-stone-800">{m.heatSource}</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-stone-500">Total Batch Sangrai:</span>
-                    <strong className="text-amber-800 font-mono">{m.totalBatchesRoasted} Batch</strong>
+                    <span className="text-stone-500">Koneksi Artisan:</span>
+                    <strong className="text-emerald-700">{m.artisanConnected ? 'Online (USB/Modbus)' : 'Offline'}</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-stone-500">Servis Terakhir:</span>
+                    <span className="text-stone-500">Status Operasional:</span>
+                    <strong className="text-stone-800 uppercase font-mono">{m.status}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-stone-500">Maintenance Terakhir:</span>
                     <strong className="text-stone-800">{m.lastMaintenanceDate}</strong>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-stone-100 mt-4 flex items-center justify-between text-xs">
-                <span className="text-stone-400">Status: <strong className="text-emerald-700 font-bold capitalize">{m.status}</strong></span>
-                <span className="text-[11px] text-stone-600 flex items-center gap-1">
-                  <Wrench className="w-3.5 h-3.5 text-stone-400" /> Kalibrasi OK
-                </span>
+              <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
+                <span className="text-[10px] font-mono text-stone-400">Total: {m.totalBatchesRoasted} Batch</span>
+                <button
+                  type="button"
+                  className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-[11px] transition-colors"
+                >
+                  Kalibrasi Sensor
+                </button>
               </div>
             </div>
           ))}
@@ -275,7 +301,7 @@ export const ProductionModule: React.FC = () => {
       {/* CREATE MASTER PROFILE MODAL */}
       {isCreateProfileOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8 p-6 text-stone-900">
+          <div className="relative bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8 p-6 text-stone-900">
             <button
               onClick={() => setIsCreateProfileOpen(false)}
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition-colors"
@@ -284,12 +310,12 @@ export const ProductionModule: React.FC = () => {
             </button>
 
             <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-stone-100">
-              <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800">
+              <div className="p-2.5 rounded-xl bg-[#714B67]/10 text-[#714B67]">
                 <Sliders className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-stone-900">Buat Master Roast Profile Baru</h3>
-                <p className="text-xs text-stone-500">Simpan parameter kurva suhu dan target Agtron sebagai resep baku roastery.</p>
+                <p className="text-xs text-stone-500">Formulasi resep sangrai presisi dengan target DTR dan Agtron.</p>
               </div>
             </div>
 
@@ -303,52 +329,37 @@ export const ProductionModule: React.FC = () => {
                   required
                   value={profName}
                   onChange={(e) => setProfName(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Roast Level
+                    Target Roast Level
                   </label>
                   <select
                     value={profLevel}
                     onChange={(e) => setProfLevel(e.target.value as any)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
                   >
-                    <option value="Light Roast">Light Roast</option>
-                    <option value="Light-Medium">Light-Medium</option>
-                    <option value="Medium Roast">Medium Roast</option>
-                    <option value="Medium-Dark">Medium-Dark</option>
-                    <option value="Dark Roast">Dark Roast</option>
+                    <option value="Light Roast">Light Roast (Filter)</option>
+                    <option value="Medium-Light">Medium-Light (Omni)</option>
+                    <option value="Medium Roast">Medium Roast (Espresso)</option>
+                    <option value="Medium-Dark">Medium-Dark (Bold)</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Agtron Gourmet
+                    Target Agtron Gourmet (#)
                   </label>
                   <input
                     type="number"
                     required
                     value={profAgtronGourmet}
                     onChange={(e) => setProfAgtronGourmet(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Target DTR (%)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    required
-                    value={profDtr}
-                    onChange={(e) => setProfDtr(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
                   />
                 </div>
               </div>
@@ -360,49 +371,45 @@ export const ProductionModule: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    required
                     value={profCharge}
                     onChange={(e) => setProfCharge(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
                   />
                 </div>
-
+                <div>
+                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
+                    Target DTR (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={profDtr}
+                    onChange={(e) => setProfDtr(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
+                  />
+                </div>
                 <div>
                   <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
                     Drop Temp (°C)
                   </label>
                   <input
                     type="number"
-                    required
                     value={profDropTemp}
                     onChange={(e) => setProfDropTemp(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Total Time (Detik)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={profTotalTime}
-                    onChange={(e) => setProfTotalTime(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Deskripsi & Karakter Rasa
+                  Deskripsi Karakter Sangrai
                 </label>
                 <textarea
                   rows={2}
                   value={profDesc}
                   onChange={(e) => setProfDesc(e.target.value)}
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#714B67]"
                 />
               </div>
 
@@ -416,7 +423,7 @@ export const ProductionModule: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-amber-800 text-white font-bold transition-all shadow-md flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white font-bold transition-all shadow-md flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   Simpan Master Profile

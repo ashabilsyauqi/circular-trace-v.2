@@ -11,6 +11,7 @@ import { WarehouseView } from './components/WarehouseView';
 import { RoasterView } from './components/RoasterView';
 import { CafeView } from './components/CafeView';
 import { PublicLotScanView } from './components/PublicLotScanView';
+import { LandingPage } from './components/LandingPage';
 
 const MainLayout: React.FC = () => {
   const { currentUser, activeView } = useCoffee();
@@ -65,18 +66,27 @@ const MainLayout: React.FC = () => {
     );
   }
 
-  // 3. Base Utama Website: E-Commerce Storefront Marketplace
+  // 3. Base Utama Website: Landing Page, E-Commerce Storefront, atau Transaksi
   return (
     <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-between text-stone-900">
       <div>
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* E-Commerce Marketplace Catalog (Katalog Terpadu 5 Aktor) */}
-          {activeView === 'marketplace' && <UnifiedMarketplace />}
+        {/* Landing Page (Base URL Marketing) */}
+        {activeView === 'landing' && <LandingPage />}
 
-          {/* Transaction Ledger View */}
-          {activeView === 'transactions' && <TransactionHistoryView />}
-        </main>
+        {/* E-Commerce Marketplace Catalog (Katalog Terpadu 5 Aktor) */}
+        {activeView === 'marketplace' && (
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <UnifiedMarketplace />
+          </main>
+        )}
+
+        {/* Transaction Ledger View */}
+        {activeView === 'transactions' && (
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <TransactionHistoryView />
+          </main>
+        )}
       </div>
 
       <footer className="bg-stone-900 text-stone-400 text-xs py-8 border-t border-stone-800 mt-12">

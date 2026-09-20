@@ -12,7 +12,10 @@ import {
   Package,
   Layers,
   Sparkles,
+  Grid,
+  ChevronDown,
 } from 'lucide-react';
+import { OdooAppSwitcherModal } from '../odoo/OdooAppSwitcherModal';
 
 interface AdminHeaderProps {
   onOpenMobileMenu: () => void;
@@ -25,10 +28,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   title,
   subtitle,
 }) => {
-  const { currentUser, setActiveView, transactions } = useCoffee();
+  const { currentUser, setActiveView, loginAsRole, transactions } = useCoffee();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [appSwitcherOpen, setAppSwitcherOpen] = useState(false);
 
   if (!currentUser) return null;
 
@@ -39,8 +43,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     <>
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          {/* Left: Mobile hamburger & breadcrumbs */}
-          <div className="flex items-center gap-3 min-w-0">
+          {/* Left: Odoo 19 App Switcher 9-Dots & Breadcrumbs */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Odoo 19 9-Dots App Switcher Button */}
+            <button
+              onClick={() => setAppSwitcherOpen(true)}
+              className="p-2 rounded-xl bg-[#714B67]/10 hover:bg-[#714B67]/20 text-[#714B67] transition-all shrink-0 flex items-center justify-center border border-[#714B67]/20 group"
+              title="Buka Odoo 19 App Launcher"
+            >
+              <Grid className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+            </button>
+
             <button
               onClick={onOpenMobileMenu}
               className="lg:hidden p-2 rounded-xl text-stone-700 hover:bg-stone-100 transition-colors shrink-0"
@@ -50,10 +63,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             </button>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[11px] text-stone-500 font-medium truncate">
-                <span>Panel Admin</span>
-                <span>/</span>
-                <span className="font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+              <div className="flex items-center gap-1.5 text-[11px] text-stone-500 font-medium truncate">
+                <span className="font-bold text-[#714B67] hidden sm:inline">CCT ERP 19</span>
+                <span className="hidden sm:inline">/</span>
+                <span className="font-bold text-[#714B67] bg-[#714B67]/10 px-2 py-0.5 rounded-md border border-[#714B67]/20">
                   {currentRoleInfo.label}
                 </span>
                 {subtitle && (
@@ -285,6 +298,14 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           </div>
         </div>
       )}
+
+      {/* Odoo 19 App Switcher Modal (9-Dots Launcher) */}
+      <OdooAppSwitcherModal
+        isOpen={appSwitcherOpen}
+        onClose={() => setAppSwitcherOpen(false)}
+        onSelectRole={(role) => loginAsRole(role)}
+        onNavigateView={(view) => setActiveView(view)}
+      />
     </>
   );
 };

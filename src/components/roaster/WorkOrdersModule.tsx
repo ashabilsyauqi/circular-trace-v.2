@@ -20,16 +20,35 @@ import {
   Coffee,
   Filter,
   X,
+  Zap,
+  Tag,
+  FileText,
+  Sliders,
+  Award,
+  Warehouse,
 } from 'lucide-react';
 import { WorkOrder, WorkOrderStatus, MasterRoastProfile } from '../../types/roasterErp';
 import { useCoffee } from '../../context/CoffeeContext';
 import { MetricCard } from '../admin/MetricCard';
 import { ArtisanRoastSimulatorModal } from './ArtisanRoastSimulatorModal';
+import { OdooControlPanel } from '../odoo/OdooControlPanel';
+import { OdooStatusPipeline, OdooPipelineStage } from '../odoo/OdooStatusPipeline';
+import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
+import { OdooChatter } from '../odoo/OdooChatter';
 
 interface WorkOrdersModuleProps {
   onNavigateToQC?: (wo: WorkOrder) => void;
   openCreateModalDirectly?: boolean;
 }
+
+const WO_PIPELINE_STAGES: OdooPipelineStage[] = [
+  { id: 'draft', label: 'Draft' },
+  { id: 'scheduled', label: 'Terjadwal' },
+  { id: 'in_production', label: 'Produksi' },
+  { id: 'roasting', label: 'Sangrai Live' },
+  { id: 'qc_pending', label: 'QC Lab' },
+  { id: 'completed', label: 'Selesai' },
+];
 
 export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
   onNavigateToQC,
@@ -45,10 +64,12 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
   } = useCoffee();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | WorkOrderStatus>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [groupBy, setGroupBy] = useState<string>('none');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'graph'>('table');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(openCreateModalDirectly);
   const [activeRoastModalWO, setActiveRoastModalWO] = useState<WorkOrder | null>(null);
+  const [detailModalWO, setDetailModalWO] = useState<WorkOrder | null>(null);
 
   // Form State for Creating Work Order
   const [formGreenLotId, setFormGreenLotId] = useState('');
@@ -175,96 +196,44 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
         />
       </div>
 
-      {/* Toolbar & Status Tabs */}
-      <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          {/* Search Box */}
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari No. WO, origin, profil, mesin..."
-              className="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
-            />
-          </div>
-
-          {/* Action Buttons & View Toggle */}
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <div className="flex items-center bg-stone-100 p-1 rounded-xl border border-stone-200">
-              <button
-                onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                  viewMode === 'table'
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'text-stone-500 hover:text-stone-800'
-                }`}
-                title="Tampilan Tabel Data"
-              >
-                <List className="w-4 h-4" />
-                <span className="hidden sm:inline">Tabel</span>
-              </button>
-              <button
-                onClick={() => setViewMode('kanban')}
-                className={`p-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                  viewMode === 'kanban'
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'text-stone-500 hover:text-stone-800'
-                }`}
-                title="Tampilan Papan Kanban"
-              >
-                <LayoutGrid className="w-4 h-4" />
-                <span className="hidden sm:inline">Kanban</span>
-              </button>
-            </div>
-
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-amber-800 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>+ Buat Work Order</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 border-t border-stone-100 pt-3 text-xs">
-          {[
-            { id: 'all', label: 'Semua Status', count: workOrders.length },
-            { id: 'scheduled', label: 'Scheduled', count: workOrders.filter((w) => w.status === 'scheduled').length },
-            { id: 'in_production', label: 'In Production', count: workOrders.filter((w) => w.status === 'in_production').length },
-            { id: 'roasting', label: 'Roasting Live', count: workOrders.filter((w) => w.status === 'roasting').length },
-            { id: 'qc_pending', label: 'QC Pending', count: workOrders.filter((w) => w.status === 'qc_pending').length },
-            { id: 'completed', label: 'Completed', count: workOrders.filter((w) => w.status === 'completed').length },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setStatusFilter(tab.id as any)}
-              className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                statusFilter === tab.id
-                  ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-xs'
-                  : 'text-stone-600 hover:bg-stone-100'
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                statusFilter === tab.id ? 'bg-amber-200 text-amber-950 font-black' : 'bg-stone-200 text-stone-600'
-              }`}>
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Odoo 19 Control Panel */}
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: 'Roastery MRP' },
+          { label: 'Work Orders' },
+        ]}
+        primaryActionLabel="+ Work Order"
+        onPrimaryAction={() => setIsCreateModalOpen(true)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        activeFilter={statusFilter}
+        onFilterChange={setStatusFilter}
+        filterOptions={[
+          { id: 'all', label: 'Semua Status' },
+          { id: 'scheduled', label: 'Scheduled' },
+          { id: 'in_production', label: 'In Production' },
+          { id: 'roasting', label: 'Roasting Live' },
+          { id: 'qc_pending', label: 'QC Pending' },
+          { id: 'completed', label: 'Completed' },
+        ]}
+        activeGroupBy={groupBy}
+        onGroupByChange={setGroupBy}
+        groupByOptions={[
+          { id: 'none', label: 'Tanpa Pengelompokan' },
+          { id: 'status', label: 'Kelompokkan Status' },
+          { id: 'machine', label: 'Kelompokkan Mesin' },
+        ]}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        recordCount={filteredWorkOrders.length}
+      />
 
       {/* VIEW 1: DATA TABLE VIEW */}
       {viewMode === 'table' && (
-        <div className="bg-white rounded-3xl border border-stone-200 shadow-xs overflow-hidden">
+        <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+              <thead className="bg-[#F8F9FA] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4">No. Work Order</th>
                   <th className="py-3.5 px-4">Komoditas Green Bean</th>
@@ -272,7 +241,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                   <th className="py-3.5 px-4">Mesin & Roaster</th>
                   <th className="py-3.5 px-4">Target / Aktual (Kg)</th>
                   <th className="py-3.5 px-4">Susut (Loss %)</th>
-                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Status Odoo</th>
                   <th className="py-3.5 px-4 text-right">Aksi Operasi</th>
                 </tr>
               </thead>
@@ -285,10 +254,16 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       : 0;
 
                   return (
-                    <tr key={wo.id} className="hover:bg-stone-50/70 transition-colors">
+                    <tr
+                      key={wo.id}
+                      className="hover:bg-stone-50/80 transition-colors cursor-pointer group"
+                      onClick={() => setDetailModalWO(wo)}
+                    >
                       {/* WO Number & Date */}
                       <td className="py-3.5 px-4">
-                        <div className="font-mono font-black text-stone-900">{wo.woNumber}</div>
+                        <div className="font-mono font-bold text-[#714B67] group-hover:underline">
+                          {wo.woNumber}
+                        </div>
                         <div className="text-[10px] text-stone-400 mt-0.5 flex items-center gap-1">
                           <Calendar className="w-3 h-3" /> Due: {wo.dueDate}
                         </div>
@@ -298,88 +273,123 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-stone-900">{wo.greenBeanName}</div>
                         <div className="text-[11px] text-stone-500">
-                          {wo.variety} • {wo.processMethod}
+                          {wo.origin} • <span className="font-medium">{wo.variety}</span>
                         </div>
                       </td>
 
-                      {/* Profile & Target */}
+                      {/* Master Profile */}
                       <td className="py-3.5 px-4">
-                        <div className="font-semibold text-stone-800">{wo.masterProfileName}</div>
-                        <div className="text-[10px] text-stone-400">
-                          Agtron #{wo.targetAgtron} • DTR {wo.targetDtr}%
+                        <div className="font-bold text-stone-800">{wo.masterProfileName}</div>
+                        <div className="text-[10px] text-stone-500 mt-0.5 flex items-center gap-1.5">
+                          <span className="font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                            {wo.targetRoastLevel}
+                          </span>
+                          <span>Agtron #{wo.targetAgtron}</span>
                         </div>
                       </td>
 
                       {/* Machine & Operator */}
                       <td className="py-3.5 px-4">
-                        <div className="font-medium text-stone-800">{wo.assignedMachine}</div>
-                        <div className="text-[10px] text-stone-400 flex items-center gap-1">
-                          <User className="w-3 h-3" /> {wo.assignedRoaster}
+                        <div className="font-semibold text-stone-900">{wo.assignedMachine}</div>
+                        <div className="text-[11px] text-stone-500 flex items-center gap-1">
+                          <User className="w-3 h-3 text-stone-400" /> {wo.assignedRoaster}
                         </div>
                       </td>
 
-                      {/* Weight Progress */}
+                      {/* Target / Actual Weight */}
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center justify-between font-mono text-[11px] mb-1">
-                          <span>{wo.actualGreenKg} / {wo.targetGreenKg} kg</span>
-                          <span className="text-amber-700 font-bold">({wo.actualRoastedKg} kg Rst)</span>
+                        <div className="font-mono font-bold text-stone-900">
+                          {wo.actualGreenKg > 0 ? wo.actualGreenKg : wo.targetGreenKg} kg Green
                         </div>
-                        <div className="w-28 bg-stone-100 rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className="bg-amber-600 h-1.5 rounded-full"
-                            style={{ width: `${progressPct}%` }}
-                          />
+                        <div className="text-[10px] text-stone-500 font-mono">
+                          ➜ {wo.actualRoastedKg > 0 ? `${wo.actualRoastedKg} kg Roasted` : `Est. ${wo.targetRoastedKg} kg`}
                         </div>
+                        {wo.status === 'in_production' && (
+                          <div className="w-24 bg-stone-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                            <div
+                              className="bg-amber-500 h-full rounded-full transition-all"
+                              style={{ width: `${progressPct}%` }}
+                            />
+                          </div>
+                        )}
                       </td>
 
                       {/* Weight Loss */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-stone-800">
+                      <td className="py-3.5 px-4">
                         {wo.weightLossPercent > 0 ? (
-                          <span className="text-stone-900">{wo.weightLossPercent}%</span>
+                          <div className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+                            <span>{wo.weightLossPercent}%</span>
+                          </div>
                         ) : (
-                          <span className="text-stone-400">-</span>
+                          <span className="text-stone-400 font-mono text-[11px]">-</span>
                         )}
                       </td>
 
                       {/* Status */}
                       <td className="py-3.5 px-4">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}
                         >
                           <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
                           {badge.label}
                         </span>
                       </td>
 
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {wo.status !== 'completed' && (
-                            <button
-                              onClick={() => setActiveRoastModalWO(wo)}
-                              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition-all flex items-center gap-1 shadow-xs"
-                            >
-                              <Flame className="w-3.5 h-3.5" />
-                              Mulai Sangrai
-                            </button>
-                          )}
+                      {/* Action Buttons */}
+                      <td
+                        className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {wo.status === 'scheduled' && (
+                          <button
+                            onClick={() => updateWorkOrderStatus(wo.id, 'in_production')}
+                            className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-[11px] transition-colors shadow-2xs"
+                          >
+                            Mulai Batch
+                          </button>
+                        )}
 
-                          {wo.status === 'qc_pending' && onNavigateToQC && (
-                            <button
-                              onClick={() => onNavigateToQC(wo)}
-                              className="px-2.5 py-1.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold text-xs transition-colors border border-purple-300 flex items-center gap-1"
-                            >
-                              <Sparkles className="w-3 h-3 text-purple-700" />
-                              QC Cupping
-                            </button>
-                          )}
+                        {wo.status === 'in_production' && (
+                          <button
+                            onClick={() => {
+                              setActiveRoastModalWO(wo);
+                              updateWorkOrderStatus(wo.id, 'roasting');
+                            }}
+                            className="px-2.5 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-[11px] transition-all shadow-2xs animate-pulse flex items-center gap-1 inline-flex"
+                          >
+                            <Flame className="w-3.5 h-3.5" />
+                            Live Artisan
+                          </button>
+                        )}
 
-                          {wo.status === 'completed' && (
-                            <span className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Selesai
-                            </span>
-                          )}
-                        </div>
+                        {wo.status === 'roasting' && (
+                          <button
+                            onClick={() => setActiveRoastModalWO(wo)}
+                            className="px-2.5 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold text-[11px] transition-colors shadow-2xs inline-flex items-center gap-1"
+                          >
+                            <Activity className="w-3.5 h-3.5" />
+                            Artisan Sync
+                          </button>
+                        )}
+
+                        {wo.status === 'qc_pending' && onNavigateToQC && (
+                          <button
+                            onClick={() => onNavigateToQC(wo)}
+                            className="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-[11px] transition-colors shadow-2xs inline-flex items-center gap-1"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Uji Cupping Lab
+                          </button>
+                        )}
+
+                        {wo.status === 'completed' && (
+                          <button
+                            onClick={() => setDetailModalWO(wo)}
+                            className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-[11px] transition-colors"
+                          >
+                            Detail Odoo
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -390,98 +400,70 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
         </div>
       )}
 
-      {/* VIEW 2: KANBAN BOARD VIEW */}
+      {/* VIEW 2: KANBAN VIEW */}
       {viewMode === 'kanban' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {(['scheduled', 'in_production', 'qc_pending', 'completed'] as WorkOrderStatus[]).map(
             (colStatus) => {
-              const colWos = filteredWorkOrders.filter((w) => w.status === colStatus);
+              const colWos = filteredWorkOrders.filter((w) =>
+                colStatus === 'in_production'
+                  ? w.status === 'in_production' || w.status === 'roasting'
+                  : w.status === colStatus
+              );
               const badge = STATUS_BADGE[colStatus];
 
               return (
                 <div
                   key={colStatus}
-                  className="bg-stone-100/70 rounded-3xl p-4 border border-stone-200/80 flex flex-col justify-between min-h-[500px]"
+                  className="bg-[#F8F9FA] rounded-3xl p-4 border border-stone-200/80 space-y-3 flex flex-col"
                 >
-                  <div>
-                    {/* Column Header */}
-                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-stone-200">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
-                        <h4 className="font-bold text-xs uppercase tracking-wider text-stone-800">
-                          {badge.label}
-                        </h4>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full bg-white text-stone-700 text-[11px] font-mono font-bold border border-stone-200">
-                        {colWos.length}
+                  <div className="flex items-center justify-between pb-2 border-b border-stone-200/60">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${badge.dot}`} />
+                      <span className="font-bold text-xs text-stone-800 uppercase tracking-wider">
+                        {badge.label}
                       </span>
                     </div>
+                    <span className="px-2 py-0.5 rounded-full bg-white text-stone-700 text-[10px] font-black border border-stone-200 shadow-2xs">
+                      {colWos.length}
+                    </span>
+                  </div>
 
-                    {/* Cards Stack */}
-                    <div className="space-y-3">
-                      {colWos.map((wo) => (
+                  <div className="space-y-2.5 flex-1">
+                    {colWos.length === 0 ? (
+                      <div className="p-6 text-center text-[11px] text-stone-400 border border-dashed border-stone-200 rounded-2xl">
+                        Tidak ada antrean
+                      </div>
+                    ) : (
+                      colWos.map((wo) => (
                         <div
                           key={wo.id}
-                          className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-2xs hover:shadow-md transition-all space-y-2.5"
+                          onClick={() => setDetailModalWO(wo)}
+                          className="bg-white p-3.5 rounded-2xl border border-stone-200/80 shadow-2xs hover:shadow-md transition-all cursor-pointer space-y-2 group"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-mono font-black text-xs text-amber-900">
+                            <span className="font-mono text-xs font-bold text-[#714B67] group-hover:underline">
                               {wo.woNumber}
                             </span>
-                            <span className="text-[10px] text-stone-400 font-medium">
-                              {wo.dueDate}
-                            </span>
+                            <span className="text-[10px] text-stone-400">{wo.dueDate}</span>
                           </div>
 
                           <div>
-                            <h5 className="font-bold text-xs text-stone-900 leading-tight">
+                            <div className="text-xs font-bold text-stone-900 leading-snug">
                               {wo.greenBeanName}
-                            </h5>
-                            <p className="text-[11px] text-stone-500 mt-0.5">
-                              {wo.masterProfileName}
-                            </p>
+                            </div>
+                            <div className="text-[10px] text-stone-500">{wo.masterProfileName}</div>
                           </div>
 
-                          <div className="bg-stone-50 p-2.5 rounded-xl border border-stone-100 text-[11px] space-y-1">
-                            <div className="flex justify-between">
-                              <span className="text-stone-500">Target Green:</span>
-                              <strong className="text-stone-800">{wo.targetGreenKg} kg</strong>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-stone-500">Output Roasted:</span>
-                              <strong className="text-amber-700">{wo.actualRoastedKg} kg</strong>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-stone-500">Mesin Sangrai:</span>
-                              <span className="text-stone-700 truncate max-w-[120px]">{wo.assignedMachine}</span>
-                            </div>
-                          </div>
-
-                          {/* Quick Action Button */}
-                          <div className="pt-1">
-                            {wo.status !== 'completed' ? (
-                              <button
-                                onClick={() => setActiveRoastModalWO(wo)}
-                                className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs"
-                              >
-                                <Flame className="w-3.5 h-3.5" />
-                                Mulai Roasting
-                              </button>
-                            ) : (
-                              <div className="text-center py-1 text-[11px] font-bold text-emerald-700 flex items-center justify-center gap-1">
-                                <CheckCircle2 className="w-3.5 h-3.5" /> Batch Selesai
-                              </div>
-                            )}
+                          <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-[11px]">
+                            <span className="font-mono font-bold text-stone-700">
+                              {wo.targetGreenKg} kg Green
+                            </span>
+                            <span className="text-stone-500 font-medium">{wo.assignedMachine}</span>
                           </div>
                         </div>
-                      ))}
-
-                      {colWos.length === 0 && (
-                        <div className="text-center py-10 text-stone-400 text-xs italic">
-                          Tidak ada work order di kolom ini.
-                        </div>
-                      )}
-                    </div>
+                      ))
+                    )}
                   </div>
                 </div>
               );
@@ -490,19 +472,187 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
         </div>
       )}
 
+      {/* ODOO 19 WORK ORDER DETAIL & INSPECTION MODAL */}
+      {detailModalWO && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-4xl w-full border border-stone-200 shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95">
+            {/* Modal Top Status Pipeline & Controls */}
+            <div className="bg-[#F8F9FA] px-6 py-4 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-[#714B67] text-white">
+                  <Flame className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-stone-900 font-mono">
+                    {detailModalWO.woNumber}
+                  </h3>
+                  <p className="text-[10px] text-stone-500">
+                    Dibuat: {detailModalWO.scheduledDate} • Batas: {detailModalWO.dueDate}
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Chevron Pipeline */}
+              <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                <OdooStatusPipeline
+                  stages={WO_PIPELINE_STAGES}
+                  currentStageId={detailModalWO.status}
+                />
+                <button
+                  onClick={() => setDetailModalWO(null)}
+                  className="p-1.5 rounded-full hover:bg-stone-200 text-stone-500 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Smart Stat Buttons Header */}
+            <div className="px-6 py-3 bg-white border-b border-stone-100 flex flex-wrap gap-2">
+              <OdooSmartStatButton
+                icon={<Warehouse className="w-4 h-4" />}
+                value={`${detailModalWO.targetGreenKg} kg`}
+                label="Bahan Baku Green"
+                color="stone"
+              />
+              <OdooSmartStatButton
+                icon={<Flame className="w-4 h-4" />}
+                value={`#${detailModalWO.targetAgtron}`}
+                label={detailModalWO.targetRoastLevel}
+                color="amber"
+              />
+              <OdooSmartStatButton
+                icon={<TrendingDown className="w-4 h-4" />}
+                value={detailModalWO.weightLossPercent > 0 ? `${detailModalWO.weightLossPercent}%` : 'Est. 14.5%'}
+                label="Roast Loss %"
+                color="blue"
+              />
+              <OdooSmartStatButton
+                icon={<Sparkles className="w-4 h-4" />}
+                value={detailModalWO.status === 'completed' ? '88.5 SCA' : 'Pending Uji'}
+                label="Quality Score"
+                color="purple"
+              />
+            </div>
+
+            {/* Modal Body Content */}
+            <div className="p-6 space-y-6 text-xs max-h-[70vh] overflow-y-auto">
+              {/* Core Information Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-stone-50/60 p-5 rounded-2xl border border-stone-200/70">
+                <div className="space-y-3">
+                  <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <Coffee className="w-4 h-4 text-[#714B67]" /> Spesifikasi Bahan Baku
+                  </h4>
+                  <div className="space-y-1.5 text-stone-700">
+                    <div className="flex justify-between py-1 border-b border-stone-200/60">
+                      <span className="text-stone-500">Nama Komoditas:</span>
+                      <span className="font-bold text-stone-900">{detailModalWO.greenBeanName}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-stone-200/60">
+                      <span className="text-stone-500">Origin / Varietas:</span>
+                      <span className="font-medium">{detailModalWO.origin} • {detailModalWO.variety}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-stone-200/60">
+                      <span className="text-stone-500">Metode Proses:</span>
+                      <span className="font-medium">{detailModalWO.processMethod}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-stone-500">Target Roasted Output:</span>
+                      <span className="font-mono font-bold text-stone-900">{detailModalWO.targetRoastedKg} kg</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <Sliders className="w-4 h-4 text-[#00A09D]" /> Profil & Mesin Roaster
+                  </h4>
+                  <div className="space-y-1.5 text-stone-700">
+                    <div className="flex justify-between py-1 border-b border-stone-200/60">
+                      <span className="text-stone-500">Master Roast Profile:</span>
+                      <span className="font-bold text-stone-900">{detailModalWO.masterProfileName}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-stone-200/60">
+                      <span className="text-stone-500">Target DTR (%):</span>
+                      <span className="font-mono font-bold text-amber-800">{detailModalWO.targetDtr}%</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-stone-200/60">
+                      <span className="text-stone-500">Armada Mesin:</span>
+                      <span className="font-medium">{detailModalWO.assignedMachine}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-stone-500">Roastmaster:</span>
+                      <span className="font-medium text-stone-900">{detailModalWO.assignedRoaster}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions in Detail Modal */}
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveRoastModalWO(detailModalWO);
+                    setDetailModalWO(null);
+                  }}
+                  className="px-4 py-2 bg-[#714B67] hover:bg-[#5A3950] text-white font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5"
+                >
+                  <Activity className="w-4 h-4 text-amber-300" />
+                  Buka Artisan Roasting Simulator
+                </button>
+
+                {detailModalWO.status === 'qc_pending' && onNavigateToQC && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onNavigateToQC(detailModalWO);
+                      setDetailModalWO(null);
+                    }}
+                    className="px-4 py-2 bg-[#00A09D] hover:bg-[#008986] text-white font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Buka Lembar Uji QC Cupping
+                  </button>
+                )}
+              </div>
+
+              {/* Odoo Chatter Internal Notes & Activity Feed */}
+              <div className="pt-4 border-t border-stone-200">
+                <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] mb-3 flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-[#714B67]" /> Odoo Chatter & Logbook Batch
+                </h4>
+                <OdooChatter
+                  documentTitle={`Work Order #${detailModalWO.woNumber}`}
+                  initialMessages={[
+                    {
+                      id: 'm1',
+                      author: detailModalWO.assignedRoaster,
+                      type: 'note',
+                      content: `Batch dibuat dengan master profile ${detailModalWO.masterProfileName}. Instruksi: ${detailModalWO.notes || 'Standar specialty roast.'}`,
+                      timestamp: detailModalWO.scheduledDate,
+                    },
+                  ]}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CREATE WORK ORDER MODAL */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8 p-6 text-stone-900">
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 border border-stone-200 shadow-2xl relative my-8 animate-in fade-in">
             <button
               onClick={() => setIsCreateModalOpen(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition-colors"
+              className="absolute top-5 right-5 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-stone-100">
-              <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800">
+              <div className="p-2.5 rounded-xl bg-[#714B67]/10 text-[#714B67]">
                 <Flame className="w-5 h-5" />
               </div>
               <div>
@@ -521,7 +671,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                   required
                   value={formGreenLotId}
                   onChange={(e) => setFormGreenLotId(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
                 >
                   <option value="">-- Pilih Lot Green Coffee --</option>
                   {warehouseLots.map((lot) => (
@@ -545,7 +695,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     required
                     value={formTargetGreenKg}
                     onChange={(e) => setFormTargetGreenKg(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
                   />
                   <span className="text-[10px] text-stone-400 mt-0.5 block">
                     Estimasi Roasted: ~{(formTargetGreenKg * 0.855).toFixed(1)} kg (@ 14.5% shrink)
@@ -560,7 +710,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     required
                     value={formProfileId}
                     onChange={(e) => setFormProfileId(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
                   >
                     <option value="">-- Pilih Master Profile --</option>
                     {masterProfiles.map((p) => (
@@ -581,7 +731,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                   <select
                     value={formMachine}
                     onChange={(e) => setFormMachine(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
                   >
                     {roasterMachines.map((m) => (
                       <option key={m.id} value={m.name}>
@@ -600,7 +750,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     required
                     value={formRoaster}
                     onChange={(e) => setFormRoaster(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
                   />
                 </div>
               </div>
@@ -616,7 +766,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     required
                     value={formDueDate}
                     onChange={(e) => setFormDueDate(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
                   />
                 </div>
 
@@ -629,7 +779,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     value={formNotes}
                     onChange={(e) => setFormNotes(e.target.value)}
                     placeholder="Instruksi kemasan, profiling..."
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#714B67]"
                   />
                 </div>
               </div>
@@ -644,7 +794,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-amber-800 text-white font-bold transition-all shadow-md flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white font-bold transition-all shadow-md flex items-center gap-1.5"
                 >
                   <PlusCircle className="w-4 h-4" />
                   Jadwalkan Work Order

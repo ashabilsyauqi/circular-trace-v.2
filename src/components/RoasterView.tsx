@@ -24,20 +24,18 @@ import {
   ArrowRight,
   Zap,
 } from 'lucide-react';
-import { WarehouseLot, RoastedBeanLot } from '../types/coffee';
+import { RoastedBeanLot } from '../types/coffee';
 import { WorkOrder } from '../types/roasterErp';
 import { TraceabilityModal } from './TraceabilityModal';
-import { CoffeeSensorySpiderChart } from './CoffeeSensorySpiderChart';
-import { MetricCard } from './admin/MetricCard';
 
-// Qrema Roastery ERP Modules
+// Roastery ERP Modules
 import { WorkOrdersModule } from './roaster/WorkOrdersModule';
 import { PurchasingModule } from './roaster/PurchasingModule';
 import { ProductionModule } from './roaster/ProductionModule';
 import { QCModule } from './roaster/QCModule';
 import { InventoryModule } from './roaster/InventoryModule';
 import { SellingModule } from './roaster/SellingModule';
-import { QremaAIAssistant } from './roaster/QremaAIAssistant';
+import { CircularTraceAssistant } from './assistant/CircularTraceAssistant';
 
 export const RoasterView: React.FC = () => {
   const {
@@ -51,11 +49,9 @@ export const RoasterView: React.FC = () => {
     salesOrders,
     transactions,
     setActiveView,
+    roasterActiveTab,
+    setRoasterActiveTab,
   } = useCoffee();
-
-  const [activeTab, setActiveTab] = useState<
-    'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history'
-  >('work_orders');
 
   const [selectedQcWO, setSelectedQcWO] = useState<WorkOrder | null>(null);
   const [traceModalLot, setTraceModalLot] = useState<RoastedBeanLot | null>(null);
@@ -74,10 +70,51 @@ export const RoasterView: React.FC = () => {
       t.toRole === 'roaster'
   );
 
+  const TAB_TITLES: Record<string, { title: string; subtitle: string; icon: any }> = {
+    work_orders: {
+      title: 'Work Orders MRP (Antrean Sangrai)',
+      subtitle: 'Penjadwalan batch sangrai presisi, pelacakan susut bobot, dan telemetri Artisan',
+      icon: Flame,
+    },
+    purchasing: {
+      title: 'Purchasing & Pengadaan Biji Hijau',
+      subtitle: 'Penerbitan PO resmi ke petani/pengolah/gudang dan evaluasi sampel lab',
+      icon: ShoppingCart,
+    },
+    production: {
+      title: 'Productions, Master Profil & Armada Mesin',
+      subtitle: 'Formulasi resep kurva RoR sangrai dan monitoring mesin terkalibrasi',
+      icon: Sliders,
+    },
+    qc: {
+      title: 'Quality Control Lab (SCA Cupping & Agtron)',
+      subtitle: 'Validasi sensori 10 atribut SCA 100-point dan uji instrumen fisik rilis specialty',
+      icon: Award,
+    },
+    inventory: {
+      title: 'Gudang Silo & Manajemen Inventaris',
+      subtitle: 'Stok green coffee silo, roasted beans kemasan, dan valve pouch (Audit FIFO)',
+      icon: Warehouse,
+    },
+    selling: {
+      title: 'Selling Wholesale & CRM Mitra Cafe',
+      subtitle: 'Distribusi biji sangrai rutin ke kedai kopi partner dengan QR silsilah',
+      icon: Store,
+    },
+    history: {
+      title: 'Buku Kas & Riwayat Transaksi Roastery',
+      subtitle: 'Catatan keuangan digital tersinkronisasi ke buku besar rantai pasok kopi',
+      icon: History,
+    },
+  };
+
+  const currentTabMeta = TAB_TITLES[roasterActiveTab] || TAB_TITLES.work_orders;
+  const CurrentTabIcon = currentTabMeta.icon;
+
   return (
     <div className="space-y-6">
       {/* Odoo 19 Roastery MRP Hero Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-[#5A3950] via-[#714B67] to-[#3B2234] rounded-3xl border border-[#714B67]/30 p-6 lg:p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#5A3950] via-[#714B67] to-[#3B2234] rounded-3xl border border-[#714B67]/30 p-6 lg:p-7 text-white shadow-xl">
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-xs font-semibold mb-3 backdrop-blur-sm">
             <Flame className="w-3.5 h-3.5 text-amber-300" />
@@ -92,17 +129,22 @@ export const RoasterView: React.FC = () => {
             Kelola alur kerja sangrai presisi dari pengadaan green bean, penjadwalan <em>Work Orders</em>, sinkronisasi kurva suhu Artisan, uji mutu <em>SCA Cupping Lab</em>, hingga pemenuhan <em>Sales Orders</em> ke kedai kopi mitra.
           </p>
 
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap gap-3">
             <button
-              onClick={() => setActiveTab('work_orders')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00A09D] hover:bg-[#008986] text-white font-bold text-xs transition-all shadow-md shadow-[#00A09D]/30 active:scale-95"
+              onClick={() => setRoasterActiveTab('work_orders')}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 ${
+                roasterActiveTab === 'work_orders'
+                  ? 'bg-amber-400 text-stone-950 font-black shadow-amber-400/20'
+                  : 'bg-[#00A09D] hover:bg-[#008986] text-white shadow-[#00A09D]/30'
+              }`}
             >
               <Flame className="w-4 h-4" />
-              Buka Work Orders ({activeWOsCount} Aktif)
+              Work Orders ({activeWOsCount} Aktif)
             </button>
+
             <button
               onClick={() => setActiveView('marketplace')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 transition-all backdrop-blur-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 transition-all backdrop-blur-sm"
             >
               <ShoppingCart className="w-4 h-4 text-amber-300" />
               Marketplace Biji Kopi
@@ -117,141 +159,51 @@ export const RoasterView: React.FC = () => {
         </div>
       </div>
 
-      {/* AI Assistant Command Palette */}
-      <QremaAIAssistant
-        onNavigateTab={(tab) => setActiveTab(tab as any)}
-        onTriggerCreateWO={() => setActiveTab('work_orders')}
-      />
+      {/* Active Module Indicator Banner */}
+      <div className="bg-white rounded-2xl px-5 py-3.5 border border-stone-200/90 shadow-xs flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-[#714B67]/10 text-[#714B67]">
+            <CurrentTabIcon className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-stone-900 leading-tight">
+              {currentTabMeta.title}
+            </h2>
+            <p className="text-[11px] text-stone-500 mt-0.5">
+              {currentTabMeta.subtitle}
+            </p>
+          </div>
+        </div>
 
-      {/* Odoo 19 Master ERP Navigation Tabs Bar */}
-      <div className="bg-white rounded-2xl p-1.5 border border-stone-200/90 shadow-xs flex items-center gap-1 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('work_orders')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-            activeTab === 'work_orders'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
-        >
-          <Flame className={`w-4 h-4 ${activeTab === 'work_orders' ? 'text-amber-300' : 'text-amber-500'}`} />
-          <span>Work Orders ({workOrders.length})</span>
-          {activeWOsCount > 0 && (
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'work_orders' ? 'bg-[#00A09D] text-white' : 'bg-amber-100 text-amber-900'
-            }`}>
-              {activeWOsCount}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('purchasing')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-            activeTab === 'purchasing'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
-        >
-          <ShoppingCart className={`w-4 h-4 ${activeTab === 'purchasing' ? 'text-blue-300' : 'text-blue-500'}`} />
-          <span>Purchasing ({purchaseOrders.length})</span>
-          {activePOsCount > 0 && (
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'purchasing' ? 'bg-blue-400 text-stone-900' : 'bg-blue-100 text-blue-900'
-            }`}>
-              {activePOsCount}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('production')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-            activeTab === 'production'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
-        >
-          <Sliders className={`w-4 h-4 ${activeTab === 'production' ? 'text-orange-300' : 'text-orange-500'}`} />
-          <span>Productions ({masterProfiles.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('qc')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-            activeTab === 'qc'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
-        >
-          <Award className={`w-4 h-4 ${activeTab === 'qc' ? 'text-purple-300' : 'text-purple-500'}`} />
-          <span>Quality Control ({activeQcCount})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('inventory')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-            activeTab === 'inventory'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
-        >
-          <Warehouse className={`w-4 h-4 ${activeTab === 'inventory' ? 'text-emerald-300' : 'text-emerald-500'}`} />
-          <span>Inventory ({warehouseLots.length} Lot)</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('selling')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-            activeTab === 'selling'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
-        >
-          <Store className={`w-4 h-4 ${activeTab === 'selling' ? 'text-amber-300' : 'text-amber-500'}`} />
-          <span>Selling Wholesale ({salesOrders.length})</span>
-          {activeSalesCount > 0 && (
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'selling' ? 'bg-[#00A09D] text-white' : 'bg-emerald-100 text-emerald-900'
-            }`}>
-              {activeSalesCount}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('history')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-            activeTab === 'history'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
-        >
-          <History className="w-4 h-4" />
-          <span>Buku Kas ({myRoasterTransactions.length})</span>
-        </button>
+        <div className="hidden sm:flex items-center gap-2 text-xs text-stone-500 font-medium bg-[#F8F9FA] px-3 py-1.5 rounded-xl border border-stone-200/80">
+          <span className="text-[10px] text-stone-400 uppercase font-bold">Navigasi Aktif:</span>
+          <span className="font-bold text-[#714B67] capitalize font-mono">
+            sidebar / {roasterActiveTab.replace('_', ' ')}
+          </span>
+        </div>
       </div>
 
-      {/* RENDER ACTIVE ERP MODULE */}
-      {activeTab === 'work_orders' && (
+      {/* RENDER ACTIVE ERP MODULE ACCORDING TO SIDEBAR SELECTION */}
+      {roasterActiveTab === 'work_orders' && (
         <WorkOrdersModule
           onNavigateToQC={(wo) => {
             setSelectedQcWO(wo);
-            setActiveTab('qc');
+            setRoasterActiveTab('qc');
           }}
         />
       )}
 
-      {activeTab === 'purchasing' && <PurchasingModule />}
+      {roasterActiveTab === 'purchasing' && <PurchasingModule />}
 
-      {activeTab === 'production' && <ProductionModule />}
+      {roasterActiveTab === 'production' && <ProductionModule />}
 
-      {activeTab === 'qc' && <QCModule initialWorkOrder={selectedQcWO} />}
+      {roasterActiveTab === 'qc' && <QCModule initialWorkOrder={selectedQcWO} />}
 
-      {activeTab === 'inventory' && <InventoryModule />}
+      {roasterActiveTab === 'inventory' && <InventoryModule />}
 
-      {activeTab === 'selling' && <SellingModule />}
+      {roasterActiveTab === 'selling' && <SellingModule />}
 
-      {activeTab === 'history' && (
+      {roasterActiveTab === 'history' && (
         <div className="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-stone-100">
             <h3 className="text-base font-bold text-stone-900 flex items-center gap-2">
@@ -311,6 +263,11 @@ export const RoasterView: React.FC = () => {
         isOpen={!!traceModalLot}
         onClose={() => setTraceModalLot(null)}
         data={traceModalLot}
+      />
+
+      {/* CircularTrace Floating Pop-up Chat Bubble Assistant */}
+      <CircularTraceAssistant
+        onTriggerCreateWO={() => setRoasterActiveTab('work_orders')}
       />
     </div>
   );

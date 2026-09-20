@@ -20,6 +20,10 @@ import {
   Cog,
   Warehouse,
   Flame,
+  ShoppingCart,
+  Sliders,
+  Award,
+  History,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -51,6 +55,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     roastedLots,
     cafeInventory,
     cafeProducts,
+    workOrders,
+    purchaseOrders,
+    masterProfiles,
+    qcSessions,
+    salesOrders,
+    transactions,
+    roasterActiveTab,
+    setRoasterActiveTab,
   } = useCoffee();
 
   if (!currentUser) return null;
@@ -89,6 +101,72 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         return <Coffee className="w-4 h-4 text-stone-300" />;
     }
   };
+
+  // Dedicated Roastery ERP navigation tabs (Work Orders -> Buku Kas)
+  const roasterNavItems = [
+    {
+      id: 'work_orders' as const,
+      label: 'Work Orders',
+      subtitle: 'MRP Sangrai',
+      icon: Flame,
+      badge: workOrders.filter((w) => w.status !== 'completed').length,
+      badgeColor: 'bg-amber-500 text-stone-950',
+    },
+    {
+      id: 'purchasing' as const,
+      label: 'Purchasing',
+      subtitle: 'Pengadaan Green Bean',
+      icon: ShoppingCart,
+      badge: purchaseOrders.filter((p) => p.status !== 'received').length,
+      badgeColor: 'bg-blue-500 text-white',
+    },
+    {
+      id: 'production' as const,
+      label: 'Productions',
+      subtitle: 'Resep & Mesin Sangrai',
+      icon: Sliders,
+      badge: masterProfiles.length,
+      badgeColor: 'bg-stone-700 text-stone-200',
+    },
+    {
+      id: 'qc' as const,
+      label: 'Quality Control',
+      subtitle: 'SCA Cupping Lab',
+      icon: Award,
+      badge: qcSessions.length,
+      badgeColor: 'bg-purple-500 text-white',
+    },
+    {
+      id: 'inventory' as const,
+      label: 'Inventory Silo',
+      subtitle: 'Green, Roasted & Pack',
+      icon: Warehouse,
+      badge: `${warehouseLots.length} Lot`,
+      badgeColor: 'bg-emerald-500 text-white',
+    },
+    {
+      id: 'selling' as const,
+      label: 'Selling Wholesale',
+      subtitle: 'Pesanan Cafe & CRM',
+      icon: Store,
+      badge: salesOrders.filter((s) => s.status !== 'dispatched').length,
+      badgeColor: 'bg-[#00A09D] text-white',
+    },
+    {
+      id: 'history' as const,
+      label: 'Buku Kas Roastery',
+      subtitle: 'Buku Kas & Riwayat TRX',
+      icon: History,
+      badge: transactions.filter(
+        (t) =>
+          t.fromRole === 'roaster' ||
+          t.toRole === 'roaster' ||
+          t.fromName === currentUser.name ||
+          t.toName === currentUser.name
+      ).length,
+      badgeColor: 'bg-stone-700 text-stone-300',
+    },
+  ];
 
   return (
     <>
@@ -223,124 +301,189 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
           {/* Navigation Sections */}
           <nav className="px-3 py-2 space-y-4">
-            {/* Category: MENU PENGELOLAAN */}
-            <div>
-              {!collapsed && (
-                <div className="px-3 pb-1 text-[10px] uppercase font-black text-stone-500 tracking-wider">
-                  Menu Utama
+            {/* CASE 1: ROASTER USER - RENDER DEDICATED ROASTERY ERP TABS (Work Orders -> Buku Kas) */}
+            {currentUser.role === 'roaster' ? (
+              <div>
+                {!collapsed && (
+                  <div className="px-3 pb-1.5 text-[10px] uppercase font-black text-stone-400 tracking-wider flex items-center justify-between">
+                    <span>Roastery MRP & Operasi</span>
+                    <span className="text-[9px] text-[#00A09D] font-mono font-bold">Odoo 19</span>
+                  </div>
+                )}
+                <div className="space-y-1">
+                  {roasterNavItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeView === 'dashboard' && roasterActiveTab === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveView('dashboard');
+                          setRoasterActiveTab(item.id);
+                          if (onSelectTab) onSelectTab(item.id);
+                          setMobileOpen(false);
+                        }}
+                        className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center ${
+                          collapsed ? 'justify-center' : 'justify-between'
+                        } ${
+                          isActive
+                            ? 'bg-gradient-to-r from-[#714B67] to-[#5A3950] text-white border border-[#714B67]/70 shadow-md shadow-[#714B67]/20 font-black'
+                            : 'text-stone-300 hover:text-white hover:bg-stone-800/70 border border-transparent'
+                        }`}
+                        title={`${item.label} - ${item.subtitle}`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icon
+                            className={`w-4 h-4 shrink-0 ${
+                              isActive ? 'text-amber-300' : 'text-stone-400 group-hover:text-amber-400'
+                            }`}
+                          />
+                          {!collapsed && (
+                            <div className="text-left min-w-0">
+                              <span className="truncate block leading-tight">{item.label}</span>
+                              <span className="text-[9px] text-stone-400 block truncate font-normal leading-tight">
+                                {item.subtitle}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {!collapsed && (
+                          <span
+                            className={`text-[10px] font-mono font-black px-1.5 py-0.5 rounded shadow-2xs ${
+                              isActive ? 'bg-[#00A09D] text-white' : item.badgeColor
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
-              <div className="space-y-1">
-                {/* 1. Dashboard Operasional */}
-                <button
-                  onClick={() => {
-                    setActiveView('dashboard');
-                    if (onSelectTab) onSelectTab('overview');
-                    setMobileOpen(false);
-                  }}
-                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center ${
-                    collapsed ? 'justify-center' : 'justify-between'
-                  } ${
-                    activeView === 'dashboard' && (!currentTab || currentTab === 'overview' || currentTab === 'catalog')
-                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-xs'
-                      : 'text-stone-400 hover:text-white hover:bg-stone-800/60'
-                  }`}
-                  title="Dashboard & Operasional"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <LayoutDashboard className="w-4 h-4 text-amber-400 shrink-0" />
-                    {!collapsed && <span className="truncate">Dashboard & Operasi</span>}
+              </div>
+            ) : (
+              /* CASE 2: OTHER ROLES - RENDER THEIR RESPECTIVE OPERATIONAL MENUS */
+              <div>
+                {!collapsed && (
+                  <div className="px-3 pb-1 text-[10px] uppercase font-black text-stone-500 tracking-wider">
+                    Menu Utama
                   </div>
-                  {!collapsed && (
-                    <span className="text-[10px] bg-stone-800 text-stone-300 font-mono px-1.5 py-0.5 rounded">
-                      Aktif
-                    </span>
-                  )}
-                </button>
-
-                {/* 2. Stok & Katalog Komoditas */}
-                <button
-                  onClick={() => {
-                    setActiveView('dashboard');
-                    if (onSelectTab) onSelectTab('catalog');
-                    setMobileOpen(false);
-                  }}
-                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center ${
-                    collapsed ? 'justify-center' : 'justify-between'
-                  } ${
-                    activeView === 'dashboard' && currentTab === 'catalog'
-                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-xs'
-                      : 'text-stone-400 hover:text-white hover:bg-stone-800/60'
-                  }`}
-                  title="Katalog & Stok Komoditas"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Package className="w-4 h-4 text-amber-400 shrink-0" />
-                    {!collapsed && <span className="truncate">Katalog & Stok Saya</span>}
-                  </div>
-                  {!collapsed && (
-                    <span className="text-[10px] bg-amber-400/20 text-amber-300 font-mono font-bold px-1.5 py-0.5 rounded border border-amber-400/30">
-                      {getRoleInventoryCount()}
-                    </span>
-                  )}
-                </button>
-
-                {/* 3. Barcode & Stiker Fisik */}
-                <button
-                  onClick={() => {
-                    setActiveView('dashboard');
-                    if (onSelectTab) onSelectTab('barcode');
-                    setMobileOpen(false);
-                  }}
-                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center ${
-                    collapsed ? 'justify-center' : 'justify-between'
-                  } ${
-                    activeView === 'dashboard' && currentTab === 'barcode'
-                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-xs'
-                      : 'text-stone-400 hover:text-white hover:bg-stone-800/60'
-                  }`}
-                  title="Barcode & Stiker Label"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <QrCode className="w-4 h-4 text-amber-400 shrink-0" />
+                )}
+                <div className="space-y-1">
+                  {/* Dashboard Operasional */}
+                  <button
+                    onClick={() => {
+                      setActiveView('dashboard');
+                      if (onSelectTab) onSelectTab('overview');
+                      setMobileOpen(false);
+                    }}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center ${
+                      collapsed ? 'justify-center' : 'justify-between'
+                    } ${
+                      activeView === 'dashboard' && (!currentTab || currentTab === 'overview' || currentTab === 'catalog')
+                        ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-xs'
+                        : 'text-stone-400 hover:text-white hover:bg-stone-800/60'
+                    }`}
+                    title="Dashboard & Operasional"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <LayoutDashboard className="w-4 h-4 text-amber-400 shrink-0" />
+                      {!collapsed && <span className="truncate">Dashboard & Operasi</span>}
+                    </div>
                     {!collapsed && (
-                      <span className="truncate">
-                        {currentUser.role === 'cafe'
-                          ? 'Stiker Gelas & Meja'
-                          : 'Stiker Barcode Karung'}
+                      <span className="text-[10px] bg-stone-800 text-stone-300 font-mono px-1.5 py-0.5 rounded">
+                        Aktif
                       </span>
                     )}
-                  </div>
-                  {!collapsed && (
-                    <span className="text-[9px] text-stone-500 font-bold uppercase">QR</span>
-                  )}
-                </button>
+                  </button>
 
-                {/* 4. Buku Besar Transaksi (Audit Trail) */}
-                <button
-                  onClick={() => {
-                    setActiveView('transactions');
-                    setMobileOpen(false);
-                  }}
-                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center ${
-                    collapsed ? 'justify-center' : 'justify-between'
-                  } ${
-                    activeView === 'transactions'
-                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-xs'
-                      : 'text-stone-400 hover:text-white hover:bg-stone-800/60'
-                  }`}
-                  title="Buku Besar Transaksi"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Receipt className="w-4 h-4 text-amber-400 shrink-0" />
-                    {!collapsed && <span className="truncate">Buku Besar Transaksi</span>}
-                  </div>
-                  {!collapsed && (
-                    <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                  )}
-                </button>
+                  {/* Stok & Katalog Komoditas */}
+                  <button
+                    onClick={() => {
+                      setActiveView('dashboard');
+                      if (onSelectTab) onSelectTab('catalog');
+                      setMobileOpen(false);
+                    }}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center ${
+                      collapsed ? 'justify-center' : 'justify-between'
+                    } ${
+                      activeView === 'dashboard' && currentTab === 'catalog'
+                        ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-xs'
+                        : 'text-stone-400 hover:text-white hover:bg-stone-800/60'
+                    }`}
+                    title="Katalog & Stok Komoditas"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Package className="w-4 h-4 text-amber-400 shrink-0" />
+                      {!collapsed && <span className="truncate">Katalog & Stok Saya</span>}
+                    </div>
+                    {!collapsed && (
+                      <span className="text-[10px] bg-amber-400/20 text-amber-300 font-mono font-bold px-1.5 py-0.5 rounded border border-amber-400/30">
+                        {getRoleInventoryCount()}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Barcode & Stiker Fisik */}
+                  <button
+                    onClick={() => {
+                      setActiveView('dashboard');
+                      if (onSelectTab) onSelectTab('barcode');
+                      setMobileOpen(false);
+                    }}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center ${
+                      collapsed ? 'justify-center' : 'justify-between'
+                    } ${
+                      activeView === 'dashboard' && currentTab === 'barcode'
+                        ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-xs'
+                        : 'text-stone-400 hover:text-white hover:bg-stone-800/60'
+                    }`}
+                    title="Barcode & Stiker Label"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <QrCode className="w-4 h-4 text-amber-400 shrink-0" />
+                      {!collapsed && (
+                        <span className="truncate">
+                          {currentUser.role === 'cafe'
+                            ? 'Stiker Gelas & Meja'
+                            : 'Stiker Barcode Karung'}
+                        </span>
+                      )}
+                    </div>
+                    {!collapsed && (
+                      <span className="text-[9px] text-stone-500 font-bold uppercase">QR</span>
+                    )}
+                  </button>
+
+                  {/* Buku Besar Transaksi (Audit Trail) */}
+                  <button
+                    onClick={() => {
+                      setActiveView('transactions');
+                      setMobileOpen(false);
+                    }}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center ${
+                      collapsed ? 'justify-center' : 'justify-between'
+                    } ${
+                      activeView === 'transactions'
+                        ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-xs'
+                        : 'text-stone-400 hover:text-white hover:bg-stone-800/60'
+                    }`}
+                    title="Buku Besar Transaksi"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Receipt className="w-4 h-4 text-amber-400 shrink-0" />
+                      {!collapsed && <span className="truncate">Buku Besar Transaksi</span>}
+                    </div>
+                    {!collapsed && (
+                      <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Category: DEMO SWITCHER / ROLE ACCORDION */}
             {!collapsed && (
@@ -357,6 +500,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                         key={roleKey}
                         onClick={() => {
                           loginAsRole(roleKey);
+                          setActiveView('dashboard');
                           setMobileOpen(false);
                         }}
                         className={`px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between ${

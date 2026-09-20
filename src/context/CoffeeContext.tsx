@@ -64,6 +64,8 @@ interface CoffeeContextType {
   logout: () => void;
   activeView: 'landing' | 'dashboard' | 'marketplace' | 'transactions';
   setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
+  roasterActiveTab: 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history';
+  setRoasterActiveTab: (tab: 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
   farmerLots: FarmerHarvestLot[];
   processedLots: ProcessedGreenBeanLot[];
   warehouseLots: WarehouseLot[];
@@ -203,6 +205,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   });
 
   const [activeView, setActiveView] = useState<'landing' | 'dashboard' | 'marketplace' | 'transactions'>('landing');
+  const [roasterActiveTab, setRoasterActiveTab] = useState<
+    'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history'
+  >('work_orders');
 
   useEffect(() => {
     localStorage.setItem('cct_users', JSON.stringify(users));
@@ -1451,6 +1456,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         logout,
         activeView,
         setActiveView,
+        roasterActiveTab,
+        setRoasterActiveTab,
         farmerLots,
         processedLots,
         warehouseLots,

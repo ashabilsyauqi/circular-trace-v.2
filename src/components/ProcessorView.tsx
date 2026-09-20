@@ -14,10 +14,17 @@ import {
   Recycle,
   Leaf,
   Star,
+  Search,
+  Filter,
+  ArrowRight,
+  Calculator,
+  ShieldCheck,
+  Scale,
 } from 'lucide-react';
 import { FarmerHarvestLot, ProcessedGreenBeanLot, CoffeeWasteManagement } from '../types/coffee';
 import { ProcessorBarcodeModal } from './ProcessorBarcodeModal';
 import { calculateProcessorEcoRating } from '../utils/ecoRating';
+import { MetricCard } from './admin/MetricCard';
 
 export const ProcessorView: React.FC = () => {
   const {
@@ -31,6 +38,10 @@ export const ProcessorView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'marketplace' | 'catalog' | 'history'>('marketplace');
   const [selectedLotToProcess, setSelectedLotToProcess] = useState<FarmerHarvestLot | null>(null);
+
+  // Search & Filter
+  const [searchQuery, setSearchQuery] = useState('');
+  const [processMethodFilter, setProcessMethodFilter] = useState<string>('all');
 
   // Barcode modal state for processed green bean lots
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
@@ -77,7 +88,11 @@ export const ProcessorView: React.FC = () => {
   );
 
   const myProcessorTransactions = transactions.filter(
-    (t) => t.fromName === currentUser?.name || t.toName === currentUser?.name || t.fromRole === 'pengolah' || t.toRole === 'pengolah'
+    (t) =>
+      t.fromName === currentUser?.name ||
+      t.toName === currentUser?.name ||
+      t.fromRole === 'pengolah' ||
+      t.toRole === 'pengolah'
   );
 
   const totalProcessedKg = myProcessedLots.reduce((acc, curr) => acc + curr.greenBeanWeightKg, 0);
@@ -117,42 +132,11 @@ export const ProcessorView: React.FC = () => {
     myEcoRatings.reduce((acc, curr) => acc + curr.carbonOffsetKg, 0).toFixed(1)
   );
 
-  // Live calculation for Process Cherry Modal
-  const liveProcessRating = calculateProcessorEcoRating(
-    {
-      wasteType,
-      utilization: wasteUtilization,
-      weightKgOrLiters: Number(wasteWeight),
-      recipientOrLocation: wasteRecipient,
-      processingMethod: wasteProcessingMethod,
-      notes: wasteNotes,
-    },
-    boughtCherryKg,
-    greenBeanYieldKg
-  );
-
-  // Live calculation for Edit Waste Modal
-  const liveEditWasteRating = calculateProcessorEcoRating(
-    {
-      wasteType: editWasteType,
-      utilization: editWasteUtilization,
-      weightKgOrLiters: Number(editWasteWeight),
-      recipientOrLocation: editWasteRecipient,
-      processingMethod: editWasteProcessingMethod,
-      notes: editWasteNotes,
-    },
-    editingWasteLot?.sourceTotalCherryWeightKg ||
-      (editingWasteLot?.greenBeanWeightKg ? editingWasteLot.greenBeanWeightKg * 5 : 500),
-    editingWasteLot?.greenBeanWeightKg || 100
-  );
-
   const handleOpenProcessModal = (lot: FarmerHarvestLot) => {
     setSelectedLotToProcess(lot);
     const defaultBuy = Math.min(lot.availableWeightKg, 500);
     setBoughtCherryKg(defaultBuy);
-    // Standard cherry to green bean yield is approximately 18-20%
     setGreenBeanYieldKg(Math.round(defaultBuy * 0.2));
-    // Standard cherry pulp waste is approximately 45%
     setWasteWeight(Math.round(defaultBuy * 0.45));
   };
 
@@ -245,21 +229,43 @@ export const ProcessorView: React.FC = () => {
     setTimeout(() => setSuccessMsg(''), 6000);
   };
 
+  // Filtered Processed Lots
+  const filteredProcessedLots = myProcessedLots.filter((lot) => {
+    const matchMethod = processMethodFilter === 'all' || lot.processMethod === processMethodFilter;
+    const q = searchQuery.toLowerCase();
+    const matchSearch =
+      lot.id.toLowerCase().includes(q) ||
+      lot.variety.toLowerCase().includes(q) ||
+      lot.sourceFarmerName.toLowerCase().includes(q) ||
+      lot.processMethod.toLowerCase().includes(q);
+    return matchMethod && matchSearch;
+  });
+
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-linear-to-r from-amber-900 via-stone-900 to-amber-950 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+      {/* Top Banner (Cruip Amber / Slate Gradient) */}
+      <div className="bg-linear-to-r from-amber-950 via-stone-900 to-amber-900 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden border border-amber-900/60">
         <div className="relative z-10 max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold mb-3 border border-amber-400/30">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold mb-3 border border-amber-400/30 backdrop-blur-xs">
             <Cog className="w-4 h-4 text-amber-400" />
-            Dasbor Pengolah Kopi • Stasiun Olah (Mill Tier)
-          </span>
+            <span>Mill Tier 2 • Stasiun Pengolahan Kopi</span>
+          </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
             Workstation Pengolahan Ceri & Penjualan Green Bean
           </h1>
           <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-            Beli ceri segar pilihan dari petani, lakukan pengolahan basah/kering terstandarisasi, input data parameter kadar air & defect, lalu jual green bean berkualitas ke gudang logistik.
+            Beli ceri segar langsung dari petani, kontrol fermentasi & kadar air secara presisi, alokasikan limbah ceri ke produk bernilai tambah, dan jual beras kopi specialty ke gudang logistik.
           </p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-stone-300 pt-1">
+            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              Rating Sirkular: <strong>{avgStarRating} / 5.00 ⭐ ({avgEcoScore} Pts)</strong>
+            </span>
+            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs">
+              Limbah Terkelola: <strong className="text-emerald-300">{totalWasteManagedKg.toLocaleString()} kg</strong>
+            </span>
+          </div>
         </div>
 
         <div className="absolute right-4 -bottom-6 opacity-10 text-white pointer-events-none">
@@ -267,145 +273,119 @@ export const ProcessorView: React.FC = () => {
         </div>
       </div>
 
-      {/* Metric Cards */}
+      {/* 4 Cruip-Style Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Ceri Tersedia di Petani</span>
-            <ShoppingCart className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">
-            {farmerLots.reduce((a, b) => a + b.availableWeightKg, 0).toLocaleString()} kg
-          </div>
-          <span className="text-[11px] text-emerald-600 font-medium">Bahan baku siap dibeli</span>
-        </div>
+        <MetricCard
+          title="Ceri Tersedia di Petani"
+          value={`${farmerLots.reduce((a, b) => a + b.availableWeightKg, 0).toLocaleString()} kg`}
+          subtitle="Bahan baku siap dibeli"
+          icon={<ShoppingCart className="w-5 h-5 text-emerald-600" />}
+          color="emerald"
+          badge="Marketplace"
+        />
 
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Total Green Bean Diolah</span>
-            <Layers className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">{totalProcessedKg.toLocaleString()} kg</div>
-          <span className="text-[11px] text-amber-600 font-medium">Beras kopi specialty</span>
-        </div>
+        <MetricCard
+          title="Total Green Bean Diolah"
+          value={`${totalProcessedKg.toLocaleString()} kg`}
+          subtitle="Beras kopi specialty"
+          icon={<Layers className="w-5 h-5 text-amber-600" />}
+          color="amber"
+          trend={{ value: '+14.2%', isPositive: true, label: 'vs target' }}
+        />
 
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Green Bean Siap Jual</span>
-            <CheckCircle2 className="w-4 h-4 text-blue-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">{availableGreenBeanKg.toLocaleString()} kg</div>
-          <span className="text-[11px] text-blue-600 font-medium">Tersedia untuk Gudang</span>
-        </div>
+        <MetricCard
+          title="Green Bean Siap Jual"
+          value={`${availableGreenBeanKg.toLocaleString()} kg`}
+          subtitle="Tersedia untuk Gudang"
+          icon={<CheckCircle2 className="w-5 h-5 text-blue-600" />}
+          color="blue"
+          badge="Siap Kirim"
+        />
 
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Riwayat Transaksi</span>
-            <TrendingUp className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">
-            {myProcessorTransactions.length} Log
-          </div>
-          <span className="text-[11px] text-stone-500 font-medium">Beli cherry & jual green bean</span>
-        </div>
+        <MetricCard
+          title="Log Transaksi Mill"
+          value={`${myProcessorTransactions.length} Log`}
+          subtitle="Beli cherry & jual green bean"
+          icon={<TrendingUp className="w-5 h-5 text-purple-600" />}
+          color="purple"
+          trend={{ value: '100% Tercatat', isPositive: true }}
+        />
       </div>
 
-      {/* Eco-Processor Sustainability & Star Rating Highlight Banner */}
-      <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-stone-900 text-white rounded-3xl p-5 sm:p-6 shadow-md border border-emerald-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
-            <Recycle className="w-8 h-8 text-emerald-400 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 text-[11px] font-bold border border-emerald-400/30 flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-                Rating Pengolah: {avgStarRating} / 5.00 ({avgEcoScore} Poin)
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-teal-400/20 text-teal-200 text-[10px] font-semibold border border-teal-400/30">
-                🌿 Zero-Waste Eco Champion
-              </span>
-            </div>
-            <h2 className="text-lg font-black tracking-tight text-white">
-              Sertifikasi Pengelolaan Limbah & Peringkat Sirkular Tinggi
-            </h2>
-            <p className="text-xs text-stone-300 max-w-xl mt-1 leading-relaxed">
-              Karena stasiun pengolahan ini aktif mengolah kulit ceri menjadi bahan baku teh cascara dan pupuk kompos untuk dikembalikan ke kebun petani, sistem CCT memberikan <strong>Rating Tertinggi (⭐⭐⭐⭐⭐ {avgStarRating})</strong> yang tampil di seluruh barcode QR pembeli kopi sebagai <em>Nilai Plus / USP</em>.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 w-full md:w-auto shrink-0">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 text-center">
-            <span className="text-[10px] text-emerald-200 block">Limbah Terkelola</span>
-            <span className="text-lg font-black text-emerald-300">{totalWasteManagedKg.toLocaleString()} kg/L</span>
-            <span className="text-[9px] text-stone-300 block">100% dialihkan dari TPA</span>
-          </div>
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 text-center">
-            <span className="text-[10px] text-teal-200 block">Pencegahan CO₂e</span>
-            <span className="text-lg font-black text-teal-300">-{totalCarbonOffsetKg} kg</span>
-            <span className="text-[9px] text-stone-300 block">Emisi metana ditekan</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Success Notification */}
-      {successMsg && (
-        <div className="p-4 rounded-2xl bg-amber-100 border border-amber-300 text-amber-950 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-amber-700" />
-          {successMsg}
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="flex border-b border-stone-200">
+      {/* Cruip Styled Navigation Tabs */}
+      <div className="bg-white p-1.5 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center gap-1.5">
         <button
           onClick={() => setActiveTab('marketplace')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
             activeTab === 'marketplace'
-              ? 'border-amber-600 text-amber-900 bg-amber-50/50'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs font-black'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
           <ShoppingCart className="w-4 h-4" />
-          Marketplace Ceri Petani ({availableFarmerLots.length} Lot)
+          <span>Marketplace Ceri Petani</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300">
+            {availableFarmerLots.length} Lot
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('catalog')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
             activeTab === 'catalog'
-              ? 'border-amber-600 text-amber-900 bg-amber-50/50'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs font-black'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <Layers className="w-4 h-4" />
-          Katalog Green Bean Saya ({myProcessedLots.length})
+          <Layers className="w-4 h-4 text-amber-400" />
+          <span>Katalog Green Bean Saya</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+            {myProcessedLots.length}
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
             activeTab === 'history'
-              ? 'border-amber-600 text-amber-900 bg-amber-50/50'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs font-black'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
           <History className="w-4 h-4" />
-          Log Pembelian & Penjualan ({myProcessorTransactions.length})
+          <span>Log Transaksi Mill</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+            {myProcessorTransactions.length}
+          </span>
         </button>
       </div>
 
-      {/* Tab 1: Marketplace Beli Ceri Petani */}
+      {/* Success Notification */}
+      {successMsg && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs font-bold flex items-center justify-between shadow-2xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-amber-700" />
+            <span>{successMsg}</span>
+          </div>
+          <button
+            onClick={() => setSuccessMsg('')}
+            className="text-stone-400 hover:text-stone-700 text-xs font-bold"
+          >
+            Tutup
+          </button>
+        </div>
+      )}
+
+      {/* TAB 1: MARKETPLACE BELI CERI PETANI */}
       {activeTab === 'marketplace' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-stone-900">
-                Katalog Ceri Segar dari Petani
+                Pilih Ceri Segar Petani untuk Diolah di Stasiun Anda
               </h2>
               <p className="text-xs text-stone-500">
-                Pilih ceri petani berdasarkan varietas, elevasi mdpl, dan tingkat Brix untuk diolah di stasiun Anda.
+                Cek kadar kemanisan Brix, elevasi, dan metode petik sebelum membeli dan mengonversi menjadi green bean.
               </p>
             </div>
           </div>
@@ -417,7 +397,7 @@ export const ProcessorView: React.FC = () => {
                 Belum ada ceri yang tersedia saat ini
               </h3>
               <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto">
-                Silakan ganti peran ke akun Petani untuk mengunggah hasil panen baru.
+                Silakan ganti peran ke akun Petani untuk mendaftarkan hasil panen baru.
               </p>
             </div>
           ) : (
@@ -425,10 +405,10 @@ export const ProcessorView: React.FC = () => {
               {availableFarmerLots.map((lot) => (
                 <div
                   key={lot.id}
-                  className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                  className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
                 >
                   <div>
-                    <div className="relative h-44 bg-stone-100">
+                    <div className="relative h-44 bg-stone-100 overflow-hidden">
                       <img
                         src={lot.photoUrl}
                         alt={lot.variety}
@@ -458,21 +438,21 @@ export const ProcessorView: React.FC = () => {
 
                       <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-stone-100">
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Ketinggian:</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Elevasi:</span>
                           <span className="font-semibold text-stone-800">{lot.altitude}</span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Kadar Gula Brix:</span>
-                          <span className="font-semibold text-emerald-700">{lot.brix}° Brix</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Brix:</span>
+                          <span className="font-black text-emerald-700">{lot.brix}° Brix</span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Standar Petik:</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Petik:</span>
                           <span className="font-semibold text-stone-800 truncate block">
                             {lot.pickingMethod.split(' ')[0]}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Tanggal Panen:</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Panen:</span>
                           <span className="font-semibold text-stone-800">{lot.harvestDate}</span>
                         </div>
                       </div>
@@ -494,7 +474,7 @@ export const ProcessorView: React.FC = () => {
 
                     <button
                       onClick={() => handleOpenProcessModal(lot)}
-                      className="px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1.5"
                     >
                       <Cog className="w-3.5 h-3.5" />
                       Beli & Olah Cherry
@@ -507,30 +487,58 @@ export const ProcessorView: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 2: Katalog Green Bean Pengolah */}
+      {/* TAB 2: KATALOG GREEN BEAN SAYA */}
       {activeTab === 'catalog' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-stone-900">
-                Katalog Green Bean Siap Dijual ke Gudang ({myProcessedLots.length})
-              </h2>
-              <p className="text-xs text-stone-500">
-                Green bean yang telah selesai fermentasi, drying, dan sortasi fisik.
-              </p>
+          {/* Toolbar Search & Method Filter */}
+          <div className="bg-white p-4 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+            <div className="relative flex-1 min-w-[240px]">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari ID green bean, varietas, petani asal, atau metode olah..."
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-stone-500 flex items-center gap-1">
+                <Filter className="w-3.5 h-3.5" /> Metode:
+              </span>
+              <select
+                value={processMethodFilter}
+                onChange={(e) => setProcessMethodFilter(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-stone-200 text-xs font-medium bg-white focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="all">Semua Metode</option>
+                <option value="Full Washed">Full Washed</option>
+                <option value="Natural / Dry">Natural / Dry</option>
+                <option value="Honey (Yellow/Red)">Honey</option>
+                <option value="Anaerobic Natural">Anaerobic Natural</option>
+                <option value="Wine Process">Wine Process</option>
+              </select>
             </div>
           </div>
 
+          {/* Green Bean Lots Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {myProcessedLots.map((gb) => {
+            {filteredProcessedLots.map((gb) => {
               const isAvailable = gb.availableWeightKg > 0;
+              const ecoRating = calculateProcessorEcoRating(
+                gb.wasteManagement,
+                gb.sourceTotalCherryWeightKg || gb.greenBeanWeightKg * 5,
+                gb.greenBeanWeightKg
+              );
+
               return (
                 <div
                   key={gb.id}
-                  className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
+                  className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-md transition-shadow flex flex-col justify-between"
                 >
                   <div>
-                    <div className="relative h-40 bg-stone-100">
+                    <div className="relative h-44 bg-stone-100 overflow-hidden">
                       <img
                         src={gb.photoUrl}
                         alt={gb.variety}
@@ -559,7 +567,7 @@ export const ProcessorView: React.FC = () => {
                       <div>
                         <div className="flex items-center gap-1 text-[11px] text-stone-500 mb-1">
                           <span>Asal Ceri:</span>
-                          <strong className="text-stone-700">{gb.sourceFarmerName}</strong>
+                          <strong className="text-stone-800">{gb.sourceFarmerName}</strong>
                           <span>({gb.sourceFarmerLotId})</span>
                         </div>
                         <h3 className="font-bold text-base text-stone-900">
@@ -573,24 +581,24 @@ export const ProcessorView: React.FC = () => {
 
                       <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-stone-100">
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Kadar Air:</span>
-                          <span className="font-semibold text-stone-800">{gb.moistureContentPercent}%</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Kadar Air:</span>
+                          <span className="font-bold text-stone-800">{gb.moistureContentPercent}%</span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Water Activity:</span>
-                          <span className="font-semibold text-stone-800">{gb.waterActivityAw} aW</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Water Activity:</span>
+                          <span className="font-bold text-stone-800">{gb.waterActivityAw} aW</span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Sortasi Defect:</span>
-                          <span className="font-semibold text-stone-800">{gb.defectCount} defect/350g</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Defect Biji:</span>
+                          <span className="font-bold text-stone-800">{gb.defectCount} defect/350g</span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Fermentasi:</span>
-                          <span className="font-semibold text-stone-800">{gb.fermentationTimeHours} Jam</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Fermentasi:</span>
+                          <span className="font-bold text-stone-800">{gb.fermentationTimeHours} Jam</span>
                         </div>
                       </div>
 
-                      {/* Cupping notes chips */}
+                      {/* Cupping Notes */}
                       <div className="flex flex-wrap gap-1 pt-1">
                         {gb.cuppingNotes.map((note, i) => (
                           <span
@@ -602,34 +610,25 @@ export const ProcessorView: React.FC = () => {
                         ))}
                       </div>
 
-                      {/* Eco-Processing Waste Management & Star Rating Badge */}
-                      {(() => {
-                        const lotRating = calculateProcessorEcoRating(
-                          gb.wasteManagement,
-                          gb.sourceTotalCherryWeightKg || gb.greenBeanWeightKg * 5,
-                          gb.greenBeanWeightKg
-                        );
-                        return (
-                          <div className="mt-2 p-2.5 rounded-xl bg-teal-50/90 border border-teal-200 text-teal-950 text-[11px] space-y-1.5">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <Recycle className="w-3.5 h-3.5 text-teal-700 shrink-0" />
-                                <span className="font-bold truncate text-teal-950">
-                                  {gb.wasteManagement?.utilization || 'Dikomposkan Jadi Pupuk Kebun'}
-                                </span>
-                              </div>
-                              <span className="font-bold text-[10px] text-emerald-800 shrink-0 bg-emerald-100/80 px-1.5 py-0.5 rounded border border-emerald-300 flex items-center gap-0.5">
-                                <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
-                                ⭐ {lotRating.starRating} ({lotRating.ecoScore} Pts)
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between text-[10px] text-teal-800/80 border-t border-teal-200/60 pt-1">
-                              <span>Limbah: {gb.wasteManagement?.weightKgOrLiters || Math.round(gb.greenBeanWeightKg * 2.2)} kg ({lotRating.diversionRatePercent}% Sirkular)</span>
-                              <span className="text-emerald-700 font-semibold">-{lotRating.carbonOffsetKg} kg CO₂e</span>
-                            </div>
+                      {/* Eco-Sustainability Card */}
+                      <div className="mt-2 p-2.5 rounded-xl bg-teal-50/90 border border-teal-200 text-teal-950 text-[11px] space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Recycle className="w-3.5 h-3.5 text-teal-700 shrink-0" />
+                            <span className="font-bold truncate text-teal-950">
+                              {gb.wasteManagement?.utilization || 'Dikomposkan Jadi Pupuk Kebun'}
+                            </span>
                           </div>
-                        );
-                      })()}
+                          <span className="font-bold text-[10px] text-emerald-800 shrink-0 bg-emerald-100/80 px-1.5 py-0.5 rounded border border-emerald-300 flex items-center gap-0.5">
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
+                            ⭐ {ecoRating.starRating} ({ecoRating.ecoScore} Pts)
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-teal-800/80 border-t border-teal-200/60 pt-1">
+                          <span>Limbah: {gb.wasteManagement?.weightKgOrLiters || Math.round(gb.greenBeanWeightKg * 2.2)} kg</span>
+                          <span className="text-emerald-700 font-semibold">-{ecoRating.carbonOffsetKg} kg CO₂e</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -643,20 +642,20 @@ export const ProcessorView: React.FC = () => {
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[10px] text-stone-400 block">Stok untuk Gudang:</span>
+                      <span className="text-[10px] text-stone-400 block">Stok Gudang:</span>
                       <span className="text-xs font-bold text-amber-800">
                         {gb.availableWeightKg} / {gb.greenBeanWeightKg} kg
                       </span>
                     </div>
                   </div>
 
-                  {/* Actions: Edit Waste & Print Barcode */}
+                  {/* Action Buttons */}
                   <div className="px-4 pb-4 pt-1 bg-stone-50 grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => handleOpenEditWaste(gb)}
                       className="py-2 px-2 rounded-xl border border-teal-300 bg-white hover:bg-teal-50 text-teal-950 font-bold text-[11px] transition-colors flex items-center justify-center gap-1 shadow-2xs"
-                      title="Perbarui data pemanfaatan limbah"
+                      title="Perbarui data alokasi limbah"
                     >
                       <Recycle className="w-3.5 h-3.5 text-teal-700" />
                       <span>Alokasi Limbah</span>
@@ -682,20 +681,27 @@ export const ProcessorView: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 3: Log Transaksi */}
+      {/* TAB 3: LOG TRANSAKSI */}
       {activeTab === 'history' && (
-        <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs">
-          <h2 className="text-base font-bold text-stone-900 mb-4 flex items-center gap-2">
-            <History className="w-5 h-5 text-amber-600" />
-            Log Aktivitas Transaksi Stasiun Pengolahan
-          </h2>
+        <div className="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-stone-900 flex items-center gap-2">
+                <History className="w-5 h-5 text-amber-600" />
+                Log Aktivitas Transaksi Stasiun Pengolahan
+              </h2>
+              <p className="text-xs text-stone-500">
+                Catatan pembelian ceri dari petani dan penjualan green bean ke gudang.
+              </p>
+            </div>
+          </div>
 
           {myProcessorTransactions.length === 0 ? (
-            <p className="text-xs text-stone-500 py-6 text-center">
-              Belum ada log transaksi pembelian cherry atau penjualan green bean.
+            <p className="text-xs text-stone-500 py-8 text-center">
+              Belum ada log transaksi stasiun pengolahan.
             </p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-xl border border-stone-200">
               <table className="w-full text-left text-xs">
                 <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                   <tr>
@@ -711,7 +717,7 @@ export const ProcessorView: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {myProcessorTransactions.map((trx) => (
-                    <tr key={trx.id} className="hover:bg-stone-50/50">
+                    <tr key={trx.id} className="hover:bg-stone-50/70 transition-colors">
                       <td className="py-3 px-4 font-mono font-bold text-stone-800">{trx.id}</td>
                       <td className="py-3 px-4 text-stone-600">{trx.date}</td>
                       <td className="py-3 px-4 font-semibold text-stone-900">{trx.fromName}</td>
@@ -737,7 +743,7 @@ export const ProcessorView: React.FC = () => {
 
       {/* Modal: Proses Cherry ke Green Bean */}
       {selectedLotToProcess && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
           <div className="relative bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
             <div className="bg-linear-to-r from-amber-900 to-stone-900 text-white p-6 relative">
               <button
@@ -755,13 +761,13 @@ export const ProcessorView: React.FC = () => {
                 Beli & Konversi Lot: {selectedLotToProcess.variety}
               </h2>
               <p className="text-xs text-stone-300 mt-1">
-                Petani Asal: {selectedLotToProcess.farmerName} • Lokasi: {selectedLotToProcess.farmLocation} ({selectedLotToProcess.altitude})
+                Petani: {selectedLotToProcess.farmerName} • Asal: {selectedLotToProcess.farmLocation} ({selectedLotToProcess.altitude})
               </p>
             </div>
 
             <form onSubmit={handleConfirmProcess} className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto">
               {/* Bagian 1: Pembelian Cherry */}
-              <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 space-y-3">
+              <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 space-y-3">
                 <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
                   1. Volume Pembelian Cherry
                 </h3>
@@ -779,8 +785,8 @@ export const ProcessorView: React.FC = () => {
                       onChange={(e) => {
                         const val = Number(e.target.value);
                         setBoughtCherryKg(val);
-                        // Auto-calculate expected yield ~20%
                         setGreenBeanYieldKg(Math.round(val * 0.2));
+                        setWasteWeight(Math.round(val * 0.45));
                       }}
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 bg-white"
                     />
@@ -800,7 +806,7 @@ export const ProcessorView: React.FC = () => {
               {/* Bagian 2: Spesifikasi Pengolahan */}
               <div>
                 <h3 className="text-xs font-bold text-stone-800 uppercase tracking-wider mb-3">
-                  2. Spesifikasi Pengolahan & Parameter Lab
+                  2. Parameter Pengolahan & Pengeringan
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -814,18 +820,18 @@ export const ProcessorView: React.FC = () => {
                       }
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 bg-white"
                     >
-                      <option value="Full Washed">Full Washed (Wet Process)</option>
-                      <option value="Natural / Dry">Natural / Dry Process</option>
-                      <option value="Honey (Yellow/Red)">Honey (Yellow / Red / Black Honey)</option>
-                      <option value="Anaerobic Natural">Anaerobic Natural (Controlled Ferment)</option>
-                      <option value="Wine Process">Wine Process (Extended Maceration)</option>
-                      <option value="Wet Hulled (Giling Basah)">Wet Hulled (Giling Basah Tradisional)</option>
+                      <option value="Full Washed">Full Washed (Clean & Crisp)</option>
+                      <option value="Natural / Dry">Natural / Dry (Sweet & Fruity)</option>
+                      <option value="Honey (Yellow/Red)">Honey Process</option>
+                      <option value="Anaerobic Natural">Anaerobic Natural (Complex & Winey)</option>
+                      <option value="Wine Process">Wine Process</option>
+                      <option value="Wet Hulled (Giling Basah)">Wet Hulled (Giling Basah)</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Durasi Fermentasi (Jam)
+                      Waktu Fermentasi (Jam)
                     </label>
                     <input
                       type="number"
@@ -838,7 +844,7 @@ export const ProcessorView: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Metode Pengeringan (Drying)
+                      Metode Penjemuran
                     </label>
                     <select
                       value={dryingMethod}
@@ -847,15 +853,15 @@ export const ProcessorView: React.FC = () => {
                       }
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 bg-white"
                     >
-                      <option value="Solar Dryer Raised Bed">Solar Dryer Raised Bed (Greenhouse)</option>
-                      <option value="Patio Penjemuran">Patio Penjemuran Matahari Langsung</option>
-                      <option value="Mechanical Controlled Dryer">Mechanical Controlled Low-Temp Dryer</option>
+                      <option value="Solar Dryer Raised Bed">Solar Dryer Raised Bed (Higienis)</option>
+                      <option value="Patio Penjemuran">Patio Penjemuran</option>
+                      <option value="Mechanical Controlled Dryer">Mechanical Controlled Dryer</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Kadar Air Akhir (% Moisture)
+                      Target Kadar Air (%)
                     </label>
                     <input
                       type="number"
@@ -863,15 +869,14 @@ export const ProcessorView: React.FC = () => {
                       required
                       value={moisturePercent}
                       onChange={(e) => setMoisturePercent(Number(e.target.value))}
-                      placeholder="11.2"
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
                     />
-                    <span className="text-[11px] text-stone-500">Standar SCA: 10.0% - 12.0%</span>
+                    <span className="text-[11px] text-stone-500">Standar aman simpan: 10% - 12%</span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Water Activity (aW)
+                      Water Activity ($a_w$)
                     </label>
                     <input
                       type="number"
@@ -879,104 +884,108 @@ export const ProcessorView: React.FC = () => {
                       required
                       value={waterActivityAw}
                       onChange={(e) => setWaterActivityAw(Number(e.target.value))}
-                      placeholder="0.57"
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
                     />
-                    <span className="text-[11px] text-stone-500">Optimal aW: &lt; 0.60</span>
+                    <span className="text-[11px] text-stone-500">Standar SCA: aw &lt; 0.60</span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Grade Green Bean
-                    </label>
-                    <select
-                      value={grade}
-                      onChange={(e) => setGrade(e.target.value as ProcessedGreenBeanLot['grade'])}
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 bg-white"
-                    >
-                      <option value="Specialty Grade 1">Specialty Grade 1 (Defect &le; 5)</option>
-                      <option value="Grade 2">Grade 2 (Defect 6 - 15)</option>
-                      <option value="Commercial Fine">Commercial Fine</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Ukuran Ayakan (Screen Size)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={screenSize}
-                      onChange={(e) => setScreenSize(e.target.value)}
-                      placeholder="Size 17-18 (Large Screen)"
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Defect Fisik (per 350g)
+                      Jumlah Cacat (Defect / 350g)
                     </label>
                     <input
                       type="number"
                       required
                       value={defectCount}
                       onChange={(e) => setDefectCount(Number(e.target.value))}
-                      placeholder="2"
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
                     />
-                    <span className="text-[11px] text-stone-500">Grade 1: &le; 5 cacat fisik</span>
                   </div>
                 </div>
               </div>
 
-              {/* Bagian 3: Hasil Green Bean & Harga Jual ke Gudang */}
+              {/* Bagian 3: Hasil Olah & Harga Jual */}
               <div>
                 <h3 className="text-xs font-bold text-stone-800 uppercase tracking-wider mb-3">
-                  3. Rendemen Green Bean & Penawaran ke Gudang
+                  3. Hasil Green Bean & Penawaran ke Gudang
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Hasil Berat Bersih Green Bean (kg)
+                      Estimasi Rendemen Green Bean (kg)
                     </label>
                     <input
                       type="number"
                       required
-                      min="1"
                       value={greenBeanYieldKg}
                       onChange={(e) => setGreenBeanYieldKg(Number(e.target.value))}
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
                     />
                     <span className="text-[11px] text-stone-500">
-                      Rendemen: {((greenBeanYieldKg / boughtCherryKg) * 100).toFixed(1)}% dari ceri
+                      Rendemen rata-rata ~{Math.round((greenBeanYieldKg / (boughtCherryKg || 1)) * 100)}% dari ceri segar
                     </span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Harga Jual Green Bean per kg ke Gudang (Rp)
+                      Harga Jual Green Bean per kg (Rp)
                     </label>
                     <input
                       type="number"
-                      required
                       step="1000"
+                      required
                       value={sellingPricePerKg}
                       onChange={(e) => setSellingPricePerKg(Number(e.target.value))}
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
                     />
-                    <span className="text-[11px] text-amber-800 font-bold">
-                      Total Nilai Green Bean: Rp {(greenBeanYieldKg * sellingPricePerKg).toLocaleString()}
-                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Bagian 4: Cupping Notes Tag Input */}
+              {/* Bagian 4: Alokasi Limbah Sirkular */}
+              <div className="bg-teal-50/90 border border-teal-200 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black text-teal-950 uppercase tracking-wider flex items-center gap-1.5">
+                    <Recycle className="w-4 h-4 text-teal-700" />
+                    4. Alokasi Limbah Sirkular (Eco-Processing)
+                  </h3>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
+                    Sertifikasi CCT Zero-Waste
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-teal-900 mb-1">
+                      Alur Pemanfaatan Limbah
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={wasteUtilization}
+                      onChange={(e) => setWasteUtilization(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-teal-300 text-xs bg-white focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-teal-900 mb-1">
+                      Penerima / Lokasi Alokasi
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={wasteRecipient}
+                      onChange={(e) => setWasteRecipient(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-teal-300 text-xs bg-white focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tasting Notes */}
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">
-                  Karakteristik Rasa Awal (Cupping Notes)
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Karakter Cupping Notes
                 </label>
                 <div className="flex gap-2 mb-2">
                   <input
@@ -989,28 +998,28 @@ export const ProcessorView: React.FC = () => {
                         handleAddNote();
                       }
                     }}
-                    placeholder="Ketik aroma (misal: Blackberry, Jasmine, Honey)..."
+                    placeholder="Ketik aroma (misal: Blackberry, Jasmine)..."
                     className="flex-1 px-4 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
                   />
                   <button
                     type="button"
                     onClick={handleAddNote}
-                    className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold transition-colors"
+                    className="px-4 py-2 rounded-xl bg-stone-800 text-white text-xs font-bold hover:bg-stone-900 transition-colors"
                   >
                     Tambah
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {cuppingNotes.map((note) => (
+                  {cuppingNotes.map((n) => (
                     <span
-                      key={note}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-300"
+                      key={n}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300"
                     >
-                      {note}
+                      {n}
                       <button
                         type="button"
-                        onClick={() => handleRemoveNote(note)}
-                        className="hover:text-red-700 ml-1"
+                        onClick={() => handleRemoveNote(n)}
+                        className="hover:text-red-700 ml-1 font-bold"
                       >
                         &times;
                       </button>
@@ -1019,167 +1028,7 @@ export const ProcessorView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Bagian 5: Pengelolaan & Pemanfaatan Limbah Kopi (Zero-Waste Circularity) */}
-              <div className="bg-teal-50/80 border-2 border-teal-300/80 rounded-2xl p-4 sm:p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-teal-200 pb-2">
-                  <div className="flex items-center gap-2">
-                    <Recycle className="w-4 h-4 text-teal-700" />
-                    <h3 className="text-xs font-black text-teal-950 uppercase tracking-wider">
-                      5. Pengelolaan & Pemanfaatan Limbah Kopi (Eco-Circularity Trace)
-                    </h3>
-                  </div>
-                  <span className="text-[10px] font-bold bg-white text-teal-900 px-2 py-0.5 rounded-full border border-teal-300 flex items-center gap-1">
-                    <Leaf className="w-3 h-3 text-emerald-600" />
-                    Tercatat di Barcode
-                  </span>
-                </div>
-                <p className="text-xs text-teal-900 leading-relaxed">
-                  Setiap proses pengupasan ceri menghasilkan limbah padat (kulit ceri/pulp/husk) dan limbah cair. Masukkan rencana alur pemanfaatan limbah ini agar tercatat secara transparan di barcode label karung green bean.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-stone-800 mb-1">
-                      Kategori Limbah yang Dihasilkan
-                    </label>
-                    <select
-                      value={wasteType}
-                      onChange={(e) => setWasteType(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                    >
-                      <option value="Kulit Ceri (Pulp / Cascara)">Kulit Ceri (Pulp / Cascara Kering)</option>
-                      <option value="Kulit Tanduk (Husk / Parchment)">Kulit Tanduk (Husk / Parchment Kering)</option>
-                      <option value="Air Limbah Fermentasi & Pencucian">Air Limbah Fermentasi & Pencucian</option>
-                      <option value="Mucilage (Lendir Kopi)">Mucilage (Lendir Terfermentasi)</option>
-                      <option value="Limbah Terpadu (Pulp & Cairan)">Limbah Terpadu (Pulp + Air Cucian)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-stone-800 mb-1">
-                      Alur Pemanfaatan / Mau Dikemanakan
-                    </label>
-                    <select
-                      value={wasteUtilization}
-                      onChange={(e) => setWasteUtilization(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white font-semibold text-teal-900"
-                    >
-                      <option value="Bahan Baku Minuman Teh Cascara & Kompos Sirkular">Bahan Minuman Teh Cascara Artisan & Kompos</option>
-                      <option value="Kompos Pupuk Organik untuk Kebun Petani (Sirkular)">Kompos Pupuk Organik untuk Kebun Petani (Sirkular)</option>
-                      <option value="Briket Energi Bahan Bakar Biomassa">Briket Energi Bahan Bakar Biomassa Ramah Lingkungan</option>
-                      <option value="Pakan Ternak Terfermentasi Silase">Pakan Ternak Terfermentasi Silase</option>
-                      <option value="Netralisasi IPAL Biologis Mandiri">Netralisasi IPAL Biologis Mandiri (Zero Polusi)</option>
-                      <option value="Pemanfaatan Khusus Industri Terkait">Pemanfaatan Khusus Industri Terkait</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-stone-800 mb-1">
-                      Estimasi Kuantitas Limbah (kg atau Liter)
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={wasteWeight}
-                      onChange={(e) => setWasteWeight(Number(e.target.value))}
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                    />
-                    <span className="text-[10px] text-stone-500">
-                      Rata-rata limbah padat ceri: ~40-50% dari total berat ceri
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-stone-800 mb-1">
-                      Pihak / Mitra Penerima Limbah
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={wasteRecipient}
-                      onChange={(e) => setWasteRecipient(e.target.value)}
-                      placeholder="Contoh: Kelompok Tani Tilu & Rumah Kompos Organik"
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-stone-800 mb-1">
-                      Metode Pengolahan Ramah Lingkungan
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={wasteProcessingMethod}
-                      onChange={(e) => setWasteProcessingMethod(e.target.value)}
-                      placeholder="Contoh: Pengeringan Solar Raised Bed (Food Grade) & Kompos Aerobik 30 Hari"
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-stone-800 mb-1">
-                      Catatan Sirkularitas & Pengolahan Limbah
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={wasteNotes}
-                      onChange={(e) => setWasteNotes(e.target.value)}
-                      placeholder="Catatan tambahan alur pengolahan limbah..."
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Live Eco-Rating & Circular Score Preview Box */}
-                <div className="bg-white/95 rounded-2xl p-4 border border-teal-300 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Star className="w-4 h-4 text-amber-500 fill-amber-400" />
-                      <span className="text-xs font-black text-stone-900">
-                        Kalkulasi Proyeksi Eco-Rating Pengolah:
-                      </span>
-                    </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
-                      ⭐ {liveProcessRating.starRating} / 5.00 ({liveProcessRating.ecoScore} Poin)
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px]">
-                    <div className="bg-teal-50/70 p-2 rounded-xl border border-teal-200/60">
-                      <span className="text-stone-500 block">Pengalihan Limbah</span>
-                      <span className="font-bold text-teal-900 text-xs">{liveProcessRating.breakdown.diversionScore.score} / 40 Pts</span>
-                      <span className="text-[9px] text-teal-700 block">({liveProcessRating.diversionRatePercent}%)</span>
-                    </div>
-                    <div className="bg-emerald-50/70 p-2 rounded-xl border border-emerald-200/60">
-                      <span className="text-stone-500 block">Nilai Upcycling</span>
-                      <span className="font-bold text-emerald-900 text-xs">{liveProcessRating.breakdown.utilizationScore.score} / 25 Pts</span>
-                      <span className="text-[9px] text-emerald-700 block">Cascara / Pupuk</span>
-                    </div>
-                    <div className="bg-blue-50/70 p-2 rounded-xl border border-blue-200/60">
-                      <span className="text-stone-500 block">Metode Rendah Emisi</span>
-                      <span className="font-bold text-blue-900 text-xs">{liveProcessRating.breakdown.methodScore.score} / 20 Pts</span>
-                      <span className="text-[9px] text-blue-700 block">Solar Raised Bed</span>
-                    </div>
-                    <div className="bg-amber-50/70 p-2 rounded-xl border border-amber-200/60">
-                      <span className="text-stone-500 block">Closed-Loop Petani</span>
-                      <span className="font-bold text-amber-900 text-xs">{liveProcessRating.breakdown.circularityScore.score} / 15 Pts</span>
-                      <span className="text-[9px] text-amber-700 block">Kembali ke Hulu</span>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-emerald-950 text-[11px] flex items-center justify-between">
-                    <span className="font-medium">
-                      🌿 <strong>Dampak:</strong> Mencegah ~{liveProcessRating.carbonOffsetKg} kg emisi CO₂e & menghasilkan ~{liveProcessRating.compostProducedKg} kg pupuk organik.
-                    </span>
-                    <span className="font-bold text-[10px] text-emerald-800 shrink-0 ml-2">Nilai Plus Terkunci ✓</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="pt-4 border-t border-stone-200 flex items-center justify-between">
+              <div className="pt-2 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setSelectedLotToProcess(null)}
@@ -1189,10 +1038,10 @@ export const ProcessorView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold transition-colors shadow-md flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs transition-colors shadow-md flex items-center gap-2"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  Konfirmasi Pembelian & Terbitkan Green Bean
+                  Konfirmasi Proses & Buat Green Bean
                 </button>
               </div>
             </form>
@@ -1200,190 +1049,74 @@ export const ProcessorView: React.FC = () => {
         </div>
       )}
 
-      {/* Edit Existing Waste Allocation Modal */}
+      {/* Modal Edit Alokasi Limbah */}
       {editingWasteLot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8 animate-fadeIn">
-            <div className="p-6 bg-gradient-to-r from-teal-900 via-emerald-900 to-stone-900 text-white flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300">
-                  <Recycle className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold flex items-center gap-2">
-                    Alokasi & Sirkularitas Limbah Kopi
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-teal-500/30 text-teal-200 border border-teal-400/30">
-                      {editingWasteLot.id}
-                    </span>
-                  </h3>
-                  <p className="text-xs text-teal-200/80">
-                    Perbarui data pemanfaatan limbah agar tercatat otomatis pada barcode QR sirkular
-                  </p>
-                </div>
-              </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
+            <div className="bg-gradient-to-r from-teal-900 to-stone-900 text-white p-5 relative">
               <button
                 onClick={() => setEditingWasteLot(null)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="absolute top-4 right-4 text-stone-300 hover:text-white"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
+              <h3 className="font-black text-lg">Perbarui Alokasi Limbah Sirkular</h3>
+              <p className="text-xs text-stone-300">Lot: {editingWasteLot.id} ({editingWasteLot.variety})</p>
             </div>
 
-            <form onSubmit={handleSaveEditWaste} className="p-6 space-y-4">
-              <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200 text-teal-950 text-xs flex items-center gap-3">
-                <Leaf className="w-5 h-5 text-teal-700 shrink-0" />
-                <span>
-                  Informasi ini akan terintegrasi langsung ke <strong>Pillar ke-3 Barcode QR & Label Fisik</strong> Green Bean untuk membuktikan komitmen <em>Zero-Waste Circular Economy</em>.
-                </span>
+            <form onSubmit={handleSaveEditWaste} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-stone-700 uppercase mb-1">
+                  Pemanfaatan / Produk Olahan Limbah
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editWasteUtilization}
+                  onChange={(e) => setEditWasteUtilization(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm"
+                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 mb-1">
-                    Jenis Limbah Kopi
-                  </label>
-                  <select
-                    value={editWasteType}
-                    onChange={(e) => setEditWasteType(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                  >
-                    <option value="Kulit Ceri (Pulp / Cascara)">Kulit Ceri (Pulp / Cascara)</option>
-                    <option value="Lendir & Air Limbah Kupas (Mucilage & Wastewater)">Lendir & Air Limbah Kupas (Mucilage & Wastewater)</option>
-                    <option value="Kulit Tanduk (Parchment / Husk)">Kulit Tanduk (Parchment / Husk)</option>
-                    <option value="Kopi Cacat Sortasi Kering / Rambang">Kopi Cacat Sortasi Kering / Rambang</option>
-                    <option value="Campuran Limbah Padat & Organik">Campuran Limbah Padat & Organik</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 mb-1">
-                    Tujuan Alokasi / Pemanfaatan
-                  </label>
-                  <select
-                    value={editWasteUtilization}
-                    onChange={(e) => setEditWasteUtilization(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                  >
-                    <option value="Bahan Baku Minuman Teh Cascara & Kompos Sirkular">Bahan Baku Minuman Teh Cascara & Kompos Sirkular</option>
-                    <option value="Kompos Organik & Bio-Fertilizer untuk Perkebunan">Kompos Organik & Bio-Fertilizer untuk Perkebunan</option>
-                    <option value="Briket Biomassa Bahan Bakar Alternatif">Briket Biomassa Bahan Bakar Alternatif</option>
-                    <option value="Pakan Ternak Fermentasi Probiotik">Pakan Ternak Fermentasi Probiotik</option>
-                    <option value="Biogas & Energi Terbarukan">Biogas & Energi Terbarukan</option>
-                    <option value="Filtrasi IPAL & Air Siram Tanaman">Filtrasi IPAL & Air Siram Tanaman</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 mb-1">
-                    Estimasi Bobot / Volume (kg atau Liter)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={editWasteWeight}
-                    onChange={(e) => setEditWasteWeight(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 mb-1">
-                    Pihak Penerima / Mitra Sirkularitas
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editWasteRecipient}
-                    onChange={(e) => setEditWasteRecipient(e.target.value)}
-                    placeholder="Contoh: Kelompok Tani Tilu & Rumah Kompos Organik"
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-stone-800 mb-1">
-                    Metode Pengolahan Ramah Lingkungan
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editWasteProcessingMethod}
-                    onChange={(e) => setEditWasteProcessingMethod(e.target.value)}
-                    placeholder="Contoh: Solar Dryer Raised Bed (Food Grade) & Kompos Aerobik 30 Hari"
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-stone-800 mb-1">
-                    Catatan Alokasi & Sirkularitas
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={editWasteNotes}
-                    onChange={(e) => setEditWasteNotes(e.target.value)}
-                    placeholder="Catatan tambahan alur pengolahan limbah..."
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-teal-500 bg-white"
-                  />
-                </div>
+              <div>
+                <label className="block font-bold text-stone-700 uppercase mb-1">
+                  Penerima / Lokasi Alokasi Kompos
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editWasteRecipient}
+                  onChange={(e) => setEditWasteRecipient(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm"
+                />
               </div>
 
-              {/* Live Eco-Rating Preview in Edit Modal */}
-              <div className="bg-teal-50/90 rounded-2xl p-4 border border-teal-300 shadow-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-400" />
-                    <span className="text-xs font-black text-teal-950">
-                      Proyeksi Rating Pengolah Setelah Pembaruan:
-                    </span>
-                  </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-white text-emerald-900 border border-emerald-300">
-                    ⭐ {liveEditWasteRating.starRating} / 5.00 ({liveEditWasteRating.ecoScore} Poin)
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px]">
-                  <div className="bg-white p-2 rounded-xl border border-teal-200/60">
-                    <span className="text-stone-500 block">Pengalihan Limbah</span>
-                    <span className="font-bold text-teal-900 text-xs">{liveEditWasteRating.breakdown.diversionScore.score} / 40</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-xl border border-emerald-200/60">
-                    <span className="text-stone-500 block">Nilai Upcycling</span>
-                    <span className="font-bold text-emerald-900 text-xs">{liveEditWasteRating.breakdown.utilizationScore.score} / 25</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-xl border border-blue-200/60">
-                    <span className="text-stone-500 block">Metode Olah</span>
-                    <span className="font-bold text-blue-900 text-xs">{liveEditWasteRating.breakdown.methodScore.score} / 20</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-xl border border-amber-200/60">
-                    <span className="text-stone-500 block">Closed-Loop Petani</span>
-                    <span className="font-bold text-amber-900 text-xs">{liveEditWasteRating.breakdown.circularityScore.score} / 15</span>
-                  </div>
-                </div>
-
-                <div className="text-[11px] text-teal-900 flex items-center justify-between">
-                  <span>
-                    🌿 Mencegah <strong>~{liveEditWasteRating.carbonOffsetKg} kg CO₂e</strong> emisi & menghasilkan <strong>~{liveEditWasteRating.compostProducedKg} kg kompos</strong>.
-                  </span>
-                  <span className="font-bold text-[10px] text-teal-800">Transparansi QR ✓</span>
-                </div>
+              <div>
+                <label className="block font-bold text-stone-700 uppercase mb-1">
+                  Volume / Bobot Limbah Terkelola (kg/L)
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={editWasteWeight}
+                  onChange={(e) => setEditWasteWeight(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm"
+                />
               </div>
 
-              <div className="pt-4 border-t border-stone-200 flex items-center justify-between">
+              <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setEditingWasteLot(null)}
-                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 text-xs font-bold hover:bg-stone-100 transition-colors"
+                  className="px-4 py-2 rounded-xl border border-stone-300 font-bold"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold transition-colors shadow-md flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl bg-teal-800 hover:bg-teal-900 text-white font-bold"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Simpan Perubahan Limbah
+                  Simpan Perubahan
                 </button>
               </div>
             </form>
@@ -1391,7 +1124,7 @@ export const ProcessorView: React.FC = () => {
         </div>
       )}
 
-      {/* Processor Green Bean Barcode & Traceability Modal */}
+      {/* Processor Barcode Modal */}
       <ProcessorBarcodeModal
         isOpen={barcodeModalOpen}
         onClose={() => setBarcodeModalOpen(false)}

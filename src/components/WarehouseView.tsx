@@ -19,9 +19,14 @@ import {
   BadgePercent,
   Edit3,
   QrCode,
+  Search,
+  Thermometer,
+  Droplets,
+  AlertTriangle,
 } from 'lucide-react';
 import { ProcessedGreenBeanLot, WarehouseLot, WarehouseGradeTier } from '../types/coffee';
 import { WarehouseBarcodeModal } from './WarehouseBarcodeModal';
+import { MetricCard } from './admin/MetricCard';
 
 // Konfigurasi Standar Grading Gudang (Dari Super Premium sampai Basic Commercial)
 export const GRADE_TIERS_CONFIG: Record<
@@ -42,7 +47,7 @@ export const GRADE_TIERS_CONFIG: Record<
     defectRange: string;
     defaultDefect: number;
     defaultScreen: string;
-    markupPercent: number; // Pengaruh persentase margin keuntungan terhadap harga jual
+    markupPercent: number;
     targetMarket: string;
     characteristics: string;
   }
@@ -139,17 +144,18 @@ export const WarehouseView: React.FC = () => {
     transactions,
   } = useCoffee();
 
-  const [activeTab, setActiveTab] = useState<'marketplace' | 'inventory' | 'history'>('marketplace');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'marketplace' | 'history'>('inventory');
   const [selectedGreenBeanToBuy, setSelectedGreenBeanToBuy] = useState<ProcessedGreenBeanLot | null>(null);
 
-  // Filter grade di inventaris gudang
+  // Search & Filter
+  const [searchQuery, setSearchQuery] = useState('');
   const [gradeFilter, setGradeFilter] = useState<'all' | WarehouseGradeTier>('all');
 
   // Form state for warehouse storage, grading & dynamic pricing
   const [boughtKg, setBoughtKg] = useState<number>(100);
   const [storageLocation, setStorageLocation] = useState('Silo A-03 (Pallet Kayu Pine #14)');
   const [temperatureCelsius, setTemperatureCelsius] = useState<number>(20.4);
-  const [humidityPercent, setHumidityPercent] = useState<number>(55);
+  const [humidityPercent, setHumidityPercent] = useState<number>(54);
   const [packagingType, setPackagingType] = useState<WarehouseLot['packagingType']>(
     'GrainPro + Karung Goni 60kg'
   );
@@ -169,7 +175,7 @@ export const WarehouseView: React.FC = () => {
   const [notes] = useState('Kemasan kedap udara GrainPro, kontrol suhu stabil.');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Re-Grading Modal State for existing inventory
+  // Re-Grading Modal State
   const [editingLotForGrading, setEditingLotForGrading] = useState<WarehouseLot | null>(null);
   const [editGradeTier, setEditGradeTier] = useState<WarehouseGradeTier>('Grade 1 - Super Premium');
   const [editDefectCount, setEditDefectCount] = useState<number>(2);
@@ -180,7 +186,7 @@ export const WarehouseView: React.FC = () => {
   const [editNotes, setEditNotes] = useState<string>('');
   const [barcodeModalLot, setBarcodeModalLot] = useState<WarehouseLot | null>(null);
 
-  // Available green bean lots from processors
+  // Data lot & transactions
   const availableGreenBeans = processedLots.filter((lot) => lot.availableWeightKg > 0);
   const myWarehouseLots = warehouseLots.filter(
     (lot) => lot.warehouseId === currentUser?.id || true
@@ -197,20 +203,21 @@ export const WarehouseView: React.FC = () => {
   const totalStoredKg = myWarehouseLots.reduce((acc, curr) => acc + curr.weightKg, 0);
   const availableStoredKg = myWarehouseLots.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
 
-  // Grade breakdowns for metrics
   const superPremiumKg = myWarehouseLots
     .filter((l) => l.gradeTier === 'Grade 1 - Super Premium')
     .reduce((acc, curr) => acc + curr.availableWeightKg, 0);
 
+  const premiumKg = myWarehouseLots
+    .filter((l) => l.gradeTier === 'Grade 2 - Premium Grade')
+    .reduce((acc, curr) => acc + curr.availableWeightKg, 0);
 
-  const commercialAndBasicKg = myWarehouseLots
+  const commercialKg = myWarehouseLots
     .filter(
       (l) =>
         l.gradeTier === 'Grade 3 - Medium Commercial' || l.gradeTier === 'Grade 4 - Basic Commercial'
     )
     .reduce((acc, curr) => acc + curr.availableWeightKg, 0);
 
-  // Handle select Grade Tier when buying/storing
   const handleSelectGradeTier = (tier: WarehouseGradeTier, basePrice: number) => {
     setGradeTier(tier);
     const cfg = GRADE_TIERS_CONFIG[tier];
@@ -218,23 +225,19 @@ export const WarehouseView: React.FC = () => {
     setScreenSize(cfg.defaultScreen);
     setVerifiedScaScore(cfg.defaultSca);
     setTargetMarket(cfg.targetMarket);
-    // Dynamic price calculation: base purchase price * (1 + markup%)
     const calculatedPrice = Math.round((basePrice * (1 + cfg.markupPercent / 100)) / 1000) * 1000;
     setSellingPricePerKg(calculatedPrice);
   };
 
-  // Open modal for storing and grading
   const handleOpenStorageModal = (lot: ProcessedGreenBeanLot) => {
     setSelectedGreenBeanToBuy(lot);
     const defaultBuy = Math.min(lot.availableWeightKg, 120);
     setBoughtKg(defaultBuy);
-    // Initial grading: auto-detect from processor grade or default to Grade 1
     const initialTier: WarehouseGradeTier =
       lot.grade === 'Specialty Grade 1' ? 'Grade 1 - Super Premium' : 'Grade 2 - Premium Grade';
     handleSelectGradeTier(initialTier, lot.pricePerKg);
   };
 
-  // Confirm store and grading
   const handleConfirmStore = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGreenBeanToBuy) return;
@@ -263,7 +266,6 @@ export const WarehouseView: React.FC = () => {
     setTimeout(() => setSuccessMsg(''), 6000);
   };
 
-  // Open Re-Grading Modal for existing lot
   const handleOpenEditGrading = (lot: WarehouseLot) => {
     setEditingLotForGrading(lot);
     const tier = lot.gradeTier || 'Grade 1 - Super Premium';
@@ -276,7 +278,6 @@ export const WarehouseView: React.FC = () => {
     setEditNotes(lot.notes || '');
   };
 
-  // Handle select Grade Tier during Re-Grading
   const handleSelectEditGradeTier = (tier: WarehouseGradeTier, basePurchasePrice: number) => {
     setEditGradeTier(tier);
     const cfg = GRADE_TIERS_CONFIG[tier];
@@ -289,7 +290,6 @@ export const WarehouseView: React.FC = () => {
     setEditSellingPricePerKg(calculatedPrice);
   };
 
-  // Save Re-Grading
   const handleSaveEditGrading = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingLotForGrading) return;
@@ -311,27 +311,44 @@ export const WarehouseView: React.FC = () => {
     setTimeout(() => setSuccessMsg(''), 6000);
   };
 
-  // Filtered inventory lots
+  // Filtered Inventory
   const filteredInventoryLots = myWarehouseLots.filter((lot) => {
-    if (gradeFilter === 'all') return true;
-    return lot.gradeTier === gradeFilter;
+    const matchGrade = gradeFilter === 'all' || lot.gradeTier === gradeFilter;
+    const q = searchQuery.toLowerCase();
+    const matchSearch =
+      lot.id.toLowerCase().includes(q) ||
+      lot.variety.toLowerCase().includes(q) ||
+      lot.origin.toLowerCase().includes(q) ||
+      lot.storageLocation.toLowerCase().includes(q);
+    return matchGrade && matchSearch;
   });
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+      {/* Top Banner (Cruip Blue / Indigo Gradient) */}
+      <div className="bg-linear-to-r from-blue-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden border border-blue-900/60">
         <div className="relative z-10 max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold mb-3 border border-blue-400/30">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold mb-3 border border-blue-400/30 backdrop-blur-xs">
             <Warehouse className="w-4 h-4 text-blue-400" />
-            Dasbor Pergudangan Kopi • Klasifikasi Mutu & Manajemen Stok
-          </span>
+            <span>Warehouse & QA Tier 3 • Silo Klimatik & Sertifikasi Mutu</span>
+          </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Grading Green Bean: Dari Premium hingga Basic
+            Grading Green Bean & Manajemen Silo Ekspor
           </h1>
           <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-            Fokus utama stasiun gudang adalah melakukan inspeksi fisik, sortir cacat (defect count), uji ayakan biji (screen size), dan klasifikasi grade (Grade 1 Super Premium s/d Grade 4 Basic) yang secara langsung menentukan kelayakan harga jual kembali ke roastery.
+            Pusat inspeksi fisik green bean, sortir defect standar SCA & SNI, pengujian ukuran ayakan screen size, serta penyimpanan klimatik hermetik (suhu & kelembaban terjaga).
           </p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-stone-300 pt-1">
+            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs flex items-center gap-1.5">
+              <Thermometer className="w-3.5 h-3.5 text-blue-400" />
+              Suhu Rata-rata Silo: <strong className="text-white">20.4°C (Optimal)</strong>
+            </span>
+            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs flex items-center gap-1.5">
+              <Droplets className="w-3.5 h-3.5 text-blue-400" />
+              Kelembaban RH: <strong className="text-emerald-300">54% (Aman Jamur)</strong>
+            </span>
+          </div>
         </div>
 
         <div className="absolute right-4 -bottom-6 opacity-10 text-white pointer-events-none">
@@ -339,247 +356,135 @@ export const WarehouseView: React.FC = () => {
         </div>
       </div>
 
-      {/* Metric Cards */}
+      {/* 4 Cruip-Style Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Stok di Pengolah</span>
-            <ShoppingCart className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">
-            {availableGreenBeans.reduce((a, b) => a + b.availableWeightKg, 0).toLocaleString()} kg
-          </div>
-          <span className="text-[11px] text-amber-600 font-medium">Bisa dibeli untuk grading</span>
-        </div>
+        <MetricCard
+          title="Total Stok Tersimpan"
+          value={`${availableStoredKg.toLocaleString()} kg`}
+          subtitle={`Dari ${totalStoredKg} kg kapasitas`}
+          icon={<Box className="w-5 h-5 text-blue-600" />}
+          color="blue"
+          badge="Silo Aktif"
+        />
 
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Total Stok Gudang</span>
-            <Box className="w-4 h-4 text-blue-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">{availableStoredKg.toLocaleString()} kg</div>
-          <span className="text-[11px] text-blue-600 font-medium">Dari {totalStoredKg} kg tersimpan</span>
-        </div>
+        <MetricCard
+          title="Grade 1: Super Premium"
+          value={`${superPremiumKg.toLocaleString()} kg`}
+          subtitle="Margin tertinggi (+32%)"
+          icon={<Crown className="w-5 h-5 text-amber-600" />}
+          color="amber"
+          trend={{ value: 'SCA ≥ 85.0', isPositive: true }}
+        />
 
-        <div className="bg-white p-5 rounded-2xl border border-amber-200/70 bg-amber-50/30 shadow-xs">
-          <div className="flex items-center justify-between text-amber-800 text-xs mb-1">
-            <span className="font-bold flex items-center gap-1">
-              <Crown className="w-3.5 h-3.5 text-amber-600" /> Super Premium
-            </span>
-            <span className="text-[10px] bg-amber-100 px-1.5 py-0.5 rounded text-amber-900 font-mono">
-              Grade 1
-            </span>
-          </div>
-          <div className="text-2xl font-black text-amber-950">{superPremiumKg.toLocaleString()} kg</div>
-          <span className="text-[11px] text-amber-700 font-medium">Margin tertinggi (+32%)</span>
-        </div>
+        <MetricCard
+          title="Grade 2: Premium Grade"
+          value={`${premiumKg.toLocaleString()} kg`}
+          subtitle="Margin stabil (+24%)"
+          icon={<Award className="w-5 h-5 text-purple-600" />}
+          color="purple"
+          trend={{ value: 'SCA 83-84.75', isPositive: true }}
+        />
 
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-600 text-xs mb-1">
-            <span className="font-bold flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5 text-stone-600" /> Commercial & Basic
-            </span>
-            <span className="text-[10px] bg-stone-100 px-1.5 py-0.5 rounded text-stone-700 font-mono">
-              Grade 3-4
-            </span>
-          </div>
-          <div className="text-2xl font-black text-stone-900">
-            {commercialAndBasicKg.toLocaleString()} kg
-          </div>
-          <span className="text-[11px] text-stone-500 font-medium">Komersial & volume massal</span>
-        </div>
+        <MetricCard
+          title="Grade 3 & 4: Komersial"
+          value={`${commercialKg.toLocaleString()} kg`}
+          subtitle="Volume & Industri"
+          icon={<Layers className="w-5 h-5 text-stone-700" />}
+          color="stone"
+          badge="House Blend"
+        />
       </div>
 
-      {/* Success Notification */}
-      {successMsg && (
-        <div className="p-4 rounded-2xl bg-blue-100 border border-blue-300 text-blue-950 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-blue-700" />
-          {successMsg}
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="flex border-b border-stone-200">
+      {/* Cruip Styled Navigation Tabs */}
+      <div className="bg-white p-1.5 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center gap-1.5">
         <button
-          onClick={() => setActiveTab('marketplace')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
-            activeTab === 'marketplace'
-              ? 'border-blue-600 text-blue-900 bg-blue-50/50'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+          onClick={() => setActiveTab('inventory')}
+          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            activeTab === 'inventory'
+              ? 'bg-stone-900 text-white shadow-xs font-black'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <ShoppingCart className="w-4 h-4" />
-          Beli Green Bean Pengolah ({availableGreenBeans.length} Lot)
+          <Box className="w-4 h-4 text-blue-400" />
+          <span>Inventaris Silo & Penilaian Grade</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300">
+            {myWarehouseLots.length}
+          </span>
         </button>
 
         <button
-          onClick={() => setActiveTab('inventory')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
-            activeTab === 'inventory'
-              ? 'border-blue-600 text-blue-900 bg-blue-50/50'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+          onClick={() => setActiveTab('marketplace')}
+          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            activeTab === 'marketplace'
+              ? 'bg-stone-900 text-white shadow-xs font-black'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <Box className="w-4 h-4" />
-          Inventaris Stok Gudang & Penilaian Grade ({myWarehouseLots.length})
+          <ShoppingCart className="w-4 h-4" />
+          <span>Beli Green Bean Pengolah</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+            {availableGreenBeans.length} Lot
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
             activeTab === 'history'
-              ? 'border-blue-600 text-blue-900 bg-blue-50/50'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs font-black'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
           <History className="w-4 h-4" />
-          Log Transaksi Pergudangan ({myWarehouseTransactions.length})
+          <span>Log Transaksi Gudang</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+            {myWarehouseTransactions.length}
+          </span>
         </button>
       </div>
 
-      {/* Tab 1: Marketplace Green Bean Pengolah */}
-      {activeTab === 'marketplace' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-stone-900">
-                Pilih Green Bean dari Pengolah untuk Dilakukan Grading
-              </h2>
-              <p className="text-xs text-stone-500">
-                Beli green bean dari stasiun pengolah, tentukan klasifikasi grade (Premium s/d Basic), dan tetapkan harga jual kembali ke roastery.
-              </p>
-            </div>
+      {/* Success Notification */}
+      {successMsg && (
+        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-300 text-blue-950 text-xs font-bold flex items-center justify-between shadow-2xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-blue-700" />
+            <span>{successMsg}</span>
           </div>
-
-          {availableGreenBeans.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-stone-200">
-              <Sparkles className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-stone-800">
-                Belum ada green bean yang siap dibeli dari stasiun pengolah
-              </h3>
-              <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto">
-                Silakan ganti peran ke akun Pengolah untuk memproses ceri menjadi green bean.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {availableGreenBeans.map((gb) => (
-                <div
-                  key={gb.id}
-                  className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="relative h-44 bg-stone-100">
-                      <img
-                        src={gb.photoUrl}
-                        alt={gb.variety}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-3 left-3 bg-stone-900/85 backdrop-blur-xs text-white text-[11px] font-mono px-2.5 py-0.5 rounded-md">
-                        {gb.id}
-                      </div>
-                      <div className="absolute top-3 right-3 bg-amber-600 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
-                        {gb.processMethod}
-                      </div>
-                    </div>
-
-                    <div className="p-5 space-y-3">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">
-                          Pengolah: {gb.processorName}
-                        </span>
-                        <h3 className="font-bold text-base text-stone-900 mt-1">
-                          {gb.variety} ({gb.grade})
-                        </h3>
-                        <p className="text-xs text-stone-500 flex items-center gap-1 mt-0.5">
-                          <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                          {gb.sourceOrigin} ({gb.altitude})
-                        </p>
-                        <div className="text-[11px] text-emerald-800 font-medium mt-1">
-                          Petani Asal: {gb.sourceFarmerName} ({gb.sourceFarmerLotId})
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-stone-100">
-                        <div>
-                          <span className="text-[11px] text-stone-400 block">Kadar Air:</span>
-                          <span className="font-semibold text-stone-800">{gb.moistureContentPercent}%</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-stone-400 block">Water Activity:</span>
-                          <span className="font-semibold text-stone-800">{gb.waterActivityAw} aW</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-stone-400 block">Sortasi Defect:</span>
-                          <span className="font-semibold text-stone-800">{gb.defectCount} defect/350g</span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-stone-400 block">Ukuran Ayakan:</span>
-                          <span className="font-semibold text-stone-800 truncate block">{gb.screenSize}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {gb.cuppingNotes.map((note, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-stone-100 text-stone-800 border border-stone-200"
-                          >
-                            {note}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-stone-50 border-t border-stone-100 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-stone-400 block">Harga Modal Beli:</span>
-                      <span className="text-sm font-black text-stone-900">
-                        Rp {gb.pricePerKg.toLocaleString()}
-                        <span className="text-xs font-normal text-stone-500"> / kg</span>
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => handleOpenStorageModal(gb)}
-                      className="px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
-                    >
-                      <Sliders className="w-3.5 h-3.5" />
-                      Beli & Grading
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <button
+            onClick={() => setSuccessMsg('')}
+            className="text-stone-400 hover:text-stone-700 text-xs font-bold"
+          >
+            Tutup
+          </button>
         </div>
       )}
 
-      {/* Tab 2: Inventaris Stok Gudang & Penilaian Grade */}
+      {/* TAB 1: INVENTARIS STOK GUDANG & GRADING MUTU */}
       {activeTab === 'inventory' && (
-        <div className="space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-base font-bold text-stone-900">
-                Inventaris Stok Gudang & Klasifikasi Mutu ({myWarehouseLots.length})
-              </h2>
-              <p className="text-xs text-stone-500">
-                Stok green bean diklasifikasikan dari Super Premium hingga Basic Commercial yang mempengaruhi margin dan harga jual ke roaster.
-              </p>
+        <div className="space-y-4">
+          {/* Toolbar Search & Grade Filter */}
+          <div className="bg-white p-4 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+            <div className="relative flex-1 min-w-[240px]">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari ID lot, varietas, lokasi silo, atau daerah asal..."
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+              />
             </div>
 
-            {/* Filter Tabs by Grade */}
-            <div className="flex flex-wrap items-center gap-1.5 bg-stone-100 p-1.5 rounded-2xl border border-stone-200 text-xs">
-              <span className="text-stone-400 text-[11px] font-bold px-2 flex items-center gap-1">
-                <Filter className="w-3 h-3" /> Filter Grade:
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-stone-400 font-bold px-1 flex items-center gap-1">
+                <Filter className="w-3.5 h-3.5" /> Grade:
               </span>
               <button
                 onClick={() => setGradeFilter('all')}
                 className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
                   gradeFilter === 'all'
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
+                    ? 'bg-stone-900 text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                 }`}
               >
                 Semua ({myWarehouseLots.length})
@@ -589,284 +494,335 @@ export const WarehouseView: React.FC = () => {
                 className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1 ${
                   gradeFilter === 'Grade 1 - Super Premium'
                     ? 'bg-amber-500 text-stone-950 shadow-xs'
-                    : 'text-stone-600 hover:text-amber-900'
+                    : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
                 }`}
               >
                 <Crown className="w-3 h-3 text-amber-800" />
-                Super Premium (
-                {myWarehouseLots.filter((l) => l.gradeTier === 'Grade 1 - Super Premium').length})
+                Super Premium ({myWarehouseLots.filter((l) => l.gradeTier === 'Grade 1 - Super Premium').length})
               </button>
               <button
                 onClick={() => setGradeFilter('Grade 2 - Premium Grade')}
                 className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1 ${
                   gradeFilter === 'Grade 2 - Premium Grade'
                     ? 'bg-purple-600 text-white shadow-xs'
-                    : 'text-stone-600 hover:text-purple-900'
+                    : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
                 }`}
               >
-                <Award className="w-3 h-3" />
-                Premium (
-                {myWarehouseLots.filter((l) => l.gradeTier === 'Grade 2 - Premium Grade').length})
+                <Award className="w-3 h-3 text-purple-800" />
+                Premium ({myWarehouseLots.filter((l) => l.gradeTier === 'Grade 2 - Premium Grade').length})
               </button>
               <button
                 onClick={() => setGradeFilter('Grade 3 - Medium Commercial')}
                 className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1 ${
                   gradeFilter === 'Grade 3 - Medium Commercial'
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-stone-600 hover:text-blue-900'
+                    : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
                 }`}
               >
-                <ShieldCheck className="w-3 h-3" />
-                Medium (
-                {myWarehouseLots.filter((l) => l.gradeTier === 'Grade 3 - Medium Commercial').length})
-              </button>
-              <button
-                onClick={() => setGradeFilter('Grade 4 - Basic Commercial')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1 ${
-                  gradeFilter === 'Grade 4 - Basic Commercial'
-                    ? 'bg-stone-700 text-white shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
-                }`}
-              >
-                <Layers className="w-3 h-3" />
-                Basic (
-                {myWarehouseLots.filter((l) => l.gradeTier === 'Grade 4 - Basic Commercial').length})
+                <ShieldCheck className="w-3 h-3 text-blue-800" />
+                Medium ({myWarehouseLots.filter((l) => l.gradeTier === 'Grade 3 - Medium Commercial').length})
               </button>
             </div>
           </div>
 
-          {filteredInventoryLots.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-stone-200">
-              <Box className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-stone-800">
-                Tidak ada lot stok untuk kategori grade ini
-              </h3>
-              <p className="text-xs text-stone-500 mt-1">
-                Silakan pilih filter grade lain atau beli green bean baru untuk dilakukan grading.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredInventoryLots.map((wh) => {
-                const cfg = GRADE_TIERS_CONFIG[wh.gradeTier || 'Grade 1 - Super Premium'];
-                const TierIcon = cfg.icon;
-                const marginRp = wh.pricePerKg - (wh.purchasePricePerKg || wh.pricePerKg * 0.8);
-                const marginPercent = Math.round(
-                  (marginRp / (wh.purchasePricePerKg || wh.pricePerKg * 0.8)) * 100
-                );
+          {/* Inventory Lots Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredInventoryLots.map((wh) => {
+              const cfg = GRADE_TIERS_CONFIG[wh.gradeTier || 'Grade 1 - Super Premium'];
+              const TierIcon = cfg.icon;
+              const marginRp = wh.pricePerKg - (wh.purchasePricePerKg || wh.pricePerKg * 0.8);
+              const marginPercent = Math.round(
+                (marginRp / (wh.purchasePricePerKg || wh.pricePerKg * 0.8)) * 100
+              );
 
-                return (
-                  <div
-                    key={wh.id}
-                    className={`bg-white rounded-2xl border ${cfg.borderColor} overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between`}
-                  >
-                    <div>
-                      {/* Card Header with Grade Banner */}
-                      <div className={`p-4 ${cfg.lightBg} border-b ${cfg.borderColor} space-y-2`}>
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-[11px] font-bold text-stone-800 bg-white/90 px-2.5 py-0.5 rounded-md border border-stone-200">
-                            {wh.id}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-xs font-black bg-stone-900 text-white px-2.5 py-0.5 rounded-lg shadow-xs">
-                            <Award className="w-3.5 h-3.5 text-amber-400" />
-                            SCA: {wh.verifiedScaScore}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black border ${cfg.badgeBg} ${cfg.badgeText} ${cfg.badgeBorder} shadow-xs`}
-                          >
-                            <TierIcon className="w-3.5 h-3.5" />
-                            {wh.gradeTier || 'Grade 1 - Super Premium'}
-                          </span>
-                        </div>
-
-                        <div>
-                          <h3 className="font-bold text-base text-stone-900">{wh.variety}</h3>
-                          <p className="text-xs text-stone-600">
-                            {wh.origin} ({wh.altitude}) • {wh.processMethod}
-                          </p>
-                        </div>
+              return (
+                <div
+                  key={wh.id}
+                  className={`bg-white rounded-2xl border ${cfg.borderColor} overflow-hidden shadow-2xs hover:shadow-md transition-shadow flex flex-col justify-between`}
+                >
+                  <div>
+                    {/* Header */}
+                    <div className={`p-4 ${cfg.lightBg} border-b ${cfg.borderColor} space-y-2`}>
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[11px] font-bold text-stone-800 bg-white/90 px-2.5 py-0.5 rounded-md border border-stone-200">
+                          {wh.id}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs font-black bg-stone-900 text-white px-2.5 py-0.5 rounded-lg shadow-xs">
+                          <Award className="w-3.5 h-3.5 text-amber-400" />
+                          SCA: {wh.verifiedScaScore}
+                        </span>
                       </div>
 
-                      {/* Physical Specs & Grading Details */}
-                      <div className="p-4 space-y-3">
-                        {/* Target Market Pill */}
-                        <div className="text-[11px] bg-stone-100 text-stone-700 p-2 rounded-xl border border-stone-200/80">
-                          <span className="font-bold text-stone-900 block mb-0.5">
-                            🎯 Rekomendasi Penggunaan / Pasar:
-                          </span>
-                          <span>{wh.targetMarket || cfg.targetMarket}</span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black border ${cfg.badgeBg} ${cfg.badgeText} ${cfg.badgeBorder} shadow-2xs`}
+                        >
+                          <TierIcon className="w-3.5 h-3.5" />
+                          {wh.gradeTier || 'Grade 1 - Super Premium'}
+                        </span>
+                      </div>
 
-                        {/* Grading Specs Matrix */}
-                        <div className="grid grid-cols-2 gap-2 text-xs bg-stone-50 p-3 rounded-xl border border-stone-200/80">
-                          <div>
-                            <span className="text-[10px] text-stone-400 block font-semibold">
-                              Sortasi Cacat (Defect):
-                            </span>
-                            <strong className="text-stone-800">
-                              {wh.defectCount ?? cfg.defaultDefect} defect/350g
-                            </strong>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-stone-400 block font-semibold">
-                              Ukuran Biji:
-                            </span>
-                            <strong className="text-stone-800 truncate block">
-                              {wh.screenSize || cfg.defaultScreen}
-                            </strong>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-stone-400 block font-semibold">
-                              Lokasi Rak / Silo:
-                            </span>
-                            <strong className="text-stone-800 truncate block">{wh.storageLocation}</strong>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-stone-400 block font-semibold">
-                              Suhu / RH Silo:
-                            </span>
-                            <strong className="text-blue-700">
-                              {wh.temperatureCelsius}°C / {wh.humidityPercent}% RH
-                            </strong>
-                          </div>
-                        </div>
-
-                        <div className="text-[11px] text-stone-500 space-y-0.5 border-t border-stone-100 pt-2">
-                          <div>Petani Asal: <strong>{wh.sourceFarmerName}</strong></div>
-                          <div>Pengolah: <strong>{wh.sourceProcessorName}</strong></div>
-                          <div>Kemasan: <strong>{wh.packagingType}</strong></div>
-                        </div>
-
-                        {wh.notes && (
-                          <p className="text-[11px] text-stone-600 italic line-clamp-2">
-                            "{wh.notes}"
-                          </p>
-                        )}
+                      <div>
+                        <h3 className="font-bold text-base text-stone-900">{wh.variety}</h3>
+                        <p className="text-xs text-stone-600">
+                          {wh.origin} ({wh.altitude}) • {wh.processMethod}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Financial Comparison & Actions */}
-                    <div className="p-4 bg-stone-50 border-t border-stone-100 space-y-3">
-                      <div className="flex items-center justify-between">
+                    {/* Specs & Target Market */}
+                    <div className="p-4 space-y-3">
+                      <div className="text-[11px] bg-stone-100 text-stone-700 p-2.5 rounded-xl border border-stone-200/80">
+                        <span className="font-bold text-stone-900 block mb-0.5">
+                          🎯 Rekomendasi Target Pasar:
+                        </span>
+                        <span>{wh.targetMarket || cfg.targetMarket}</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs bg-stone-50 p-3 rounded-xl border border-stone-200/80">
                         <div>
-                          <span className="text-[10px] text-stone-400 block">Modal Beli:</span>
-                          <span className="text-xs font-semibold text-stone-600">
-                            Rp {(wh.purchasePricePerKg || Math.round(wh.pricePerKg * 0.8)).toLocaleString()}/kg
+                          <span className="text-[10px] text-stone-400 block font-semibold">
+                            Cacat (Defect):
                           </span>
+                          <strong className="text-stone-800">
+                            {wh.defectCount ?? cfg.defaultDefect} defect/350g
+                          </strong>
                         </div>
-                        <div className="text-right">
-                          <span className="text-[10px] text-stone-400 block">Harga Jual ke Roaster:</span>
-                          <span className="text-sm font-black text-stone-900">
-                            Rp {wh.pricePerKg.toLocaleString()}
-                            <span className="text-xs font-normal text-stone-500"> / kg</span>
+                        <div>
+                          <span className="text-[10px] text-stone-400 block font-semibold">
+                            Ukuran Ayakan:
                           </span>
+                          <strong className="text-stone-800 truncate block">
+                            {wh.screenSize || cfg.defaultScreen}
+                          </strong>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-stone-400 block font-semibold">
+                            Lokasi Silo:
+                          </span>
+                          <strong className="text-stone-800 truncate block">{wh.storageLocation}</strong>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-stone-400 block font-semibold">
+                            Suhu & RH:
+                          </span>
+                          <strong className="text-blue-700 font-mono">
+                            {wh.temperatureCelsius}°C / {wh.humidityPercent}% RH
+                          </strong>
                         </div>
                       </div>
 
-                      {/* Margin Badge */}
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs">
-                        <span className="text-emerald-800 font-semibold flex items-center gap-1">
-                          <BadgePercent className="w-3.5 h-3.5" /> Margin Laba:
-                        </span>
-                        <strong className="text-emerald-950">
-                          +Rp {marginRp.toLocaleString()} / kg (+{marginPercent}%)
-                        </strong>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-xs text-stone-500">
-                          Stok: <strong>{wh.availableWeightKg}</strong> / {wh.weightKg} kg
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setBarcodeModalLot(wh)}
-                            className="px-2.5 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-bold transition-all shadow-xs flex items-center gap-1"
-                            title="Lihat & Cetak Barcode Karung Gudang"
-                          >
-                            <QrCode className="w-3.5 h-3.5 text-stone-700" />
-                            <span className="hidden sm:inline">Barcode</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditGrading(wh)}
-                            className="px-3 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-bold transition-all shadow-xs flex items-center gap-1"
-                          >
-                            <Edit3 className="w-3.5 h-3.5 text-blue-600" />
-                            Re-Grading & Ubah Harga
-                          </button>
-                        </div>
+                      <div className="text-[11px] text-stone-500 space-y-0.5 border-t border-stone-100 pt-2">
+                        <div>Petani Asal: <strong>{wh.sourceFarmerName}</strong></div>
+                        <div>Stasiun Olah: <strong>{wh.sourceProcessorName}</strong></div>
+                        <div>Kemasan: <strong>{wh.packagingType}</strong></div>
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* Tab 3: Log Transaksi Pergudangan */}
-      {activeTab === 'history' && (
-        <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs">
-          <h2 className="text-base font-bold text-stone-900 mb-4 flex items-center gap-2">
-            <History className="w-5 h-5 text-blue-600" />
-            Log Transaksi Gudang Logistik
-          </h2>
-
-          {myWarehouseTransactions.length === 0 ? (
-            <p className="text-xs text-stone-500 py-6 text-center">
-              Belum ada log transaksi masuk atau keluar gudang.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
-                  <tr>
-                    <th className="py-3 px-4">No. TRX</th>
-                    <th className="py-3 px-4">Tanggal</th>
-                    <th className="py-3 px-4">Pengirim</th>
-                    <th className="py-3 px-4">Penerima</th>
-                    <th className="py-3 px-4">Barang</th>
-                    <th className="py-3 px-4">Volume</th>
-                    <th className="py-3 px-4">Total Nilai</th>
-                    <th className="py-3 px-4">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100">
-                  {myWarehouseTransactions.map((trx) => (
-                    <tr key={trx.id} className="hover:bg-stone-50/50">
-                      <td className="py-3 px-4 font-mono font-bold text-stone-800">{trx.id}</td>
-                      <td className="py-3 px-4 text-stone-600">{trx.date}</td>
-                      <td className="py-3 px-4 font-semibold text-stone-900">{trx.fromName}</td>
-                      <td className="py-3 px-4 font-semibold text-stone-900">{trx.toName}</td>
-                      <td className="py-3 px-4 text-stone-700">{trx.itemName}</td>
-                      <td className="py-3 px-4 font-bold text-blue-800">{trx.quantity}</td>
-                      <td className="py-3 px-4 font-black text-stone-900">
-                        Rp {trx.totalAmount.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                          {trx.status}
+                  {/* Financial Margins & Actions */}
+                  <div className="p-4 bg-stone-50 border-t border-stone-100 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-stone-400 block">Modal Beli:</span>
+                        <span className="text-xs font-semibold text-stone-600">
+                          Rp {(wh.purchasePricePerKg || Math.round(wh.pricePerKg * 0.8)).toLocaleString()}/kg
                         </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-stone-400 block">Harga Jual ke Roaster:</span>
+                        <span className="text-sm font-black text-stone-900">
+                          Rp {wh.pricePerKg.toLocaleString()}
+                          <span className="text-xs font-normal text-stone-500"> / kg</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs">
+                      <span className="text-emerald-800 font-semibold flex items-center gap-1">
+                        <BadgePercent className="w-3.5 h-3.5" /> Margin Laba:
+                      </span>
+                      <strong className="text-emerald-950 font-mono">
+                        +Rp {marginRp.toLocaleString()} / kg (+{marginPercent}%)
+                      </strong>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs text-stone-500">
+                        Stok: <strong>{wh.availableWeightKg}</strong> / {wh.weightKg} kg
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setBarcodeModalLot(wh)}
+                          className="px-2.5 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-bold transition-all shadow-xs flex items-center gap-1"
+                          title="Cetak Barcode Karung Gudang"
+                        >
+                          <QrCode className="w-3.5 h-3.5 text-stone-700" />
+                          <span className="hidden sm:inline">Barcode</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditGrading(wh)}
+                          className="px-3 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-bold transition-all shadow-xs flex items-center gap-1"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-blue-600" />
+                          Re-Grading
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* Modal: Beli, Simpan di Gudang & Penilaian Grading */}
+      {/* TAB 2: MARKETPLACE BELI GREEN BEAN PENGOLAH */}
+      {activeTab === 'marketplace' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-stone-900">
+                Pilih Green Bean dari Stasiun Pengolah untuk Dilakukan Grading & Simpan
+              </h2>
+              <p className="text-xs text-stone-500">
+                Beli green bean hasil sortasi stasiun mill, klasifikasikan grade, dan tentukan harga jual kembali.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {availableGreenBeans.map((gb) => (
+              <div
+                key={gb.id}
+                className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="relative h-44 bg-stone-100 overflow-hidden">
+                    <img
+                      src={gb.photoUrl}
+                      alt={gb.variety}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-3 left-3 bg-stone-900/85 backdrop-blur-xs text-white text-[11px] font-mono px-2.5 py-0.5 rounded-md">
+                      {gb.id}
+                    </div>
+                    <div className="absolute top-3 right-3 bg-amber-600 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
+                      {gb.processMethod}
+                    </div>
+                  </div>
+
+                  <div className="p-5 space-y-3">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">
+                        Pengolah: {gb.processorName}
+                      </span>
+                      <h3 className="font-bold text-base text-stone-900 mt-1">
+                        {gb.variety} ({gb.grade})
+                      </h3>
+                      <p className="text-xs text-stone-500 flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3.5 h-3.5 text-stone-400" />
+                        {gb.sourceOrigin} ({gb.altitude})
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-stone-100">
+                      <div>
+                        <span className="text-[10px] text-stone-400 block font-semibold">Kadar Air:</span>
+                        <span className="font-bold text-stone-800">{gb.moistureContentPercent}%</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-stone-400 block font-semibold">Water Activity:</span>
+                        <span className="font-bold text-stone-800">{gb.waterActivityAw} aW</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-stone-400 block font-semibold">Defect:</span>
+                        <span className="font-bold text-stone-800">{gb.defectCount} defect/350g</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-stone-400 block font-semibold">Ayakan Screen:</span>
+                        <span className="font-bold text-stone-800 truncate block">{gb.screenSize}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-stone-50 border-t border-stone-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-stone-400 block">Harga Modal Beli:</span>
+                    <span className="text-sm font-black text-stone-900">
+                      Rp {gb.pricePerKg.toLocaleString()}
+                      <span className="text-xs font-normal text-stone-500"> / kg</span>
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => handleOpenStorageModal(gb)}
+                    className="px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1.5"
+                  >
+                    <Sliders className="w-3.5 h-3.5" />
+                    Beli & Grading
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: LOG TRANSAKSI */}
+      {activeTab === 'history' && (
+        <div className="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-2xs space-y-4">
+          <h2 className="text-base font-bold text-stone-900 flex items-center gap-2">
+            <History className="w-5 h-5 text-blue-600" />
+            Log Transaksi Pergudangan
+          </h2>
+          <div className="overflow-x-auto rounded-xl border border-stone-200">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+                <tr>
+                  <th className="py-3 px-4">No. TRX</th>
+                  <th className="py-3 px-4">Tanggal</th>
+                  <th className="py-3 px-4">Pengirim</th>
+                  <th className="py-3 px-4">Penerima</th>
+                  <th className="py-3 px-4">Barang</th>
+                  <th className="py-3 px-4">Volume</th>
+                  <th className="py-3 px-4">Total Nilai</th>
+                  <th className="py-3 px-4">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {myWarehouseTransactions.map((trx) => (
+                  <tr key={trx.id} className="hover:bg-stone-50/70 transition-colors">
+                    <td className="py-3 px-4 font-mono font-bold text-stone-800">{trx.id}</td>
+                    <td className="py-3 px-4 text-stone-600">{trx.date}</td>
+                    <td className="py-3 px-4 font-semibold text-stone-900">{trx.fromName}</td>
+                    <td className="py-3 px-4 font-semibold text-stone-900">{trx.toName}</td>
+                    <td className="py-3 px-4 text-stone-700">{trx.itemName}</td>
+                    <td className="py-3 px-4 font-bold text-blue-800">{trx.quantity}</td>
+                    <td className="py-3 px-4 font-black text-stone-900">
+                      Rp {trx.totalAmount.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                        {trx.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Beli & Grading Silo */}
       {selectedGreenBeanToBuy && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
-            <div className="bg-gradient-to-r from-blue-950 via-stone-900 to-indigo-950 text-white p-6 relative">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
+            <div className="bg-linear-to-r from-blue-950 to-stone-900 text-white p-6 relative">
               <button
                 onClick={() => setSelectedGreenBeanToBuy(null)}
                 className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
@@ -876,25 +832,20 @@ export const WarehouseView: React.FC = () => {
 
               <div className="inline-flex items-center gap-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-1 rounded-full text-xs font-semibold mb-2">
                 <Sliders className="w-3.5 h-3.5" />
-                Prosedur Masuk Gudang & Evaluasi Grading Mutu
+                Workstation QC Grading & Penyimpanan Silo
               </div>
               <h2 className="text-xl sm:text-2xl font-black">
-                Beli & Grading: {selectedGreenBeanToBuy.variety} ({selectedGreenBeanToBuy.processMethod})
+                Grading Lot: {selectedGreenBeanToBuy.variety} ({selectedGreenBeanToBuy.sourceOrigin})
               </h2>
-              <p className="text-xs text-stone-300 mt-1">
-                Stasiun Pengolah: {selectedGreenBeanToBuy.processorName} • Petani Asal: {selectedGreenBeanToBuy.sourceFarmerName}
-              </p>
             </div>
 
-            <form onSubmit={handleConfirmStore} className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto">
-              {/* Bagian 1: Pembelian dari Pengolah */}
-              <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-5 space-y-3">
-                <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-2">
-                  <ShoppingCart className="w-4 h-4" /> 1. Transaksi Pembelian Green Bean dari Pengolah
-                </h3>
+            <form onSubmit={handleConfirmStore} className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto text-xs">
+              {/* Pembelian */}
+              <div className="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 space-y-3">
+                <h3 className="font-bold text-blue-900 uppercase">1. Kuantitas Pembelian</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-stone-700 font-semibold mb-1">
                       Volume Beli (kg) - Maks: {selectedGreenBeanToBuy.availableWeightKg} kg
                     </label>
                     <input
@@ -904,311 +855,73 @@ export const WarehouseView: React.FC = () => {
                       max={selectedGreenBeanToBuy.availableWeightKg}
                       value={boughtKg}
                       onChange={(e) => setBoughtKg(Number(e.target.value))}
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-blue-500 bg-white font-bold"
+                      className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm bg-white"
                     />
                   </div>
-                  <div className="flex flex-col justify-center bg-white p-3 rounded-xl border border-blue-200">
-                    <span className="text-xs text-stone-500">Total Biaya Modal Beli:</span>
-                    <span className="text-lg font-black text-blue-950">
+                  <div className="flex flex-col justify-center">
+                    <span className="text-stone-500">Biaya Pengadaan Modal:</span>
+                    <strong className="text-base font-black text-blue-900">
                       Rp {(boughtKg * selectedGreenBeanToBuy.pricePerKg).toLocaleString()}
-                    </span>
-                    <span className="text-[11px] text-stone-500">
-                      (Rp {selectedGreenBeanToBuy.pricePerKg.toLocaleString()}/kg)
-                    </span>
+                    </strong>
                   </div>
                 </div>
               </div>
 
-              {/* Bagian 2: Evaluasi Mutu & Grading Standar Gudang (FOKUS UTAMA) */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider flex items-center gap-2">
-                      <Crown className="w-4 h-4 text-amber-600" /> 2. Klasifikasi Grade Mutu Biji (Fokus Gudang)
-                    </h3>
-                    <p className="text-xs text-stone-500">
-                      Pilih kategori grade mutu yang sesuai. Grading ini secara otomatis merekomendasikan harga jual kembali ke roaster.
-                    </p>
-                  </div>
-                </div>
-
-                {/* 4 Grade Selector Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Grading Tier Selection */}
+              <div>
+                <h3 className="font-bold text-stone-800 uppercase mb-3">2. Klasifikasi Grade Mutu</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {(Object.keys(GRADE_TIERS_CONFIG) as WarehouseGradeTier[]).map((tierKey) => {
                     const cfg = GRADE_TIERS_CONFIG[tierKey];
-                    const TierIcon = cfg.icon;
                     const isSelected = gradeTier === tierKey;
-                    const estPrice = Math.round(
-                      (selectedGreenBeanToBuy.pricePerKg * (1 + cfg.markupPercent / 100)) / 1000
-                    ) * 1000;
-
                     return (
-                      <button
+                      <div
                         key={tierKey}
-                        type="button"
                         onClick={() => handleSelectGradeTier(tierKey, selectedGreenBeanToBuy.pricePerKg)}
-                        className={`text-left p-4 rounded-2xl border-2 transition-all flex flex-col justify-between ${
+                        className={`p-3 rounded-2xl border-2 cursor-pointer transition-all ${
                           isSelected
-                            ? `${cfg.borderColor} ${cfg.lightBg} shadow-md ring-2 ${cfg.activeRing}`
-                            : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50/50'
+                            ? `${cfg.borderColor} ${cfg.lightBg} ring-2 ${cfg.activeRing}`
+                            : 'border-stone-200 hover:border-stone-300 bg-white'
                         }`}
                       >
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span
-                              className={`w-7 h-7 rounded-lg flex items-center justify-center ${cfg.badgeBg} ${cfg.badgeText}`}
-                            >
-                              <TierIcon className="w-4 h-4" />
-                            </span>
-                            <span
-                              className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                                isSelected
-                                  ? `${cfg.badgeBg} ${cfg.badgeText}`
-                                  : 'bg-stone-100 text-stone-600'
-                              }`}
-                            >
-                              +{cfg.markupPercent}%
-                            </span>
-                          </div>
-
-                          <h4 className="font-black text-xs text-stone-900 leading-snug">
-                            {cfg.shortLabel}
-                          </h4>
-                          <span className="text-[10px] text-stone-500 block mt-0.5">
-                            {cfg.scaRange}
-                          </span>
-                          <span className="text-[10px] text-stone-600 block mt-1">
-                            {cfg.defectRange}
-                          </span>
+                        <div className="flex items-center justify-between mb-1">
+                          <strong className="text-stone-900 font-bold">{cfg.shortLabel}</strong>
+                          <span className="font-bold text-emerald-700 font-mono">+{cfg.markupPercent}% Margin</span>
                         </div>
-
-                        <div className="mt-3 pt-2 border-t border-stone-200/70">
-                          <span className="text-[9px] text-stone-400 uppercase font-bold block">
-                            Rekomendasi Jual:
-                          </span>
-                          <span className="text-xs font-black text-stone-900">
-                            Rp {estPrice.toLocaleString()}/kg
-                          </span>
-                        </div>
-                      </button>
+                        <p className="text-[11px] text-stone-500 leading-tight">{cfg.targetMarket}</p>
+                      </div>
                     );
                   })}
                 </div>
-
-                {/* Live Grading Inspection Parameters */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Jumlah Cacat (Defect / 350g)
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={defectCount}
-                      onChange={(e) => setDefectCount(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-blue-500 bg-white"
-                    />
-                    <span className="text-[10px] text-stone-500">Standar SCA / SNI</span>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Ukuran Ayakan (Screen Size)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={screenSize}
-                      onChange={(e) => setScreenSize(e.target.value)}
-                      placeholder="Contoh: Screen 18+ (Super)"
-                      className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-blue-500 bg-white"
-                    />
-                    <span className="text-[10px] text-stone-500">Ukuran lubang ayakan</span>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Verifikasi Cupping Score (SCA)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.25"
-                      required
-                      value={verifiedScaScore}
-                      onChange={(e) => setVerifiedScaScore(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-blue-500 bg-white font-bold"
-                    />
-                    <span className="text-[10px] text-stone-500">Skor sensori cupping</span>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Target Segmen Pembeli
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={targetMarket}
-                      onChange={(e) => setTargetMarket(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-blue-500 bg-white"
-                    />
-                    <span className="text-[10px] text-stone-500">Pasar sasaran roastery</span>
-                  </div>
-                </div>
-
-                {/* Dynamic Price & Profit Margin Engine */}
-                <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-300/80 rounded-2xl p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
-                      <TrendingUp className="w-4 h-4 text-emerald-700" /> Pengaruh Grading ke Harga Jual & Margin
-                    </span>
-                    <span className="text-xs text-emerald-800 font-semibold">
-                      Klasifikasi: <strong>{gradeTier}</strong>
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                    <div className="bg-white p-3.5 rounded-xl border border-emerald-200">
-                      <span className="text-[11px] text-stone-500 block">Harga Modal Beli:</span>
-                      <span className="text-base font-black text-stone-800">
-                        Rp {selectedGreenBeanToBuy.pricePerKg.toLocaleString()} / kg
-                      </span>
-                      <span className="text-[10px] text-stone-400">Dari stasiun pengolah</span>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-800 mb-1">
-                        Harga Jual ke Roaster per kg (Rp)
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        step="1000"
-                        value={sellingPricePerKg}
-                        onChange={(e) => setSellingPricePerKg(Number(e.target.value))}
-                        className="w-full px-4 py-2.5 rounded-xl border-2 border-emerald-400 text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 bg-white shadow-xs"
-                      />
-                      <span className="text-[10px] text-stone-500">Dapat disesuaikan secara fleksibel</span>
-                    </div>
-
-                    <div className="bg-white p-3.5 rounded-xl border border-emerald-200">
-                      <span className="text-[11px] text-emerald-800 font-semibold block">
-                        Keuntungan Bersih Gudang:
-                      </span>
-                      <span className="text-base font-black text-emerald-700">
-                        +Rp {(sellingPricePerKg - selectedGreenBeanToBuy.pricePerKg).toLocaleString()} / kg
-                      </span>
-                      <span className="text-[10px] text-emerald-800 block mt-0.5">
-                        ROI Margin: +
-                        {(
-                          ((sellingPricePerKg - selectedGreenBeanToBuy.pricePerKg) /
-                            selectedGreenBeanToBuy.pricePerKg) *
-                          100
-                        ).toFixed(1)}
-                        % | Total Laba: Rp{' '}
-                        {(
-                          (sellingPricePerKg - selectedGreenBeanToBuy.pricePerKg) *
-                          boughtKg
-                        ).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
               </div>
 
-              {/* Bagian 3: Parameter Fasilitas Gudang & Kemasan */}
-              <div>
-                <h3 className="text-xs font-bold text-stone-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Warehouse className="w-4 h-4 text-blue-600" /> 3. Fasilitas Penyimpanan & Kemasan Hermetik
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Lokasi Silo / Rak Pallet
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={storageLocation}
-                      onChange={(e) => setStorageLocation(e.target.value)}
-                      placeholder="Contoh: Silo A-03 Pallet Kayu Pine #14"
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Jenis Kemasan Hermetik
-                    </label>
-                    <select
-                      value={packagingType}
-                      onChange={(e) =>
-                        setPackagingType(e.target.value as WarehouseLot['packagingType'])
-                      }
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-blue-500 bg-white"
-                    >
-                      <option value="GrainPro + Karung Goni 60kg">GrainPro Hermetic + Karung Goni 60kg</option>
-                      <option value="Vacuum Bag 30kg">Vacuum Sealed Bag 30kg</option>
-                      <option value="Ecotact Hermetic 50kg">Ecotact Multi-Layer Hermetic 50kg</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Kontrol Iklim (Suhu / RH)
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="number"
-                        step="0.1"
-                        required
-                        value={temperatureCelsius}
-                        onChange={(e) => setTemperatureCelsius(Number(e.target.value))}
-                        className="w-full px-3 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-blue-500"
-                        placeholder="°C"
-                      />
-                      <input
-                        type="number"
-                        required
-                        value={humidityPercent}
-                        onChange={(e) => setHumidityPercent(Number(e.target.value))}
-                        className="w-full px-3 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-blue-500"
-                        placeholder="% RH"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">
-                  Catatan Inspeksi Grading & QA Gudang
+              {/* Harga Jual ke Roaster */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                <label className="block text-emerald-950 font-bold uppercase mb-1">
+                  3. Penetapan Harga Jual ke Roaster per kg (Rp)
                 </label>
-                <textarea
-                  rows={2}
-                  value={gradingNotes}
-                  onChange={(e) => setGradingNotes(e.target.value)}
-                  placeholder="Catatan hasil sortir fisik, densitas biji, keseragaman ayakan..."
-                  className="w-full px-4 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-blue-500"
+                <input
+                  type="number"
+                  required
+                  value={sellingPricePerKg}
+                  onChange={(e) => setSellingPricePerKg(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-emerald-300 text-sm font-black bg-white"
                 />
               </div>
 
-              {/* Submit Buttons */}
-              <div className="pt-4 border-t border-stone-200 flex items-center justify-between">
+              <div className="pt-2 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setSelectedGreenBeanToBuy(null)}
-                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 text-xs font-bold hover:bg-stone-100 transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-stone-300 font-bold"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold transition-colors shadow-md flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Konfirmasi Masuk Gudang & Buka Penjualan ({gradeTier})
+                  Simpan & Terbitkan ke Silo
                 </button>
               </div>
             </form>
@@ -1216,203 +929,64 @@ export const WarehouseView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Re-Grading & Penyesuaian Harga Lot yang Ada */}
+      {/* Modal Re-Grading */}
       {editingLotForGrading && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
-            <div className="bg-gradient-to-r from-stone-900 via-blue-950 to-stone-900 text-white p-6 relative">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
+            <div className="bg-gradient-to-r from-blue-900 to-stone-900 text-white p-5 relative">
               <button
                 onClick={() => setEditingLotForGrading(null)}
-                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="absolute top-4 right-4 text-stone-300 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
-
-              <div className="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-semibold mb-2">
-                <Edit3 className="w-3.5 h-3.5" />
-                Penilaian Ulang Mutu (Re-Grading) & Penyesuaian Harga
-              </div>
-              <h2 className="text-xl font-black">
-                Re-Grading: {editingLotForGrading.id} ({editingLotForGrading.variety})
-              </h2>
-              <p className="text-xs text-stone-300 mt-0.5">
-                Ubah klasifikasi grade berdasarkan uji sortir lanjutan, uji cupping ulang, atau penyesuaian strategi harga jual ke roaster.
-              </p>
+              <h3 className="font-black text-lg">Re-Grading & Penyesuaian Harga Jual</h3>
+              <p className="text-xs text-stone-300">Lot: {editingLotForGrading.id} ({editingLotForGrading.variety})</p>
             </div>
 
-            <form onSubmit={handleSaveEditGrading} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+            <form onSubmit={handleSaveEditGrading} className="p-6 space-y-4 text-xs">
               <div>
-                <label className="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-2">
-                  Pilih Klasifikasi Grade Baru:
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                  {(Object.keys(GRADE_TIERS_CONFIG) as WarehouseGradeTier[]).map((tierKey) => {
-                    const cfg = GRADE_TIERS_CONFIG[tierKey];
-                    const TierIcon = cfg.icon;
-                    const isSelected = editGradeTier === tierKey;
-                    const purchasePrice =
-                      editingLotForGrading.purchasePricePerKg ||
-                      Math.round(editingLotForGrading.pricePerKg * 0.8);
-                    const suggestedPrice =
-                      Math.round((purchasePrice * (1 + cfg.markupPercent / 100)) / 1000) * 1000;
-
-                    return (
-                      <button
-                        key={tierKey}
-                        type="button"
-                        onClick={() => handleSelectEditGradeTier(tierKey, purchasePrice)}
-                        className={`p-3 rounded-xl border-2 text-left transition-all flex flex-col justify-between ${
-                          isSelected
-                            ? `${cfg.borderColor} ${cfg.lightBg} shadow-sm ring-2 ${cfg.activeRing}`
-                            : 'border-stone-200 bg-white hover:bg-stone-50'
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <TierIcon className="w-4 h-4 text-stone-800" />
-                            <span className="text-[10px] font-mono font-bold text-stone-600">
-                              +{cfg.markupPercent}%
-                            </span>
-                          </div>
-                          <span className="font-bold text-xs text-stone-900 block">
-                            {cfg.shortLabel}
-                          </span>
-                          <span className="text-[10px] text-stone-500 block">{cfg.scaRange}</span>
-                        </div>
-                        <span className="text-[10px] font-black text-stone-800 mt-2 block border-t border-stone-200/80 pt-1">
-                          Rp {suggestedPrice.toLocaleString()}/kg
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">
-                    Defect (Cacat / 350g)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={editDefectCount}
-                    onChange={(e) => setEditDefectCount(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">
-                    Ukuran Biji (Screen Size)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editScreenSize}
-                    onChange={(e) => setEditScreenSize(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">
-                    Verifikasi Skor SCA
-                  </label>
-                  <input
-                    type="number"
-                    step="0.25"
-                    required
-                    value={editVerifiedScaScore}
-                    onChange={(e) => setEditVerifiedScaScore(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs bg-white font-bold"
-                  />
-                </div>
-              </div>
-
-              {/* Price adjustment */}
-              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
-                    <TrendingUp className="w-4 h-4 text-emerald-700" /> Penyesuaian Harga Jual ke Roaster
-                  </span>
-                  <span className="text-xs text-stone-600">
-                    Modal: Rp{' '}
-                    {(
-                      editingLotForGrading.purchasePricePerKg ||
-                      Math.round(editingLotForGrading.pricePerKg * 0.8)
-                    ).toLocaleString()}
-                    /kg
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                  <div>
-                    <label className="block text-xs font-bold text-stone-800 mb-1">
-                      Harga Jual Baru per kg (Rp)
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      step="1000"
-                      value={editSellingPricePerKg}
-                      onChange={(e) => setEditSellingPricePerKg(Number(e.target.value))}
-                      className="w-full px-4 py-2.5 rounded-xl border-2 border-emerald-400 text-base font-black text-emerald-950 bg-white"
-                    />
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border border-emerald-200 text-xs">
-                    <span className="text-stone-500 block">Margin Laba Baru:</span>
-                    <span className="text-base font-black text-emerald-700">
-                      +Rp{' '}
-                      {(
-                        editSellingPricePerKg -
-                        (editingLotForGrading.purchasePricePerKg ||
-                          Math.round(editingLotForGrading.pricePerKg * 0.8))
-                      ).toLocaleString()}{' '}
-                      / kg
-                    </span>
-                  </div>
-                </div>
+                <label className="block font-bold text-stone-700 uppercase mb-1">Klasifikasi Grade</label>
+                <select
+                  value={editGradeTier}
+                  onChange={(e) =>
+                    handleSelectEditGradeTier(
+                      e.target.value as WarehouseGradeTier,
+                      editingLotForGrading.purchasePricePerKg || 120000
+                    )
+                  }
+                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm bg-white"
+                >
+                  {(Object.keys(GRADE_TIERS_CONFIG) as WarehouseGradeTier[]).map((k) => (
+                    <option key={k} value={k}>{k}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">
-                  Target Pasar & Rekomendasi Roastery
-                </label>
+                <label className="block font-bold text-stone-700 uppercase mb-1">Harga Jual per kg (Rp)</label>
                 <input
-                  type="text"
+                  type="number"
                   required
-                  value={editTargetMarket}
-                  onChange={(e) => setEditTargetMarket(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs"
+                  value={editSellingPricePerKg}
+                  onChange={(e) => setEditSellingPricePerKg(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm font-black"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">
-                  Catatan Tambahan Re-Grading
-                </label>
-                <textarea
-                  rows={2}
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
-                  placeholder="Catatan inspeksi ulang mutu..."
-                  className="w-full px-4 py-2 rounded-xl border border-stone-300 text-xs"
-                />
-              </div>
-
-              <div className="pt-4 border-t border-stone-200 flex items-center justify-between">
+              <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setEditingLotForGrading(null)}
-                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 text-xs font-bold hover:bg-stone-100 transition-colors"
+                  className="px-4 py-2 rounded-xl border border-stone-300 font-bold"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold transition-colors shadow-md flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Simpan Re-Grading & Perbarui Harga
+                  Simpan Re-Grading
                 </button>
               </div>
             </form>
@@ -1420,9 +994,9 @@ export const WarehouseView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Barcode Karung Gudang */}
+      {/* Barcode Modal */}
       <WarehouseBarcodeModal
-        isOpen={Boolean(barcodeModalLot)}
+        isOpen={!!barcodeModalLot}
         onClose={() => setBarcodeModalLot(null)}
         lot={barcodeModalLot}
         isNewGrading={false}

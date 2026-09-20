@@ -14,10 +14,23 @@ import {
   Package,
   X,
   ArrowRight,
+  Search,
+  SlidersHorizontal,
+  Calculator,
+  DollarSign,
+  Tag,
+  Award,
+  Printer,
+  ChevronRight,
+  Flame,
+  Store,
+  Receipt,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { CafeInventoryItem } from '../types/coffee';
 import { TraceabilityModal } from './TraceabilityModal';
 import { CafeCupBarcodeModal } from './CafeCupBarcodeModal';
+import { MetricCard } from './admin/MetricCard';
 
 export const CafeView: React.FC = () => {
   const {
@@ -29,7 +42,8 @@ export const CafeView: React.FC = () => {
     setActiveView,
   } = useCoffee();
 
-  const [activeTab, setActiveTab] = useState<'inventory' | 'create_product' | 'my_products' | 'history'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'create_product' | 'my_products' | 'calculator' | 'history'>('inventory');
+  const [searchQuery, setSearchQuery] = useState('');
   const [traceModalData, setTraceModalData] = useState<any | null>(null);
   const [tableCardItem, setTableCardItem] = useState<CafeInventoryItem | null>(null);
   const [cupBarcodeItem, setCupBarcodeItem] = useState<CafeInventoryItem | null>(null);
@@ -47,6 +61,12 @@ export const CafeView: React.FC = () => {
   const [prodNotes, setProdNotes] = useState<string[]>(['Milk Chocolate', 'Caramel', 'Sweet Toffee']);
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Barista Recipe & Cup Margin Calculator State
+  const [calcSelectedBean, setCalcSelectedBean] = useState<string>('');
+  const [calcDoseGrams, setCalcDoseGrams] = useState<number>(15);
+  const [calcCupPrice, setCalcCupPrice] = useState<number>(32000);
+  const [calcExtraCost, setCalcExtraCost] = useState<number>(4500); // cup, milk, ice, sleeve
+
   const myCafeInventory = cafeInventory.filter(
     (item) => item.cafeId === currentUser?.id || true
   );
@@ -60,9 +80,37 @@ export const CafeView: React.FC = () => {
   );
 
   const totalPacksInStock = myCafeInventory.reduce((acc, curr) => acc + curr.packsInStock, 0);
+  const totalWeightKg = myCafeInventory.reduce((acc, curr) => acc + (curr.packsInStock * curr.packWeightGrams) / 1000, 0);
   const totalSpend = myCafeTransactions
     .filter((t) => t.toRole === 'cafe')
     .reduce((acc, curr) => acc + curr.totalAmount, 0);
+
+  const retailInventoryValue = myCafeProducts.reduce(
+    (acc, curr) => acc + curr.price * curr.availableStock,
+    0
+  );
+
+  // Filtered Inventory
+  const filteredInventory = myCafeInventory.filter((item) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      item.beanName.toLowerCase().includes(q) ||
+      item.roasterName.toLowerCase().includes(q) ||
+      item.variety.toLowerCase().includes(q) ||
+      item.processMethod.toLowerCase().includes(q)
+    );
+  });
+
+  // Selected item for calculator
+  const activeCalcItem = myCafeInventory.find((i) => i.id === calcSelectedBean) || myCafeInventory[0] || null;
+  const costPerGram = activeCalcItem ? activeCalcItem.costPerPack / activeCalcItem.packWeightGrams : 480;
+  const beanCostPerCup = costPerGram * calcDoseGrams;
+  const totalCostPerCup = beanCostPerCup + calcExtraCost;
+  const profitPerCup = calcCupPrice - totalCostPerCup;
+  const marginPercentage = calcCupPrice > 0 ? (profitPerCup / calcCupPrice) * 100 : 0;
+  const estimatedCupsPerPack = activeCalcItem ? Math.floor(activeCalcItem.packWeightGrams / calcDoseGrams) : 16;
+  const totalRevenuePerPack = estimatedCupsPerPack * calcCupPrice;
+  const totalProfitPerPack = estimatedCupsPerPack * profitPerCup;
 
   const handleAddNote = () => {
     if (noteInput.trim() && !prodNotes.includes(noteInput.trim())) {
@@ -97,193 +145,233 @@ export const CafeView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-linear-to-r from-stone-900 via-amber-950 to-stone-950 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden">
-        <div className="relative z-10 max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold mb-3 border border-amber-400/30">
-            <Coffee className="w-4 h-4 text-amber-400" />
-            Dasbor Coffee Shop Owner • Barista Bar & Toko Kedai (Cafe Tier)
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Manajemen Barista Bar & Toko Kedai Kopi
+      {/* Cruip Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 rounded-3xl border border-stone-800 p-6 lg:p-8 text-white shadow-xl">
+        <div className="relative z-10 max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-3 backdrop-blur-sm">
+            <Coffee className="w-3.5 h-3.5 text-amber-400" />
+            <span>Barista Bar Station & Coffee Shop Management</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          </div>
+
+          <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-white">
+            Kelola Bar Seduh & Etalase Kedai Specialty
           </h1>
-          <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-            Kelola inventaris biji kopi specialty di bar kedai Anda, cetak kartu meja transparansi silsilah (Farm-to-Cup) untuk pengunjung cafe, serta sediakan menu minuman dan kemasan retail untuk pelanggan kedai Anda sendiri.
+          <p className="mt-2 text-stone-300 text-xs lg:text-sm leading-relaxed">
+            Sajikan pengalaman kopi berkelas dengan transparansi silsilah biji <em>(Farm-to-Cup)</em>. Cetak stiker QR gelas, pasang kartu meja interaktif, hitung HPP per cup otomatis, dan terbitkan produk retail ke toko kedai Anda.
           </p>
 
-          <div className="mt-4 pt-2">
+          <div className="mt-5 flex flex-wrap gap-3">
             <button
               onClick={() => setActiveView('marketplace')}
-              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold transition-colors shadow-xs flex items-center gap-2"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition-all shadow-md shadow-amber-500/20 active:scale-95"
             >
               <ShoppingCart className="w-4 h-4" />
-              Buka Marketplace Terpadu untuk Belanja Beans
+              Restok Beans di Marketplace
               <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setActiveTab('calculator')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/10 transition-colors"
+            >
+              <Calculator className="w-4 h-4 text-amber-300" />
+              Kalkulator Dosing & Margin Cup
             </button>
           </div>
         </div>
 
-        <div className="absolute right-4 -bottom-6 opacity-10 text-white pointer-events-none">
-          <Coffee className="w-48 h-48" />
+        {/* Ambient Decorative Background */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 opacity-10 pointer-events-none text-white">
+          <Coffee className="w-96 h-96" />
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Stok Beans di Bar</span>
-            <Coffee className="w-4 h-4 text-amber-700" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">{totalPacksInStock.toLocaleString()} Pack</div>
-          <span className="text-[11px] text-amber-700 font-medium">Siap seduh untuk tamu</span>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Varian Menu Aktif</span>
-            <Layers className="w-4 h-4 text-blue-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">{myCafeInventory.length} Single Origin</div>
-          <span className="text-[11px] text-blue-600 font-medium">Lengkap dengan Traceability</span>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Menu & Retail Kedai</span>
-            <Package className="w-4 h-4 text-orange-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">{myCafeProducts.length} Item</div>
-          <span className="text-[11px] text-orange-600 font-medium">Di Etalase Toko Sendiri</span>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Total Belanja Bahan</span>
-            <TrendingUp className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">
-            Rp {totalSpend.toLocaleString()}
-          </div>
-          <span className="text-[11px] text-stone-500 font-medium">{myCafeTransactions.length} Pembelian</span>
-        </div>
+      {/* Cruip KPI Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard
+          title="Stok Biji di Bar"
+          value={`${totalPacksInStock} Pack`}
+          subtitle={`${totalWeightKg.toFixed(1)} kg total biji siap diseduh`}
+          trend={{ value: 'Stok Aman', isPositive: true }}
+          icon={<Coffee className="w-5 h-5" />}
+          color="amber"
+          progress={{ current: totalPacksInStock, total: 60 }}
+        />
+        <MetricCard
+          title="Varian Single Origin"
+          value={`${myCafeInventory.length} Varian`}
+          subtitle="Tersertifikasi SCA & Direct Trade"
+          trend={{ value: '100% Traceable', isPositive: true }}
+          icon={<Layers className="w-5 h-5" />}
+          color="blue"
+        />
+        <MetricCard
+          title="Etalase Retail Kedai"
+          value={`${myCafeProducts.length} Produk`}
+          subtitle={`Nilai Rp ${retailInventoryValue.toLocaleString()}`}
+          trend={{ value: '+4 Penjualan Pekan Ini', isPositive: true }}
+          icon={<Store className="w-5 h-5" />}
+          color="emerald"
+        />
+        <MetricCard
+          title="Total Belanja Beans"
+          value={`Rp ${totalSpend.toLocaleString()}`}
+          subtitle={`${myCafeTransactions.length} Pengadaan langsung`}
+          trend={{ value: 'Direct Trade HPP', isPositive: true }}
+          icon={<TrendingUp className="w-5 h-5" />}
+          color="stone"
+        />
       </div>
 
-      {/* Success Notification */}
+      {/* Success Notification Alert */}
       {successMsg && (
-        <div className="p-4 rounded-2xl bg-amber-100 border border-amber-300 text-amber-950 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-amber-700" />
-          {successMsg}
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center justify-between shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+          <button onClick={() => setSuccessMsg('')} className="text-emerald-700 hover:text-emerald-900">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex border-b border-stone-200">
+      {/* Navigation Tabs Bar */}
+      <div className="bg-white rounded-2xl p-1.5 border border-stone-200 shadow-xs flex flex-wrap gap-1">
         <button
           onClick={() => setActiveTab('inventory')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
             activeTab === 'inventory'
-              ? 'border-stone-900 text-stone-900 bg-stone-100/70 font-black'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
           <Coffee className="w-4 h-4" />
-          Barista Bar & Menu Seduh ({myCafeInventory.length})
+          <span>Barista Bar ({myCafeInventory.length})</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('create_product')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
-            activeTab === 'create_product'
-              ? 'border-stone-900 text-stone-900 bg-stone-100/70 font-black'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+          onClick={() => setActiveTab('calculator')}
+          className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            activeTab === 'calculator'
+              ? 'bg-stone-900 text-white shadow-xs'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <PlusCircle className="w-4 h-4" />
-          Tambah Menu / Retail Toko
+          <Calculator className="w-4 h-4 text-amber-400" />
+          <span>Kalkulator Seduh & Margin</span>
         </button>
 
         <button
           onClick={() => setActiveTab('my_products')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
             activeTab === 'my_products'
-              ? 'border-stone-900 text-stone-900 bg-stone-100/70 font-black'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
           <Package className="w-4 h-4" />
-          Etalase Toko Cafe ({myCafeProducts.length})
+          <span>Etalase Retail Toko ({myCafeProducts.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('create_product')}
+          className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            activeTab === 'create_product'
+              ? 'bg-stone-900 text-white shadow-xs'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+          }`}
+        >
+          <PlusCircle className="w-4 h-4" />
+          <span>+ Rilis Menu / Retail</span>
         </button>
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
             activeTab === 'history'
-              ? 'border-stone-900 text-stone-900 bg-stone-100/70 font-black'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
           <History className="w-4 h-4" />
-          Riwayat Pengeluaran ({myCafeTransactions.length})
+          <span>Buku Pengeluaran ({myCafeTransactions.length})</span>
         </button>
       </div>
 
-      {/* Tab 1: Barista Bar Inventaris */}
+      {/* TAB 1: BARISTA BAR INVENTARIS */}
       {activeTab === 'inventory' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-stone-900">
-                Menu Kopi Aktif & Inventaris Barista ({myCafeInventory.length})
-              </h2>
-              <p className="text-xs text-stone-500">
-                Biji kopi siap seduh untuk disajikan kepada pengunjung kedai specialty Anda.
-              </p>
+          {/* Action Toolbar */}
+          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari biji kopi, roastery, profil..."
+                className="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
+              />
             </div>
-            <button
-              onClick={() => setActiveView('marketplace')}
-              className="text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg border border-amber-300 flex items-center gap-1"
-            >
-              <ShoppingCart className="w-3.5 h-3.5" />
-              Beli Beans Tambahan di Marketplace
-            </button>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <span className="text-xs text-stone-500 font-medium">
+                Menampilkan <strong>{filteredInventory.length}</strong> varian di bar
+              </span>
+              <button
+                onClick={() => setActiveView('marketplace')}
+                className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-xs"
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                Belanja Beans
+              </button>
+            </div>
           </div>
 
+          {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {myCafeInventory.map((item) => (
+            {filteredInventory.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
+                className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
               >
                 <div>
-                  <div className="p-5 bg-linear-to-br from-amber-50 via-stone-50 to-white border-b border-stone-100">
+                  {/* Card Header */}
+                  <div className="p-5 bg-gradient-to-br from-amber-50/70 via-stone-50 to-white border-b border-stone-100">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Aktif di Bar
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Ready at Bar
                       </span>
-                      <span className="inline-flex items-center gap-1 text-xs font-black bg-stone-900 text-amber-400 px-2 py-0.5 rounded-md">
-                        SCA: {item.scaScore}
+                      <span className="inline-flex items-center gap-1 text-xs font-black bg-stone-900 text-amber-300 px-2.5 py-0.5 rounded-md shadow-xs">
+                        <Award className="w-3 h-3 text-amber-400" />
+                        SCA {item.scaScore}
                       </span>
                     </div>
 
-                    <h3 className="font-bold text-base text-stone-900 leading-tight">
+                    <h3 className="font-bold text-base text-stone-900 leading-tight group-hover:text-amber-800 transition-colors">
                       {item.beanName}
                     </h3>
-                    <p className="text-xs text-stone-500 mt-1">
-                      Roaster: <strong>{item.roasterName}</strong> • {item.roastLevel}
-                    </p>
+                    <div className="flex items-center gap-2 text-xs text-stone-500 mt-1">
+                      <span>Roaster: <strong className="text-stone-700">{item.roasterName}</strong></span>
+                      <span>•</span>
+                      <span className="px-1.5 py-0.5 bg-stone-100 rounded text-[11px] font-medium text-stone-600">
+                        {item.roastLevel}
+                      </span>
+                    </div>
                   </div>
 
+                  {/* Flavor Notes & Metadata */}
                   <div className="p-5 space-y-3">
                     <div>
-                      <span className="text-[10px] font-semibold text-stone-400 block mb-1">
-                        Karakter Rasa Menu:
+                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1.5">
+                        Tasting Profile:
                       </span>
                       <div className="flex flex-wrap gap-1">
                         {item.tastingNotes.map((note, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-50 text-amber-900 border border-amber-200"
+                            className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-900 border border-amber-200/70"
                           >
                             {note}
                           </span>
@@ -291,63 +379,69 @@ export const CafeView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="bg-stone-50 p-3 rounded-xl border border-stone-200/80 text-xs space-y-1">
+                    {/* Silsilah Summary Box */}
+                    <div className="bg-stone-50 p-3 rounded-xl border border-stone-200/70 text-xs space-y-1.5">
                       <div className="flex justify-between">
-                        <span className="text-stone-500">Petani Asal:</span>
-                        <strong className="text-stone-800 truncate max-w-[170px]">{item.lineage.farmerName}</strong>
+                        <span className="text-stone-500">Petani / Asal:</span>
+                        <strong className="text-stone-800 truncate max-w-[160px]">{item.lineage.farmerName}</strong>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-stone-500">Ketinggian Kebun:</span>
-                        <strong className="text-emerald-700">{item.lineage.altitude}</strong>
+                        <strong className="text-emerald-700 font-semibold">{item.lineage.altitude}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-stone-500">Metode Proses:</span>
+                        <span className="text-stone-500">Metode Fermentasi:</span>
                         <strong className="text-stone-800">{item.processMethod}</strong>
                       </div>
                     </div>
 
+                    {/* Quick Tools & Tracing */}
                     <div className="space-y-2 pt-1">
                       <button
                         onClick={() => setCupBarcodeItem(item)}
-                        className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-600 via-stone-900 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white text-xs font-black transition-all flex items-center justify-center gap-2 shadow-sm"
+                        className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-600 via-stone-900 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white text-xs font-black transition-all flex items-center justify-center gap-2 shadow-xs"
                       >
                         <QrCode className="w-4 h-4 text-amber-300" />
-                        🏷️ Cetak Stiker Barcode Gelas (Cup)
+                        🏷️ Cetak Stiker QR Gelas (Takeaway Cup)
                       </button>
 
                       <div className="grid grid-cols-2 gap-2">
                         <button
-                          onClick={() => setTraceModalData(item)}
-                          className="py-2 px-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors flex items-center justify-center gap-1 border border-stone-300"
+                          onClick={() => setTableCardItem(item)}
+                          className="py-2 px-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 border border-stone-300"
                         >
-                          <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                          Silsilah Lengkap
+                          <Printer className="w-3.5 h-3.5 text-stone-600" />
+                          Kartu Meja
                         </button>
 
                         <button
-                          onClick={() => setTableCardItem(item)}
-                          className="py-2 px-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors flex items-center justify-center gap-1 border border-stone-300"
+                          onClick={() => setTraceModalData(item)}
+                          className="py-2 px-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 border border-stone-300"
                         >
-                          <Coffee className="w-3.5 h-3.5 text-stone-600" />
-                          Kartu Meja
+                          <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                          Silsilah Lengkap
                         </button>
                       </div>
                     </div>
                   </div>
                 </div>
 
+                {/* Footer Stok */}
                 <div className="p-4 bg-stone-50 border-t border-stone-100 flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-stone-400 block">Stok Cafe Tersedia:</span>
+                    <span className="text-[10px] text-stone-400 block font-medium">Stok di Bar:</span>
                     <span className="text-sm font-black text-amber-900">
                       {item.packsInStock} Pack
-                      <span className="text-xs font-normal text-stone-500"> ({(item.packsInStock * item.packWeightGrams) / 1000} kg)</span>
+                      <span className="text-xs font-normal text-stone-500"> ({((item.packsInStock * item.packWeightGrams) / 1000).toFixed(1)} kg)</span>
                     </span>
                   </div>
 
-                  <span className="text-[11px] text-stone-500 font-medium">
-                    Rp {item.costPerPack.toLocaleString()} / pack
-                  </span>
+                  <div className="text-right">
+                    <span className="text-[10px] text-stone-400 block font-medium">HPP Pembelian:</span>
+                    <span className="text-xs font-bold text-stone-800">
+                      Rp {item.costPerPack.toLocaleString()} / pack
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -355,206 +449,189 @@ export const CafeView: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 2: Form Rilis Produk Baru ke Marketplace Terpadu */}
-      {activeTab === 'create_product' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm max-w-3xl">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
-              <PlusCircle className="w-5 h-5 text-amber-600" />
-              Rilis Produk / Retail Pack ke Marketplace Terpadu
-            </h2>
-            <p className="text-xs text-stone-500 mt-1">
-              Sebagai pemilik coffee shop, Anda dapat menjual signature house blend, drip bag, cold brew bottle, atau produk kopi kemasan ke seluruh pengguna di ekosistem kopi.
-            </p>
+      {/* TAB 2: KALKULATOR DOSING & MARGIN SEDUH */}
+      {activeTab === 'calculator' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Input Controls */}
+          <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-stone-200 shadow-xs space-y-5">
+            <div className="flex items-center gap-2 border-b border-stone-100 pb-4">
+              <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700">
+                <Calculator className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-stone-900">Kalkulator Dosing & HPP per Cup</h2>
+                <p className="text-xs text-stone-500">Hitung profitabilitas seduh manual brew, espresso, atau milk-based drink.</p>
+              </div>
+            </div>
+
+            {/* Select Bean */}
+            <div>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                Pilih Biji Kopi di Bar
+              </label>
+              <select
+                value={calcSelectedBean || (activeCalcItem?.id || '')}
+                onChange={(e) => setCalcSelectedBean(e.target.value)}
+                className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-medium text-stone-800 focus:ring-2 focus:ring-amber-500"
+              >
+                {myCafeInventory.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.beanName} (Rp {item.costPerPack.toLocaleString()} / {item.packWeightGrams}g)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Gram Dose */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">
+                  Dosis Biji Kopi per Gelas (Gram)
+                </label>
+                <span className="text-xs font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                  {calcDoseGrams} g / cup
+                </span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="25"
+                step="0.5"
+                value={calcDoseGrams}
+                onChange={(e) => setCalcDoseGrams(Number(e.target.value))}
+                className="w-full accent-amber-600"
+              />
+              <div className="flex justify-between text-[10px] text-stone-400 mt-1">
+                <span>10g (Light Filter)</span>
+                <span>15g (V60 Standard)</span>
+                <span>18g-20g (Double Espresso)</span>
+                <span>25g (Bold / Iced)</span>
+              </div>
+            </div>
+
+            {/* Extra Cost (Milk, Cup, Ice, etc.) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                  Biaya Kemasan & Add-on (Rp)
+                </label>
+                <input
+                  type="number"
+                  step="500"
+                  value={calcExtraCost}
+                  onChange={(e) => setCalcExtraCost(Number(e.target.value))}
+                  placeholder="Cup, sedotan, susu..."
+                  className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-800 focus:ring-2 focus:ring-amber-500"
+                />
+                <span className="text-[10px] text-stone-400 mt-1 block">Cup takeaway + sedotan + susu</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                  Harga Jual Minuman di Menu (Rp)
+                </label>
+                <input
+                  type="number"
+                  step="1000"
+                  value={calcCupPrice}
+                  onChange={(e) => setCalcCupPrice(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-800 focus:ring-2 focus:ring-amber-500"
+                />
+                <span className="text-[10px] text-stone-400 mt-1 block">Harga tertera di menu kasir</span>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleCreateProduct} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Nama Produk Kopi
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={prodName}
-                  onChange={(e) => setProdName(e.target.value)}
-                  placeholder="Contoh: Seduh Teduh House Blend Espresso 250g"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Asal Daerah / Asal Biji (Origin)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={prodOrigin}
-                  onChange={(e) => setProdOrigin(e.target.value)}
-                  placeholder="Contoh: Pangalengan x Aceh Gayo"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Varietas
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={prodVariety}
-                  onChange={(e) => setProdVariety(e.target.value)}
-                  placeholder="Contoh: Typica & Ateng Blend"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Profil Sangrai
-                </label>
-                <select
-                  value={prodRoastLevel}
-                  onChange={(e) => setProdRoastLevel(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 bg-white"
-                >
-                  <option value="Light Roast">Light Roast (Filter)</option>
-                  <option value="Light-Medium">Light-Medium Roast</option>
-                  <option value="Medium Roast">Medium Roast (Omni / Espresso)</option>
-                  <option value="Dark Roast">Dark Roast (Bold)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Format Kemasan (Satuan)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={prodUnit}
-                  onChange={(e) => setProdUnit(e.target.value)}
-                  placeholder="Pack (250g), Box (5 Drip Bags), Botol (500ml)"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Harga Jual Satuan (Rp)
-                </label>
-                <input
-                  type="number"
-                  required
-                  step="1000"
-                  value={prodPrice}
-                  onChange={(e) => setProdPrice(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Stok Tersedia
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={prodStock}
-                  onChange={(e) => setProdStock(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-            </div>
-
+          {/* Results Summary Card */}
+          <div className="lg:col-span-6 bg-gradient-to-br from-stone-900 to-amber-950 text-white rounded-3xl p-6 shadow-xl flex flex-col justify-between border border-stone-800">
             <div>
-              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                Deskripsi Produk Cafe
-              </label>
-              <textarea
-                rows={2}
-                value={prodDesc}
-                onChange={(e) => setProdDesc(e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
-              />
-            </div>
-
-            {/* Tasting Notes */}
-            <div>
-              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                Karakter Rasa (Tasting Notes)
-              </label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={noteInput}
-                  onChange={(e) => setNoteInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddNote();
-                    }
-                  }}
-                  placeholder="Ketik aroma (misal: Milk Chocolate, Toffee)..."
-                  className="flex-1 px-4 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddNote}
-                  className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold transition-colors"
-                >
-                  Tambah
-                </button>
+              <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-5">
+                <span className="text-xs uppercase font-bold tracking-widest text-amber-400">
+                  Estimasi Profitabilitas Seduh
+                </span>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                  Margin: {marginPercentage.toFixed(1)}%
+                </span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {prodNotes.map((note) => (
-                  <span
-                    key={note}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-300"
-                  >
-                    {note}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveNote(note)}
-                      className="hover:text-red-700 ml-1"
-                    >
-                      &times;
-                    </button>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <span className="text-[10px] text-stone-400 uppercase font-semibold block">HPP Biji Kopi / Cup:</span>
+                  <span className="text-lg font-black text-amber-300">
+                    Rp {Math.round(beanCostPerCup).toLocaleString()}
                   </span>
-                ))}
+                  <span className="text-[10px] text-stone-400 block mt-0.5">({calcDoseGrams}g @ Rp {Math.round(costPerGram)}/g)</span>
+                </div>
+
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <span className="text-[10px] text-stone-400 uppercase font-semibold block">Total HPP per Gelas:</span>
+                  <span className="text-lg font-black text-stone-200">
+                    Rp {Math.round(totalCostPerCup).toLocaleString()}
+                  </span>
+                  <span className="text-[10px] text-stone-400 block mt-0.5">+ Biaya cup & bahan Rp {calcExtraCost.toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Profit per cup */}
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 mb-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-emerald-300 font-bold block">Gross Profit per Cup:</span>
+                    <span className="text-2xl font-black text-emerald-400">
+                      Rp {Math.round(profitPerCup).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-stone-400 block">Harga Jual Menu:</span>
+                    <span className="text-base font-black text-white">
+                      Rp {calcCupPrice.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Yield per Pack */}
+              <div className="space-y-2 text-xs border-t border-white/10 pt-4">
+                <div className="flex justify-between text-stone-300">
+                  <span>Hasil Seduh per Pack ({activeCalcItem?.packWeightGrams || 250}g):</span>
+                  <strong className="text-white font-mono">{estimatedCupsPerPack} Gelas</strong>
+                </div>
+                <div className="flex justify-between text-stone-300">
+                  <span>Potensi Omzet per Pack:</span>
+                  <strong className="text-amber-300 font-mono">Rp {totalRevenuePerPack.toLocaleString()}</strong>
+                </div>
+                <div className="flex justify-between text-stone-300">
+                  <span>Estimasi Laba Bersih per Pack:</span>
+                  <strong className="text-emerald-400 font-mono">Rp {Math.round(totalProfitPerPack).toLocaleString()}</strong>
+                </div>
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
-              <button
-                type="submit"
-                className="px-6 py-3 rounded-xl bg-stone-900 hover:bg-amber-800 text-white font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2"
-              >
-                <PlusCircle className="w-4 h-4" />
-                Terbitkan ke Marketplace Terpadu
-              </button>
+            <div className="pt-4 mt-4 border-t border-white/10 text-[11px] text-stone-400 italic">
+              💡 Transparansi cerita silsilah di kartu meja terbukti meningkatkan konversi penjualan menu specialty hingga 40%.
             </div>
-          </form>
+          </div>
         </div>
       )}
 
-      {/* Tab 3: Produk Cafe Saya di Marketplace Terpadu */}
+      {/* TAB 3: ETALASE PRODUK CAFE */}
       {activeTab === 'my_products' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-stone-900">
-              Produk Cafe yang Sedang Dijual di Marketplace ({myCafeProducts.length})
-            </h2>
+          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-stone-900">
+                Katalog Menu & Retail Pack Kedai ({myCafeProducts.length})
+              </h2>
+              <p className="text-xs text-stone-500">
+                Produk yang aktif ditampilkan di etalase toko dan menu pesanan kedai Anda.
+              </p>
+            </div>
             <button
               onClick={() => setActiveTab('create_product')}
-              className="text-xs font-bold text-stone-800 bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-lg border border-stone-300 flex items-center gap-1"
+              className="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-xs"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              Tambah Produk Baru
+              Tambah Produk Retail
             </button>
           </div>
 
@@ -565,7 +642,7 @@ export const CafeView: React.FC = () => {
                 className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative h-40 bg-stone-900">
+                  <div className="relative h-44 bg-stone-900">
                     <img
                       src={prod.photoUrl}
                       alt={prod.name}
@@ -574,7 +651,7 @@ export const CafeView: React.FC = () => {
                     <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-xs text-white text-[10px] font-mono px-2 py-0.5 rounded-md">
                       {prod.id}
                     </div>
-                    <div className="absolute top-3 right-3 bg-stone-200 text-stone-900 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-stone-400">
+                    <div className="absolute top-3 right-3 bg-white text-stone-900 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
                       {prod.packageUnit}
                     </div>
                   </div>
@@ -606,7 +683,7 @@ export const CafeView: React.FC = () => {
 
                 <div className="p-4 bg-stone-50 border-t border-stone-100 flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-stone-400 block">Harga Jual:</span>
+                    <span className="text-[10px] text-stone-400 block font-medium">Harga Jual:</span>
                     <span className="text-sm font-black text-stone-900">
                       Rp {prod.price.toLocaleString()}
                       <span className="text-xs font-normal text-stone-500"> / {prod.packageUnit}</span>
@@ -614,9 +691,9 @@ export const CafeView: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[10px] text-stone-400 block">Sisa Stok:</span>
-                    <span className="text-xs font-bold text-emerald-700">
-                      {prod.availableStock} / {prod.totalStock}
+                    <span className="text-[10px] text-stone-400 block font-medium">Stok Retail:</span>
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      {prod.availableStock} / {prod.totalStock} tersedia
                     </span>
                   </div>
                 </div>
@@ -626,18 +703,211 @@ export const CafeView: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 4: Riwayat Transaksi */}
+      {/* TAB 4: TAMBAH PRODUK BARU */}
+      {activeTab === 'create_product' && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm max-w-3xl">
+          <div className="mb-6 pb-4 border-b border-stone-100">
+            <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+              <PlusCircle className="w-5 h-5 text-amber-600" />
+              Rilis Menu / Retail Pack ke Toko Kedai
+            </h2>
+            <p className="text-xs text-stone-500 mt-1">
+              Sebagai pemilik cafe, Anda dapat menjual signature house blend, cold brew bottle, drip bag, atau merchandise ke pengunjung dan ekosistem.
+            </p>
+          </div>
+
+          <form onSubmit={handleCreateProduct} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Nama Produk Kopi / Menu
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={prodName}
+                  onChange={(e) => setProdName(e.target.value)}
+                  placeholder="Contoh: Seduh Teduh House Blend Espresso 250g"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Asal Daerah (Origin)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={prodOrigin}
+                  onChange={(e) => setProdOrigin(e.target.value)}
+                  placeholder="Contoh: Pangalengan x Aceh Gayo"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Varietas
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={prodVariety}
+                  onChange={(e) => setProdVariety(e.target.value)}
+                  placeholder="Contoh: Typica & Ateng Blend"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Profil Sangrai
+                </label>
+                <select
+                  value={prodRoastLevel}
+                  onChange={(e) => setProdRoastLevel(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 bg-white"
+                >
+                  <option value="Light Roast">Light Roast (Filter)</option>
+                  <option value="Light-Medium">Light-Medium Roast</option>
+                  <option value="Medium Roast">Medium Roast (Omni / Espresso)</option>
+                  <option value="Dark Roast">Dark Roast (Bold)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Format Kemasan
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={prodUnit}
+                  onChange={(e) => setProdUnit(e.target.value)}
+                  placeholder="Pack (250g), Box (5 Drip Bags), Botol (500ml)"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Harga Jual Satuan (Rp)
+                </label>
+                <input
+                  type="number"
+                  required
+                  step="1000"
+                  value={prodPrice}
+                  onChange={(e) => setProdPrice(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Jumlah Stok Rilis
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  value={prodStock}
+                  onChange={(e) => setProdStock(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 font-semibold"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Deskripsi Menu / Produk
+              </label>
+              <textarea
+                rows={2}
+                value={prodDesc}
+                onChange={(e) => setProdDesc(e.target.value)}
+                className="w-full px-4 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            {/* Tasting Notes */}
+            <div>
+              <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                Karakter Rasa (Tasting Notes)
+              </label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={noteInput}
+                  onChange={(e) => setNoteInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddNote();
+                    }
+                  }}
+                  placeholder="Ketik aroma (misal: Milk Chocolate, Toffee)..."
+                  className="flex-1 px-4 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddNote}
+                  className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold transition-colors"
+                >
+                  Tambah
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {prodNotes.map((note) => (
+                  <span
+                    key={note}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-300"
+                  >
+                    {note}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveNote(note)}
+                      className="hover:text-red-700 ml-1 text-sm font-bold"
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-3 flex justify-end">
+              <button
+                type="submit"
+                className="px-6 py-3 rounded-xl bg-stone-900 hover:bg-amber-800 text-white font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Terbitkan ke Katalog Kedai
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* TAB 5: RIWAYAT TRANSAKSI & PENGELUARAN */}
       {activeTab === 'history' && (
-        <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs">
-          <h2 className="text-base font-bold text-stone-900 mb-4 flex items-center gap-2">
-            <History className="w-5 h-5 text-stone-800" />
-            Catatan Transaksi Cafe
-          </h2>
+        <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+            <h2 className="text-base font-bold text-stone-900 flex items-center gap-2">
+              <History className="w-5 h-5 text-stone-800" />
+              Buku Pengeluaran & Transaksi Cafe
+            </h2>
+            <span className="text-xs text-stone-500 font-medium">
+              Total Pengeluaran: <strong>Rp {totalSpend.toLocaleString()}</strong>
+            </span>
+          </div>
 
           {myCafeTransactions.length === 0 ? (
-            <p className="text-xs text-stone-500 py-6 text-center">
-              Belum ada riwayat pesanan.
-            </p>
+            <div className="text-center py-12 text-stone-400">
+              <Receipt className="w-10 h-10 mx-auto mb-2 opacity-50" />
+              <p className="text-xs">Belum ada riwayat transaksi pengadaan.</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -647,7 +917,7 @@ export const CafeView: React.FC = () => {
                     <th className="py-3 px-4">Tanggal</th>
                     <th className="py-3 px-4">Pengirim</th>
                     <th className="py-3 px-4">Penerima</th>
-                    <th className="py-3 px-4">Komoditas</th>
+                    <th className="py-3 px-4">Komoditas Beans</th>
                     <th className="py-3 px-4">Jumlah</th>
                     <th className="py-3 px-4">Total Biaya</th>
                     <th className="py-3 px-4">Status</th>
@@ -655,7 +925,7 @@ export const CafeView: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {myCafeTransactions.map((trx) => (
-                    <tr key={trx.id} className="hover:bg-stone-50/50">
+                    <tr key={trx.id} className="hover:bg-stone-50/50 transition-colors">
                       <td className="py-3 px-4 font-mono font-bold text-stone-800">{trx.id}</td>
                       <td className="py-3 px-4 text-stone-600">{trx.date}</td>
                       <td className="py-3 px-4 font-semibold text-stone-900">{trx.fromName}</td>
@@ -770,3 +1040,4 @@ export const CafeView: React.FC = () => {
     </div>
   );
 };
+

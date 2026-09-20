@@ -15,6 +15,18 @@ import {
   WarehouseGradeTier,
 } from '../types/coffee';
 import {
+  WorkOrder,
+  WorkOrderStatus,
+  WorkOrderBatch,
+  MasterRoastProfile,
+  PurchaseOrder,
+  GreenBeanSample,
+  QCCuppingSession,
+  RoasterPackagingItem,
+  SalesOrder,
+  RoasterMachine,
+} from '../types/roasterErp';
+import {
   MOCK_USERS,
   INITIAL_FARMER_LOTS,
   INITIAL_PROCESSED_LOTS,
@@ -24,6 +36,16 @@ import {
   INITIAL_CAFE_PRODUCTS,
   INITIAL_TRANSACTIONS,
 } from '../data/mockData';
+import {
+  INITIAL_WORK_ORDERS,
+  INITIAL_MASTER_PROFILES,
+  INITIAL_PURCHASE_ORDERS,
+  INITIAL_GREEN_SAMPLES,
+  INITIAL_QC_SESSIONS,
+  INITIAL_PACKAGING_ITEMS,
+  INITIAL_SALES_ORDERS,
+  INITIAL_ROASTER_MACHINES,
+} from '../data/mockRoasterErpData';
 import { calculateProcessorEcoRating } from '../utils/ecoRating';
 
 interface CoffeeContextType {
@@ -31,9 +53,19 @@ interface CoffeeContextType {
   users: AppUser[];
   loginAsRole: (role: UserRole) => void;
   loginAsUser: (userId: string) => void;
+  registerUser?: (userData: {
+    name: string;
+    role: UserRole;
+    organization: string;
+    location: string;
+    phone: string;
+    bio?: string;
+  }) => AppUser;
   logout: () => void;
-  activeView: 'dashboard' | 'marketplace' | 'transactions';
-  setActiveView: (view: 'dashboard' | 'marketplace' | 'transactions') => void;
+  activeView: 'landing' | 'dashboard' | 'marketplace' | 'transactions';
+  setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
+  roasterActiveTab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history';
+  setRoasterActiveTab: (tab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
   farmerLots: FarmerHarvestLot[];
   processedLots: ProcessedGreenBeanLot[];
   warehouseLots: WarehouseLot[];
@@ -112,6 +144,18 @@ interface CoffeeContextType {
       recommendedBrew: string[];
     }
   ) => void;
+  publishRoastedLotFromWorkOrder: (
+    workOrderId: string,
+    listingData: {
+      tastingNotes: string[];
+      scaCuppingScore: number;
+      packageWeightGrams: number;
+      totalPacks: number;
+      pricePerPack: number;
+      restingRecommendationDays: number;
+      recommendedBrew: string[];
+    }
+  ) => RoastedBeanLot | null;
   buyRoastedBeansForCafe: (roastedLotId: string, packCount: number) => void;
   addCafeRetailProduct: (
     productData: Omit<CafeRetailProduct, 'id' | 'cafeId' | 'cafeName' | 'createdAt' | 'availableStock'>
@@ -127,6 +171,29 @@ interface CoffeeContextType {
     warehouseLot?: WarehouseLot;
     roastedLot?: RoastedBeanLot;
   };
+  // --- QREMA ROASTERY ERP STATE & METHODS ---
+  workOrders: WorkOrder[];
+  masterProfiles: MasterRoastProfile[];
+  purchaseOrders: PurchaseOrder[];
+  greenBeanSamples: GreenBeanSample[];
+  qcSessions: QCCuppingSession[];
+  packagingInventory: RoasterPackagingItem[];
+  salesOrders: SalesOrder[];
+  roasterMachines: RoasterMachine[];
+  createWorkOrder: (
+    woData: Omit<WorkOrder, 'id' | 'woNumber' | 'createdAt' | 'batches' | 'actualRoastedKg' | 'actualGreenKg' | 'weightLossPercent'>
+  ) => WorkOrder;
+  updateWorkOrderStatus: (id: string, status: WorkOrderStatus) => void;
+  executeRoastBatch: (woId: string, batchData: Omit<WorkOrderBatch, 'executedAt'>) => void;
+  createPurchaseOrder: (poData: Omit<PurchaseOrder, 'id' | 'poNumber'>) => PurchaseOrder;
+  receivePurchaseOrder: (poId: string) => void;
+  createGreenBeanSample: (sampleData: Omit<GreenBeanSample, 'id' | 'sampleCode' | 'receivedDate'>) => GreenBeanSample;
+  updateGreenBeanSample: (id: string, status: GreenBeanSample['status'], evaluationNotes?: string) => void;
+  createMasterProfile: (profileData: Omit<MasterRoastProfile, 'id'>) => MasterRoastProfile;
+  createCuppingSession: (qcData: Omit<QCCuppingSession, 'id' | 'sessionCode' | 'date'>) => QCCuppingSession;
+  createSalesOrder: (soData: Omit<SalesOrder, 'id' | 'soNumber' | 'orderDate'>) => SalesOrder;
+  dispatchSalesOrder: (soId: string) => void;
+  updatePackagingStock: (id: string, qtyDelta: number) => void;
 }
 
 const CoffeeContext = createContext<CoffeeContextType | undefined>(undefined);
@@ -144,7 +211,19 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return MOCK_USERS[0];
   });
 
-  const [activeView, setActiveView] = useState<'dashboard' | 'marketplace' | 'transactions'>('marketplace');
+  const [users, setUsers] = useState<AppUser[]>(() => {
+    const saved = localStorage.getItem('cct_users');
+    return saved ? JSON.parse(saved) : MOCK_USERS;
+  });
+
+  const [activeView, setActiveView] = useState<'landing' | 'dashboard' | 'marketplace' | 'transactions'>('landing');
+  const [roasterActiveTab, setRoasterActiveTab] = useState<
+    'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history'
+  >('dashboard');
+
+  useEffect(() => {
+    localStorage.setItem('cct_users', JSON.stringify(users));
+  }, [users]);
 
   const [farmerLots, setFarmerLots] = useState<FarmerHarvestLot[]>(() => {
     const saved = localStorage.getItem('cct_farmerLots');
@@ -179,6 +258,47 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [transactions, setTransactions] = useState<SupplyChainTransaction[]>(() => {
     const saved = localStorage.getItem('cct_transactions');
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+  });
+
+  // --- QREMA ROASTERY ERP STATE ---
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>(() => {
+    const saved = localStorage.getItem('cct_workOrders');
+    return saved ? JSON.parse(saved) : INITIAL_WORK_ORDERS;
+  });
+
+  const [masterProfiles, setMasterProfiles] = useState<MasterRoastProfile[]>(() => {
+    const saved = localStorage.getItem('cct_masterProfiles');
+    return saved ? JSON.parse(saved) : INITIAL_MASTER_PROFILES;
+  });
+
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => {
+    const saved = localStorage.getItem('cct_purchaseOrders');
+    return saved ? JSON.parse(saved) : INITIAL_PURCHASE_ORDERS;
+  });
+
+  const [greenBeanSamples, setGreenBeanSamples] = useState<GreenBeanSample[]>(() => {
+    const saved = localStorage.getItem('cct_greenBeanSamples');
+    return saved ? JSON.parse(saved) : INITIAL_GREEN_SAMPLES;
+  });
+
+  const [qcSessions, setQcSessions] = useState<QCCuppingSession[]>(() => {
+    const saved = localStorage.getItem('cct_qcSessions');
+    return saved ? JSON.parse(saved) : INITIAL_QC_SESSIONS;
+  });
+
+  const [packagingInventory, setPackagingInventory] = useState<RoasterPackagingItem[]>(() => {
+    const saved = localStorage.getItem('cct_packagingInventory');
+    return saved ? JSON.parse(saved) : INITIAL_PACKAGING_ITEMS;
+  });
+
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(() => {
+    const saved = localStorage.getItem('cct_salesOrders');
+    return saved ? JSON.parse(saved) : INITIAL_SALES_ORDERS;
+  });
+
+  const [roasterMachines, setRoasterMachines] = useState<RoasterMachine[]>(() => {
+    const saved = localStorage.getItem('cct_roasterMachines');
+    return saved ? JSON.parse(saved) : INITIAL_ROASTER_MACHINES;
   });
 
   // Sync state to local storage
@@ -218,8 +338,40 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem('cct_transactions', JSON.stringify(transactions));
   }, [transactions]);
 
+  useEffect(() => {
+    localStorage.setItem('cct_workOrders', JSON.stringify(workOrders));
+  }, [workOrders]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_masterProfiles', JSON.stringify(masterProfiles));
+  }, [masterProfiles]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_purchaseOrders', JSON.stringify(purchaseOrders));
+  }, [purchaseOrders]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_greenBeanSamples', JSON.stringify(greenBeanSamples));
+  }, [greenBeanSamples]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_qcSessions', JSON.stringify(qcSessions));
+  }, [qcSessions]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_packagingInventory', JSON.stringify(packagingInventory));
+  }, [packagingInventory]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_salesOrders', JSON.stringify(salesOrders));
+  }, [salesOrders]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_roasterMachines', JSON.stringify(roasterMachines));
+  }, [roasterMachines]);
+
   const loginAsRole = (role: UserRole) => {
-    const matched = MOCK_USERS.find((u) => u.role === role);
+    const matched = users.find((u) => u.role === role) || MOCK_USERS.find((u) => u.role === role);
     if (matched) {
       setCurrentUser(matched);
       setActiveView('dashboard');
@@ -227,11 +379,45 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const loginAsUser = (userId: string) => {
-    const matched = MOCK_USERS.find((u) => u.id === userId);
+    const matched = users.find((u) => u.id === userId) || MOCK_USERS.find((u) => u.id === userId);
     if (matched) {
       setCurrentUser(matched);
       setActiveView('dashboard');
     }
+  };
+
+  const registerUser = (userData: {
+    name: string;
+    role: UserRole;
+    organization: string;
+    location: string;
+    phone: string;
+    bio?: string;
+  }): AppUser => {
+    const defaultAvatars: Record<UserRole, string> = {
+      petani: 'https://images.unsplash.com/photo-1595273670150-bd0c3c392e46?w=150&auto=format&fit=crop&q=80',
+      pengolah: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      gudang: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      roaster: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80',
+      cafe: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    };
+
+    const newUser: AppUser = {
+      id: `user-${userData.role}-${Date.now().toString().slice(-4)}`,
+      name: userData.name,
+      role: userData.role,
+      organization: userData.organization,
+      location: userData.location,
+      phone: userData.phone,
+      avatar: defaultAvatars[userData.role] || defaultAvatars.roaster,
+      balance: 50000000,
+      bio: userData.bio || `Pengguna terdaftar baru sebagai ${userData.role}`,
+    };
+
+    setUsers((prev) => [newUser, ...prev]);
+    setCurrentUser(newUser);
+    setActiveView('dashboard');
+    return newUser;
   };
 
   const logout = () => {
@@ -578,6 +764,90 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       photoUrl: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&auto=format&fit=crop&q=80',
     };
     setRoastedLots((prev) => [newRoastedBean, ...prev]);
+  };
+
+  // 4b. Roaster mempublikasikan hasil Work Order (MRP) yang sudah completed ke Marketplace
+  // Ini menjembatani modul Production/Work Orders (internal MRP) dengan Unified Marketplace,
+  // sekaligus mengurangi stok green bean gudang & membuat Roasted Bean Lot yang bisa dipindai QR-nya.
+  const publishRoastedLotFromWorkOrder = (
+    workOrderId: string,
+    listingData: {
+      tastingNotes: string[];
+      scaCuppingScore: number;
+      packageWeightGrams: number;
+      totalPacks: number;
+      pricePerPack: number;
+      restingRecommendationDays: number;
+      recommendedBrew: string[];
+    }
+  ): RoastedBeanLot | null => {
+    if (!currentUser) return null;
+    const wo = workOrders.find((w) => w.id === workOrderId);
+    if (!wo) return null;
+
+    // Sudah pernah dipublikasikan sebelumnya? jangan duplikat.
+    const alreadyPublished = roastedLots.find((r) => r.sourceWorkOrderId === wo.id);
+    if (alreadyPublished) return alreadyPublished;
+
+    const sourceWH = warehouseLots.find((w) => w.id === wo.greenLotId);
+
+    // Kurangi stok gudang sesuai green bean yang benar-benar terpakai di WO ini (konsistensi rantai pasok)
+    if (sourceWH) {
+      const consumedKg = wo.actualGreenKg || wo.targetGreenKg;
+      const remainingKg = Math.max(0, sourceWH.availableWeightKg - consumedKg);
+      setWarehouseLots((prev) =>
+        prev.map((w) =>
+          w.id === sourceWH.id
+            ? { ...w, availableWeightKg: remainingKg, status: remainingKg === 0 ? 'sold' : 'partial' }
+            : w
+        )
+      );
+
+      const newTrx: SupplyChainTransaction = {
+        id: `TRX-${Date.now().toString().slice(-4)}`,
+        date: new Date().toISOString().split('T')[0],
+        fromRole: 'gudang',
+        fromName: sourceWH.warehouseName,
+        toRole: 'roaster',
+        toName: currentUser.organization || currentUser.name,
+        itemName: `Green Bean ${sourceWH.variety} untuk ${wo.woNumber} (${wo.actualGreenKg || wo.targetGreenKg} kg)`,
+        quantity: `${wo.actualGreenKg || wo.targetGreenKg} kg`,
+        totalAmount: (wo.actualGreenKg || wo.targetGreenKg) * sourceWH.pricePerKg,
+        status: 'Selesai',
+      };
+      setTransactions((prev) => [newTrx, ...prev]);
+    }
+
+    const newRoastedId = `RST-CRF-${Date.now().toString().slice(-4)}`;
+    const newRoastedBean: RoastedBeanLot = {
+      id: newRoastedId,
+      roasterId: currentUser.id,
+      roasterName: currentUser.organization || currentUser.name,
+      sourceWarehouseLotId: wo.greenLotId,
+      origin: wo.origin,
+      variety: wo.variety,
+      altitude: sourceWH?.altitude || '-',
+      processMethod: wo.processMethod,
+      farmerName: sourceWH?.sourceFarmerName || 'Mitra Petani',
+      roasterMachine: wo.assignedMachine,
+      roastLevel: (wo.targetRoastLevel as RoastedBeanLot['roastLevel']) || 'Medium Roast',
+      agtronNumber: wo.targetAgtron,
+      roastDate: new Date().toISOString().split('T')[0],
+      developmentTimeRatio: wo.targetDtr,
+      tastingNotes: listingData.tastingNotes,
+      scaCuppingScore: listingData.scaCuppingScore,
+      packageWeightGrams: listingData.packageWeightGrams,
+      totalPacks: listingData.totalPacks,
+      availablePacks: listingData.totalPacks,
+      pricePerPack: listingData.pricePerPack,
+      restingRecommendationDays: listingData.restingRecommendationDays,
+      recommendedBrew: listingData.recommendedBrew,
+      status: 'available',
+      photoUrl: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&auto=format&fit=crop&q=80',
+      sourceWorkOrderId: wo.id,
+    };
+    setRoastedLots((prev) => [newRoastedBean, ...prev]);
+    return newRoastedBean;
   };
 
   // 5. Cafe beli roasted bean
@@ -1029,6 +1299,229 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   };
 
+  // --- QREMA ROASTERY ERP ACTIONS ---
+  const createWorkOrder = (
+    woData: Omit<WorkOrder, 'id' | 'woNumber' | 'createdAt' | 'batches' | 'actualRoastedKg' | 'actualGreenKg' | 'weightLossPercent'>
+  ): WorkOrder => {
+    const newId = `wo-${Date.now().toString().slice(-4)}`;
+    const newWoNumber = `WO-2026-${(workOrders.length + 1).toString().padStart(3, '0')}`;
+    const newWo: WorkOrder = {
+      ...woData,
+      id: newId,
+      woNumber: newWoNumber,
+      actualGreenKg: 0,
+      actualRoastedKg: 0,
+      weightLossPercent: 0,
+      batches: [],
+      createdAt: new Date().toISOString(),
+    };
+    setWorkOrders((prev) => [newWo, ...prev]);
+    return newWo;
+  };
+
+  const updateWorkOrderStatus = (id: string, status: WorkOrderStatus) => {
+    setWorkOrders((prev) =>
+      prev.map((wo) => (wo.id === id ? { ...wo, status } : wo))
+    );
+  };
+
+  const executeRoastBatch = (woId: string, batchData: Omit<WorkOrderBatch, 'executedAt'>) => {
+    const executedBatch: WorkOrderBatch = {
+      ...batchData,
+      executedAt: new Date().toISOString(),
+    };
+
+    setWorkOrders((prev) =>
+      prev.map((wo) => {
+        if (wo.id !== woId) return wo;
+        const updatedBatches = [...wo.batches, executedBatch];
+        const totalActualGreen = updatedBatches.reduce((acc, b) => acc + b.greenWeightKg, 0);
+        const totalActualRoasted = updatedBatches.reduce((acc, b) => acc + b.roastedWeightKg, 0);
+        const avgWeightLoss = totalActualGreen > 0 ? ((totalActualGreen - totalActualRoasted) / totalActualGreen) * 100 : 14.5;
+        const newStatus: WorkOrderStatus = totalActualGreen >= wo.targetGreenKg ? 'qc_pending' : 'in_production';
+
+        return {
+          ...wo,
+          batches: updatedBatches,
+          actualGreenKg: Number(totalActualGreen.toFixed(1)),
+          actualRoastedKg: Number(totalActualRoasted.toFixed(1)),
+          weightLossPercent: Number(avgWeightLoss.toFixed(1)),
+          status: newStatus,
+        };
+      })
+    );
+
+    // Also deduct green bean inventory from warehouse lots if applicable
+    const targetWo = workOrders.find((w) => w.id === woId);
+    if (targetWo) {
+      setWarehouseLots((prev) =>
+        prev.map((lot) => {
+          if (lot.id === targetWo.greenLotId) {
+            const remaining = Math.max(0, lot.availableWeightKg - batchData.greenWeightKg);
+            return {
+              ...lot,
+              availableWeightKg: remaining,
+              status: remaining === 0 ? 'sold' : 'partial',
+            };
+          }
+          return lot;
+        })
+      );
+    }
+  };
+
+  const createPurchaseOrder = (poData: Omit<PurchaseOrder, 'id' | 'poNumber'>): PurchaseOrder => {
+    const newId = `po-${Date.now().toString().slice(-4)}`;
+    const newPoNumber = `PO-2026-${(purchaseOrders.length + 1).toString().padStart(3, '0')}`;
+    const newPo: PurchaseOrder = {
+      ...poData,
+      id: newId,
+      poNumber: newPoNumber,
+    };
+    setPurchaseOrders((prev) => [newPo, ...prev]);
+    return newPo;
+  };
+
+  const receivePurchaseOrder = (poId: string) => {
+    const targetPo = purchaseOrders.find((p) => p.id === poId);
+    if (!targetPo) return;
+
+    setPurchaseOrders((prev) =>
+      prev.map((p) => (p.id === poId ? { ...p, status: 'received', paymentStatus: 'paid' } : p))
+    );
+
+    // Create a new Warehouse Lot for Roaster's Green Coffee inventory
+    targetPo.items.forEach((item) => {
+      const newLot: WarehouseLot = {
+        id: `WH-LOT-${Date.now().toString().slice(-4)}`,
+        warehouseId: currentUser?.id || 'roaster-warehouse-1',
+        warehouseName: currentUser?.organization || 'Roastery Green Silo Hub',
+        sourceGreenBeanId: item.lotReference || `GB-${Date.now().toString().slice(-3)}`,
+        sourceProcessorName: targetPo.supplierName,
+        sourceFarmerName: 'Petani Mitra Direct Trade',
+        origin: item.origin,
+        variety: item.variety,
+        altitude: '1.400 - 1.650 mdpl',
+        processMethod: item.processMethod,
+        storageLocation: 'Green Silo Bay 01 (GrainPro)',
+        temperatureCelsius: 20.0,
+        humidityPercent: 56,
+        packagingType: 'GrainPro + Karung Goni 60kg',
+        verifiedScaScore: 87.0,
+        weightKg: item.totalWeightKg,
+        availableWeightKg: item.totalWeightKg,
+        pricePerKg: item.pricePerKg,
+        purchasePricePerKg: item.pricePerKg,
+        storedDate: new Date().toISOString().split('T')[0],
+        status: 'available',
+        gradeTier: 'Grade 1 - Super Premium',
+        defectCount: 2,
+        screenSize: 'Screen 17-18',
+        moistureContentPercent: 11.2,
+        waterActivityAw: 0.55,
+      };
+      setWarehouseLots((prev) => [newLot, ...prev]);
+    });
+  };
+
+  const createGreenBeanSample = (
+    sampleData: Omit<GreenBeanSample, 'id' | 'sampleCode' | 'receivedDate'>
+  ): GreenBeanSample => {
+    const newId = `smp-${Date.now().toString().slice(-4)}`;
+    const newCode = `SMP-${(greenBeanSamples.length + 80).toString().padStart(3, '0')}`;
+    const newSample: GreenBeanSample = {
+      ...sampleData,
+      id: newId,
+      sampleCode: newCode,
+      receivedDate: new Date().toISOString().split('T')[0],
+    };
+    setGreenBeanSamples((prev) => [newSample, ...prev]);
+    return newSample;
+  };
+
+  const updateGreenBeanSample = (
+    id: string,
+    status: GreenBeanSample['status'],
+    evaluationNotes?: string
+  ) => {
+    setGreenBeanSamples((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, status, evaluationNotes: evaluationNotes || s.evaluationNotes } : s))
+    );
+  };
+
+  const createMasterProfile = (profileData: Omit<MasterRoastProfile, 'id'>): MasterRoastProfile => {
+    const newId = `prof-${Date.now().toString().slice(-4)}`;
+    const newProf: MasterRoastProfile = {
+      ...profileData,
+      id: newId,
+    };
+    setMasterProfiles((prev) => [newProf, ...prev]);
+    return newProf;
+  };
+
+  const createCuppingSession = (
+    qcData: Omit<QCCuppingSession, 'id' | 'sessionCode' | 'date'>
+  ): QCCuppingSession => {
+    const newId = `qc-${Date.now().toString().slice(-4)}`;
+    const newCode = `QC-2026-${(qcSessions.length + 1).toString().padStart(3, '0')}`;
+    const newQc: QCCuppingSession = {
+      ...qcData,
+      id: newId,
+      sessionCode: newCode,
+      date: new Date().toISOString().split('T')[0],
+    };
+    setQcSessions((prev) => [newQc, ...prev]);
+
+    // If linked to work order and status is approved, update WO to completed
+    if (qcData.workOrderId && qcData.status.startsWith('approved')) {
+      updateWorkOrderStatus(qcData.workOrderId, 'completed');
+    }
+    return newQc;
+  };
+
+  const createSalesOrder = (soData: Omit<SalesOrder, 'id' | 'soNumber' | 'orderDate'>): SalesOrder => {
+    const newId = `so-${Date.now().toString().slice(-4)}`;
+    const newSoNumber = `SO-2026-${(salesOrders.length + 1).toString().padStart(3, '0')}`;
+    const newSo: SalesOrder = {
+      ...soData,
+      id: newId,
+      soNumber: newSoNumber,
+      orderDate: new Date().toISOString().split('T')[0],
+    };
+    setSalesOrders((prev) => [newSo, ...prev]);
+    return newSo;
+  };
+
+  const dispatchSalesOrder = (soId: string) => {
+    const targetSo = salesOrders.find((s) => s.id === soId);
+    if (!targetSo) return;
+
+    setSalesOrders((prev) =>
+      prev.map((s) => (s.id === soId ? { ...s, status: 'dispatched' } : s))
+    );
+
+    // Create a supply chain transaction
+    const newTrx: SupplyChainTransaction = {
+      id: `TRX-${Date.now().toString().slice(-4)}`,
+      date: new Date().toISOString().split('T')[0],
+      fromRole: 'roaster',
+      fromName: currentUser?.organization || currentUser?.name || 'Roaster HQ',
+      toRole: 'cafe',
+      toName: targetSo.customerName,
+      itemName: `${targetSo.items.map((i) => i.productName).join(', ')}`,
+      quantity: `${targetSo.items.reduce((acc, i) => acc + i.quantity, 0)} Items`,
+      totalAmount: targetSo.totalAmount,
+      status: 'Terkirim',
+    };
+    setTransactions((prev) => [newTrx, ...prev]);
+  };
+
+  const updatePackagingStock = (id: string, qtyDelta: number) => {
+    setPackagingInventory((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, stockQuantity: Math.max(0, p.stockQuantity + qtyDelta) } : p))
+    );
+  };
+
   const resetToDefaultData = () => {
     setFarmerLots(INITIAL_FARMER_LOTS);
     setProcessedLots(INITIAL_PROCESSED_LOTS);
@@ -1037,6 +1530,14 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCafeInventory(INITIAL_CAFE_ITEMS);
     setCafeProducts(INITIAL_CAFE_PRODUCTS);
     setTransactions(INITIAL_TRANSACTIONS);
+    setWorkOrders(INITIAL_WORK_ORDERS);
+    setMasterProfiles(INITIAL_MASTER_PROFILES);
+    setPurchaseOrders(INITIAL_PURCHASE_ORDERS);
+    setGreenBeanSamples(INITIAL_GREEN_SAMPLES);
+    setQcSessions(INITIAL_QC_SESSIONS);
+    setPackagingInventory(INITIAL_PACKAGING_ITEMS);
+    setSalesOrders(INITIAL_SALES_ORDERS);
+    setRoasterMachines(INITIAL_ROASTER_MACHINES);
     localStorage.clear();
   };
 
@@ -1044,12 +1545,15 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <CoffeeContext.Provider
       value={{
         currentUser,
-        users: MOCK_USERS,
+        users,
         loginAsRole,
         loginAsUser,
+        registerUser,
         logout,
         activeView,
         setActiveView,
+        roasterActiveTab,
+        setRoasterActiveTab,
         farmerLots,
         processedLots,
         warehouseLots,
@@ -1064,11 +1568,33 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         buyGreenBeanAndStoreWarehouse,
         updateWarehouseLotGrading,
         buyWarehouseBeanAndRoast,
+        publishRoastedLotFromWorkOrder,
         buyRoastedBeansForCafe,
         addCafeRetailProduct,
         buyFromUnifiedMarketplace,
         resetToDefaultData,
         getTraceabilityForRoastedLot,
+        // --- QREMA ROASTERY ERP ---
+        workOrders,
+        masterProfiles,
+        purchaseOrders,
+        greenBeanSamples,
+        qcSessions,
+        packagingInventory,
+        salesOrders,
+        roasterMachines,
+        createWorkOrder,
+        updateWorkOrderStatus,
+        executeRoastBatch,
+        createPurchaseOrder,
+        receivePurchaseOrder,
+        createGreenBeanSample,
+        updateGreenBeanSample,
+        createMasterProfile,
+        createCuppingSession,
+        createSalesOrder,
+        dispatchSalesOrder,
+        updatePackagingStock,
       }}
     >
       {children}

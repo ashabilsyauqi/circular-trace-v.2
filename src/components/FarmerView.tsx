@@ -9,13 +9,26 @@ import {
   MapPin,
   CheckCircle2,
   QrCode,
+  Search,
+  Filter,
+  Layers,
+  ArrowUpRight,
+  ShieldCheck,
+  Calendar,
+  Sparkles,
+  Calculator,
 } from 'lucide-react';
 import { FarmerHarvestLot } from '../types/coffee';
 import { FarmerBarcodeModal } from './FarmerBarcodeModal';
+import { MetricCard } from './admin/MetricCard';
 
 export const FarmerView: React.FC = () => {
   const { currentUser, farmerLots, addFarmerHarvest, transactions } = useCoffee();
-  const [activeTab, setActiveTab] = useState<'upload' | 'catalog' | 'history'>('catalog');
+  const [activeTab, setActiveTab] = useState<'catalog' | 'upload' | 'history'>('catalog');
+
+  // Filter & Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'sold'>('all');
 
   // Form State for uploading new harvest lot
   const [variety, setVariety] = useState('Typica & Sigarar Utang');
@@ -28,14 +41,15 @@ export const FarmerView: React.FC = () => {
   const [brix, setBrix] = useState<number>(21.5);
   const [totalWeightKg, setTotalWeightKg] = useState<number>(500);
   const [pricePerKg, setPricePerKg] = useState<number>(15000);
+  const [pickingCostPerKg, setPickingCostPerKg] = useState<number>(3000); // HPP upah petik
   const [notes, setNotes] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Barcode & Sack Label Modal State
+  // Barcode Modal State
   const [selectedBarcodeLot, setSelectedBarcodeLot] = useState<FarmerHarvestLot | null>(null);
   const [isNewUpload, setIsNewUpload] = useState<boolean>(false);
 
-  // Filter lots uploaded by this farmer (or all for demo simplicity)
+  // Data lot & transactions
   const myLots = farmerLots.filter((lot) => lot.farmerId === currentUser?.id || true);
   const myTransactions = transactions.filter((t) => t.fromRole === 'petani');
 
@@ -43,6 +57,12 @@ export const FarmerView: React.FC = () => {
   const availableKg = myLots.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
   const soldKg = totalHarvestedKg - availableKg;
   const totalRevenue = myTransactions.reduce((acc, curr) => acc + curr.totalAmount, 0);
+
+  // Live valuation calculations for Form
+  const estimatedGrossRevenue = totalWeightKg * pricePerKg;
+  const estimatedHppCost = totalWeightKg * pickingCostPerKg;
+  const estimatedNetProfit = estimatedGrossRevenue - estimatedHppCost;
+  const profitMarginPercent = Math.round((estimatedNetProfit / estimatedGrossRevenue) * 100) || 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,131 +88,168 @@ export const FarmerView: React.FC = () => {
       setIsNewUpload(true);
     }
 
-    // Reset some form values
     setNotes('');
   };
 
+  // Filtered Catalog
+  const filteredLots = myLots.filter((lot) => {
+    const matchStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'available' && lot.availableWeightKg > 0) ||
+      (statusFilter === 'sold' && lot.availableWeightKg === 0);
+    const q = searchQuery.toLowerCase();
+    const matchSearch =
+      lot.id.toLowerCase().includes(q) ||
+      lot.variety.toLowerCase().includes(q) ||
+      lot.farmLocation.toLowerCase().includes(q);
+    return matchStatus && matchSearch;
+  });
+
   return (
     <div className="space-y-6">
-      {/* Top Banner / Hero */}
-      <div className="bg-linear-to-r from-emerald-900 via-stone-900 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+      {/* Top Banner Hero (Cruip Slate/Emerald Gradient) */}
+      <div className="bg-linear-to-r from-emerald-950 via-stone-900 to-emerald-900 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden border border-emerald-900/60">
         <div className="relative z-10 max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-3 border border-emerald-400/30">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-3 border border-emerald-400/30 backdrop-blur-xs">
             <Sprout className="w-4 h-4 text-emerald-400" />
-            Dasbor Petani Kopi • Rantai Hulu (Farm Tier)
-          </span>
+            <span>Farm Tier 1 • Stasiun Hulu Perkebunan</span>
+          </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Manajemen Panen & Penjualan Cherry
+            Manajemen Panen Ceri & Ketertelusuran Lahan
           </h1>
           <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-            Upload spesifikasi hasil panen Anda ke pasar digital. Pengolah kopi (mill station) dapat langsung melihat standar mutu ceri, ketinggian kebun, brix, dan membelinya secara langsung.
+            Catat hasil petik merah dengan data ketinggian mdpl dan kadar kemanisan (°Brix). Stasiun pengolah dapat langsung memverifikasi kualitas dan membeli ceri Anda secara transparan.
           </p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-stone-300 pt-1">
+            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              Sertifikasi EUDR: <strong>Lolos Geolocation 100%</strong>
+            </span>
+            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs">
+              Elevasi: <strong className="text-amber-300">{currentUser?.location || '1.550 mdpl'}</strong>
+            </span>
+          </div>
         </div>
 
-        {/* Decorative background badge */}
         <div className="absolute right-4 -bottom-6 opacity-10 text-white pointer-events-none">
           <Sprout className="w-48 h-48" />
         </div>
       </div>
 
-      {/* Metric Cards */}
+      {/* 4 Cruip-Style Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Total Panen Dicatat</span>
-            <Package className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">{totalHarvestedKg.toLocaleString()} kg</div>
-          <span className="text-[11px] text-emerald-600 font-medium">Cherry merah segar</span>
-        </div>
+        <MetricCard
+          title="Total Panen Dicatat"
+          value={`${totalHarvestedKg.toLocaleString()} kg`}
+          subtitle="Cherry merah segar"
+          icon={<Package className="w-5 h-5 text-emerald-600" />}
+          color="emerald"
+          trend={{ value: '18.4%', isPositive: true, label: 'vs musim lalu' }}
+        />
 
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Stok Cherry Tersedia</span>
-            <Sprout className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">{availableKg.toLocaleString()} kg</div>
-          <span className="text-[11px] text-amber-600 font-medium">Siap dibeli Pengolah</span>
-        </div>
+        <MetricCard
+          title="Stok Ceri Tersedia"
+          value={`${availableKg.toLocaleString()} kg`}
+          subtitle="Siap dibeli Pengolah"
+          icon={<Sprout className="w-5 h-5 text-amber-600" />}
+          color="amber"
+          badge="Siap Jual"
+        />
 
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Cherry Terjual</span>
-            <CheckCircle2 className="w-4 h-4 text-blue-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">{soldKg.toLocaleString()} kg</div>
-          <span className="text-[11px] text-blue-600 font-medium">Menuju stasiun olah</span>
-        </div>
+        <MetricCard
+          title="Ceri Terjual"
+          value={`${soldKg.toLocaleString()} kg`}
+          subtitle="Menuju stasiun mill"
+          icon={<CheckCircle2 className="w-5 h-5 text-blue-600" />}
+          color="blue"
+          trend={{ value: '100% Diserap', isPositive: true }}
+        />
 
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
-            <span>Total Penjualan</span>
-            <TrendingUp className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-2xl font-black text-stone-900">
-            Rp {totalRevenue.toLocaleString()}
-          </div>
-          <span className="text-[11px] text-stone-500 font-medium">Dari {myTransactions.length} transaksi</span>
-        </div>
+        <MetricCard
+          title="Total Penjualan"
+          value={`Rp ${totalRevenue.toLocaleString()}`}
+          subtitle={`Dari ${myTransactions.length} transaksi selesai`}
+          icon={<TrendingUp className="w-5 h-5 text-emerald-600" />}
+          color="emerald"
+          trend={{ value: '+24.5%', isPositive: true, label: 'MoM' }}
+        />
       </div>
 
-      {/* Feedback message banner */}
+      {/* Feedback Message Banner */}
       {successMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-          {successMessage}
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs font-bold flex items-center justify-between shadow-2xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+            <span>{successMessage}</span>
+          </div>
+          <button
+            onClick={() => setSuccessMessage('')}
+            className="text-stone-400 hover:text-stone-700 text-xs font-bold"
+          >
+            Tutup
+          </button>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex border-b border-stone-200">
+      {/* Cruip Styled Navigation Tabs */}
+      <div className="bg-white p-1.5 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center gap-1.5">
         <button
           onClick={() => setActiveTab('catalog')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
             activeTab === 'catalog'
-              ? 'border-emerald-600 text-emerald-900 bg-emerald-50/50'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs font-black'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
           <Package className="w-4 h-4" />
-          Katalog Hasil Panen Saya ({myLots.length})
+          <span>Katalog Panen Saya</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300">
+            {myLots.length}
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('upload')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
             activeTab === 'upload'
-              ? 'border-emerald-600 text-emerald-900 bg-emerald-50/50'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs font-black'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
-          <PlusCircle className="w-4 h-4" />
-          Upload Hasil Panen Baru
+          <PlusCircle className="w-4 h-4 text-emerald-400" />
+          <span>Form Pendaftaran Panen Baru</span>
         </button>
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`py-3 px-5 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
             activeTab === 'history'
-              ? 'border-emerald-600 text-emerald-900 bg-emerald-50/50'
-              : 'border-transparent text-stone-500 hover:text-stone-800'
+              ? 'bg-stone-900 text-white shadow-xs font-black'
+              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
           }`}
         >
           <History className="w-4 h-4" />
-          Riwayat Penjualan ke Pengolah ({myTransactions.length})
+          <span>Buku Kas & Log Penjualan</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+            {myTransactions.length}
+          </span>
         </button>
       </div>
 
-      {/* Tab 1: Upload Panen Baru */}
+      {/* TAB 1: FORM PENDAFTARAN PANEN BARU */}
       {activeTab === 'upload' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm max-w-4xl">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
-              <PlusCircle className="w-5 h-5 text-emerald-600" />
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200/90 shadow-sm max-w-4xl space-y-6">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200 mb-2">
+              <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
+              Pendaftaran Komoditas Ceri Kopi
+            </div>
+            <h2 className="text-xl font-black text-stone-900">
               Formulir Pendaftaran Hasil Panen Ceri Kopi
             </h2>
             <p className="text-xs text-stone-500 mt-1">
-              Data yang diunggah akan menjadi basis traceability (silsilah) saat kopi dibeli dan diproses oleh pengolah.
+              Data yang diunggah akan menjadi basis ketertelusuran (Chain of Custody) saat kopi dibeli dan diproses oleh pengolah.
             </p>
           </div>
 
@@ -207,8 +264,8 @@ export const FarmerView: React.FC = () => {
                   required
                   value={variety}
                   onChange={(e) => setVariety(e.target.value)}
-                  placeholder="Contoh: Typica, Sigarar Utang, Kartika, Ateng Super"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="Contoh: Typica, Sigarar Utang, Ateng Super"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -222,7 +279,7 @@ export const FarmerView: React.FC = () => {
                   value={farmLocation}
                   onChange={(e) => setFarmLocation(e.target.value)}
                   placeholder="Contoh: Pangalengan Blok Gunung Tilu"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -235,8 +292,8 @@ export const FarmerView: React.FC = () => {
                   required
                   value={altitude}
                   onChange={(e) => setAltitude(e.target.value)}
-                  placeholder="Contoh: 1.500 - 1.650 mdpl"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="Contoh: 1.550 mdpl"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -249,7 +306,7 @@ export const FarmerView: React.FC = () => {
                   required
                   value={harvestDate}
                   onChange={(e) => setHarvestDate(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -262,7 +319,7 @@ export const FarmerView: React.FC = () => {
                   onChange={(e) =>
                     setPickingMethod(e.target.value as FarmerHarvestLot['pickingMethod'])
                   }
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 bg-white"
                 >
                   <option value="Petik Merah Optimal (95%+)">
                     Petik Merah Optimal (95%+) - Specialty Standard
@@ -276,7 +333,7 @@ export const FarmerView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Tingkat Kemanisan (°Brix)
+                  Tingkat Kemanisan Buah (°Brix)
                 </label>
                 <input
                   type="number"
@@ -285,9 +342,9 @@ export const FarmerView: React.FC = () => {
                   value={brix}
                   onChange={(e) => setBrix(Number(e.target.value))}
                   placeholder="Contoh: 21.5"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
                 />
-                <span className="text-[11px] text-stone-500">Standar cherry matang: 19 - 24 °Brix</span>
+                <span className="text-[11px] text-stone-500">Standar cherry specialty matang: 19° - 24° Brix</span>
               </div>
 
               <div>
@@ -300,7 +357,7 @@ export const FarmerView: React.FC = () => {
                   min="1"
                   value={totalWeightKg}
                   onChange={(e) => setTotalWeightKg(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -314,11 +371,57 @@ export const FarmerView: React.FC = () => {
                   step="500"
                   value={pricePerKg}
                   onChange={(e) => setPricePerKg(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
                 />
-                <span className="text-[11px] text-emerald-700 font-medium">
-                  Estimasi Nilai Lot: Rp {(totalWeightKg * pricePerKg).toLocaleString()}
-                </span>
+              </div>
+            </div>
+
+            {/* Cruip Interactive Valuation & Profitability Card */}
+            <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-4 sm:p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <Calculator className="w-4 h-4 text-emerald-700" />
+                <h3 className="text-xs font-black uppercase tracking-wider text-emerald-950">
+                  Kalkulator Nilai Lot & Perkiraan Laba Bersih
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="bg-white p-3 rounded-xl border border-emerald-200/60 shadow-2xs">
+                  <span className="text-[11px] text-stone-500 block">Estimasi Nilai Lot (Gross):</span>
+                  <strong className="text-base font-black text-stone-900 block mt-0.5">
+                    Rp {estimatedGrossRevenue.toLocaleString()}
+                  </strong>
+                  <span className="text-[10px] text-stone-400">
+                    {totalWeightKg} kg × Rp {pricePerKg.toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border border-emerald-200/60 shadow-2xs">
+                  <span className="text-[11px] text-stone-500 block">Estimasi Ongkos Petik (HPP):</span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <input
+                      type="number"
+                      value={pickingCostPerKg}
+                      onChange={(e) => setPickingCostPerKg(Number(e.target.value))}
+                      className="w-20 px-2 py-0.5 text-xs font-bold border rounded bg-stone-50"
+                      title="Biaya upah petik per kg"
+                    />
+                    <span className="text-xs text-stone-500">/kg</span>
+                  </div>
+                  <span className="text-[10px] text-stone-400">
+                    Total HPP: Rp {estimatedHppCost.toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border border-emerald-200/60 shadow-2xs">
+                  <span className="text-[11px] text-emerald-700 font-bold block">
+                    Estimasi Margin Keuntungan:
+                  </span>
+                  <strong className="text-base font-black text-emerald-700 block mt-0.5">
+                    +Rp {estimatedNetProfit.toLocaleString()} ({profitMarginPercent}%)
+                  </strong>
+                  <span className="text-[10px] text-emerald-600">Laba bersih petani</span>
+                </div>
               </div>
             </div>
 
@@ -330,8 +433,8 @@ export const FarmerView: React.FC = () => {
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Tuliskan catatan khusus, misalnya: Pemupukan organik kascing, naungan pohon lamtoro, cuaca saat pemetikan..."
-                className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                placeholder="Tuliskan catatan khusus, misalnya: Pemupukan organik kascing, naungan pohon lamtoro, petik pagi cerah..."
+                className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
@@ -341,46 +444,71 @@ export const FarmerView: React.FC = () => {
                 className="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2"
               >
                 <PlusCircle className="w-4 h-4" />
-                Daftarkan Hasil Panen ke Sistem
+                Daftarkan Hasil Panen ke Sistem & Buat Barcode
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Tab 2: Katalog Panen Saya */}
+      {/* TAB 2: KATALOG PANEN SAYA (Cruip Table & Filter) */}
       {activeTab === 'catalog' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-stone-900">
-              Daftar Lot Panen Terdaftar ({myLots.length})
-            </h2>
-            <button
-              onClick={() => setActiveTab('upload')}
-              className="text-xs font-bold text-emerald-800 hover:text-emerald-900 flex items-center gap-1 bg-emerald-100/70 px-3 py-1.5 rounded-lg border border-emerald-300"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              Tambah Panen
-            </button>
+          {/* Toolbar Search & Status Filter */}
+          <div className="bg-white p-4 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+            <div className="relative flex-1 min-w-[240px]">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari varietas, ID lot, atau lokasi kebun..."
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-stone-500 flex items-center gap-1">
+                <Filter className="w-3.5 h-3.5" /> Status:
+              </span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="px-3 py-2 rounded-xl border border-stone-200 text-xs font-medium bg-white focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="all">Semua Status ({myLots.length})</option>
+                <option value="available">Tersedia ({myLots.filter((l) => l.availableWeightKg > 0).length})</option>
+                <option value="sold">Terjual ({myLots.filter((l) => l.availableWeightKg === 0).length})</option>
+              </select>
+
+              <button
+                onClick={() => setActiveTab('upload')}
+                className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-2xs"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                Tambah Panen
+              </button>
+            </div>
           </div>
 
+          {/* Lots Grid Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {myLots.map((lot) => {
+            {filteredLots.map((lot) => {
               const isAvailable = lot.availableWeightKg > 0;
               return (
                 <div
                   key={lot.id}
-                  className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
+                  className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
                 >
                   <div>
-                    {/* Header card */}
-                    <div className="relative h-40 overflow-hidden bg-stone-100">
+                    {/* Header Image with Badges */}
+                    <div className="relative h-44 bg-stone-100 overflow-hidden">
                       <img
                         src={lot.photoUrl}
                         alt={lot.variety}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-xs text-white text-[11px] font-mono px-2.5 py-0.5 rounded-md">
+                      <div className="absolute top-3 left-3 bg-stone-900/85 backdrop-blur-xs text-white text-[11px] font-mono px-2.5 py-0.5 rounded-md">
                         {lot.id}
                       </div>
                       <div className="absolute top-3 right-3">
@@ -397,7 +525,7 @@ export const FarmerView: React.FC = () => {
                     </div>
 
                     {/* Details */}
-                    <div className="p-4 sm:p-5 space-y-3">
+                    <div className="p-5 space-y-3">
                       <div>
                         <h3 className="font-bold text-base text-stone-900 leading-tight">
                           {lot.variety}
@@ -410,22 +538,22 @@ export const FarmerView: React.FC = () => {
 
                       <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-stone-100">
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Ketinggian:</span>
-                          <span className="font-semibold text-stone-700">{lot.altitude}</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Elevasi:</span>
+                          <span className="font-semibold text-stone-800">{lot.altitude}</span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Kemanisan Brix:</span>
-                          <span className="font-semibold text-emerald-700">{lot.brix}° Brix</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Kemanisan:</span>
+                          <span className="font-black text-emerald-700">{lot.brix}° Brix</span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Standar Petik:</span>
-                          <span className="font-semibold text-stone-700 truncate block">
+                          <span className="text-[10px] text-stone-400 block font-semibold">Standar Petik:</span>
+                          <span className="font-semibold text-stone-800 truncate block">
                             {lot.pickingMethod.split(' ')[0]}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400 block">Tanggal Panen:</span>
-                          <span className="font-semibold text-stone-700">{lot.harvestDate}</span>
+                          <span className="text-[10px] text-stone-400 block font-semibold">Tgl Panen:</span>
+                          <span className="font-semibold text-stone-800">{lot.harvestDate}</span>
                         </div>
                       </div>
 
@@ -433,7 +561,7 @@ export const FarmerView: React.FC = () => {
                         "{lot.notes}"
                       </p>
 
-                      {/* Action to view & print barcode sticker */}
+                      {/* Barcode Sticker Print Trigger */}
                       <button
                         type="button"
                         onClick={() => {
@@ -448,7 +576,7 @@ export const FarmerView: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Pricing footer */}
+                  {/* Pricing Footer */}
                   <div className="p-4 bg-stone-50 border-t border-stone-100 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-stone-400 block">Harga Penawaran:</span>
@@ -459,7 +587,7 @@ export const FarmerView: React.FC = () => {
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[10px] text-stone-400 block">Tersedia untuk Pengolah:</span>
+                      <span className="text-[10px] text-stone-400 block">Stok Tersedia:</span>
                       <span className="text-xs font-bold text-emerald-700">
                         {lot.availableWeightKg} / {lot.totalWeightKg} kg
                       </span>
@@ -472,20 +600,34 @@ export const FarmerView: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 3: Riwayat Penjualan */}
+      {/* TAB 3: BUKU KAS & RIWAYAT PENJUALAN */}
       {activeTab === 'history' && (
-        <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs">
-          <h2 className="text-base font-bold text-stone-900 mb-4 flex items-center gap-2">
-            <History className="w-5 h-5 text-emerald-600" />
-            Catatan Penjualan Cherry ke Pengolah (Processor)
-          </h2>
+        <div className="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-stone-900 flex items-center gap-2">
+                <History className="w-5 h-5 text-emerald-600" />
+                Catatan Penjualan Ceri Kopi ke Pengolah
+              </h2>
+              <p className="text-xs text-stone-500">
+                Log riwayat transaksi hulu yang tercatat secara permanen di buku besar CCT.
+              </p>
+            </div>
+
+            <div className="text-right">
+              <span className="text-[10px] text-stone-400 block font-bold uppercase">Total Penerimaan</span>
+              <span className="text-base font-black text-emerald-700 font-mono">
+                Rp {totalRevenue.toLocaleString()}
+              </span>
+            </div>
+          </div>
 
           {myTransactions.length === 0 ? (
-            <p className="text-xs text-stone-500 py-6 text-center">
+            <p className="text-xs text-stone-500 py-8 text-center">
               Belum ada transaksi penjualan ceri kopi.
             </p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-xl border border-stone-200">
               <table className="w-full text-left text-xs">
                 <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                   <tr>
@@ -500,7 +642,7 @@ export const FarmerView: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {myTransactions.map((trx) => (
-                    <tr key={trx.id} className="hover:bg-stone-50/50">
+                    <tr key={trx.id} className="hover:bg-stone-50/70 transition-colors">
                       <td className="py-3 px-4 font-mono font-bold text-stone-800">{trx.id}</td>
                       <td className="py-3 px-4 text-stone-600">{trx.date}</td>
                       <td className="py-3 px-4 font-semibold text-stone-900">{trx.toName}</td>
@@ -523,7 +665,7 @@ export const FarmerView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Barcode & Stiker Karung */}
+      {/* Modal Barcode Karung */}
       <FarmerBarcodeModal
         isOpen={!!selectedBarcodeLot}
         onClose={() => setSelectedBarcodeLot(null)}

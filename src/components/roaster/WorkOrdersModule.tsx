@@ -26,15 +26,20 @@ import {
   Sliders,
   Award,
   Warehouse,
+  Store,
+  QrCode,
 } from 'lucide-react';
 import { WorkOrder, WorkOrderStatus, MasterRoastProfile } from '../../types/roasterErp';
 import { useCoffee } from '../../context/CoffeeContext';
 import { MetricCard } from '../admin/MetricCard';
 import { ArtisanRoastSimulatorModal } from './ArtisanRoastSimulatorModal';
+import { PublishToMarketplaceModal } from './PublishToMarketplaceModal';
+import { RoasterBarcodeModal } from './RoasterBarcodeModal';
 import { OdooControlPanel } from '../odoo/OdooControlPanel';
 import { OdooStatusPipeline, OdooPipelineStage } from '../odoo/OdooStatusPipeline';
 import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
 import { OdooChatter } from '../odoo/OdooChatter';
+import { RecordBreadcrumb } from '../shared/RecordBreadcrumb';
 
 interface WorkOrdersModuleProps {
   onNavigateToQC?: (wo: WorkOrder) => void;
@@ -59,6 +64,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
     warehouseLots,
     masterProfiles,
     roasterMachines,
+    roastedLots,
     createWorkOrder,
     updateWorkOrderStatus,
   } = useCoffee();
@@ -68,6 +74,8 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
   const [groupBy, setGroupBy] = useState<string>('none');
   const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'graph'>('table');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(openCreateModalDirectly);
+  const [publishModalWO, setPublishModalWO] = useState<WorkOrder | null>(null);
+  const [qrLot, setQrLot] = useState<import('../../types/coffee').RoastedBeanLot | null>(null);
   const [activeRoastModalWO, setActiveRoastModalWO] = useState<WorkOrder | null>(null);
   const [detailModalWO, setDetailModalWO] = useState<WorkOrder | null>(null);
 
@@ -160,6 +168,8 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
 
   return (
     <div className="space-y-6">
+      {!detailModalWO && (
+      <>
       {/* Top Cruip Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
@@ -382,12 +392,32 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                           </button>
                         )}
 
+                        {wo.status === 'completed' && (() => {
+                          const publishedLot = roastedLots.find((r) => r.sourceWorkOrderId === wo.id);
+                          return publishedLot ? (
+                            <button
+                              onClick={() => setQrLot(publishedLot)}
+                              className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[11px] transition-colors inline-flex items-center gap-1"
+                            >
+                              <QrCode className="w-3.5 h-3.5" />
+                              Lihat QR / Marketplace
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setPublishModalWO(wo)}
+                              className="px-2.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-[11px] transition-colors inline-flex items-center gap-1"
+                            >
+                              <Store className="w-3.5 h-3.5" />
+                              Jual ke Marketplace
+                            </button>
+                          );
+                        })()}
                         {wo.status === 'completed' && (
                           <button
                             onClick={() => setDetailModalWO(wo)}
                             className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-[11px] transition-colors"
                           >
-                            Detail Odoo
+                            Detail
                           </button>
                         )}
                       </td>
@@ -471,15 +501,22 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
           )}
         </div>
       )}
+      </>
+      )}
 
-      {/* ODOO 19 WORK ORDER DETAIL & INSPECTION MODAL */}
+      {/* WORK ORDER DETAIL PAGE (breadcrumb + stage pipeline, in-page like Odoo's form view) */}
       {detailModalWO && (
-        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-4xl w-full border border-stone-200 shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95">
-            {/* Modal Top Status Pipeline & Controls */}
+        <div>
+          <RecordBreadcrumb
+            listLabel="Work Orders"
+            recordLabel={detailModalWO.woNumber}
+            onBack={() => setDetailModalWO(null)}
+          />
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            {/* Detail Page Header & Status Pipeline */}
             <div className="bg-[#F8F9FA] px-6 py-4 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-[#714B67] text-white">
+                <div className="p-2 rounded-xl bg-[#1E2333] text-orange-400">
                   <Flame className="w-4 h-4" />
                 </div>
                 <div>
@@ -498,12 +535,6 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                   stages={WO_PIPELINE_STAGES}
                   currentStageId={detailModalWO.status}
                 />
-                <button
-                  onClick={() => setDetailModalWO(null)}
-                  className="p-1.5 rounded-full hover:bg-stone-200 text-stone-500 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
             </div>
 
@@ -811,6 +842,20 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
         onClose={() => setActiveRoastModalWO(null)}
         workOrder={activeRoastModalWO}
       />
+
+      {/* PUBLISH TO MARKETPLACE (final step of a completed roast) */}
+      <PublishToMarketplaceModal
+        isOpen={!!publishModalWO}
+        onClose={() => setPublishModalWO(null)}
+        workOrder={publishModalWO}
+        onPublished={(lot) => {
+          setPublishModalWO(null);
+          setQrLot(lot);
+        }}
+      />
+
+      {/* QR / BARCODE FOR THE PUBLISHED ROASTED LOT */}
+      <RoasterBarcodeModal isOpen={!!qrLot} onClose={() => setQrLot(null)} lot={qrLot} />
     </div>
   );
 };

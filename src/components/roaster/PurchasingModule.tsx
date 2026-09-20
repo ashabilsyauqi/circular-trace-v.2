@@ -29,6 +29,7 @@ import { OdooControlPanel } from '../odoo/OdooControlPanel';
 import { OdooStatusPipeline, OdooPipelineStage } from '../odoo/OdooStatusPipeline';
 import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
 import { OdooChatter } from '../odoo/OdooChatter';
+import { RecordBreadcrumb } from '../shared/RecordBreadcrumb';
 
 const PO_PIPELINE_STAGES: OdooPipelineStage[] = [
   { id: 'draft', label: 'Draft PO' },
@@ -164,6 +165,8 @@ export const PurchasingModule: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {!detailModalPO && (
+      <>
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
@@ -422,14 +425,21 @@ export const PurchasingModule: React.FC = () => {
           ))}
         </div>
       )}
+      </>
+      )}
 
-      {/* ODOO 19 PO DETAIL & INSPECTION MODAL */}
+      {/* PURCHASE ORDER DETAIL PAGE (breadcrumb + stage pipeline) */}
       {detailModalPO && (
-        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-3xl w-full border border-stone-200 shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95">
+        <div>
+          <RecordBreadcrumb
+            listLabel="Purchase Orders"
+            recordLabel={detailModalPO.poNumber}
+            onBack={() => setDetailModalPO(null)}
+          />
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="bg-[#F8F9FA] px-6 py-4 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-[#714B67] text-white">
+                <div className="p-2 rounded-xl bg-[#1E2333] text-orange-400">
                   <ShoppingCart className="w-4 h-4" />
                 </div>
                 <div>
@@ -445,12 +455,6 @@ export const PurchasingModule: React.FC = () => {
                   stages={PO_PIPELINE_STAGES}
                   currentStageId={detailModalPO.status}
                 />
-                <button
-                  onClick={() => setDetailModalPO(null)}
-                  className="p-1.5 rounded-full hover:bg-stone-200 text-stone-500 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
             </div>
 

@@ -154,6 +154,8 @@ export interface RoastedBeanLot {
   recommendedBrew: string[]; // e.g., ["V60", "Aeropress", "Espresso", "Japanese Drip"]
   status: 'available' | 'sold' | 'partial';
   photoUrl?: string;
+  // Referensi asal Work Order MRP (jika dipublikasikan dari modul Production/Work Orders)
+  sourceWorkOrderId?: string;
 }
 
 // 5. INVENTARIS CAFE & PESANAN PEMILIK CAFE

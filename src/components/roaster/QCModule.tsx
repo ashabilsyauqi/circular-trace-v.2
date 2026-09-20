@@ -25,6 +25,7 @@ import { OdooControlPanel } from '../odoo/OdooControlPanel';
 import { OdooStatusPipeline, OdooPipelineStage } from '../odoo/OdooStatusPipeline';
 import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
 import { OdooChatter } from '../odoo/OdooChatter';
+import { RecordBreadcrumb } from '../shared/RecordBreadcrumb';
 
 interface QCModuleProps {
   initialWorkOrder?: WorkOrder | null;
@@ -157,6 +158,8 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
 
   return (
     <div className="space-y-6">
+      {!detailModalQC && (
+      <>
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
@@ -374,14 +377,21 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
           </div>
         </div>
       )}
+      </>
+      )}
 
-      {/* ODOO 19 QC DETAIL MODAL */}
+      {/* QC SESSION DETAIL PAGE (breadcrumb + stage pipeline) */}
       {detailModalQC && (
-        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-3xl w-full border border-stone-200 shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95">
+        <div>
+          <RecordBreadcrumb
+            listLabel="Quality Control"
+            recordLabel={detailModalQC.sessionCode}
+            onBack={() => setDetailModalQC(null)}
+          />
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="bg-[#F8F9FA] px-6 py-4 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-[#714B67] text-white">
+                <div className="p-2 rounded-xl bg-[#1E2333] text-orange-400">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
@@ -395,12 +405,6 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                   stages={QC_PIPELINE_STAGES}
                   currentStageId="approved"
                 />
-                <button
-                  onClick={() => setDetailModalQC(null)}
-                  className="p-1.5 rounded-full hover:bg-stone-200 text-stone-500 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
             </div>
 
@@ -486,19 +490,24 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
 
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-stone-100 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="p-2.5 rounded-xl bg-[#714B67]/10 text-[#714B67]">
+                <div className="p-2.5 rounded-xl bg-[#1E2333] text-orange-400">
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
+                  {initialWorkOrder && (
+                    <span className="inline-block mb-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-[10px] font-bold">
+                      Dari Work Order: {initialWorkOrder.woNumber}
+                    </span>
+                  )}
                   <h3 className="text-base font-bold text-stone-900">Form Skor Cupping SCA 100-Point</h3>
                   <p className="text-xs text-stone-500">Evaluasi sensori dan instrumen fisik batch sangrai.</p>
                 </div>
               </div>
 
               {/* Live Score Pill */}
-              <div className="text-right bg-gradient-to-r from-[#714B67] to-[#5A3950] text-white px-4 py-2 rounded-2xl shadow-md">
-                <span className="text-[10px] text-purple-200 uppercase tracking-widest block font-bold">Total Skor SCA:</span>
-                <span className="text-xl font-black text-amber-300 font-mono">{totalScaScore} / 100</span>
+              <div className="text-right bg-[#1E2333] text-white px-4 py-2 rounded-2xl">
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Total Skor SCA:</span>
+                <span className="text-xl font-black text-orange-400 font-mono">{totalScaScore} / 100</span>
               </div>
             </div>
 

@@ -64,8 +64,8 @@ interface CoffeeContextType {
   logout: () => void;
   activeView: 'landing' | 'dashboard' | 'marketplace' | 'transactions';
   setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
-  roasterActiveTab: 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history';
-  setRoasterActiveTab: (tab: 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
+  roasterActiveTab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history';
+  setRoasterActiveTab: (tab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
   farmerLots: FarmerHarvestLot[];
   processedLots: ProcessedGreenBeanLot[];
   warehouseLots: WarehouseLot[];
@@ -144,6 +144,18 @@ interface CoffeeContextType {
       recommendedBrew: string[];
     }
   ) => void;
+  publishRoastedLotFromWorkOrder: (
+    workOrderId: string,
+    listingData: {
+      tastingNotes: string[];
+      scaCuppingScore: number;
+      packageWeightGrams: number;
+      totalPacks: number;
+      pricePerPack: number;
+      restingRecommendationDays: number;
+      recommendedBrew: string[];
+    }
+  ) => RoastedBeanLot | null;
   buyRoastedBeansForCafe: (roastedLotId: string, packCount: number) => void;
   addCafeRetailProduct: (
     productData: Omit<CafeRetailProduct, 'id' | 'cafeId' | 'cafeName' | 'createdAt' | 'availableStock'>
@@ -206,8 +218,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [activeView, setActiveView] = useState<'landing' | 'dashboard' | 'marketplace' | 'transactions'>('landing');
   const [roasterActiveTab, setRoasterActiveTab] = useState<
-    'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history'
-  >('work_orders');
+    'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history'
+  >('dashboard');
 
   useEffect(() => {
     localStorage.setItem('cct_users', JSON.stringify(users));
@@ -752,6 +764,90 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       photoUrl: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&auto=format&fit=crop&q=80',
     };
     setRoastedLots((prev) => [newRoastedBean, ...prev]);
+  };
+
+  // 4b. Roaster mempublikasikan hasil Work Order (MRP) yang sudah completed ke Marketplace
+  // Ini menjembatani modul Production/Work Orders (internal MRP) dengan Unified Marketplace,
+  // sekaligus mengurangi stok green bean gudang & membuat Roasted Bean Lot yang bisa dipindai QR-nya.
+  const publishRoastedLotFromWorkOrder = (
+    workOrderId: string,
+    listingData: {
+      tastingNotes: string[];
+      scaCuppingScore: number;
+      packageWeightGrams: number;
+      totalPacks: number;
+      pricePerPack: number;
+      restingRecommendationDays: number;
+      recommendedBrew: string[];
+    }
+  ): RoastedBeanLot | null => {
+    if (!currentUser) return null;
+    const wo = workOrders.find((w) => w.id === workOrderId);
+    if (!wo) return null;
+
+    // Sudah pernah dipublikasikan sebelumnya? jangan duplikat.
+    const alreadyPublished = roastedLots.find((r) => r.sourceWorkOrderId === wo.id);
+    if (alreadyPublished) return alreadyPublished;
+
+    const sourceWH = warehouseLots.find((w) => w.id === wo.greenLotId);
+
+    // Kurangi stok gudang sesuai green bean yang benar-benar terpakai di WO ini (konsistensi rantai pasok)
+    if (sourceWH) {
+      const consumedKg = wo.actualGreenKg || wo.targetGreenKg;
+      const remainingKg = Math.max(0, sourceWH.availableWeightKg - consumedKg);
+      setWarehouseLots((prev) =>
+        prev.map((w) =>
+          w.id === sourceWH.id
+            ? { ...w, availableWeightKg: remainingKg, status: remainingKg === 0 ? 'sold' : 'partial' }
+            : w
+        )
+      );
+
+      const newTrx: SupplyChainTransaction = {
+        id: `TRX-${Date.now().toString().slice(-4)}`,
+        date: new Date().toISOString().split('T')[0],
+        fromRole: 'gudang',
+        fromName: sourceWH.warehouseName,
+        toRole: 'roaster',
+        toName: currentUser.organization || currentUser.name,
+        itemName: `Green Bean ${sourceWH.variety} untuk ${wo.woNumber} (${wo.actualGreenKg || wo.targetGreenKg} kg)`,
+        quantity: `${wo.actualGreenKg || wo.targetGreenKg} kg`,
+        totalAmount: (wo.actualGreenKg || wo.targetGreenKg) * sourceWH.pricePerKg,
+        status: 'Selesai',
+      };
+      setTransactions((prev) => [newTrx, ...prev]);
+    }
+
+    const newRoastedId = `RST-CRF-${Date.now().toString().slice(-4)}`;
+    const newRoastedBean: RoastedBeanLot = {
+      id: newRoastedId,
+      roasterId: currentUser.id,
+      roasterName: currentUser.organization || currentUser.name,
+      sourceWarehouseLotId: wo.greenLotId,
+      origin: wo.origin,
+      variety: wo.variety,
+      altitude: sourceWH?.altitude || '-',
+      processMethod: wo.processMethod,
+      farmerName: sourceWH?.sourceFarmerName || 'Mitra Petani',
+      roasterMachine: wo.assignedMachine,
+      roastLevel: (wo.targetRoastLevel as RoastedBeanLot['roastLevel']) || 'Medium Roast',
+      agtronNumber: wo.targetAgtron,
+      roastDate: new Date().toISOString().split('T')[0],
+      developmentTimeRatio: wo.targetDtr,
+      tastingNotes: listingData.tastingNotes,
+      scaCuppingScore: listingData.scaCuppingScore,
+      packageWeightGrams: listingData.packageWeightGrams,
+      totalPacks: listingData.totalPacks,
+      availablePacks: listingData.totalPacks,
+      pricePerPack: listingData.pricePerPack,
+      restingRecommendationDays: listingData.restingRecommendationDays,
+      recommendedBrew: listingData.recommendedBrew,
+      status: 'available',
+      photoUrl: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&auto=format&fit=crop&q=80',
+      sourceWorkOrderId: wo.id,
+    };
+    setRoastedLots((prev) => [newRoastedBean, ...prev]);
+    return newRoastedBean;
   };
 
   // 5. Cafe beli roasted bean
@@ -1472,6 +1568,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         buyGreenBeanAndStoreWarehouse,
         updateWarehouseLotGrading,
         buyWarehouseBeanAndRoast,
+        publishRoastedLotFromWorkOrder,
         buyRoastedBeansForCafe,
         addCafeRetailProduct,
         buyFromUnifiedMarketplace,

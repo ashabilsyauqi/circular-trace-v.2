@@ -56,28 +56,10 @@ export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
     <div className="bg-white rounded-2xl border border-stone-200/90 shadow-xs p-3.5 sm:p-4 space-y-3">
       {/* Top Bar: Breadcrumbs & Action Buttons & Search */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
-        {/* Left: Breadcrumbs & Primary Buttons */}
+        {/* Left: Primary Buttons (breadcrumb dropped here — the sidebar already names
+            the current section, and the record-detail pages have their own breadcrumb) */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Breadcrumbs */}
-          <nav className="flex items-center gap-1.5 text-xs font-semibold text-stone-500">
-            {breadcrumbs.map((b, idx) => (
-              <React.Fragment key={idx}>
-                {idx > 0 && <span className="text-stone-300">/</span>}
-                {idx === breadcrumbs.length - 1 ? (
-                  <span className="font-bold text-stone-900 text-sm">{b.label}</span>
-                ) : (
-                  <button
-                    onClick={b.onClick}
-                    className="hover:text-[#714B67] hover:underline transition-colors"
-                  >
-                    {b.label}
-                  </button>
-                )}
-              </React.Fragment>
-            ))}
-          </nav>
-
-          {/* Primary Action Button (Odoo + Baru) */}
+          {/* Primary Action Button (+ Baru) */}
           {onPrimaryAction && (
             <button
               onClick={onPrimaryAction}

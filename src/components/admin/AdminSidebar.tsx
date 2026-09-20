@@ -105,6 +105,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   // Dedicated Roastery ERP navigation tabs (Work Orders -> Buku Kas)
   const roasterNavItems = [
     {
+      id: 'dashboard' as const,
+      label: 'Dashboard',
+      subtitle: 'Ringkasan Bisnis',
+      icon: LayoutDashboard,
+      badge: '',
+      badgeColor: 'bg-transparent',
+    },
+    {
       id: 'work_orders' as const,
       label: 'Work Orders',
       subtitle: 'MRP Sangrai',
@@ -154,8 +162,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     },
     {
       id: 'history' as const,
-      label: 'Buku Kas Roastery',
-      subtitle: 'Buku Kas & Riwayat TRX',
+      label: 'Report',
+      subtitle: 'Riwayat Transaksi',
       icon: History,
       badge: transactions.filter(
         (t) =>
@@ -305,9 +313,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             {currentUser.role === 'roaster' ? (
               <div>
                 {!collapsed && (
-                  <div className="px-3 pb-1.5 text-[10px] uppercase font-black text-stone-400 tracking-wider flex items-center justify-between">
-                    <span>Roastery MRP & Operasi</span>
-                    <span className="text-[9px] text-[#00A09D] font-mono font-bold">Odoo 19</span>
+                  <div className="px-3 pb-1.5 text-[10px] uppercase font-black text-stone-400 tracking-wider">
+                    <span>Roastery</span>
                   </div>
                 )}
                 <div className="space-y-1">
@@ -329,7 +336,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                           collapsed ? 'justify-center' : 'justify-between'
                         } ${
                           isActive
-                            ? 'bg-gradient-to-r from-[#714B67] to-[#5A3950] text-white border border-[#714B67]/70 shadow-md shadow-[#714B67]/20 font-black'
+                            ? 'bg-orange-500 text-white border border-orange-500 font-black'
                             : 'text-stone-300 hover:text-white hover:bg-stone-800/70 border border-transparent'
                         }`}
                         title={`${item.label} - ${item.subtitle}`}
@@ -337,7 +344,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                         <div className="flex items-center gap-2.5 min-w-0">
                           <Icon
                             className={`w-4 h-4 shrink-0 ${
-                              isActive ? 'text-amber-300' : 'text-stone-400 group-hover:text-amber-400'
+                              isActive ? 'text-white' : 'text-stone-400 group-hover:text-orange-400'
                             }`}
                           />
                           {!collapsed && (
@@ -350,10 +357,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                           )}
                         </div>
 
-                        {!collapsed && (
+                        {!collapsed && item.badge !== '' && (
                           <span
                             className={`text-[10px] font-mono font-black px-1.5 py-0.5 rounded shadow-2xs ${
-                              isActive ? 'bg-[#00A09D] text-white' : item.badgeColor
+                              isActive ? 'bg-white/20 text-white' : item.badgeColor
                             }`}
                           >
                             {item.badge}

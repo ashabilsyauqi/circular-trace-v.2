@@ -705,12 +705,17 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                   className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
                 >
                   <option value="">-- Pilih Lot Green Coffee --</option>
-                  {warehouseLots.map((lot) => (
-                    <option key={lot.id} value={lot.id}>
-                      {lot.origin} ({lot.variety}, {lot.processMethod}) — Tersedia: {lot.availableWeightKg} kg (SCA: {lot.verifiedScaScore})
-                    </option>
-                  ))}
+                  {warehouseLots
+                    .filter((lot) => (lot.qcStatus ?? 'passed') === 'passed' && lot.availableWeightKg > 0)
+                    .map((lot) => (
+                      <option key={lot.id} value={lot.id}>
+                        {lot.origin} ({lot.variety}, {lot.processMethod}) — Tersedia: {lot.availableWeightKg} kg (SCA: {lot.verifiedScaScore})
+                      </option>
+                    ))}
                 </select>
+                <p className="text-[10px] text-stone-400 mt-1">
+                  Hanya lot yang sudah lulus QC Masuk di Inventory yang muncul di sini.
+                </p>
               </div>
 
               {/* Target Kg & Master Profile */}

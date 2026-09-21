@@ -79,7 +79,7 @@ export interface CoffeeWasteManagement {
   weightKgOrLiters: number; // Volume / berat limbah yang terkelola
   recipientOrLocation: string; // Penerima / lokasi pemanfaatan limbah
   processingMethod: string; // Metode olah ramah lingkungan
-  ecoCertificate?: string; // e.g. 'CCT Zero-Waste Circular Standard'
+  ecoCertificate?: string; // e.g. 'sangrAI Zero-Waste Circular Standard'
   notes?: string;
   ecoRating?: number; // Rating bintang 1.0 - 5.0 ⭐
   ecoScore?: number; // Skor total 0 - 100
@@ -117,6 +117,12 @@ export interface WarehouseLot {
   storedDate: string;
   status: 'available' | 'sold' | 'partial';
   notes?: string;
+  // Incoming QC gate: goods received from an approved Purchase Order start as 'pending_qc' and
+  // are only selectable by the roaster (Work Orders) once QC marks them 'passed'.
+  qcStatus?: 'pending_qc' | 'passed' | 'rejected';
+  qcNotes?: string;
+  qcCheckedBy?: string;
+  qcCheckedAt?: string;
   // Grading & Quality Assessment (Fokus Utama Gudang)
   gradeTier: WarehouseGradeTier;
   defectCount: number; // Nilai cacat per 350 gram (Standar SCA / SNI)

@@ -28,7 +28,7 @@ export const OdooChatter: React.FC<OdooChatterProps> = ({
   initialMessages = [
     {
       id: 'msg-1',
-      author: 'Sistem Ledger CCT',
+      author: 'Sistem Ledger sangrAI',
       type: 'system',
       content: 'Dokumen berhasil diverifikasi dan disinkronkan ke buku besar rantai pasok.',
       timestamp: 'Hari ini, 09:15',

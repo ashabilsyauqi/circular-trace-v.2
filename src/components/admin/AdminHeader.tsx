@@ -2,33 +2,52 @@ import React, { useState } from 'react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { ROLE_DETAILS } from '../../constants/roles';
 import {
-  Menu,
   ShieldCheck,
   Store,
   Bell,
   Search,
   Wallet,
-  CheckCircle2,
   Package,
   Layers,
   Sparkles,
   Grid,
-  ChevronDown,
+  LayoutDashboard,
+  ShoppingCart,
+  Warehouse,
+  Flame,
+  Sliders,
+  Award,
+  History,
+  Recycle,
 } from 'lucide-react';
 import { OdooAppSwitcherModal } from '../odoo/OdooAppSwitcherModal';
+import { ProfileMenu } from '../shared/ProfileMenu';
 
 interface AdminHeaderProps {
-  onOpenMobileMenu: () => void;
   title?: string;
   subtitle?: string;
 }
 
-export const AdminHeader: React.FC<AdminHeaderProps> = ({
-  onOpenMobileMenu,
-  title,
-  subtitle,
-}) => {
-  const { currentUser, setActiveView, loginAsRole, transactions } = useCoffee();
+export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => {
+  const {
+    currentUser,
+    setActiveView,
+    loginAsRole,
+    transactions,
+    roasterActiveTab,
+    setRoasterActiveTab,
+    workOrders,
+    purchaseOrders,
+    warehouseLots,
+    masterProfiles,
+    qcSessions,
+    salesOrders,
+    processorActiveTab,
+    setProcessorActiveTab,
+    farmerLots,
+    processedLots,
+    t,
+  } = useCoffee();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,13 +58,75 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const currentRoleInfo = ROLE_DETAILS[currentUser.role];
   const recentTransactions = transactions.slice(0, 4);
 
+  // The roaster role is the only one with real, stateful sub-navigation (roasterActiveTab,
+  // held in CoffeeContext) — the other roles render as a single page. So the second header
+  // row (module tab strip) only appears for the roaster, replacing what the old sidebar did.
+  const pendingApprovalPOCount = purchaseOrders.filter((p) => p.status === 'pending_approval').length;
+  const pendingIncomingQcCount = warehouseLots.filter((l) => l.qcStatus === 'pending_qc').length;
+  const myRoasterTransactionsCount = transactions.filter(
+    (trx) =>
+      trx.fromRole === 'roaster' ||
+      trx.toRole === 'roaster' ||
+      trx.fromName === currentUser.name ||
+      trx.toName === currentUser.name
+  ).length;
+
+  const roasterTabs = [
+    { id: 'dashboard', label: t('sidebar.dashboard.title'), icon: LayoutDashboard, badge: 0 },
+    { id: 'purchasing', label: t('sidebar.purchasing.title'), icon: ShoppingCart, badge: pendingApprovalPOCount },
+    { id: 'inventory', label: t('sidebar.inventory.title'), icon: Warehouse, badge: pendingIncomingQcCount },
+    { id: 'work_orders', label: t('sidebar.workOrders.title'), icon: Flame, badge: workOrders.filter((w) => w.status !== 'completed').length },
+    { id: 'production', label: t('sidebar.production.title'), icon: Sliders, badge: masterProfiles.length },
+    { id: 'qc', label: t('sidebar.qc.title'), icon: Award, badge: qcSessions.length },
+    { id: 'selling', label: t('sidebar.selling.title'), icon: Store, badge: salesOrders.filter((s) => s.status !== 'dispatched').length },
+    { id: 'history', label: t('sidebar.history.title'), icon: History, badge: myRoasterTransactionsCount },
+  ];
+
+  // Pengolah (Processor) has its own, different pipeline: sourcing cherry from farmers ->
+  // processing/waste catalog -> transaction history. Its own tab strip, own state
+  // (processorActiveTab), separate from the roaster's.
+  const availableFarmerCherryLots = farmerLots.filter((l) => l.availableWeightKg > 0).length;
+  const myProcessedLotsCount = processedLots.filter((l) => l.processorId === currentUser.id || true).length;
+  const myProcessorTransactionsCount = transactions.filter(
+    (trx) =>
+      trx.fromName === currentUser.name ||
+      trx.toName === currentUser.name ||
+      trx.fromRole === 'pengolah' ||
+      trx.toRole === 'pengolah'
+  ).length;
+
+  const processorTabs = [
+    { id: 'dashboard', label: t('sidebar.dashboard.title'), icon: LayoutDashboard, badge: 0 },
+    { id: 'sourcing', label: t('sidebar.processorSourcing'), icon: ShoppingCart, badge: availableFarmerCherryLots },
+    { id: 'inventory', label: t('sidebar.processorInventory'), icon: Recycle, badge: myProcessedLotsCount },
+    { id: 'history', label: t('sidebar.history.title'), icon: History, badge: myProcessorTransactionsCount },
+  ];
+
+  // Each role gets its own pipeline tab strip — different steps, same interaction pattern.
+  // Only roles with real, stateful sub-navigation (held in CoffeeContext) get a second row;
+  // roles that still render as a single page (petani, gudang, cafe) get none for now.
+  const moduleTabs: { id: string; label: string; icon: React.ElementType; badge: number }[] | null =
+    currentUser.role === 'roaster'
+      ? roasterTabs
+      : currentUser.role === 'pengolah'
+      ? processorTabs
+      : null;
+  const activeModuleTab = currentUser.role === 'roaster' ? roasterActiveTab : processorActiveTab;
+  const onSelectModuleTab = (id: string) => {
+    if (currentUser.role === 'roaster') {
+      setRoasterActiveTab(id as typeof roasterActiveTab);
+    } else if (currentUser.role === 'pengolah') {
+      setProcessorActiveTab(id as typeof processorActiveTab);
+    }
+  };
+
   return (
     <>
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-2xs">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Left: Odoo 19 App Switcher 9-Dots & Breadcrumbs */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            {/* Odoo 19 9-Dots App Switcher Button */}
+            {/* Odoo 19 9-Dots App Switcher Button — now the primary way to move between modules */}
             <button
               onClick={() => setAppSwitcherOpen(true)}
               className="p-2 rounded-xl bg-[#714B67]/10 hover:bg-[#714B67]/20 text-[#714B67] transition-all shrink-0 flex items-center justify-center border border-[#714B67]/20 group"
@@ -54,17 +135,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               <Grid className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
             </button>
 
-            <button
-              onClick={onOpenMobileMenu}
-              className="lg:hidden p-2 rounded-xl text-stone-700 hover:bg-stone-100 transition-colors shrink-0"
-              title="Buka Menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-[11px] text-stone-500 font-medium truncate">
-                <span className="font-bold text-[#714B67] hidden sm:inline">CCT ERP 19</span>
+                <span className="font-bold text-[#714B67] hidden sm:inline">sangrAI ERP 19</span>
                 <span className="hidden sm:inline">/</span>
                 <span className="font-bold text-[#714B67] bg-[#714B67]/10 px-2 py-0.5 rounded-md border border-[#714B67]/20">
                   {currentRoleInfo.label}
@@ -100,7 +173,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             {/* Verified Node Badge */}
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold shadow-2xs">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden md:inline">Node CCT Terverifikasi</span>
+              <span className="hidden md:inline">Node sangrAI Terverifikasi</span>
               <span className="md:hidden">Verified</span>
             </div>
 
@@ -139,7 +212,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                         <div key={trx.id} className="py-2.5 px-1 space-y-1 hover:bg-stone-50/80 rounded-lg transition-colors">
                           <div className="flex items-center justify-between text-[11px]">
                             <span className="font-bold text-stone-900 truncate">
-                              {trx.fromName} $\rightarrow$ {trx.toName}
+                              {trx.fromName} → {trx.toName}
                             </span>
                             <span className="text-[10px] text-stone-400 font-mono">
                               {trx.date}
@@ -167,7 +240,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                       }}
                       className="w-full mt-2 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors text-center block"
                     >
-                      Buka Semua Buku Besar Transaksi $\rightarrow$
+                      Buka Semua Buku Besar Transaksi →
                     </button>
                   </div>
                 </>
@@ -186,11 +259,64 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               className="px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-stone-950 font-black text-xs transition-all shadow-xs flex items-center gap-1.5"
             >
               <Store className="w-4 h-4" />
-              <span className="hidden sm:inline">Ke Toko E-Commerce</span>
+              <span className="hidden sm:inline">{t('sidebar.storeCta')}</span>
               <span className="sm:hidden">Toko</span>
             </button>
+
+            {/* Profile menu: identity, language, demo mode, ledger shortcut & logout — no sidebar needed */}
+            <ProfileMenu
+              variant="light"
+              onOpenLedger={() => setActiveView('transactions')}
+            />
           </div>
         </div>
+
+        {/* Second row: this role's own pipeline module tabs. Each role has its own module
+            steps (roaster differs from processor, etc.) driven by its own context state.
+            Roles that still render as a single page get no second row here. */}
+        {moduleTabs && (
+          <div className="border-t border-stone-100 bg-stone-50/70">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+              <div className="flex items-center gap-1 overflow-x-auto py-1.5 scrollbar-thin scrollbar-thumb-stone-300 [-ms-overflow-style:none] [scrollbar-width:thin]">
+                {moduleTabs.map((tabItem, idx) => {
+                  const TabIcon = tabItem.icon;
+                  const isActive = activeModuleTab === tabItem.id;
+                  return (
+                    <button
+                      key={tabItem.id}
+                      onClick={() => onSelectModuleTab(tabItem.id)}
+                      className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                        isActive
+                          ? 'bg-stone-900 text-amber-400 shadow-xs'
+                          : 'text-stone-600 hover:bg-white hover:text-stone-900'
+                      }`}
+                      title={tabItem.label}
+                    >
+                      <span
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
+                          isActive ? 'bg-amber-400 text-stone-950' : 'bg-stone-200 text-stone-500'
+                        }`}
+                      >
+                        {idx + 1}
+                      </span>
+                      <TabIcon className="w-3.5 h-3.5 shrink-0" />
+                      <span>{tabItem.label}</span>
+                      {tabItem.badge > 0 && (
+                        <span
+                          className={`ml-0.5 text-[9px] font-black px-1.5 py-0.2 rounded-full shrink-0 ${
+                            isActive ? 'bg-amber-500 text-stone-950' : 'bg-stone-800 text-white'
+                          }`}
+                        >
+                          {tabItem.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Global Quick Search Modal (Cruip Style) */}
@@ -242,7 +368,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     </span>
                   </div>
                 </div>
-                <span className="text-xs text-amber-700 font-bold">Buka $\rightarrow$</span>
+                <span className="text-xs text-amber-700 font-bold">Buka →</span>
               </div>
 
               <div
@@ -265,7 +391,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     </span>
                   </div>
                 </div>
-                <span className="text-xs text-blue-700 font-bold">Buka $\rightarrow$</span>
+                <span className="text-xs text-blue-700 font-bold">Buka →</span>
               </div>
 
               <div
@@ -288,7 +414,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     </span>
                   </div>
                 </div>
-                <span className="text-xs text-emerald-700 font-bold">Buka $\rightarrow$</span>
+                <span className="text-xs text-emerald-700 font-bold">Buka →</span>
               </div>
             </div>
 

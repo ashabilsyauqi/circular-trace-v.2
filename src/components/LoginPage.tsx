@@ -99,7 +99,7 @@ export const LoginPage: React.FC = () => {
           Portal Masuk Resmi • Rantai Pasok Digital CCT-Coffee
         </div>
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-900 tracking-tight">
-          CCT Coffee Supply Chain
+          sangrAI Supply Chain
         </h1>
         <p className="mt-3 text-stone-600 text-sm sm:text-base max-w-2xl mx-auto">
           Sistem masuk terisolasi berbasis peran untuk <strong className="text-emerald-700">Petani</strong> $\rightarrow${' '}
@@ -225,7 +225,7 @@ export const LoginPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="text-center text-xs text-stone-500 pb-2">
-        <p>CCT Coffee Supply Chain System • Dedicated Role-Based Workspace Architecture</p>
+        <p>sangrAI Supply Chain System • Dedicated Role-Based Workspace Architecture</p>
       </footer>
     </div>
   );

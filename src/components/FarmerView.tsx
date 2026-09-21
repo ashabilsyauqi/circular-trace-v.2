@@ -610,7 +610,7 @@ export const FarmerView: React.FC = () => {
                 Catatan Penjualan Ceri Kopi ke Pengolah
               </h2>
               <p className="text-xs text-stone-500">
-                Log riwayat transaksi hulu yang tercatat secara permanen di buku besar CCT.
+                Log riwayat transaksi hulu yang tercatat secara permanen di buku besar sangrAI.
               </p>
             </div>
 

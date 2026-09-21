@@ -227,11 +227,11 @@ export const WarehouseBarcodeModal: React.FC<WarehouseBarcodeModalProps> = ({
             <div className="flex items-center justify-between border-b-2 border-stone-900 pb-3 mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-stone-900 text-blue-400 flex items-center justify-center font-black text-sm">
-                  CCT
+                  sAI
                 </div>
                 <div>
                   <h3 className="font-black text-sm tracking-wider uppercase text-stone-900">
-                    CCT WAREHOUSE & LOGISTICS QA
+                    sangrAI WAREHOUSE & LOGISTICS QA
                   </h3>
                   <p className="text-[10px] text-stone-500 font-semibold">
                     Standard Laboratorium Mutu, Grading & Penyimpanan Terkontrol
@@ -334,7 +334,7 @@ export const WarehouseBarcodeModal: React.FC<WarehouseBarcodeModalProps> = ({
 
             {/* Bottom Disclaimer */}
             <div className="mt-4 pt-3 border-t border-stone-200 flex items-center justify-between text-[9px] text-stone-400 font-medium">
-              <span>*Label resmi fisik karung gudang CCT (Zero Price Policy / Tanpa Harga)</span>
+              <span>*Label resmi fisik karung gudang sangrAI (Zero Price Policy / Tanpa Harga)</span>
               <span>Diperiksa & Disimpan: {lot.storedDate}</span>
             </div>
           </div>

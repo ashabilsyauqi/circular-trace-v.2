@@ -95,7 +95,7 @@ export const CafeCupBarcodeModal: React.FC<CafeCupBarcodeModalProps> = ({
       key={keyIndex}
       className="border-2 border-stone-800 rounded-2xl p-4 bg-white text-stone-900 shadow-sm relative print:border-stone-900 print:shadow-none print:break-inside-avoid"
     >
-      {/* Sticker Header: Cafe Brand + CCT Direct-Trade Stamp */}
+      {/* Sticker Header: Cafe Brand + sangrAI Direct-Trade Stamp */}
       <div className="flex items-center justify-between border-b-2 border-stone-900 pb-2 mb-2.5">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black text-xs">

@@ -118,8 +118,8 @@ export const LandingPage: React.FC = () => {
 
   const faqs = [
     {
-      q: 'Apa itu CCT-Coffee (Circular Trace Coffee)?',
-      a: 'CCT-Coffee adalah platform sistem informasi rantai pasok kopi hulu-ke-hilir yang mengintegrasikan perdagangan B2B, pelacakan lot digital (Lot Traceability), standarisasi sensoris SCA, hingga manajemen limbah sirkular (Zero-Waste Eco-Processing).',
+      q: 'Apa itu sangrAI?',
+      a: 'sangrAI adalah platform sistem informasi rantai pasok kopi hulu-ke-hilir yang mengintegrasikan perdagangan B2B, pelacakan lot digital (Lot Traceability), standarisasi sensoris SCA, hingga manajemen limbah sirkular (Zero-Waste Eco-Processing).',
     },
     {
       q: 'Bagaimana cara kerja QR Traceability untuk konsumen cafe?',
@@ -362,7 +362,7 @@ export const LandingPage: React.FC = () => {
               Layanan & Fitur Komprehensif
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">
-              5 Pilar Ekosistem Kopi CCT-Coffee
+              5 Pilar Ekosistem Kopi sangrAI
             </h2>
             <p className="mt-3 text-stone-600 text-sm sm:text-base">
               Setiap pemangku kepentingan memiliki modul khusus yang saling tersambung secara otomatis dalam satu basis data terdesentralisasi.
@@ -797,7 +797,7 @@ export const LandingPage: React.FC = () => {
               Keunggulan Kompetitif Kami
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">
-              Mengapa Industri Kopi Memilih CCT-Coffee?
+              Mengapa Industri Kopi Memilih sangrAI?
             </h2>
             <p className="mt-3 text-stone-600 text-sm sm:text-base">
               Menyatukan presisi data teknis, transparansi harga yang adil, serta kepedulian lingkungan hidup dalam satu platform modern.
@@ -930,7 +930,7 @@ export const LandingPage: React.FC = () => {
                 Kopi specialty Indonesia diakui di seluruh dunia, namun di balik kelezatan rasa terdapat tantangan besar: <strong>rantai pasok yang terfragmentasi, asimetri harga di tingkat petani, hilangnya riwayat terroir saat sampai ke barista</strong>, serta timbunan limbah pengolahan basah yang belum terkelola optimal.
               </p>
               <p className="text-stone-600 text-sm leading-relaxed">
-                <strong>CCT-Coffee (Circular Trace Coffee)</strong> lahir sebagai jawaban: sebuah platform yang mengembalikan kehormatan dan transparansi kepada para penanam kopi, memberikan kepastian mutu dan data kepada roaster, serta menyuguhkan integritas cerita kepada setiap penikmat kopi di kedai.
+                <strong>sangrAI</strong> — gabungan "Sangrai" (proses roasting kopi) dan "AI" — lahir sebagai jawaban: sebuah platform yang mengembalikan kehormatan dan transparansi kepada para penanam kopi, memberikan kepastian mutu dan data kepada roaster, serta menyuguhkan integritas cerita kepada setiap penikmat kopi di kedai.
               </p>
 
               {/* Core Mission Pillars */}
@@ -1004,7 +1004,7 @@ export const LandingPage: React.FC = () => {
               Mulai Transformasi Digital Sekarang
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
-              Siap Mengembangkan Usaha Kopi Anda Bersama CCT-Coffee?
+              Siap Mengembangkan Usaha Kopi Anda Bersama sangrAI?
             </h2>
             <p className="text-stone-300 text-sm sm:text-base leading-relaxed">
               Bergabunglah dengan ribuan petani, pengolah mill, pengelola silo gudang, artisan roastery, dan barista cafe di seluruh Indonesia. Gratis tanpa biaya aktivasi awal.

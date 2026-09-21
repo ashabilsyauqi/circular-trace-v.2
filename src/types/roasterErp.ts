@@ -82,7 +82,7 @@ export interface MasterRoastProfile {
   description: string;
 }
 
-export type PurchaseOrderStatus = 'draft' | 'ordered' | 'in_transit' | 'received' | 'cancelled';
+export type PurchaseOrderStatus = 'draft' | 'pending_approval' | 'approved' | 'received' | 'cancelled';
 
 export interface POItem {
   id: string;
@@ -96,6 +96,11 @@ export interface POItem {
   pricePerKg: number;
   totalPrice: number;
   lotReference?: string;
+  // Set when this PO item was created by picking an existing listing from the Unified
+  // Marketplace rather than typed in free-form. Lets approvePurchaseOrder deduct the real
+  // seller's stock and log a real SupplyChainTransaction once the PO is signed.
+  sourceMarketplaceId?: string;
+  sourceMarketplaceCategory?: 'green_bean_processor' | 'green_bean_warehouse';
 }
 
 export interface PurchaseOrder {
@@ -112,6 +117,9 @@ export interface PurchaseOrder {
   totalAmount: number;
   paymentStatus: 'unpaid' | 'paid' | 'partial';
   notes?: string;
+  // Approval workflow: draft -> pending_approval -> approved (digital signature) -> received
+  approvalSignedBy?: string;
+  approvalSignedAt?: string;
 }
 
 export interface GreenBeanSample {

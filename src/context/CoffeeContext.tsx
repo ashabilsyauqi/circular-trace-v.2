@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Language, translations } from '../i18n/translations';
 import {
   AppUser,
   UserRole,
@@ -20,6 +21,7 @@ import {
   WorkOrderBatch,
   MasterRoastProfile,
   PurchaseOrder,
+  POItem,
   GreenBeanSample,
   QCCuppingSession,
   RoasterPackagingItem,
@@ -66,6 +68,8 @@ interface CoffeeContextType {
   setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
   roasterActiveTab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history';
   setRoasterActiveTab: (tab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
+  processorActiveTab: 'dashboard' | 'sourcing' | 'inventory' | 'history';
+  setProcessorActiveTab: (tab: 'dashboard' | 'sourcing' | 'inventory' | 'history') => void;
   farmerLots: FarmerHarvestLot[];
   processedLots: ProcessedGreenBeanLot[];
   warehouseLots: WarehouseLot[];
@@ -186,7 +190,15 @@ interface CoffeeContextType {
   updateWorkOrderStatus: (id: string, status: WorkOrderStatus) => void;
   executeRoastBatch: (woId: string, batchData: Omit<WorkOrderBatch, 'executedAt'>) => void;
   createPurchaseOrder: (poData: Omit<PurchaseOrder, 'id' | 'poNumber'>) => PurchaseOrder;
+  createPOFromMarketplace: (item: UnifiedMarketplaceItem, quantityKg: number) => { success: boolean; message: string };
+  submitPurchaseOrderForApproval: (poId: string) => void;
+  approvePurchaseOrder: (poId: string, signedByName: string) => void;
+  rejectPurchaseOrder: (poId: string) => void;
   receivePurchaseOrder: (poId: string) => void;
+  submitIncomingQC: (
+    lotId: string,
+    result: { passed: boolean; scaScore: number; moisturePercent: number; notes: string; checkedBy: string }
+  ) => void;
   createGreenBeanSample: (sampleData: Omit<GreenBeanSample, 'id' | 'sampleCode' | 'receivedDate'>) => GreenBeanSample;
   updateGreenBeanSample: (id: string, status: GreenBeanSample['status'], evaluationNotes?: string) => void;
   createMasterProfile: (profileData: Omit<MasterRoastProfile, 'id'>) => MasterRoastProfile;
@@ -194,6 +206,13 @@ interface CoffeeContextType {
   createSalesOrder: (soData: Omit<SalesOrder, 'id' | 'soNumber' | 'orderDate'>) => SalesOrder;
   dispatchSalesOrder: (soId: string) => void;
   updatePackagingStock: (id: string, qtyDelta: number) => void;
+  // App shell settings: language (ID/EN) and whether the demo role-switcher shows in the
+  // navbar/sidebar. Both persist to localStorage like everything else here.
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+  demoModeEnabled: boolean;
+  setDemoModeEnabled: (enabled: boolean) => void;
 }
 
 const CoffeeContext = createContext<CoffeeContextType | undefined>(undefined);
@@ -211,6 +230,30 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return MOCK_USERS[0];
   });
 
+  const [language, setLanguageState] = useState<Language>(() => {
+    const saved = localStorage.getItem('cct_language');
+    return saved === 'en' || saved === 'id' ? saved : 'id';
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem('cct_language', lang);
+  };
+
+  const t = (key: string): string => {
+    return translations[language]?.[key] ?? translations.id[key] ?? key;
+  };
+
+  const [demoModeEnabled, setDemoModeEnabledState] = useState<boolean>(() => {
+    const saved = localStorage.getItem('cct_demoMode');
+    return saved === null ? true : saved === 'true';
+  });
+
+  const setDemoModeEnabled = (enabled: boolean) => {
+    setDemoModeEnabledState(enabled);
+    localStorage.setItem('cct_demoMode', String(enabled));
+  };
+
   const [users, setUsers] = useState<AppUser[]>(() => {
     const saved = localStorage.getItem('cct_users');
     return saved ? JSON.parse(saved) : MOCK_USERS;
@@ -219,6 +262,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [activeView, setActiveView] = useState<'landing' | 'dashboard' | 'marketplace' | 'transactions'>('landing');
   const [roasterActiveTab, setRoasterActiveTab] = useState<
     'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history'
+  >('dashboard');
+  const [processorActiveTab, setProcessorActiveTab] = useState<
+    'dashboard' | 'sourcing' | 'inventory' | 'history'
   >('dashboard');
 
   useEffect(() => {
@@ -532,7 +578,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           weightKgOrLiters: Math.round(boughtKg * 0.45),
           recipientOrLocation: 'Kelompok Tani Lestari & Rumah Olah Kompos',
           processingMethod: 'Solar Dryer Raised Bed & Kompos Aerobik 30 Hari',
-          ecoCertificate: 'CCT Zero-Waste Circular Standard',
+          ecoCertificate: 'sangrAI Zero-Waste Circular Standard',
           notes: 'Pulp ceri dialokasikan untuk teh cascara dan pupuk organik.',
         };
         const ratingCalc = calculateProcessorEcoRating(rawWaste, boughtKg, processData.greenBeanWeightKg);
@@ -1382,15 +1428,163 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return newPo;
   };
 
+  // Direct "beli" action from the Unified Marketplace itself — same storefront every other
+  // role buys/sells through, no separate supplier-picker screen in Purchasing. A roaster
+  // picking a green bean listing here creates a Purchase Order straight at "pending_approval"
+  // (this click *is* the submit-for-approval step) — it still needs a digital signature in
+  // Purchasing before stock is actually deducted from the seller and goods can be received.
+  const createPOFromMarketplace = (
+    item: UnifiedMarketplaceItem,
+    quantityKg: number
+  ): { success: boolean; message: string } => {
+    if (!currentUser || currentUser.role !== 'roaster') {
+      return { success: false, message: 'Hanya akun Roaster yang dapat membuat Purchase Order dari listing ini.' };
+    }
+    if (item.category !== 'green_bean_processor' && item.category !== 'green_bean_warehouse') {
+      return { success: false, message: 'Kategori produk ini tidak dapat dibeli lewat Purchase Order.' };
+    }
+    if (quantityKg <= 0 || quantityKg > item.availableStock) {
+      return { success: false, message: 'Kuantitas melebihi stok yang tersedia pada listing ini.' };
+    }
+
+    const pricePerKg = item.price;
+    const itemTotal = quantityKg * pricePerKg;
+    const estimatedFreight = Math.round(quantityKg * 2500);
+
+    const newItem: POItem = {
+      id: `poi-${Date.now().toString().slice(-4)}`,
+      greenBeanName: item.title,
+      origin: item.origin,
+      variety: item.variety,
+      processMethod: item.processMethod || '-',
+      bagCount: Math.max(1, Math.ceil(quantityKg / 60)),
+      weightPerBagKg: 60,
+      totalWeightKg: quantityKg,
+      pricePerKg,
+      totalPrice: itemTotal,
+      lotReference: item.id,
+      sourceMarketplaceId: item.id,
+      sourceMarketplaceCategory: item.category as 'green_bean_processor' | 'green_bean_warehouse',
+    };
+
+    const newPo = createPurchaseOrder({
+      supplierName: item.sellerOrg || item.sellerName,
+      supplierRole: item.sellerRole as 'petani' | 'pengolah' | 'gudang',
+      orderDate: new Date().toISOString().split('T')[0],
+      expectedDeliveryDate: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
+      status: 'draft',
+      items: [newItem],
+      subtotal: itemTotal,
+      freightCost: estimatedFreight,
+      totalAmount: itemTotal + estimatedFreight,
+      paymentStatus: 'unpaid',
+      notes: `Dibeli langsung dari Unified Marketplace (${item.sellerOrg || item.sellerName}).`,
+    });
+
+    setPurchaseOrders((prev) =>
+      prev.map((p) => (p.id === newPo.id ? { ...p, status: 'pending_approval' } : p))
+    );
+
+    return {
+      success: true,
+      message: `PO ${newPo.poNumber} diajukan ke ${item.sellerOrg || item.sellerName} senilai Rp ${(
+        itemTotal + estimatedFreight
+      ).toLocaleString()}. Tanda tangani persetujuan di modul Purchasing untuk melanjutkan.`,
+    };
+  };
+
+  // Draft -> Pending Approval (submitted, awaiting a digital signature from an authorized user)
+  const submitPurchaseOrderForApproval = (poId: string) => {
+    setPurchaseOrders((prev) =>
+      prev.map((p) => (p.id === poId && p.status === 'draft' ? { ...p, status: 'pending_approval' } : p))
+    );
+  };
+
+  // Pending Approval -> Approved, gated by a digital signature (typed full name confirmation).
+  // This is also the moment the purchase is actually committed against the real seller: for
+  // any item picked straight from the Unified Marketplace, the seller's own listing stock is
+  // deducted here and a real SupplyChainTransaction is logged — mirroring buyFromUnifiedMarketplace
+  // so Purchasing stays tied to the same marketplace stock everyone else sells through.
+  const approvePurchaseOrder = (poId: string, signedByName: string) => {
+    const targetPo = purchaseOrders.find((p) => p.id === poId);
+    if (!targetPo || targetPo.status !== 'pending_approval') return;
+
+    setPurchaseOrders((prev) =>
+      prev.map((p) =>
+        p.id === poId
+          ? {
+              ...p,
+              status: 'approved',
+              approvalSignedBy: signedByName,
+              approvalSignedAt: new Date().toISOString(),
+            }
+          : p
+      )
+    );
+
+    targetPo.items.forEach((item) => {
+      if (!item.sourceMarketplaceId || !item.sourceMarketplaceCategory) return;
+
+      if (item.sourceMarketplaceCategory === 'green_bean_processor') {
+        setProcessedLots((prev) =>
+          prev.map((l) =>
+            l.id === item.sourceMarketplaceId
+              ? {
+                  ...l,
+                  availableWeightKg: Math.max(0, l.availableWeightKg - item.totalWeightKg),
+                  status: l.availableWeightKg - item.totalWeightKg <= 0 ? 'sold' : 'available',
+                }
+              : l
+          )
+        );
+      } else if (item.sourceMarketplaceCategory === 'green_bean_warehouse') {
+        setWarehouseLots((prev) =>
+          prev.map((l) =>
+            l.id === item.sourceMarketplaceId
+              ? {
+                  ...l,
+                  availableWeightKg: Math.max(0, l.availableWeightKg - item.totalWeightKg),
+                  status: l.availableWeightKg - item.totalWeightKg <= 0 ? 'sold' : 'partial',
+                }
+              : l
+          )
+        );
+      }
+
+      const newTrx: SupplyChainTransaction = {
+        id: `TRX-${Date.now().toString().slice(-4)}`,
+        date: new Date().toISOString().split('T')[0],
+        fromRole: targetPo.supplierRole,
+        fromName: targetPo.supplierName,
+        toRole: currentUser?.role || 'roaster',
+        toName: currentUser?.organization || currentUser?.name || 'Roastery',
+        itemName: `${item.greenBeanName} (${item.totalWeightKg} kg) — ${targetPo.poNumber}`,
+        quantity: `${item.totalWeightKg} kg`,
+        totalAmount: item.totalPrice,
+        status: 'Diproses',
+      };
+      setTransactions((prev) => [newTrx, ...prev]);
+    });
+  };
+
+  // Approval rejected / sent back to draft for revision
+  const rejectPurchaseOrder = (poId: string) => {
+    setPurchaseOrders((prev) =>
+      prev.map((p) => (p.id === poId ? { ...p, status: 'draft', approvalSignedBy: undefined, approvalSignedAt: undefined } : p))
+    );
+  };
+
   const receivePurchaseOrder = (poId: string) => {
     const targetPo = purchaseOrders.find((p) => p.id === poId);
-    if (!targetPo) return;
+    if (!targetPo || targetPo.status !== 'approved') return;
 
     setPurchaseOrders((prev) =>
       prev.map((p) => (p.id === poId ? { ...p, status: 'received', paymentStatus: 'paid' } : p))
     );
 
-    // Create a new Warehouse Lot for Roaster's Green Coffee inventory
+    // Create a new Warehouse Lot for Roaster's Green Coffee inventory. Goods arrive as
+    // 'pending_qc' — they are visible in Inventory immediately, but only usable by the
+    // roaster (Work Orders) once incoming QC marks them 'passed'.
     targetPo.items.forEach((item) => {
       const newLot: WarehouseLot = {
         id: `WH-LOT-${Date.now().toString().slice(-4)}`,
@@ -1403,25 +1597,85 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         variety: item.variety,
         altitude: '1.400 - 1.650 mdpl',
         processMethod: item.processMethod,
-        storageLocation: 'Green Silo Bay 01 (GrainPro)',
+        storageLocation: 'Receiving Bay (Menunggu QC Masuk)',
         temperatureCelsius: 20.0,
         humidityPercent: 56,
         packagingType: 'GrainPro + Karung Goni 60kg',
-        verifiedScaScore: 87.0,
+        verifiedScaScore: 0,
         weightKg: item.totalWeightKg,
         availableWeightKg: item.totalWeightKg,
         pricePerKg: item.pricePerKg,
         purchasePricePerKg: item.pricePerKg,
         storedDate: new Date().toISOString().split('T')[0],
         status: 'available',
+        qcStatus: 'pending_qc',
         gradeTier: 'Grade 1 - Super Premium',
-        defectCount: 2,
+        defectCount: 0,
         screenSize: 'Screen 17-18',
-        moistureContentPercent: 11.2,
+        moistureContentPercent: undefined,
         waterActivityAw: 0.55,
       };
       setWarehouseLots((prev) => [newLot, ...prev]);
     });
+  };
+
+  // Incoming QC gate: inspect a just-received green bean lot before the roaster can use it.
+  const submitIncomingQC = (
+    lotId: string,
+    result: { passed: boolean; scaScore: number; moisturePercent: number; notes: string; checkedBy: string }
+  ) => {
+    const targetLot = warehouseLots.find((l) => l.id === lotId);
+
+    setWarehouseLots((prev) =>
+      prev.map((lot) =>
+        lot.id === lotId
+          ? {
+              ...lot,
+              qcStatus: result.passed ? 'passed' : 'rejected',
+              qcNotes: result.notes,
+              qcCheckedBy: result.checkedBy,
+              qcCheckedAt: new Date().toISOString(),
+              verifiedScaScore: result.scaScore,
+              moistureContentPercent: result.moisturePercent,
+              storageLocation: result.passed ? 'Green Silo Bay 01 (GrainPro)' : 'Receiving Bay (Ditolak QC)',
+              status: result.passed ? lot.status : 'sold',
+              availableWeightKg: result.passed ? lot.availableWeightKg : 0,
+            }
+          : lot
+      )
+    );
+
+    // A lot that just cleared QC is ready to roast — auto-queue a Work Order for it right
+    // away (status 'scheduled') instead of leaving the roaster to click "+ Work Order" and
+    // re-pick the same lot from a dropdown. Best-guess profile/machine are pre-filled from
+    // whatever's already configured in Production; the roaster can still adjust before
+    // executing the first batch.
+    const alreadyQueued = workOrders.some((w) => w.greenLotId === lotId);
+    if (result.passed && targetLot && !alreadyQueued && targetLot.availableWeightKg > 0) {
+      const defaultProfile = masterProfiles[0];
+      const readyMachine = roasterMachines.find((m) => m.status === 'ready') || roasterMachines[0];
+
+      createWorkOrder({
+        scheduledDate: new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+        status: 'scheduled',
+        greenLotId: targetLot.id,
+        greenBeanName: `${targetLot.origin} - ${targetLot.variety}`,
+        origin: targetLot.origin,
+        variety: targetLot.variety,
+        processMethod: targetLot.processMethod,
+        targetGreenKg: targetLot.availableWeightKg,
+        targetRoastedKg: Number((targetLot.availableWeightKg * 0.855).toFixed(1)),
+        masterProfileId: defaultProfile?.id || '',
+        masterProfileName: defaultProfile?.name || 'Belum Dipilih',
+        targetRoastLevel: defaultProfile?.targetRoastLevel || 'Belum Ditentukan',
+        targetAgtron: defaultProfile?.agtronGourmet || 0,
+        targetDtr: defaultProfile?.targetDtr || 0,
+        assignedMachine: readyMachine?.name || 'Belum Ditentukan',
+        assignedRoaster: currentUser?.name || 'Roastmaster',
+        notes: `Auto-dijadwalkan setelah lot ${targetLot.id} lulus QC Masuk. Cek profil sangrai & mesin sebelum eksekusi batch.`,
+      });
+    }
   };
 
   const createGreenBeanSample = (
@@ -1554,6 +1808,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setActiveView,
         roasterActiveTab,
         setRoasterActiveTab,
+        processorActiveTab,
+        setProcessorActiveTab,
         farmerLots,
         processedLots,
         warehouseLots,
@@ -1587,7 +1843,12 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         updateWorkOrderStatus,
         executeRoastBatch,
         createPurchaseOrder,
+        createPOFromMarketplace,
+        submitPurchaseOrderForApproval,
+        approvePurchaseOrder,
+        rejectPurchaseOrder,
         receivePurchaseOrder,
+        submitIncomingQC,
         createGreenBeanSample,
         updateGreenBeanSample,
         createMasterProfile,
@@ -1595,6 +1856,11 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         createSalesOrder,
         dispatchSalesOrder,
         updatePackagingStock,
+        language,
+        setLanguage,
+        t,
+        demoModeEnabled,
+        setDemoModeEnabled,
       }}
     >
       {children}

@@ -93,7 +93,7 @@ const MainLayout: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-            <span className="text-white font-bold tracking-tight">CCT-Coffee Ecosystem</span>
+            <span className="text-white font-bold tracking-tight">sangrAI Ecosystem</span>
             <span className="text-stone-600">|</span>
             <span>E-Commerce Terpadu & Panel Admin Mandiri</span>
           </div>

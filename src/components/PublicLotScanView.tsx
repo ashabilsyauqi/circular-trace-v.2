@@ -114,7 +114,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
   const currentWarehouseLot: WarehouseLot = warehouseLot || {
     id: lotId,
     warehouseId: 'user-gudang-1',
-    warehouseName: 'Gudang Sentra Kopi Priangan (CCT Storage)',
+    warehouseName: 'Gudang Sentra Kopi Priangan (sangrAI Storage)',
     sourceGreenBeanId: 'GB-PGL-001',
     variety: 'Typica Java Preanger',
     processMethod: 'Full Washed',
@@ -196,10 +196,10 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
     const title = isCafeCup
       ? `Cerita Seduhan Kopi ${currentCafeItem.beanName} • ${currentCafeItem.cafeName}`
       : isWarehouse
-      ? `Laporan Grading Gudang Lot ${currentWarehouseLot.id} (${currentWarehouseLot.gradeTier}) • CCT-Coffee`
+      ? `Laporan Grading Gudang Lot ${currentWarehouseLot.id} (${currentWarehouseLot.gradeTier}) • sangrAI`
       : isProcessed
-      ? `Spesifikasi Green Bean Lot ${currentProcessedLot.id} • CCT-Coffee`
-      : `Spesifikasi Ceri Lot ${currentFarmerLot.id} • CCT-Coffee`;
+      ? `Spesifikasi Green Bean Lot ${currentProcessedLot.id} • sangrAI`
+      : `Spesifikasi Ceri Lot ${currentFarmerLot.id} • sangrAI`;
     const text = isCafeCup
       ? `Nikmati seduhan ${currentCafeItem.beanName} (SCA: ${currentCafeItem.scaScore}) di ${currentCafeItem.cafeName}. Cek silsilah langsung dari kebun petani ${currentCafeItem.lineage.farmerName}!`
       : isWarehouse
@@ -547,12 +547,11 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
       <header className="max-w-3xl mx-auto w-full flex items-center justify-between py-4 border-b border-stone-200">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black text-sm">
-            CCT
-
+            sAI
           </div>
           <div>
             <span className="font-black text-xs uppercase tracking-wider block text-stone-900">
-              Coffee Chain Traceability (CCT)
+              sangrAI Traceability
             </span>
             <span className="text-[10px] text-stone-500 font-semibold block">
               Sistem Verifikasi Barcode & Ketertelusuran Resmi
@@ -588,7 +587,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   Nikmati Seduhan Asli Specialty Coffee
                 </h1>
                 <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-                  Selamat menikmati! Cangkir kopi yang sedang Anda nikmati di <strong className="text-amber-300 font-bold">{currentCafeItem.cafeName}</strong> terhubung langsung ke petani dan roastery melalui sistem ketertelusuran CCT.
+                  Selamat menikmati! Cangkir kopi yang sedang Anda nikmati di <strong className="text-amber-300 font-bold">{currentCafeItem.cafeName}</strong> terhubung langsung ke petani dan roastery melalui sistem ketertelusuran sangrAI.
                 </p>
               </div>
 
@@ -766,7 +765,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   weightKgOrLiters: 480,
                   recipientOrLocation: `${currentCafeItem.lineage.farmerName} (Kelompok Tani Tilu Lestari)`,
                   processingMethod: 'Solar Dryer Raised Bed (Food Grade) & Kompos Aerobik 30 Hari',
-                  ecoCertificate: 'CCT Zero-Waste Circular Standard',
+                  ecoCertificate: 'sangrAI Zero-Waste Circular Standard',
                   notes: 'Limbah ceri dari seduhan ini telah dikembalikan sebagai pupuk kompos organik ke kebun petani asal dan diolah jadi teh cascara artisan.',
                 },
                 1200,
@@ -781,7 +780,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   <span>Jaminan Transparansi & Keadilan Rantai Pasok (Direct Trade)</span>
                 </div>
                 <p className="text-[11px] text-stone-500 leading-relaxed">
-                  Biji kopi pada cangkir ini dibeli langsung oleh <strong className="text-stone-800">{currentCafeItem.cafeName}</strong> melalui platform CCT tanpa perantara spekulan. Memastikan nilai tambah terbaik dinikmati petani dan kualitas seduhan terbaik disajikan untuk Anda.
+                  Biji kopi pada cangkir ini dibeli langsung oleh <strong className="text-stone-800">{currentCafeItem.cafeName}</strong> melalui platform sangrAI tanpa perantara spekulan. Memastikan nilai tambah terbaik dinikmati petani dan kualitas seduhan terbaik disajikan untuk Anda.
                 </p>
               </div>
 
@@ -789,7 +788,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
               <div className="pt-4 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span>Tersertifikasi Rantai Pasok CCT • Tahap 5 (End-User Cafe Cup Tier)</span>
+                  <span>Tersertifikasi Rantai Pasok sangrAI • Tahap 5 (End-User Cafe Cup Tier)</span>
                 </div>
                 <span>Disajikan: {currentCafeItem.purchaseDate}</span>
               </div>
@@ -808,7 +807,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   Sertifikasi Mutu & Grading Gudang
                 </h1>
                 <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-                  Data ini didekripsi langsung dari kode QR stiker karung gudang CCT. Memuat hasil uji sensorik cupping (SCA), penilaian cacat fisik (defect), serta kontrol iklim ruang simpan.
+                  Data ini didekripsi langsung dari kode QR stiker karung gudang sangrAI. Memuat hasil uji sensorik cupping (SCA), penilaian cacat fisik (defect), serta kontrol iklim ruang simpan.
                 </p>
               </div>
 
@@ -1024,7 +1023,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                     weightKgOrLiters: Math.round(currentWarehouseLot.weightKg * 2.5),
                     recipientOrLocation: `${currentWarehouseLot.sourceFarmerName} & Rumah Kompos`,
                     processingMethod: 'Solar Dryer Raised Bed & IPAL Biologis Mandiri',
-                    ecoCertificate: 'CCT Zero-Waste Circular Standard',
+                    ecoCertificate: 'sangrAI Zero-Waste Circular Standard',
                     notes: 'Limbah ceri dari bahan baku lot gudang ini telah dialokasikan 100% secara sirkular.',
                   },
                   sourceGb?.sourceTotalCherryWeightKg || currentWarehouseLot.weightKg * 5,
@@ -1037,7 +1036,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
               <div className="pt-4 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                  <span>Tersertifikasi Rantai Pasok Terpadu CCT • Tahap 3 (Pergudangan & Grading Mutu)</span>
+                  <span>Tersertifikasi Rantai Pasok Terpadu sangrAI • Tahap 3 (Pergudangan & Grading Mutu)</span>
                 </div>
                 <span>Tgl Simpan: {currentWarehouseLot.storedDate}</span>
               </div>
@@ -1268,7 +1267,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
               <div className="pt-4 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span>Tersertifikasi Rantai Pasok Terpadu CCT • Tahap 2 (Wet/Dry Mill)</span>
+                  <span>Tersertifikasi Rantai Pasok Terpadu sangrAI • Tahap 2 (Wet/Dry Mill)</span>
                 </div>
                 <span>Tgl Selesai: {currentProcessedLot.processedDate}</span>
               </div>
@@ -1290,7 +1289,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   Spesifikasi Mutu Lot Panen Ceri
                 </h1>
                 <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-                  Data berikut didekripsi langsung dari kode QR resmi pada stiker karung panen petani. Data tercatat secara transparan di buku besar rantai pasok CCT.
+                  Data berikut didekripsi langsung dari kode QR resmi pada stiker karung panen petani. Data tercatat secara transparan di buku besar rantai pasok sangrAI.
                 </p>
               </div>
 
@@ -1401,7 +1400,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
               <div className="pt-4 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span>Tersertifikasi Asli oleh Jaringan CCT Traceability</span>
+                  <span>Tersertifikasi Asli oleh Jaringan sangrAI Traceability</span>
                 </div>
                 <span>Timestamp: {currentFarmerLot.createdAt}</span>
               </div>
@@ -1409,14 +1408,14 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
           </>
         )}
 
-        {/* Action Button to Open CCT Platform */}
+        {/* Action Button to Open sangrAI Platform */}
         <div className="flex justify-center pt-2">
           <button
             onClick={onContinue}
             className="px-8 py-3.5 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2"
           >
             <Layers className="w-4 h-4 text-amber-400" />
-            Buka Marketplace & Ekosistem Kopi CCT
+            Buka Marketplace & Ekosistem Kopi sangrAI
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -1424,7 +1423,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
 
       {/* Footer */}
       <footer className="max-w-3xl mx-auto w-full text-center py-6 border-t border-stone-200 text-xs text-stone-500">
-        Coffee Chain Traceability (CCT) • Verified Physical Sack Label Standard
+        sangrAI Traceability • Verified Physical Sack Label Standard
       </footer>
     </div>
   );

@@ -129,11 +129,11 @@ export const ProcessorBarcodeModal: React.FC<ProcessorBarcodeModalProps> = ({
             <div className="flex items-center justify-between border-b-2 border-stone-800 pb-3 mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black text-sm">
-                  CCT
+                  sAI
                 </div>
                 <div>
                   <span className="font-black text-xs uppercase tracking-wider block">
-                    Coffee Chain Traceability (CCT)
+                    sangrAI Traceability
                   </span>
                   <span className="text-[10px] text-stone-600 font-bold">
                     PROCESSOR SPECIALTY LOT LABEL • TAHAP 2 (MILL & GREEN BEAN)
@@ -375,7 +375,7 @@ export const ProcessorBarcodeModal: React.FC<ProcessorBarcodeModalProps> = ({
             <div className="mt-4 pt-3 border-t border-stone-300 flex flex-wrap items-center justify-between text-[10px] text-stone-500">
               <div className="flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Terverifikasi Rantai Pasok CCT • Wet & Dry Mill Standard</span>
+                <span>Terverifikasi Rantai Pasok sangrAI • Wet & Dry Mill Standard</span>
               </div>
               <span className="font-mono text-[9px] text-stone-400">
                 Hash: {lot.id.split('-').join('')}•CCT2

@@ -38,7 +38,9 @@ export const UnifiedMarketplace: React.FC = () => {
     currentUser,
     unifiedMarketplaceItems,
     buyFromUnifiedMarketplace,
+    createPOFromMarketplace,
     setActiveView,
+    setRoasterActiveTab,
   } = useCoffee();
 
   const [selectedCategory, setSelectedCategory] = useState<MarketplaceCategory | 'all'>('all');
@@ -132,11 +134,22 @@ export const UnifiedMarketplace: React.FC = () => {
     }
   };
 
+  // A roaster buying a green bean listing creates a Purchase Order (goes through digital
+  // signature approval + incoming QC before it becomes usable stock) instead of an instantly
+  // completed transaction — same "beli langsung" click, different result under the hood.
+  const isRoasterGreenBeanPurchase =
+    !!buyingItem &&
+    currentUser?.role === 'roaster' &&
+    (buyingItem.category === 'green_bean_processor' || buyingItem.category === 'green_bean_warehouse');
+
   const handleConfirmPurchase = (e: React.FormEvent) => {
     e.preventDefault();
     if (!buyingItem) return;
 
-    const res = buyFromUnifiedMarketplace(buyingItem, buyQuantity);
+    const res = isRoasterGreenBeanPurchase
+      ? createPOFromMarketplace(buyingItem, buyQuantity)
+      : buyFromUnifiedMarketplace(buyingItem, buyQuantity);
+
     if (res.success) {
       setActionNotice({ type: 'success', message: res.message });
       setBuyingItem(null);
@@ -199,6 +212,18 @@ export const UnifiedMarketplace: React.FC = () => {
               >
                 <Coffee className="w-3.5 h-3.5 text-amber-400" />
                 Buka Bar & Cetak Stiker Gelas
+              </button>
+            )}
+            {currentUser?.role === 'roaster' && actionNotice.type === 'success' && (
+              <button
+                onClick={() => {
+                  setActiveView('dashboard');
+                  setRoasterActiveTab('purchasing');
+                }}
+                className="px-3 py-1.5 rounded-xl bg-stone-900 text-orange-300 hover:bg-stone-800 text-xs font-black transition-all flex items-center gap-1.5 shadow-xs"
+              >
+                <ShoppingCart className="w-3.5 h-3.5 text-orange-400" />
+                Tanda Tangani di Purchasing
               </button>
             )}
             <button onClick={() => setActionNotice(null)} className="hover:opacity-75 p-1">
@@ -598,6 +623,14 @@ export const UnifiedMarketplace: React.FC = () => {
                 </div>
               )}
 
+              {isRoasterGreenBeanPurchase && (
+                <div className="p-3 bg-orange-50 border border-orange-200 rounded-xl text-[11px] text-orange-900">
+                  💡 <strong>Info Roaster:</strong> Pembelian ini akan dibuat sebagai Purchase Order berstatus
+                  "Menunggu Persetujuan". Tanda tangani secara digital di modul <em>Purchasing</em> agar barang bisa
+                  diterima &amp; masuk antrean QC di Inventory.
+                </div>
+              )}
+
               <div className="pt-2 flex items-center justify-between">
                 <button
                   type="button"
@@ -611,7 +644,7 @@ export const UnifiedMarketplace: React.FC = () => {
                   className="px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-amber-800 text-white text-xs font-bold transition-colors shadow-md flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  Konfirmasi Pembelian
+                  {isRoasterGreenBeanPurchase ? 'Beli & Ajukan PO' : 'Konfirmasi Pembelian'}
                 </button>
               </div>
             </form>

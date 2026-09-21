@@ -21,8 +21,11 @@ import {
   Warehouse,
   ChevronRight,
   Zap,
+  PenTool,
+  Send,
+  XCircle,
 } from 'lucide-react';
-import { PurchaseOrder, GreenBeanSample, POItem } from '../../types/roasterErp';
+import { PurchaseOrder, GreenBeanSample } from '../../types/roasterErp';
 import { useCoffee } from '../../context/CoffeeContext';
 import { MetricCard } from '../admin/MetricCard';
 import { OdooControlPanel } from '../odoo/OdooControlPanel';
@@ -31,22 +34,57 @@ import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
 import { OdooChatter } from '../odoo/OdooChatter';
 import { RecordBreadcrumb } from '../shared/RecordBreadcrumb';
 
+// Purchase Order approval flow: Draft -> Pending Approval (digital signature) -> Approved ->
+// Received (goods move into Inventory's incoming-QC queue; only after QC "passed" can the
+// roaster select the lot in a Work Order).
 const PO_PIPELINE_STAGES: OdooPipelineStage[] = [
-  { id: 'draft', label: 'Draft PO' },
-  { id: 'ordered', label: 'Dipesan' },
-  { id: 'in_transit', label: 'Pengiriman' },
-  { id: 'received', label: 'Diterima di Silo' },
+  { id: 'draft', label: 'Draft' },
+  { id: 'pending_approval', label: 'Menunggu Persetujuan' },
+  { id: 'approved', label: 'Disetujui' },
+  { id: 'received', label: 'Diterima (QC Masuk)' },
 ];
+
+const STATUS_BADGE: Record<string, { icon: React.ReactNode; className: string; label: string }> = {
+  draft: {
+    icon: <FileText className="w-3 h-3" />,
+    className: 'bg-stone-100 text-stone-700 border-stone-300',
+    label: 'Draft',
+  },
+  pending_approval: {
+    icon: <Clock className="w-3 h-3" />,
+    className: 'bg-amber-100 text-amber-800 border-amber-300',
+    label: 'Menunggu Persetujuan',
+  },
+  approved: {
+    icon: <ShieldCheck className="w-3 h-3" />,
+    className: 'bg-blue-100 text-blue-800 border-blue-300',
+    label: 'Disetujui',
+  },
+  received: {
+    icon: <CheckCircle2 className="w-3 h-3" />,
+    className: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    label: 'Diterima',
+  },
+  cancelled: {
+    icon: <XCircle className="w-3 h-3" />,
+    className: 'bg-rose-100 text-rose-800 border-rose-300',
+    label: 'Dibatalkan',
+  },
+};
 
 export const PurchasingModule: React.FC = () => {
   const {
+    currentUser,
     purchaseOrders,
     greenBeanSamples,
     warehouseLots,
-    createPurchaseOrder,
+    submitPurchaseOrderForApproval,
+    approvePurchaseOrder,
+    rejectPurchaseOrder,
     receivePurchaseOrder,
     createGreenBeanSample,
     updateGreenBeanSample,
+    setActiveView,
   } = useCoffee();
 
   const [activeSubTab, setActiveSubTab] = useState<'orders' | 'samples'>('orders');
@@ -54,25 +92,11 @@ export const PurchasingModule: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [groupBy, setGroupBy] = useState<string>('none');
   const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'graph'>('table');
-  const [isCreatePoOpen, setIsCreatePoOpen] = useState(false);
   const [isCreateSampleOpen, setIsCreateSampleOpen] = useState(false);
   const [detailModalPO, setDetailModalPO] = useState<PurchaseOrder | null>(null);
-
-  // Form State for PO
-  const [poSupplierName, setPoSupplierName] = useState('Silo QA Hub Java & Sumatera');
-  const [poSupplierRole, setPoSupplierRole] = useState<'petani' | 'pengolah' | 'gudang'>('gudang');
-  const [poGreenName, setPoGreenName] = useState('Java Pangalengan Anaerobic Natural');
-  const [poOrigin, setPoOrigin] = useState('Pangalengan, Jawa Barat');
-  const [poVariety, setPoVariety] = useState('Typica & Ateng Super');
-  const [poProcess, setPoProcess] = useState('Anaerobic Natural');
-  const [poBags, setPoBags] = useState<number>(2);
-  const [poWeightPerBag, setPoWeightPerBag] = useState<number>(60);
-  const [poPricePerKg, setPoPricePerKg] = useState<number>(140000);
-  const [poFreight, setPoFreight] = useState<number>(450000);
-  const [poDeliveryDate, setPoDeliveryDate] = useState(
-    new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0]
-  );
-  const [poNotes, setPoNotes] = useState('Kemasan GrainPro hermetic, sertifikat moisture 11.2%.');
+  const [signatureModalPO, setSignatureModalPO] = useState<PurchaseOrder | null>(null);
+  const [signatureName, setSignatureName] = useState('');
+  const [signatureConfirmed, setSignatureConfirmed] = useState(false);
 
   // Form State for Sample
   const [sampleName, setSampleName] = useState('Kerinci Mount Natural Anaerobic 1.700m');
@@ -87,7 +111,8 @@ export const PurchasingModule: React.FC = () => {
 
   // Metrics
   const totalSpend = purchaseOrders.reduce((acc, curr) => acc + curr.totalAmount, 0);
-  const inTransitCount = purchaseOrders.filter((p) => p.status === 'in_transit' || p.status === 'ordered').length;
+  const pendingApprovalCount = purchaseOrders.filter((p) => p.status === 'pending_approval').length;
+  const approvedCount = purchaseOrders.filter((p) => p.status === 'approved').length;
   const receivedCount = purchaseOrders.filter((p) => p.status === 'received').length;
   const approvedSamplesCount = greenBeanSamples.filter((s) => s.status === 'approved_to_buy').length;
 
@@ -109,41 +134,6 @@ export const PurchasingModule: React.FC = () => {
     );
   });
 
-  const handleCreatePoSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const totalWeight = poBags * poWeightPerBag;
-    const itemTotal = totalWeight * poPricePerKg;
-
-    const newItem: POItem = {
-      id: `poi-${Date.now().toString().slice(-4)}`,
-      greenBeanName: poGreenName,
-      origin: poOrigin,
-      variety: poVariety,
-      processMethod: poProcess,
-      bagCount: Number(poBags),
-      weightPerBagKg: Number(poWeightPerBag),
-      totalWeightKg: totalWeight,
-      pricePerKg: Number(poPricePerKg),
-      totalPrice: itemTotal,
-    };
-
-    createPurchaseOrder({
-      supplierName: poSupplierName,
-      supplierRole: poSupplierRole,
-      orderDate: new Date().toISOString().split('T')[0],
-      expectedDeliveryDate: poDeliveryDate,
-      status: 'ordered',
-      items: [newItem],
-      subtotal: itemTotal,
-      freightCost: Number(poFreight),
-      totalAmount: itemTotal + Number(poFreight),
-      paymentStatus: 'paid',
-      notes: poNotes,
-    });
-
-    setIsCreatePoOpen(false);
-  };
-
   const handleCreateSampleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createGreenBeanSample({
@@ -163,6 +153,75 @@ export const PurchasingModule: React.FC = () => {
     setIsCreateSampleOpen(false);
   };
 
+  const openSignatureModal = (po: PurchaseOrder) => {
+    setSignatureModalPO(po);
+    setSignatureName(currentUser?.name || '');
+    setSignatureConfirmed(false);
+  };
+
+  const handleConfirmSignature = () => {
+    if (!signatureModalPO || !signatureName.trim() || !signatureConfirmed) return;
+    approvePurchaseOrder(signatureModalPO.id, signatureName.trim());
+    setSignatureModalPO(null);
+    setDetailModalPO(null);
+  };
+
+  const renderStatusBadge = (status: string) => {
+    const meta = STATUS_BADGE[status] || STATUS_BADGE.draft;
+    return (
+      <span
+        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 w-fit whitespace-nowrap ${meta.className}`}
+      >
+        {meta.icon} {meta.label}
+      </span>
+    );
+  };
+
+  // Primary row action, one per lifecycle stage
+  const renderRowAction = (po: PurchaseOrder) => {
+    if (po.status === 'draft') {
+      return (
+        <button
+          onClick={() => submitPurchaseOrderForApproval(po.id)}
+          className="px-3 py-1.5 rounded-xl bg-[#1E2333] hover:bg-slate-800 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto"
+        >
+          <Send className="w-3.5 h-3.5" />
+          Ajukan Persetujuan
+        </button>
+      );
+    }
+    if (po.status === 'pending_approval') {
+      return (
+        <button
+          onClick={() => openSignatureModal(po)}
+          className="px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto"
+        >
+          <PenTool className="w-3.5 h-3.5" />
+          Tanda Tangani &amp; Setujui
+        </button>
+      );
+    }
+    if (po.status === 'approved') {
+      return (
+        <button
+          onClick={() => receivePurchaseOrder(po.id)}
+          className="px-3 py-1.5 rounded-xl bg-[#00A09D] hover:bg-[#008986] text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto"
+        >
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          Terima Barang ke Inventory
+        </button>
+      );
+    }
+    return (
+      <button
+        onClick={() => setDetailModalPO(po)}
+        className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-[11px] transition-colors"
+      >
+        Detail PO
+      </button>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {!detailModalPO && (
@@ -172,25 +231,25 @@ export const PurchasingModule: React.FC = () => {
         <MetricCard
           title="Total Pembelian (PO)"
           value={`Rp ${totalSpend.toLocaleString()}`}
-          subtitle={`${purchaseOrders.length} Pesanan Terbit`}
+          subtitle={`${purchaseOrders.length} PO Terbit`}
           trend={{ value: `${receivedCount} Selesai di Silo`, isPositive: true }}
           icon={<DollarSign className="w-5 h-5" />}
           color="amber"
         />
         <MetricCard
-          title="Dalam Pengiriman / Pesan"
-          value={`${inTransitCount} PO`}
-          subtitle="Estimasi tiba 1 - 3 hari kerja"
-          trend={{ value: 'Logistik On-Track', isPositive: true }}
-          icon={<Truck className="w-5 h-5" />}
+          title="Menunggu Persetujuan"
+          value={`${pendingApprovalCount} PO`}
+          subtitle="Butuh tanda tangan digital"
+          trend={{ value: pendingApprovalCount > 0 ? 'Aksi Diperlukan' : 'Semua Ter-review', isPositive: pendingApprovalCount === 0 }}
+          icon={<Clock className="w-5 h-5" />}
           color="blue"
         />
         <MetricCard
-          title="Stok Lot Gudang Silo"
-          value={`${warehouseLots.length} Lot`}
-          subtitle="Tersimpan di Silo Berpendingin"
-          trend={{ value: 'Hermetic GrainPro', isPositive: true }}
-          icon={<Warehouse className="w-5 h-5" />}
+          title="Disetujui, Belum Diterima"
+          value={`${approvedCount} PO`}
+          subtitle="Menunggu kedatangan fisik"
+          trend={{ value: 'Siap Diterima di Silo', isPositive: true }}
+          icon={<Truck className="w-5 h-5" />}
           color="emerald"
         />
         <MetricCard
@@ -209,7 +268,7 @@ export const PurchasingModule: React.FC = () => {
           onClick={() => setActiveSubTab('orders')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
             activeSubTab === 'orders'
-              ? 'bg-[#714B67] text-white shadow-xs'
+              ? 'bg-[#1E2333] text-white shadow-xs'
               : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
@@ -221,7 +280,7 @@ export const PurchasingModule: React.FC = () => {
           onClick={() => setActiveSubTab('samples')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
             activeSubTab === 'samples'
-              ? 'bg-[#714B67] text-white shadow-xs'
+              ? 'bg-[#1E2333] text-white shadow-xs'
               : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
@@ -230,15 +289,15 @@ export const PurchasingModule: React.FC = () => {
         </button>
       </div>
 
-      {/* Odoo 19 Control Panel */}
+      {/* Odoo Control Panel */}
       <OdooControlPanel
         breadcrumbs={[
           { label: 'Pengadaan & Pembelian' },
           { label: activeSubTab === 'orders' ? 'Purchase Orders' : 'Sample Green Bean' },
         ]}
-        primaryActionLabel={activeSubTab === 'orders' ? '+ Purchase Order' : '+ Daftarkan Sampel'}
+        primaryActionLabel={activeSubTab === 'orders' ? '+ Beli dari Marketplace' : '+ Daftarkan Sampel'}
         onPrimaryAction={() =>
-          activeSubTab === 'orders' ? setIsCreatePoOpen(true) : setIsCreateSampleOpen(true)
+          activeSubTab === 'orders' ? setActiveView('marketplace') : setIsCreateSampleOpen(true)
         }
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -248,9 +307,10 @@ export const PurchasingModule: React.FC = () => {
           activeSubTab === 'orders'
             ? [
                 { id: 'all', label: 'Semua Status' },
-                { id: 'ordered', label: 'Dipesan' },
-                { id: 'in_transit', label: 'Dalam Perjalanan' },
-                { id: 'received', label: 'Diterima di Silo' },
+                { id: 'draft', label: 'Draft' },
+                { id: 'pending_approval', label: 'Menunggu Persetujuan' },
+                { id: 'approved', label: 'Disetujui' },
+                { id: 'received', label: 'Diterima' },
               ]
             : []
         }
@@ -271,8 +331,8 @@ export const PurchasingModule: React.FC = () => {
                   <th className="py-3.5 px-4">Komoditas Biji</th>
                   <th className="py-3.5 px-4">Volume (Karung / Kg)</th>
                   <th className="py-3.5 px-4">Total Biaya (Rp)</th>
-                  <th className="py-3.5 px-4">Status Odoo</th>
-                  <th className="py-3.5 px-4 text-right">Aksi Operasi</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -285,7 +345,7 @@ export const PurchasingModule: React.FC = () => {
                       className="hover:bg-stone-50/80 transition-colors cursor-pointer group"
                     >
                       <td className="py-3.5 px-4">
-                        <div className="font-mono font-bold text-[#714B67] group-hover:underline">
+                        <div className="font-mono font-bold text-[#1E2333] group-hover:underline">
                           {po.poNumber}
                         </div>
                         <div className="text-[10px] text-stone-400">{po.orderDate}</div>
@@ -309,44 +369,13 @@ export const PurchasingModule: React.FC = () => {
                         Rp {po.totalAmount.toLocaleString()}
                       </td>
 
-                      <td className="py-3.5 px-4">
-                        {po.status === 'received' && (
-                          <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 flex items-center gap-1 w-fit">
-                            <CheckCircle2 className="w-3 h-3" /> Diterima di Silo
-                          </span>
-                        )}
-                        {po.status === 'in_transit' && (
-                          <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold border border-blue-300 flex items-center gap-1 w-fit">
-                            <Truck className="w-3 h-3" /> Dalam Perjalanan
-                          </span>
-                        )}
-                        {po.status === 'ordered' && (
-                          <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300 flex items-center gap-1 w-fit">
-                            <Clock className="w-3 h-3" /> Dipesan
-                          </span>
-                        )}
-                      </td>
+                      <td className="py-3.5 px-4">{renderStatusBadge(po.status)}</td>
 
                       <td
                         className="py-3.5 px-4 text-right"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {po.status !== 'received' ? (
-                          <button
-                            onClick={() => receivePurchaseOrder(po.id)}
-                            className="px-3 py-1.5 rounded-xl bg-[#00A09D] hover:bg-[#008986] text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Terima & Masuk Stok
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setDetailModalPO(po)}
-                            className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-[11px] transition-colors"
-                          >
-                            Detail PO
-                          </button>
-                        )}
+                        {renderRowAction(po)}
                       </td>
                     </tr>
                   );
@@ -367,7 +396,7 @@ export const PurchasingModule: React.FC = () => {
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-[#714B67]">{smp.sampleCode}</span>
+                  <span className="font-mono text-xs font-bold text-[#1E2333]">{smp.sampleCode}</span>
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                       smp.status === 'approved_to_buy'
@@ -415,7 +444,7 @@ export const PurchasingModule: React.FC = () => {
                 {smp.status === 'pending_evaluation' && (
                   <button
                     onClick={() => updateGreenBeanSample(smp.id, 'approved_to_buy')}
-                    className="px-3 py-1.5 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white font-bold text-[11px] transition-colors shadow-2xs"
+                    className="px-3 py-1.5 rounded-xl bg-[#1E2333] hover:bg-slate-800 text-white font-bold text-[11px] transition-colors shadow-2xs"
                   >
                     Setujui Kontrak
                   </button>
@@ -490,7 +519,7 @@ export const PurchasingModule: React.FC = () => {
             <div className="p-6 space-y-6 text-xs max-h-[70vh] overflow-y-auto">
               <div className="bg-stone-50/70 p-4 rounded-2xl border border-stone-200/80 space-y-2">
                 <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                  <Package className="w-4 h-4 text-[#714B67]" /> Detail Item Komoditas
+                  <Package className="w-4 h-4 text-[#1E2333]" /> Detail Item Komoditas
                 </h4>
                 {detailModalPO.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between items-center py-2 border-b border-stone-200/60 last:border-0">
@@ -512,7 +541,53 @@ export const PurchasingModule: React.FC = () => {
                 ))}
               </div>
 
-              {detailModalPO.status !== 'received' && (
+              {/* Approval status / digital signature record */}
+              {detailModalPO.status === 'draft' && (
+                <div className="flex items-center justify-between bg-stone-50 border border-stone-200 rounded-2xl p-4">
+                  <p className="text-[11px] text-stone-500 max-w-sm">
+                    PO ini masih draft dan belum diajukan untuk persetujuan. Ajukan agar dapat ditanda tangani
+                    secara digital oleh pihak berwenang.
+                  </p>
+                  <button
+                    onClick={() => submitPurchaseOrderForApproval(detailModalPO.id)}
+                    className="px-5 py-2.5 rounded-xl bg-[#1E2333] hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 shrink-0"
+                  >
+                    <Send className="w-4 h-4" />
+                    Ajukan Persetujuan
+                  </button>
+                </div>
+              )}
+
+              {detailModalPO.status === 'pending_approval' && (
+                <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                  <p className="text-[11px] text-amber-800 max-w-sm">
+                    PO menunggu persetujuan &amp; tanda tangan digital. Setelah disetujui, status berubah menjadi
+                    "Disetujui" dan siap diterima secara fisik.
+                  </p>
+                  <button
+                    onClick={() => openSignatureModal(detailModalPO)}
+                    className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 shrink-0"
+                  >
+                    <PenTool className="w-4 h-4" />
+                    Tanda Tangani &amp; Setujui
+                  </button>
+                </div>
+              )}
+
+              {(detailModalPO.status === 'approved' || detailModalPO.status === 'received') &&
+                detailModalPO.approvalSignedBy && (
+                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-[11px] text-blue-800">
+                    <PenTool className="w-4 h-4 shrink-0" />
+                    <span>
+                      Ditanda tangani secara digital oleh <strong>{detailModalPO.approvalSignedBy}</strong>
+                      {detailModalPO.approvalSignedAt &&
+                        ` pada ${new Date(detailModalPO.approvalSignedAt).toLocaleString('id-ID')}`}
+                      .
+                    </span>
+                  </div>
+                )}
+
+              {detailModalPO.status === 'approved' && (
                 <div className="flex justify-end">
                   <button
                     onClick={() => {
@@ -522,9 +597,17 @@ export const PurchasingModule: React.FC = () => {
                     className="px-5 py-2.5 rounded-xl bg-[#00A09D] hover:bg-[#008986] text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    Konfirmasi Penerimaan Fisik di Silo Gudang
+                    Konfirmasi Penerimaan Fisik &amp; Kirim ke Inventory
                   </button>
                 </div>
+              )}
+
+              {detailModalPO.status === 'received' && (
+                <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  Barang telah diterima dan sedang menunggu QC Masuk di modul Inventory sebelum dapat diolah
+                  roaster.
+                </p>
               )}
 
               {/* Odoo Chatter */}
@@ -543,148 +626,6 @@ export const PurchasingModule: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* CREATE PO MODAL */}
-      {isCreatePoOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8 p-6 text-stone-900">
-            <button
-              onClick={() => setIsCreatePoOpen(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-stone-100">
-              <div className="p-2.5 rounded-xl bg-[#714B67]/10 text-[#714B67]">
-                <ShoppingCart className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-stone-900">Buat Purchase Order Green Coffee</h3>
-                <p className="text-xs text-stone-500">Kirim PO resmi ke petani, pengolah, atau gudang mitra.</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleCreatePoSubmit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Nama Supplier Mitra
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={poSupplierName}
-                    onChange={(e) => setPoSupplierName(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Peran Supplier
-                  </label>
-                  <select
-                    value={poSupplierRole}
-                    onChange={(e) => setPoSupplierRole(e.target.value as any)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
-                  >
-                    <option value="gudang">Gudang / QA Hub</option>
-                    <option value="pengolah">Stasiun Pengolah (Mill)</option>
-                    <option value="petani">Kelompok Tani Kebun</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Nama Komoditas Green Bean
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={poGreenName}
-                  onChange={(e) => setPoGreenName(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Jumlah Karung
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={poBags}
-                    onChange={(e) => setPoBags(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Kg / Karung
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={poWeightPerBag}
-                    onChange={(e) => setPoWeightPerBag(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Harga Beli / Kg (Rp)
-                  </label>
-                  <input
-                    type="number"
-                    step="1000"
-                    required
-                    value={poPricePerKg}
-                    onChange={(e) => setPoPricePerKg(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-black focus:ring-2 focus:ring-[#714B67]"
-                  />
-                </div>
-              </div>
-
-              <div className="bg-[#714B67]/5 p-3 rounded-2xl border border-[#714B67]/20 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] text-stone-600 uppercase font-bold block">Total Volume:</span>
-                  <span className="text-sm font-black text-[#714B67]">{poBags * poWeightPerBag} Kg Green Bean</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-stone-600 uppercase font-bold block">Total Estimasi PO:</span>
-                  <span className="text-sm font-black text-[#714B67]">
-                    Rp {((poBags * poWeightPerBag * poPricePerKg) + Number(poFreight)).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-3 flex justify-end gap-2 border-t border-stone-100">
-                <button
-                  type="button"
-                  onClick={() => setIsCreatePoOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white font-bold transition-all shadow-md flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Terbitkan Purchase Order
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
@@ -720,7 +661,7 @@ export const PurchasingModule: React.FC = () => {
                   required
                   value={sampleName}
                   onChange={(e) => setSampleName(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#1E2333]"
                 />
               </div>
 
@@ -734,7 +675,7 @@ export const PurchasingModule: React.FC = () => {
                     required
                     value={sampleSupplier}
                     onChange={(e) => setSampleSupplier(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#1E2333]"
                   />
                 </div>
 
@@ -748,7 +689,7 @@ export const PurchasingModule: React.FC = () => {
                     required
                     value={sampleScore}
                     onChange={(e) => setSampleScore(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#1E2333]"
                   />
                 </div>
               </div>
@@ -761,7 +702,7 @@ export const PurchasingModule: React.FC = () => {
                   rows={2}
                   value={sampleNotes}
                   onChange={(e) => setSampleNotes(e.target.value)}
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#714B67]"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#1E2333]"
                 />
               </div>
 
@@ -782,6 +723,77 @@ export const PurchasingModule: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DIGITAL SIGNATURE MODAL */}
+      {signatureModalPO && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
+            <div className="bg-[#1E2333] text-white px-6 py-5">
+              <div className="flex items-center gap-2 text-orange-400 text-xs font-bold uppercase tracking-wider mb-1">
+                <PenTool className="w-3.5 h-3.5" />
+                Persetujuan &amp; Tanda Tangan Digital
+              </div>
+              <h2 className="text-lg font-bold">{signatureModalPO.poNumber}</h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Rp {signatureModalPO.totalAmount.toLocaleString()} • {signatureModalPO.supplierName}
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs">
+              <p className="text-stone-500">
+                Dengan menandatangani, Anda mengonfirmasi bahwa Purchase Order ini telah ditinjau dan disetujui
+                untuk dipesan secara resmi ke supplier.
+              </p>
+
+              <div>
+                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Nama Lengkap (Tanda Tangan Digital)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={signatureName}
+                  onChange={(e) => setSignatureName(e.target.value)}
+                  placeholder="Ketik nama lengkap Anda"
+                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-orange-400 font-serif italic text-sm"
+                />
+              </div>
+
+              <label className="flex items-start gap-2.5 bg-stone-50 border border-stone-200 rounded-xl p-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={signatureConfirmed}
+                  onChange={(e) => setSignatureConfirmed(e.target.checked)}
+                  className="mt-0.5 accent-orange-500"
+                />
+                <span className="text-stone-600">
+                  Saya menyetujui pembelian ini dan bertanggung jawab penuh atas keputusan pembelian PO
+                  {' '}{signatureModalPO.poNumber}.
+                </span>
+              </label>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSignatureModalPO(null)}
+                  className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={!signatureName.trim() || !signatureConfirmed}
+                  onClick={handleConfirmSignature}
+                  className="px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold transition-all shadow-md flex items-center gap-1.5"
+                >
+                  <PenTool className="w-4 h-4" />
+                  Tanda Tangani &amp; Setujui
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

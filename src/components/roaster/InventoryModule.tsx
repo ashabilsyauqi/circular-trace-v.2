@@ -14,12 +14,16 @@ import {
   TrendingDown,
   Warehouse,
   Flame,
+  ClipboardCheck,
+  Clock,
 } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { MetricCard } from '../admin/MetricCard';
 import { RoasterPackagingItem } from '../../types/roasterErp';
+import { WarehouseLot } from '../../types/coffee';
 import { OdooControlPanel } from '../odoo/OdooControlPanel';
 import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
+import { IncomingQCModal } from './IncomingQCModal';
 
 export const InventoryModule: React.FC = () => {
   const {
@@ -31,6 +35,9 @@ export const InventoryModule: React.FC = () => {
 
   const [activeCategory, setActiveCategory] = useState<'green' | 'roasted' | 'packaging'>('green');
   const [searchQuery, setSearchQuery] = useState('');
+  const [qcModalLot, setQcModalLot] = useState<WarehouseLot | null>(null);
+
+  const pendingQcCount = warehouseLots.filter((l) => l.qcStatus === 'pending_qc').length;
 
   // Valuation Computations
   const totalGreenKg = warehouseLots.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
@@ -107,6 +114,25 @@ export const InventoryModule: React.FC = () => {
           color="purple"
         />
       </div>
+
+      {/* Incoming QC alert banner */}
+      {pendingQcCount > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 text-amber-800">
+            <Clock className="w-4 h-4 shrink-0" />
+            <p className="text-xs font-semibold">
+              {pendingQcCount} lot green coffee baru datang dari Purchasing dan menunggu QC Masuk sebelum bisa
+              diolah roaster.
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveCategory('green')}
+            className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold shrink-0"
+          >
+            Lihat Lot
+          </button>
+        </div>
+      )}
 
       {/* Subtab Toggle Buttons */}
       <div className="flex items-center gap-2 border-b border-stone-200 pb-2">
@@ -185,15 +211,20 @@ export const InventoryModule: React.FC = () => {
                   <th className="py-3.5 px-4">Stok Tersedia (Kg)</th>
                   <th className="py-3.5 px-4">HPP Modal (Rp/Kg)</th>
                   <th className="py-3.5 px-4">Total Nilai Aset</th>
-                  <th className="py-3.5 px-4 text-right">Status Reorder</th>
+                  <th className="py-3.5 px-4">Status Stok</th>
+                  <th className="py-3.5 px-4 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {filteredWarehouseLots.map((lot) => {
-                  const isLow = lot.availableWeightKg < 50;
+                  // Reorder is about how much of THIS lot has actually been used up, not an
+                  // absolute kg floor — otherwise a freshly received, untouched 30kg lot gets
+                  // flagged "Reorder Needed" the instant it clears QC, which makes no sense.
+                  const isLow = lot.weightKg > 0 && lot.availableWeightKg / lot.weightKg < 0.2;
+                  const qc = lot.qcStatus ?? 'passed';
                   return (
                     <tr key={lot.id} className="hover:bg-stone-50/70 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#714B67]">{lot.id}</td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#1E2333]">{lot.id}</td>
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-stone-900">{lot.origin}</div>
                         <div className="text-[10px] text-stone-400">{lot.variety} • {lot.altitude}</div>
@@ -201,7 +232,7 @@ export const InventoryModule: React.FC = () => {
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-stone-800">{lot.processMethod}</div>
                         <div className="text-[10px] text-amber-800 font-mono font-bold">
-                          SCA {lot.verifiedScaScore} (KA: {lot.moistureContentPercent || 11.2}%)
+                          {qc === 'pending_qc' ? 'Menunggu skor QC' : `SCA ${lot.verifiedScaScore} (KA: ${lot.moistureContentPercent || 11.2}%)`}
                         </div>
                       </td>
                       <td className="py-3.5 px-4 text-stone-600">{lot.storageLocation}</td>
@@ -211,18 +242,41 @@ export const InventoryModule: React.FC = () => {
                       <td className="py-3.5 px-4 text-stone-800">
                         Rp {lot.purchasePricePerKg.toLocaleString()}
                       </td>
-                      <td className="py-3.5 px-4 font-black text-[#714B67]">
+                      <td className="py-3.5 px-4 font-black text-[#1E2333]">
                         Rp {(lot.availableWeightKg * lot.purchasePricePerKg).toLocaleString()}
                       </td>
+                      <td className="py-3.5 px-4">
+                        {qc === 'pending_qc' && (
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300">
+                            <Clock className="w-3 h-3 shrink-0" /> Menunggu QC
+                          </span>
+                        )}
+                        {qc === 'rejected' && (
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300">
+                            <AlertTriangle className="w-3 h-3 shrink-0" /> Ditolak QC
+                          </span>
+                        )}
+                        {qc === 'passed' && isLow && (
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300">
+                            <AlertTriangle className="w-3 h-3 shrink-0" /> Stok Menipis
+                          </span>
+                        )}
+                        {qc === 'passed' && !isLow && (
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                            <CheckCircle2 className="w-3 h-3 shrink-0" /> Stok Aman
+                          </span>
+                        )}
+                      </td>
                       <td className="py-3.5 px-4 text-right">
-                        {isLow ? (
-                          <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300 inline-flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3" /> Reorder Needed
-                          </span>
+                        {qc === 'pending_qc' ? (
+                          <button
+                            onClick={() => setQcModalLot(lot)}
+                            className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-[11px] transition-colors shadow-xs ml-auto"
+                          >
+                            <ClipboardCheck className="w-3.5 h-3.5 shrink-0" /> QC Masuk
+                          </button>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 inline-flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" /> Stok Aman
-                          </span>
+                          <span className="text-stone-300">—</span>
                         )}
                       </td>
                     </tr>
@@ -296,15 +350,15 @@ export const InventoryModule: React.FC = () => {
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200">
+                    <span className="whitespace-nowrap text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200">
                       {pack.category}
                     </span>
                     {isLow ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" /> Reorder Soon
+                      <span className="whitespace-nowrap px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300 inline-flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3 shrink-0" /> Reorder Soon
                       </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                      <span className="whitespace-nowrap px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
                         In Stock
                       </span>
                     )}
@@ -360,6 +414,8 @@ export const InventoryModule: React.FC = () => {
           })}
         </div>
       )}
+
+      <IncomingQCModal isOpen={!!qcModalLot} onClose={() => setQcModalLot(null)} lot={qcModalLot} />
     </div>
   );
 };

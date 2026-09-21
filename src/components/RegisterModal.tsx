@@ -121,7 +121,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         organization: org.trim(),
         location: location.trim() || roleConfigs[selectedRole].defaultLocExample.replace('e.g. ', ''),
         phone: phone.trim() || '0812-3456-7890',
-        bio: bio.trim() || `Akun ${ROLE_DETAILS[selectedRole].label} baru terdaftar di platform CCT-Coffee.`,
+        bio: bio.trim() || `Akun ${ROLE_DETAILS[selectedRole].label} baru terdaftar di platform sangrAI.`,
       });
     } else {
       loginAsRole(selectedRole);
@@ -157,7 +157,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
           <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-bold mb-3">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            Aktivasi Instan Ekosistem CCT-Coffee
+            Aktivasi Instan Ekosistem sangrAI
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Registrasi & Akses Platform

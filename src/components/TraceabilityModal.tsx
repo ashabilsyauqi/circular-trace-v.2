@@ -296,7 +296,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
         <div className="bg-stone-50 border-t border-stone-200 p-4 sm:p-5 flex items-center justify-between">
           <div className="text-xs text-stone-500 flex items-center gap-1">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            Data silsilah tercatat permanen di jaringan rantai pasok CCT.
+            Data silsilah tercatat permanen di jaringan rantai pasok sangrAI.
           </div>
           <button
             onClick={onClose}

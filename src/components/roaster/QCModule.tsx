@@ -234,7 +234,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                     {qc.sessionCode} • {qc.date}
                   </span>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-black border flex items-center gap-1 ${
+                    className={`px-3 py-1 rounded-full text-xs font-black border inline-flex items-center gap-1 whitespace-nowrap ${
                       qc.status === 'approved_specialty'
                         ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
                         : qc.status === 'approved_commercial'

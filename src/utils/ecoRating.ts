@@ -186,7 +186,7 @@ export function calculateProcessorEcoRating(
     `${diversionRatePercent}% Limbah Kopi Terkelola Sirkular`,
     `${carbonOffsetKg} kg CO₂e Emisi Metana Berhasil Dicegah`,
     `${compostProducedKg} kg Kompos Organik Dikembalikan ke Petani`,
-    `Sertifikasi Mutu: ${waste?.ecoCertificate || 'CCT Zero-Waste Circular Standard'}`,
+    `Sertifikasi Mutu: ${waste?.ecoCertificate || 'sangrAI Zero-Waste Circular Standard'}`,
   ];
 
   const breakdown: EcoRatingBreakdown = {

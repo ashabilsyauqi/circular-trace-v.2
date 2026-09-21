@@ -370,7 +370,9 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
     supplierRole: 'pengolah',
     orderDate: '2026-09-18',
     expectedDeliveryDate: '2026-09-22',
-    status: 'in_transit',
+    status: 'approved',
+    approvalSignedBy: 'Andi Roastmaster',
+    approvalSignedAt: '2026-09-19T08:00:00.000Z',
     items: [
       {
         id: 'poi-2',
@@ -399,7 +401,7 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
     supplierRole: 'pengolah',
     orderDate: '2026-09-20',
     expectedDeliveryDate: '2026-09-25',
-    status: 'ordered',
+    status: 'pending_approval',
     items: [
       {
         id: 'poi-3',

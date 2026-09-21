@@ -32,58 +32,59 @@ export const RoasterView: React.FC = () => {
     setActiveView,
     roasterActiveTab,
     setRoasterActiveTab,
+    t,
   } = useCoffee();
 
   const [selectedQcWO, setSelectedQcWO] = useState<WorkOrder | null>(null);
   const [traceModalLot, setTraceModalLot] = useState<RoastedBeanLot | null>(null);
 
   const myRoasterTransactions = transactions.filter(
-    (t) =>
-      t.fromName === currentUser?.name ||
-      t.toName === currentUser?.name ||
-      t.fromRole === 'roaster' ||
-      t.toRole === 'roaster'
+    (trx) =>
+      trx.fromName === currentUser?.name ||
+      trx.toName === currentUser?.name ||
+      trx.fromRole === 'roaster' ||
+      trx.toRole === 'roaster'
   );
 
   const TAB_TITLES: Record<string, { title: string; subtitle: string; icon: any }> = {
     dashboard: {
-      title: 'Dashboard',
-      subtitle: 'Ringkasan bisnis roastery Anda',
+      title: t('module.dashboard.title'),
+      subtitle: t('module.dashboard.subtitle'),
       icon: LayoutDashboard,
     },
     work_orders: {
-      title: 'Work Orders',
-      subtitle: 'Penjadwalan batch sangrai, susut bobot, dan telemetri Artisan',
+      title: t('module.workOrders.title'),
+      subtitle: t('module.workOrders.subtitle'),
       icon: Flame,
     },
     purchasing: {
-      title: 'Purchasing',
-      subtitle: 'Penerbitan PO ke petani/pengolah/gudang dan evaluasi sampel',
+      title: t('module.purchasing.title'),
+      subtitle: t('module.purchasing.subtitle'),
       icon: ShoppingCart,
     },
     production: {
-      title: 'Production',
-      subtitle: 'Master profil sangrai dan armada mesin terkalibrasi',
+      title: t('module.production.title'),
+      subtitle: t('module.production.subtitle'),
       icon: Sliders,
     },
     qc: {
-      title: 'Quality Control',
-      subtitle: 'Validasi sensori SCA cupping dan uji instrumen Agtron',
+      title: t('module.qc.title'),
+      subtitle: t('module.qc.subtitle'),
       icon: Award,
     },
     inventory: {
-      title: 'Inventory',
-      subtitle: 'Stok green coffee, roasted beans, dan kemasan',
+      title: t('module.inventory.title'),
+      subtitle: t('module.inventory.subtitle'),
       icon: Warehouse,
     },
     selling: {
-      title: 'Selling',
-      subtitle: 'Terbitkan roasted bean ke Unified Marketplace & pantau penjualan',
+      title: t('module.selling.title'),
+      subtitle: t('module.selling.subtitle'),
       icon: Store,
     },
     history: {
-      title: 'Report',
-      subtitle: 'Riwayat transaksi roastery',
+      title: t('module.history.title'),
+      subtitle: t('module.history.subtitle'),
       icon: History,
     },
   };

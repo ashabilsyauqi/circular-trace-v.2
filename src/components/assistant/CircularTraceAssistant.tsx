@@ -263,7 +263,7 @@ export const CircularTraceAssistant: React.FC<CircularTraceAssistantProps> = ({
                   </span>
                 </div>
                 <p className="text-[10px] text-stone-400">
-                  Asisten Operasional Roastery & Supply Chain CCT
+                  Asisten Operasional Roastery & Supply Chain sangrAI
                 </p>
               </div>
             </div>

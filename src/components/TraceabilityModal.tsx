@@ -94,8 +94,27 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
             </span>
           </div>
 
+          {/* Quick Orientation Stepper (role colors) */}
+          <div className="flex items-center gap-1 mt-5">
+            {[
+              { label: 'Petani', color: 'bg-emerald-500' },
+              { label: 'Pengolah', color: 'bg-amber-500' },
+              { label: 'Gudang', color: 'bg-blue-500' },
+              { label: 'Roaster', color: 'bg-orange-500' },
+              { label: 'Cafe', color: 'bg-stone-300' },
+            ].map((step, i) => (
+              <React.Fragment key={step.label}>
+                <div className="flex flex-col items-center gap-1">
+                  <span className={`w-2.5 h-2.5 rounded-full ${step.color}`} />
+                  <span className="text-[9px] font-bold text-stone-300 hidden sm:block">{step.label}</span>
+                </div>
+                {i < 4 && <span className="flex-1 h-px bg-white/20 mb-3.5 sm:mb-3" />}
+              </React.Fragment>
+            ))}
+          </div>
+
           {/* Sub-Tab Switcher */}
-          <div className="flex items-center gap-2 mt-5 pt-4 border-t border-white/15">
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/15">
             <button
               onClick={() => setActiveTraceTab('timeline')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${

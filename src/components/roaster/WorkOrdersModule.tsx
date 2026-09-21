@@ -35,10 +35,10 @@ import { MetricCard } from '../admin/MetricCard';
 import { ArtisanRoastSimulatorModal } from './ArtisanRoastSimulatorModal';
 import { PublishToMarketplaceModal } from './PublishToMarketplaceModal';
 import { RoasterBarcodeModal } from './RoasterBarcodeModal';
-import { OdooControlPanel } from '../odoo/OdooControlPanel';
-import { OdooStatusPipeline, OdooPipelineStage } from '../odoo/OdooStatusPipeline';
-import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
-import { OdooChatter } from '../odoo/OdooChatter';
+import { ControlPanel } from '../shared/ControlPanel';
+import { StatusPipeline, PipelineStage } from '../shared/StatusPipeline';
+import { StatButton } from '../shared/StatButton';
+import { ActivityFeed } from '../shared/ActivityFeed';
 import { RecordBreadcrumb } from '../shared/RecordBreadcrumb';
 
 interface WorkOrdersModuleProps {
@@ -46,7 +46,7 @@ interface WorkOrdersModuleProps {
   openCreateModalDirectly?: boolean;
 }
 
-const WO_PIPELINE_STAGES: OdooPipelineStage[] = [
+const WO_PIPELINE_STAGES: PipelineStage[] = [
   { id: 'draft', label: 'Draft' },
   { id: 'scheduled', label: 'Terjadwal' },
   { id: 'in_production', label: 'Produksi' },
@@ -206,8 +206,8 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
         />
       </div>
 
-      {/* Odoo 19 Control Panel */}
-      <OdooControlPanel
+      {/* Toolbar / Control Panel */}
+      <ControlPanel
         breadcrumbs={[
           { label: 'Roastery MRP' },
           { label: 'Work Orders' },
@@ -243,16 +243,16 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FA] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+              <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-4">No. Work Order</th>
-                  <th className="py-3.5 px-4">Komoditas Green Bean</th>
-                  <th className="py-3.5 px-4">Master Profile</th>
-                  <th className="py-3.5 px-4">Mesin & Roaster</th>
-                  <th className="py-3.5 px-4">Target / Aktual (Kg)</th>
-                  <th className="py-3.5 px-4">Susut (Loss %)</th>
-                  <th className="py-3.5 px-4">Status Odoo</th>
-                  <th className="py-3.5 px-4 text-right">Aksi Operasi</th>
+                  <th className="py-4 px-5">No. Work Order</th>
+                  <th className="py-4 px-5">Komoditas Green Bean</th>
+                  <th className="py-4 px-5">Master Profile</th>
+                  <th className="py-4 px-5">Mesin & Roaster</th>
+                  <th className="py-4 px-5">Target / Aktual (Kg)</th>
+                  <th className="py-4 px-5">Susut (Loss %)</th>
+                  <th className="py-4 px-5">Status</th>
+                  <th className="py-4 px-5 text-right">Aksi Operasi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -270,8 +270,8 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       onClick={() => setDetailModalWO(wo)}
                     >
                       {/* WO Number & Date */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-mono font-bold text-[#714B67] group-hover:underline">
+                      <td className="py-4 px-5">
+                        <div className="font-mono font-bold text-sm text-[#EA580C] group-hover:underline">
                           {wo.woNumber}
                         </div>
                         <div className="text-[10px] text-stone-400 mt-0.5 flex items-center gap-1">
@@ -280,7 +280,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Green Bean */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-5">
                         <div className="font-bold text-stone-900">{wo.greenBeanName}</div>
                         <div className="text-[11px] text-stone-500">
                           {wo.origin} • <span className="font-medium">{wo.variety}</span>
@@ -288,7 +288,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Master Profile */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-5">
                         <div className="font-bold text-stone-800">{wo.masterProfileName}</div>
                         <div className="text-[10px] text-stone-500 mt-0.5 flex items-center gap-1.5">
                           <span className="font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
@@ -299,7 +299,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Machine & Operator */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-5">
                         <div className="font-semibold text-stone-900">{wo.assignedMachine}</div>
                         <div className="text-[11px] text-stone-500 flex items-center gap-1">
                           <User className="w-3 h-3 text-stone-400" /> {wo.assignedRoaster}
@@ -307,8 +307,8 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Target / Actual Weight */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-mono font-bold text-stone-900">
+                      <td className="py-4 px-5">
+                        <div className="font-mono font-bold text-sm text-stone-900">
                           {wo.actualGreenKg > 0 ? wo.actualGreenKg : wo.targetGreenKg} kg Green
                         </div>
                         <div className="text-[10px] text-stone-500 font-mono">
@@ -325,7 +325,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Weight Loss */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-5">
                         {wo.weightLossPercent > 0 ? (
                           <div className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
                             <span>{wo.weightLossPercent}%</span>
@@ -336,7 +336,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Status */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-5">
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}
                         >
@@ -347,7 +347,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
 
                       {/* Action Buttons */}
                       <td
-                        className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap"
+                        className="py-4 px-5 text-right space-x-1.5 whitespace-nowrap"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {wo.status === 'scheduled' && (
@@ -445,7 +445,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
               return (
                 <div
                   key={colStatus}
-                  className="bg-[#F8F9FA] rounded-3xl p-4 border border-stone-200/80 space-y-3 flex flex-col"
+                  className="bg-[#FAF7F2] rounded-3xl p-4 border border-stone-200/80 space-y-3 flex flex-col"
                 >
                   <div className="flex items-center justify-between pb-2 border-b border-stone-200/60">
                     <div className="flex items-center gap-2">
@@ -472,7 +472,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                           className="bg-white p-3.5 rounded-2xl border border-stone-200/80 shadow-2xs hover:shadow-md transition-all cursor-pointer space-y-2 group"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-mono text-xs font-bold text-[#714B67] group-hover:underline">
+                            <span className="font-mono text-sm font-bold text-[#EA580C] group-hover:underline">
                               {wo.woNumber}
                             </span>
                             <span className="text-[10px] text-stone-400">{wo.dueDate}</span>
@@ -486,7 +486,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                           </div>
 
                           <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-[11px]">
-                            <span className="font-mono font-bold text-stone-700">
+                            <span className="font-mono font-bold text-sm text-stone-700">
                               {wo.targetGreenKg} kg Green
                             </span>
                             <span className="text-stone-500 font-medium">{wo.assignedMachine}</span>
@@ -504,7 +504,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
       </>
       )}
 
-      {/* WORK ORDER DETAIL PAGE (breadcrumb + stage pipeline, in-page like Odoo's form view) */}
+      {/* WORK ORDER DETAIL PAGE (breadcrumb + stage pipeline, in-page record view) */}
       {detailModalWO && (
         <div>
           <RecordBreadcrumb
@@ -514,13 +514,13 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
           />
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             {/* Detail Page Header & Status Pipeline */}
-            <div className="bg-[#F8F9FA] px-6 py-4 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-[#1E2333] text-orange-400">
-                  <Flame className="w-4 h-4" />
+            <div className="bg-[#FAF7F2] px-6 py-5 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-orange-100 text-orange-600">
+                  <Flame className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-stone-900 font-mono">
+                  <h3 className="text-xl font-black text-stone-900 font-mono">
                     {detailModalWO.woNumber}
                   </h3>
                   <p className="text-[10px] text-stone-500">
@@ -531,7 +531,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
 
               {/* Status Chevron Pipeline */}
               <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                <OdooStatusPipeline
+                <StatusPipeline
                   stages={WO_PIPELINE_STAGES}
                   currentStageId={detailModalWO.status}
                 />
@@ -539,26 +539,26 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
             </div>
 
             {/* Smart Stat Buttons Header */}
-            <div className="px-6 py-3 bg-white border-b border-stone-100 flex flex-wrap gap-2">
-              <OdooSmartStatButton
+            <div className="px-6 py-4 bg-white border-b border-stone-100 flex flex-wrap gap-2.5">
+              <StatButton
                 icon={<Warehouse className="w-4 h-4" />}
                 value={`${detailModalWO.targetGreenKg} kg`}
                 label="Bahan Baku Green"
                 color="stone"
               />
-              <OdooSmartStatButton
+              <StatButton
                 icon={<Flame className="w-4 h-4" />}
                 value={`#${detailModalWO.targetAgtron}`}
                 label={detailModalWO.targetRoastLevel}
                 color="amber"
               />
-              <OdooSmartStatButton
+              <StatButton
                 icon={<TrendingDown className="w-4 h-4" />}
                 value={detailModalWO.weightLossPercent > 0 ? `${detailModalWO.weightLossPercent}%` : 'Est. 14.5%'}
                 label="Roast Loss %"
                 color="blue"
               />
-              <OdooSmartStatButton
+              <StatButton
                 icon={<Sparkles className="w-4 h-4" />}
                 value={detailModalWO.status === 'completed' ? '88.5 SCA' : 'Pending Uji'}
                 label="Quality Score"
@@ -572,7 +572,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-stone-50/60 p-5 rounded-2xl border border-stone-200/70">
                 <div className="space-y-3">
                   <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <Coffee className="w-4 h-4 text-[#714B67]" /> Spesifikasi Bahan Baku
+                    <Coffee className="w-4 h-4 text-[#EA580C]" /> Spesifikasi Bahan Baku
                   </h4>
                   <div className="space-y-1.5 text-stone-700">
                     <div className="flex justify-between py-1 border-b border-stone-200/60">
@@ -596,7 +596,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
 
                 <div className="space-y-3">
                   <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <Sliders className="w-4 h-4 text-[#00A09D]" /> Profil & Mesin Roaster
+                    <Sliders className="w-4 h-4 text-[#059669]" /> Profil & Mesin Roaster
                   </h4>
                   <div className="space-y-1.5 text-stone-700">
                     <div className="flex justify-between py-1 border-b border-stone-200/60">
@@ -627,9 +627,9 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     setActiveRoastModalWO(detailModalWO);
                     setDetailModalWO(null);
                   }}
-                  className="px-4 py-2 bg-[#714B67] hover:bg-[#5A3950] text-white font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm rounded-2xl transition-all shadow-sm flex items-center gap-2"
                 >
-                  <Activity className="w-4 h-4 text-amber-300" />
+                  <Activity className="w-4 h-4 text-amber-200" />
                   Buka Artisan Roasting Simulator
                 </button>
 
@@ -640,7 +640,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       onNavigateToQC(detailModalWO);
                       setDetailModalWO(null);
                     }}
-                    className="px-4 py-2 bg-[#00A09D] hover:bg-[#008986] text-white font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5"
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-2xl transition-all shadow-sm flex items-center gap-2"
                   >
                     <Sparkles className="w-4 h-4" />
                     Buka Lembar Uji QC Cupping
@@ -648,12 +648,12 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                 )}
               </div>
 
-              {/* Odoo Chatter Internal Notes & Activity Feed */}
+              {/* Internal Notes & Activity Feed */}
               <div className="pt-4 border-t border-stone-200">
                 <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] mb-3 flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-[#714B67]" /> Odoo Chatter & Logbook Batch
+                  <FileText className="w-4 h-4 text-[#EA580C]" /> Log Aktivitas & Catatan Batch
                 </h4>
-                <OdooChatter
+                <ActivityFeed
                   documentTitle={`Work Order #${detailModalWO.woNumber}`}
                   initialMessages={[
                     {
@@ -683,7 +683,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
             </button>
 
             <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-stone-100">
-              <div className="p-2.5 rounded-xl bg-[#714B67]/10 text-[#714B67]">
+              <div className="p-3 rounded-2xl bg-orange-100 text-orange-600">
                 <Flame className="w-5 h-5" />
               </div>
               <div>
@@ -702,7 +702,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                   required
                   value={formGreenLotId}
                   onChange={(e) => setFormGreenLotId(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#EA580C]"
                 >
                   <option value="">-- Pilih Lot Green Coffee --</option>
                   {warehouseLots
@@ -731,7 +731,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     required
                     value={formTargetGreenKg}
                     onChange={(e) => setFormTargetGreenKg(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#EA580C]"
                   />
                   <span className="text-[10px] text-stone-400 mt-0.5 block">
                     Estimasi Roasted: ~{(formTargetGreenKg * 0.855).toFixed(1)} kg (@ 14.5% shrink)
@@ -746,7 +746,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     required
                     value={formProfileId}
                     onChange={(e) => setFormProfileId(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#EA580C]"
                   >
                     <option value="">-- Pilih Master Profile --</option>
                     {masterProfiles.map((p) => (
@@ -767,7 +767,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                   <select
                     value={formMachine}
                     onChange={(e) => setFormMachine(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#EA580C]"
                   >
                     {roasterMachines.map((m) => (
                       <option key={m.id} value={m.name}>
@@ -786,7 +786,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     required
                     value={formRoaster}
                     onChange={(e) => setFormRoaster(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#EA580C]"
                   />
                 </div>
               </div>
@@ -802,7 +802,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     required
                     value={formDueDate}
                     onChange={(e) => setFormDueDate(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#EA580C]"
                   />
                 </div>
 
@@ -815,7 +815,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                     value={formNotes}
                     onChange={(e) => setFormNotes(e.target.value)}
                     placeholder="Instruksi kemasan, profiling..."
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#EA580C]"
                   />
                 </div>
               </div>
@@ -830,7 +830,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white font-bold transition-all shadow-md flex items-center gap-1.5"
+                  className="px-6 py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm transition-all shadow-md flex items-center gap-2"
                 >
                   <PlusCircle className="w-4 h-4" />
                   Jadwalkan Work Order

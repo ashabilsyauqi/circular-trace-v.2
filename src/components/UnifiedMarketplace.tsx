@@ -346,7 +346,7 @@ export const UnifiedMarketplace: React.FC = () => {
             return (
               <div
                 key={`${item.category}-${item.id}`}
-                className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                className="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all flex flex-col justify-between group"
               >
                 <div>
                   {/* Photo & Category Banner (Clickable to view detail) */}

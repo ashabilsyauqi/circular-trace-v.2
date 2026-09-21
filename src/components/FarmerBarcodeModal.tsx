@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { FarmerHarvestLot } from '../types/coffee';
+import { getNetworkHost, getPublicBaseUrl, isLoopbackHost, saveNetworkHost } from '../utils/baseUrl';
 
 interface FarmerBarcodeModalProps {
   isOpen: boolean;
@@ -28,31 +29,17 @@ export const FarmerBarcodeModal: React.FC<FarmerBarcodeModalProps> = ({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
-  // Detect loopback (localhost/127.0.0.1) to automatically provide LAN IP for mobile scanners
-  const isLoopback = typeof window !== 'undefined' && (
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1'
-  );
+  // Detect loopback (localhost/127.0.0.1) to automatically provide LAN IP for mobile scanners.
+  // A deployed build (VPS/domain) resolves via VITE_PUBLIC_BASE_URL or window.location.origin
+  // instead — see src/utils/baseUrl.ts.
+  const isLoopback = isLoopbackHost();
 
-  const [networkHost, setNetworkHost] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('cct_network_host');
-      if (saved) return saved;
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return '10.100.5.87:5173'; // Mac Wi-Fi IP address
-      }
-      return window.location.host;
-    }
-    return '10.100.5.87:5173';
-  });
+  const [networkHost, setNetworkHost] = useState<string>(() => getNetworkHost());
 
   const [tempHost, setTempHost] = useState(networkHost);
   const [isEditingHost, setIsEditingHost] = useState(false);
 
-  const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-  const resolvedBaseUrl = isLoopback
-    ? `${protocol}//${networkHost}`
-    : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
+  const resolvedBaseUrl = getPublicBaseUrl(networkHost);
 
   const realtimeScanUrl = lot ? `${resolvedBaseUrl}/?lotId=${lot.id}` : '';
 
@@ -257,7 +244,7 @@ export const FarmerBarcodeModal: React.FC<FarmerBarcodeModalProps> = ({
                   type="button"
                   onClick={() => {
                     setNetworkHost(tempHost);
-                    localStorage.setItem('cct_network_host', tempHost);
+                    saveNetworkHost(tempHost);
                     setIsEditingHost(false);
                   }}
                   className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold"
@@ -268,7 +255,7 @@ export const FarmerBarcodeModal: React.FC<FarmerBarcodeModalProps> = ({
             )}
 
             <p className="text-stone-600 text-[11px] leading-relaxed">
-              💡 <strong>Petunjuk Pindai Kamera HP:</strong> Kode QR di atas otomatis diarahkan ke alamat IP Wi-Fi lokal laptop Anda (<code className="bg-emerald-100 text-emerald-900 px-1 py-0.5 rounded font-bold font-mono">10.100.5.87:5173</code>). Pastikan HP Anda terhubung ke <strong>jaringan Wi-Fi yang sama</strong> agar kamera HP dapat membuka halaman spesifikasi lot.
+              💡 <strong>Petunjuk Pindai Kamera HP:</strong> Kode QR di atas otomatis diarahkan ke alamat (<code className="bg-emerald-100 text-emerald-900 px-1 py-0.5 rounded font-bold font-mono">{networkHost}</code>). Pastikan HP Anda terhubung ke <strong>jaringan Wi-Fi yang sama</strong> agar kamera HP dapat membuka halaman spesifikasi lot. Setelah situs ini di-deploy ke domain/VPS, langkah ini tidak diperlukan lagi — QR otomatis memakai domain aslinya.
             </p>
           </div>
 

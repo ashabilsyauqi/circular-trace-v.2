@@ -1,21 +1,21 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 
-export interface OdooPipelineStage {
+export interface PipelineStage {
   id: string;
   label: string;
 }
 
-interface OdooStatusPipelineProps {
-  stages: OdooPipelineStage[];
+interface StatusPipelineProps {
+  stages: PipelineStage[];
   currentStageId: string;
   onSelectStage?: (stageId: string) => void;
   isClickable?: boolean;
 }
 
-// Odoo-style "statusbar" widget: a row of chevron/arrow-shaped stage tabs, current stage
+// "Statusbar" widget: a row of chevron/arrow-shaped stage tabs, current stage
 // highlighted solid, passed stages checked, upcoming stages muted.
-export const OdooStatusPipeline: React.FC<OdooStatusPipelineProps> = ({
+export const StatusPipeline: React.FC<StatusPipelineProps> = ({
   stages,
   currentStageId,
   onSelectStage,
@@ -44,10 +44,10 @@ export const OdooStatusPipeline: React.FC<OdooStatusPipelineProps> = ({
             }}
             className={`relative px-4 py-1.5 whitespace-nowrap flex items-center gap-1.5 transition-colors ${
               isCurrent
-                ? 'bg-orange-500 text-white z-10'
+                ? 'bg-amber-600 text-white z-10'
                 : isPassed
-                  ? 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                  : 'bg-slate-100 text-slate-400'
+                  ? 'bg-stone-200 text-stone-600 hover:bg-stone-300'
+                  : 'bg-stone-100 text-stone-400'
             } ${!isClickable ? 'cursor-default' : 'cursor-pointer'}`}
           >
             {isPassed && <Check className="w-3 h-3" />}

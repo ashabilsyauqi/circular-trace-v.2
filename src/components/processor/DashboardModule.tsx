@@ -84,7 +84,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
       icon: History,
       label: 'Riwayat Transaksi',
       hint: `${myProcessorTransactions.length} log tercatat`,
-      color: 'bg-purple-500/10 text-purple-700 border-purple-200',
+      color: 'bg-cyan-500/10 text-cyan-700 border-cyan-200 hover:border-cyan-300',
     },
   ];
 

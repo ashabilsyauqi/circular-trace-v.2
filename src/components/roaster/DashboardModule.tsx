@@ -18,7 +18,7 @@ interface DashboardModuleProps {
   onNavigate: (tab: 'work_orders' | 'purchasing' | 'selling' | 'inventory') => void;
 }
 
-// Flat, Qrema-style overview dashboard: a handful of honest numbers pulled straight from
+// Flat, sangrAI-style overview dashboard: a handful of honest numbers pulled straight from
 // context state (no decorative gradients, no invented metrics) plus quick-action shortcuts.
 export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) => {
   const { currentUser, transactions, roastedLots, workOrders, purchaseOrders } = useCoffee();
@@ -55,10 +55,10 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
     value: string,
     tone: 'up' | 'down' | 'neutral' = 'neutral'
   ) => (
-    <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-start justify-between">
+    <div className="bg-white rounded-xl border border-stone-200 p-4 flex items-start justify-between">
       <div>
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block mb-1">{label}</span>
-        <span className="text-xl font-bold text-slate-900">{value}</span>
+        <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wide block mb-1">{label}</span>
+        <span className="text-2xl font-bold text-stone-900">{value}</span>
       </div>
       <div
         className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
@@ -66,7 +66,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
             ? 'bg-emerald-50 text-emerald-600'
             : tone === 'down'
               ? 'bg-red-50 text-red-600'
-              : 'bg-slate-100 text-slate-600'
+              : 'bg-stone-100 text-stone-600'
         }`}
       >
         {icon}
@@ -77,8 +77,8 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-slate-900">Dashboard</h2>
-        <p className="text-xs text-slate-500 mt-0.5">Ringkasan operasional roastery Anda.</p>
+        <h2 className="text-2xl font-bold text-stone-900">Dashboard</h2>
+        <p className="text-sm text-stone-500 mt-1">Ringkasan operasional roastery Anda.</p>
       </div>
 
       {/* Financial overview */}
@@ -94,16 +94,16 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
       </div>
 
       {/* Inventory value */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Inventory Value</h3>
+      <div className="bg-white rounded-xl border border-stone-200 p-4">
+        <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-3">Inventory Value</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <Sprout className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[11px] text-slate-500 block">Green Bean (in progress)</span>
-              <strong className="text-sm text-slate-900">{greenBeanKgInProgress.toFixed(1)} kg</strong>
+              <span className="text-[11px] text-stone-500 block">Green Bean (in progress)</span>
+              <strong className="text-sm text-stone-900">{greenBeanKgInProgress.toFixed(1)} kg</strong>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -111,8 +111,8 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
               <Coffee className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[11px] text-slate-500 block">Roasted (tersedia)</span>
-              <strong className="text-sm text-slate-900">{roastedKgAvailable.toFixed(1)} kg</strong>
+              <span className="text-[11px] text-stone-500 block">Roasted (tersedia)</span>
+              <strong className="text-sm text-stone-900">{roastedKgAvailable.toFixed(1)} kg</strong>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -120,8 +120,8 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
               <Package className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[11px] text-slate-500 block">Nilai Stok Jadi</span>
-              <strong className="text-sm text-slate-900">Rp {finishedValue.toLocaleString()}</strong>
+              <span className="text-[11px] text-stone-500 block">Nilai Stok Jadi</span>
+              <strong className="text-sm text-stone-900">Rp {finishedValue.toLocaleString()}</strong>
             </div>
           </div>
         </div>
@@ -129,51 +129,51 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
 
       {/* Quick actions */}
       <div>
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Quick Actions</h3>
+        <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-2">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <button
             onClick={() => onNavigate('purchasing')}
-            className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col items-start gap-2 hover:border-orange-400 transition-colors text-left"
+            className="bg-white border border-stone-200 rounded-xl p-4 flex flex-col items-start gap-2 hover:border-orange-400 transition-colors text-left"
           >
             <ShoppingCart className="w-5 h-5 text-orange-500" />
-            <span className="text-xs font-bold text-slate-900">Create PO</span>
+            <span className="text-xs font-bold text-stone-900">Create PO</span>
           </button>
           <button
             onClick={() => onNavigate('work_orders')}
-            className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col items-start gap-2 hover:border-orange-400 transition-colors text-left"
+            className="bg-white border border-stone-200 rounded-xl p-4 flex flex-col items-start gap-2 hover:border-orange-400 transition-colors text-left"
           >
             <Flame className="w-5 h-5 text-orange-500" />
-            <span className="text-xs font-bold text-slate-900">Create WO</span>
+            <span className="text-xs font-bold text-stone-900">Create WO</span>
           </button>
           <button
             onClick={() => onNavigate('selling')}
-            className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col items-start gap-2 hover:border-orange-400 transition-colors text-left"
+            className="bg-white border border-stone-200 rounded-xl p-4 flex flex-col items-start gap-2 hover:border-orange-400 transition-colors text-left"
           >
             <Store className="w-5 h-5 text-orange-500" />
-            <span className="text-xs font-bold text-slate-900">Selling</span>
+            <span className="text-xs font-bold text-stone-900">Selling</span>
           </button>
           <button
             onClick={() => onNavigate('inventory')}
-            className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col items-start gap-2 hover:border-orange-400 transition-colors text-left"
+            className="bg-white border border-stone-200 rounded-xl p-4 flex flex-col items-start gap-2 hover:border-orange-400 transition-colors text-left"
           >
             <PlusCircle className="w-5 h-5 text-orange-500" />
-            <span className="text-xs font-bold text-slate-900">Inventory</span>
+            <span className="text-xs font-bold text-stone-900">Inventory</span>
           </button>
         </div>
       </div>
 
       {/* Alerts */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+        <div className="bg-white rounded-xl border border-stone-200 p-4">
+          <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5" /> Low Stock Roasted Lots
           </h3>
           {lowStockLots.length === 0 ? (
-            <p className="text-xs text-slate-400 py-3">Tidak ada lot roasted dengan stok menipis.</p>
+            <p className="text-xs text-stone-400 py-3">Tidak ada lot roasted dengan stok menipis.</p>
           ) : (
             <ul className="space-y-1.5">
               {lowStockLots.map((l) => (
-                <li key={l.id} className="text-xs text-slate-700 flex items-center justify-between">
+                <li key={l.id} className="text-xs text-stone-700 flex items-center justify-between">
                   <span>{l.origin} — {l.variety}</span>
                   <strong className="text-red-600">{l.availablePacks} pack</strong>
                 </li>
@@ -181,18 +181,18 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
             </ul>
           )}
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+        <div className="bg-white rounded-xl border border-stone-200 p-4">
+          <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
             <ShoppingCart className="w-3.5 h-3.5" /> Purchase Order Berjalan
           </h3>
           {openPOs.length === 0 ? (
-            <p className="text-xs text-slate-400 py-3">Tidak ada PO yang sedang berjalan.</p>
+            <p className="text-xs text-stone-400 py-3">Tidak ada PO yang sedang berjalan.</p>
           ) : (
             <ul className="space-y-1.5">
               {openPOs.slice(0, 5).map((p) => (
-                <li key={p.id} className="text-xs text-slate-700 flex items-center justify-between">
+                <li key={p.id} className="text-xs text-stone-700 flex items-center justify-between">
                   <span>{p.poNumber} — {p.supplierName}</span>
-                  <span className="text-slate-500">{p.status}</span>
+                  <span className="text-stone-500">{p.status}</span>
                 </li>
               ))}
             </ul>

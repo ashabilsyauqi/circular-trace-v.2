@@ -19,12 +19,12 @@ interface ChatterMessage {
   timestamp: string;
 }
 
-interface OdooChatterProps {
+interface ActivityFeedProps {
   initialMessages?: ChatterMessage[];
   documentTitle?: string;
 }
 
-export const OdooChatter: React.FC<OdooChatterProps> = ({
+export const ActivityFeed: React.FC<ActivityFeedProps> = ({
   initialMessages = [
     {
       id: 'msg-1',
@@ -58,7 +58,7 @@ export const OdooChatter: React.FC<OdooChatterProps> = ({
   };
 
   return (
-    <div className="bg-[#F8F9FA] rounded-3xl p-5 border border-stone-200/80 space-y-4">
+    <div className="bg-stone-50/70 rounded-3xl p-5 border border-stone-200/80 space-y-4">
       {/* Top Chatter Action Tabs */}
       <div className="flex items-center gap-2 border-b border-stone-200/70 pb-3">
         <button
@@ -66,8 +66,8 @@ export const OdooChatter: React.FC<OdooChatterProps> = ({
           onClick={() => setActiveTab('note')}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'note'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:bg-stone-200/60'
+              ? 'bg-amber-600 text-white shadow-xs'
+              : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
@@ -79,8 +79,8 @@ export const OdooChatter: React.FC<OdooChatterProps> = ({
           onClick={() => setActiveTab('message')}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'message'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:bg-stone-200/60'
+              ? 'bg-amber-600 text-white shadow-xs'
+              : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
@@ -92,8 +92,8 @@ export const OdooChatter: React.FC<OdooChatterProps> = ({
           onClick={() => setActiveTab('activity')}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'activity'
-              ? 'bg-[#714B67] text-white shadow-xs'
-              : 'text-stone-600 hover:bg-stone-200/60'
+              ? 'bg-amber-600 text-white shadow-xs'
+              : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
           <Clock className="w-3.5 h-3.5" />
@@ -103,7 +103,7 @@ export const OdooChatter: React.FC<OdooChatterProps> = ({
 
       {/* Input Box */}
       <form onSubmit={handlePost} className="space-y-2">
-        <div className="bg-white rounded-2xl border border-stone-200 p-2.5 shadow-2xs focus-within:ring-2 focus-within:ring-[#714B67] focus-within:border-transparent transition-all">
+        <div className="bg-white rounded-2xl border border-stone-200 p-2.5 shadow-2xs focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-transparent transition-all">
           <textarea
             rows={2}
             value={inputText}
@@ -117,11 +117,11 @@ export const OdooChatter: React.FC<OdooChatterProps> = ({
           />
           <div className="flex items-center justify-between pt-2 border-t border-stone-100">
             <span className="text-[10px] text-stone-400">
-              Odoo Chatter • Rekam jejak permanen
+              Log Aktivitas • Rekam jejak permanen
             </span>
             <button
               type="submit"
-              className="px-3 py-1.5 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white font-bold text-xs transition-colors flex items-center gap-1 shadow-xs"
+              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors flex items-center gap-1 shadow-xs"
             >
               <Send className="w-3 h-3" />
               <span>Simpan Catatan</span>
@@ -140,10 +140,10 @@ export const OdooChatter: React.FC<OdooChatterProps> = ({
             <div
               className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-white shrink-0 ${
                 msg.type === 'system'
-                  ? 'bg-[#00A09D]'
+                  ? 'bg-emerald-600'
                   : msg.type === 'note'
-                  ? 'bg-[#714B67]'
-                  : 'bg-amber-600'
+                  ? 'bg-amber-600'
+                  : 'bg-orange-600'
               }`}
             >
               {msg.type === 'system' ? (

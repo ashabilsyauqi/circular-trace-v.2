@@ -97,7 +97,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div
-      className={`relative bg-white rounded-2xl p-5 border border-stone-200/90 shadow-2xs hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between group ${styles.borderCard} ${className}`}
+      className={`relative bg-white rounded-3xl p-5 border border-stone-200/80 shadow-xs hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between group ${styles.borderCard} ${className}`}
     >
       {/* Subtle top gradient glow */}
       <div

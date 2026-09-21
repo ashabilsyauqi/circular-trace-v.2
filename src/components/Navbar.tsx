@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { RegisterModal } from './RegisterModal';
 import { ProfileMenu } from './shared/ProfileMenu';
+import { LanguageSwitch } from './shared/LanguageSwitch';
 
 export const Navbar: React.FC = () => {
   const {
@@ -145,8 +146,10 @@ export const Navbar: React.FC = () => {
             </button>
           </div>
 
-          {/* Right Action: everything (register, panel entry, language, demo mode, logout) lives in one Profile dropdown */}
+          {/* Right Action: language switch is always visible here; panel entry, register, demo
+              mode and logout live inside the Profile dropdown */}
           <div className="flex items-center gap-2 shrink-0">
+            <LanguageSwitch variant="light" />
             {currentUser ? (
               <ProfileMenu
                 variant="light"

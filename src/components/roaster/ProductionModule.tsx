@@ -20,8 +20,8 @@ import {
 import { MasterRoastProfile, RoasterMachine } from '../../types/roasterErp';
 import { useCoffee } from '../../context/CoffeeContext';
 import { MetricCard } from '../admin/MetricCard';
-import { OdooControlPanel } from '../odoo/OdooControlPanel';
-import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
+import { ControlPanel } from '../shared/ControlPanel';
+import { StatButton } from '../shared/StatButton';
 
 export const ProductionModule: React.FC = () => {
   const { masterProfiles, roasterMachines, createMasterProfile } = useCoffee();
@@ -129,7 +129,7 @@ export const ProductionModule: React.FC = () => {
           onClick={() => setActiveTab('profiles')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
             activeTab === 'profiles'
-              ? 'bg-[#714B67] text-white shadow-xs'
+              ? 'bg-[#EA580C] text-white shadow-xs'
               : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
@@ -141,7 +141,7 @@ export const ProductionModule: React.FC = () => {
           onClick={() => setActiveTab('machines')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
             activeTab === 'machines'
-              ? 'bg-[#714B67] text-white shadow-xs'
+              ? 'bg-[#EA580C] text-white shadow-xs'
               : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
@@ -150,8 +150,8 @@ export const ProductionModule: React.FC = () => {
         </button>
       </div>
 
-      {/* Odoo 19 Control Panel */}
-      <OdooControlPanel
+      {/* Toolbar / Control Panel */}
+      <ControlPanel
         breadcrumbs={[
           { label: 'Produksi & Resep' },
           { label: activeTab === 'profiles' ? 'Master Profiles' : 'Mesin Roaster' },
@@ -197,7 +197,7 @@ export const ProductionModule: React.FC = () => {
                 </p>
 
                 {/* Phase Milestones */}
-                <div className="grid grid-cols-3 gap-2 mt-4 bg-[#F8F9FA] p-3 rounded-2xl border border-stone-200/80 text-xs">
+                <div className="grid grid-cols-3 gap-2 mt-4 bg-[#FAF7F2] p-3 rounded-2xl border border-stone-200/80 text-xs">
                   <div>
                     <span className="text-[10px] text-stone-400 block font-medium">Charge Temp:</span>
                     <strong className="text-stone-900 font-mono">{prof.chargeTemp}°C</strong>
@@ -221,7 +221,7 @@ export const ProductionModule: React.FC = () => {
                   {prof.flavorProfile.map((flv, i) => (
                     <span
                       key={i}
-                      className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#714B67]/10 text-[#714B67] border border-[#714B67]/20"
+                      className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#EA580C]/10 text-[#EA580C] border border-[#EA580C]/20"
                     >
                       {flv}
                     </span>
@@ -264,7 +264,7 @@ export const ProductionModule: React.FC = () => {
                   <p className="text-xs text-stone-500 mt-0.5">{m.model}</p>
                 </div>
 
-                <div className="bg-[#F8F9FA] p-3 rounded-2xl border border-stone-200/80 text-xs space-y-1.5">
+                <div className="bg-[#FAF7F2] p-3 rounded-2xl border border-stone-200/80 text-xs space-y-1.5">
                   <div className="flex justify-between">
                     <span className="text-stone-500">Sumber Panas:</span>
                     <strong className="text-stone-800">{m.heatSource}</strong>
@@ -310,7 +310,7 @@ export const ProductionModule: React.FC = () => {
             </button>
 
             <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-stone-100">
-              <div className="p-2.5 rounded-xl bg-[#714B67]/10 text-[#714B67]">
+              <div className="p-2.5 rounded-xl bg-[#EA580C]/10 text-[#EA580C]">
                 <Sliders className="w-5 h-5" />
               </div>
               <div>
@@ -329,7 +329,7 @@ export const ProductionModule: React.FC = () => {
                   required
                   value={profName}
                   onChange={(e) => setProfName(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                  className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#EA580C]"
                 />
               </div>
 
@@ -341,7 +341,7 @@ export const ProductionModule: React.FC = () => {
                   <select
                     value={profLevel}
                     onChange={(e) => setProfLevel(e.target.value as any)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#EA580C]"
                   >
                     <option value="Light Roast">Light Roast (Filter)</option>
                     <option value="Medium-Light">Medium-Light (Omni)</option>
@@ -359,7 +359,7 @@ export const ProductionModule: React.FC = () => {
                     required
                     value={profAgtronGourmet}
                     onChange={(e) => setProfAgtronGourmet(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#EA580C]"
                   />
                 </div>
               </div>
@@ -373,7 +373,7 @@ export const ProductionModule: React.FC = () => {
                     type="number"
                     value={profCharge}
                     onChange={(e) => setProfCharge(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#EA580C]"
                   />
                 </div>
                 <div>
@@ -385,7 +385,7 @@ export const ProductionModule: React.FC = () => {
                     step="0.1"
                     value={profDtr}
                     onChange={(e) => setProfDtr(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#EA580C]"
                   />
                 </div>
                 <div>
@@ -396,7 +396,7 @@ export const ProductionModule: React.FC = () => {
                     type="number"
                     value={profDropTemp}
                     onChange={(e) => setProfDropTemp(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-bold focus:ring-2 focus:ring-[#EA580C]"
                   />
                 </div>
               </div>
@@ -409,7 +409,7 @@ export const ProductionModule: React.FC = () => {
                   rows={2}
                   value={profDesc}
                   onChange={(e) => setProfDesc(e.target.value)}
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#714B67]"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#EA580C]"
                 />
               </div>
 
@@ -423,7 +423,7 @@ export const ProductionModule: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white font-bold transition-all shadow-md flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-xl bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold transition-all shadow-md flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   Simpan Master Profile

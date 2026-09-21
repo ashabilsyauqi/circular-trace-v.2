@@ -542,30 +542,30 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8">
-      {/* Top Header Navigation */}
+    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8 selection:bg-amber-500 selection:text-stone-950">
+      {/* Top Header Navigation — warm, story-driven, consumer-facing */}
       <header className="max-w-3xl mx-auto w-full flex items-center justify-between py-4 border-b border-stone-200">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black text-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-stone-950 text-amber-400 flex items-center justify-center font-black text-sm shadow-md shrink-0">
             sAI
           </div>
           <div>
-            <span className="font-black text-xs uppercase tracking-wider block text-stone-900">
-              sangrAI Traceability
+            <span className="font-black text-sm block text-stone-950 tracking-tight">
+              sangrAI
             </span>
-            <span className="text-[10px] text-stone-500 font-semibold block">
-              Sistem Verifikasi Barcode & Ketertelusuran Resmi
+            <span className="text-[10px] text-stone-500 font-semibold block leading-tight">
+              Kisah Asli di Balik Cangkir Kopi Anda
             </span>
           </div>
         </div>
 
         <button
           onClick={handleShare}
-          className="p-2 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-100 text-xs font-bold flex items-center gap-1.5 transition-colors"
+          className="p-2.5 sm:px-4 rounded-full bg-white border border-stone-300 text-stone-700 hover:bg-stone-100 hover:border-stone-400 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
           title="Bagikan Tautan Verifikasi"
         >
           <Share2 className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Bagikan</span>
+          <span className="hidden sm:inline">Bagikan Cerita Ini</span>
         </button>
       </header>
 
@@ -1408,14 +1408,21 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
           </>
         )}
 
-        {/* Action Button to Open sangrAI Platform */}
-        <div className="flex justify-center pt-2">
+        {/* Closing Trust Statement + Action Button to Open sangrAI Platform */}
+        <div className="bg-gradient-to-br from-stone-950 via-amber-950 to-stone-950 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[11px] font-bold">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            100% Transparan, dari Kebun hingga Cangkir
+          </div>
+          <p className="text-white/90 text-sm sm:text-base font-semibold max-w-lg mx-auto leading-relaxed">
+            Ingin menjelajahi lebih banyak kopi bersertifikat serupa, atau melihat bagaimana platform sangrAI menghubungkan petani, pengolah, gudang, roaster, dan kedai kopi?
+          </p>
           <button
             onClick={onContinue}
-            className="px-8 py-3.5 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2"
+            className="px-8 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs sm:text-sm transition-all shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto"
           >
-            <Layers className="w-4 h-4 text-amber-400" />
-            Buka Marketplace & Ekosistem Kopi sangrAI
+            <Layers className="w-4 h-4" />
+            Jelajahi Marketplace & Ekosistem sangrAI
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -1423,7 +1430,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
 
       {/* Footer */}
       <footer className="max-w-3xl mx-auto w-full text-center py-6 border-t border-stone-200 text-xs text-stone-500">
-        sangrAI Traceability • Verified Physical Sack Label Standard
+        sangrAI Traceability • Standar Label Karung Fisik Terverifikasi
       </footer>
     </div>
   );

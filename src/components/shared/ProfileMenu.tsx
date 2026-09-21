@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { LogOut, ChevronDown, Globe, Sparkles, LayoutDashboard, UserPlus, ChevronRight, Receipt, Wallet } from 'lucide-react';
+import { LogOut, ChevronDown, Sparkles, LayoutDashboard, UserPlus, ChevronRight, Receipt, Wallet } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
 
 interface ProfileMenuProps {
@@ -26,7 +26,7 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
   onOpenRegister,
   onOpenLedger,
 }) => {
-  const { currentUser, logout, language, setLanguage, demoModeEnabled, setDemoModeEnabled, t } = useCoffee();
+  const { currentUser, logout, demoModeEnabled, setDemoModeEnabled, t } = useCoffee();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -77,7 +77,7 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-2xl border border-stone-200 shadow-xl z-50 overflow-hidden text-stone-900">
+        <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-3xl border border-stone-200 shadow-xl z-50 overflow-hidden text-stone-900">
           <div className="px-4 py-3 border-b border-stone-100 bg-stone-50">
             <div className="flex items-center gap-2.5">
               <img src={currentUser.avatar} alt={currentUser.name} className="w-9 h-9 rounded-full object-cover border border-stone-300" />
@@ -137,27 +137,6 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
           )}
 
           <div className="p-3 space-y-3">
-            {/* Language toggle */}
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1 mb-1.5">
-                <Globe className="w-3 h-3" /> {t('profile.language')}
-              </span>
-              <div className="flex rounded-lg border border-stone-200 overflow-hidden text-[11px] font-bold">
-                <button
-                  onClick={() => setLanguage('id')}
-                  className={`flex-1 py-1.5 transition-colors ${language === 'id' ? 'bg-orange-500 text-white' : 'bg-white text-stone-600 hover:bg-stone-50'}`}
-                >
-                  Indonesia
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`flex-1 py-1.5 transition-colors border-l border-stone-200 ${language === 'en' ? 'bg-orange-500 text-white' : 'bg-white text-stone-600 hover:bg-stone-50'}`}
-                >
-                  English
-                </button>
-              </div>
-            </div>
-
             {/* Demo mode toggle */}
             <button
               onClick={() => setDemoModeEnabled(!demoModeEnabled)}

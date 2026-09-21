@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
 import { RegisterModal } from './RegisterModal';
+import { landingContent } from '../i18n/landingContent';
 import {
   Sprout,
   Cog,
@@ -40,7 +41,8 @@ import {
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-  const { setActiveView, loginAsRole } = useCoffee();
+  const { language, setActiveView, loginAsRole } = useCoffee();
+  const content = landingContent[language];
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [registerRole, setRegisterRole] = useState<UserRole>('roaster');
   const [activeTabService, setActiveTabService] = useState<UserRole>('roaster');
@@ -53,91 +55,9 @@ export const LandingPage: React.FC = () => {
   };
 
   // Pipeline simulation stages
-  const pipelineStages = [
-    {
-      step: 1,
-      role: 'petani' as UserRole,
-      title: 'Panen Ceri Petik Merah',
-      actor: 'Pak Asep (Petani Pangalengan)',
-      badge: 'Kebun Kopi • 1.550 mdpl',
-      metric: 'Brix 22.4°Bx • 98% Petik Merah',
-      desc: 'Pencatatan varietas Ateng Super & Sigarar Utang langsung dari lereng timur kebun.',
-      color: 'text-emerald-600 bg-emerald-50 border-emerald-300',
-      tagColor: 'bg-emerald-500 text-white',
-      lotCode: 'LOT-PTN-001',
-    },
-    {
-      step: 2,
-      role: 'pengolah' as UserRole,
-      title: 'Eco-Processing & Fermentasi',
-      actor: 'CV Malabar Wet Mill Station',
-      badge: 'Anaerobic Natural • Eco 5.0★',
-      metric: 'Kadar Air 11.2% • Aw 0.58',
-      desc: 'Fermentasi 72 jam terkontrol dan pemanfaatan 100% limbah pulp menjadi pupuk kompos & cascara.',
-      color: 'text-amber-600 bg-amber-50 border-amber-300',
-      tagColor: 'bg-amber-500 text-stone-950',
-      lotCode: 'LOT-GB-001',
-    },
-    {
-      step: 3,
-      role: 'gudang' as UserRole,
-      title: 'Silo Storage & SCA QA',
-      actor: 'PT Nusantara Green Bean Silo',
-      badge: 'GrainPro Hermetik • 20°C / RH 55%',
-      metric: 'SCA Score: 87.25 • Grade 1 Super',
-      desc: 'Penyimpanan terstandarisasi untuk menjaga stabilitas organoleptik biji kopi specialty.',
-      color: 'text-blue-600 bg-blue-50 border-blue-300',
-      tagColor: 'bg-blue-500 text-white',
-      lotCode: 'LOT-WH-001',
-    },
-    {
-      step: 4,
-      role: 'roaster' as UserRole,
-      title: 'Artisan Roasting Intelligence',
-      actor: 'Karsa Craft Roastery',
-      badge: 'Light-Medium • Agtron 65',
-      metric: 'DTR 14.8% • First Crack @ 08:30',
-      desc: 'Penyangraian presisi dengan sensoris spider chart 8 parameter dan rekomendasi resting 7 hari.',
-      color: 'text-orange-600 bg-orange-50 border-orange-300',
-      tagColor: 'bg-orange-500 text-white',
-      lotCode: 'LOT-ROAST-001',
-    },
-    {
-      step: 5,
-      role: 'cafe' as UserRole,
-      title: 'Specialty Cup & QR Story',
-      actor: 'Seduh Teduh Specialty Coffee',
-      badge: 'Filter V60 • Single Origin',
-      metric: '100% Traceability ke Konsumen',
-      desc: 'Pelanggan memindai QR Code di cangkir untuk melihat seluruh perjalanan terroir dari kebun Pak Asep.',
-      color: 'text-stone-700 bg-stone-100 border-stone-300',
-      tagColor: 'bg-stone-900 text-amber-400',
-      lotCode: 'CUP-TEDUH-2026',
-    },
-  ];
+  const pipelineStages = content.pipelineStages;
 
-  const faqs = [
-    {
-      q: 'Apa itu sangrAI?',
-      a: 'sangrAI adalah platform sistem informasi rantai pasok kopi hulu-ke-hilir yang mengintegrasikan perdagangan B2B, pelacakan lot digital (Lot Traceability), standarisasi sensoris SCA, hingga manajemen limbah sirkular (Zero-Waste Eco-Processing).',
-    },
-    {
-      q: 'Bagaimana cara kerja QR Traceability untuk konsumen cafe?',
-      a: 'Setiap lot roasted bean yang diseduh di cafe menghasilkan kode unik. Barista mencetak stiker QR untuk cangkir atau kemasan ritel. Konsumen cukup memindai dengan kamera ponsel untuk membaca riwayat petani, ketinggian kebun, profil fermentasi, kurva sangrai, hingga uji rasa.',
-    },
-    {
-      q: 'Apa manfaat modul Circular Economy & Eco-Rating bagi Pengolah (Mill)?',
-      a: 'Modul ini mencatat pengalihan limbah organik ceri kopi (kulit/pulp dan air fermentasi) menjadi produk bernilai tambah seperti teh cascara, briket arang, dan pupuk kompos organik. Sistem secara otomatis menghitung skor Eco-Rating dan estimasi reduksi karbon.',
-    },
-    {
-      q: 'Apakah roastery dapat menggunakan simulator kurva dan formulasi rasa AI?',
-      a: 'Ya, modul Roaster ERP kami dilengkapi simulator profil sangrai (Agtron, DTR, RoR), radar sensori 8 parameter SCA, Work Order produksi, serta asisten cerdas Qrema AI untuk rekomendasi seduh dan resting.',
-    },
-    {
-      q: 'Bagaimana cara memulai dan mendaftarkan entitas bisnis kopi saya?',
-      a: 'Klik tombol "Daftar Akun", pilih peran usaha Anda (Petani, Pengolah, Gudang, Roastery, atau Cafe), dan Anda akan langsung mendapatkan akses ke panel operasional serta katalog marketplace terpadu.',
-    },
-  ];
+  const faqs = content.faqs;
 
   return (
     <div className="bg-[#FAF7F2] text-stone-900 overflow-x-hidden selection:bg-amber-500 selection:text-stone-950 font-sans">
@@ -155,10 +75,10 @@ export const LandingPage: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-stone-300/80 shadow-xs backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span className="text-xs font-bold text-stone-800 tracking-tight">
-                Platform Rantai Pasok Kopi Specialty & Traceability #1
+                {content.hero.pillLabel}
               </span>
               <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500 text-stone-950">
-                CIRCULAR TRACE
+                {content.hero.circularTag}
               </span>
             </div>
           </div>
@@ -166,14 +86,14 @@ export const LandingPage: React.FC = () => {
           {/* Main Headline & Subtitle */}
           <div className="text-center max-w-4xl mx-auto space-y-6">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-stone-950 tracking-tight leading-[1.1]">
-              Hubungkan Setiap Biji Kopi:{' '}
+              {content.hero.titlePart1}{' '}
               <span className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 bg-clip-text text-transparent">
-                Dari Kebun Petani
+                {content.hero.titleHighlight}
               </span>{' '}
-              Hingga Secangkir Kopi di Cafe Anda.
+              {content.hero.titlePart2}
             </h1>
             <p className="text-base sm:text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-              Ekosistem digital terpadu untuk <strong>Petani, Pengolah Mill, Silo Gudang, Artisan Roastery</strong>, dan <strong>Pemilik Cafe</strong>. Dilengkapi pelacakan 100% QR Traceability, standar cupping SCA, dan integrasi sirkular ramah lingkungan.
+              {content.hero.subtitlePre}<strong>{content.hero.subtitleStrong1}</strong>{content.hero.subtitleMid}<strong>{content.hero.subtitleStrong2}</strong>{content.hero.subtitleEnd}
             </p>
 
             {/* Main Action Buttons */}
@@ -183,7 +103,7 @@ export const LandingPage: React.FC = () => {
                 className="px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-stone-950 hover:bg-stone-800 text-amber-400 hover:text-amber-300 font-black text-sm sm:text-base shadow-xl hover:shadow-2xl transition-all flex items-center gap-2.5 border border-stone-800 group cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-                <span>Daftar Akun / Mulai Demo</span>
+                <span>{content.hero.ctaRegister}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
@@ -192,7 +112,7 @@ export const LandingPage: React.FC = () => {
                 className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm sm:text-base shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Store className="w-4 h-4 text-stone-950" />
-                <span>Jelajahi B2B Marketplace</span>
+                <span>{content.hero.ctaMarketplace}</span>
               </button>
 
               <button
@@ -200,7 +120,7 @@ export const LandingPage: React.FC = () => {
                 className="px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-white hover:bg-stone-100 text-stone-700 font-bold text-sm border border-stone-300 shadow-xs transition-all flex items-center gap-2 cursor-pointer"
               >
                 <History className="w-4 h-4 text-stone-500" />
-                <span>Log Transaksi</span>
+                <span>{content.hero.ctaLedger}</span>
               </button>
             </div>
 
@@ -208,15 +128,15 @@ export const LandingPage: React.FC = () => {
             <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-stone-500">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Standar Penilaian SCA 100 Poin
+                {content.hero.trust1}
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-amber-600" />
-                Zero Waste Circular Eco-Rating
+                {content.hero.trust2}
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                QR Code Tanpa Install Aplikasi
+                {content.hero.trust3}
               </span>
             </div>
           </div>
@@ -224,27 +144,27 @@ export const LandingPage: React.FC = () => {
           {/* Key Metrics Stats Grid */}
           <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
             <div className="bg-white/80 backdrop-blur-md p-5 rounded-2xl border border-stone-200/80 shadow-xs text-center">
-              <div className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">5 Pilar</div>
+              <div className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">{content.hero.stats[0].value}</div>
               <p className="text-xs text-stone-500 font-medium mt-1">
-                Rantai Pasok Terintegrasi Penuh
+                {content.hero.stats[0].label}
               </p>
             </div>
             <div className="bg-white/80 backdrop-blur-md p-5 rounded-2xl border border-stone-200/80 shadow-xs text-center">
-              <div className="text-3xl sm:text-4xl font-black text-amber-600 tracking-tight">100%</div>
+              <div className="text-3xl sm:text-4xl font-black text-amber-600 tracking-tight">{content.hero.stats[1].value}</div>
               <p className="text-xs text-stone-500 font-medium mt-1">
-                Farm-to-Cup QR Traceability
+                {content.hero.stats[1].label}
               </p>
             </div>
             <div className="bg-white/80 backdrop-blur-md p-5 rounded-2xl border border-stone-200/80 shadow-xs text-center">
-              <div className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight">87.5+</div>
+              <div className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight">{content.hero.stats[2].value}</div>
               <p className="text-xs text-stone-500 font-medium mt-1">
-                Rata-rata Skor Cupping SCA
+                {content.hero.stats[2].label}
               </p>
             </div>
             <div className="bg-white/80 backdrop-blur-md p-5 rounded-2xl border border-stone-200/80 shadow-xs text-center">
-              <div className="text-3xl sm:text-4xl font-black text-blue-600 tracking-tight">0 Calo</div>
+              <div className="text-3xl sm:text-4xl font-black text-blue-600 tracking-tight">{content.hero.stats[3].value}</div>
               <p className="text-xs text-stone-500 font-medium mt-1">
-                Pasar B2B Langsung & Transparan
+                {content.hero.stats[3].label}
               </p>
             </div>
           </div>
@@ -258,14 +178,14 @@ export const LandingPage: React.FC = () => {
               <div>
                 <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-amber-400">
                   <Activity className="w-3.5 h-3.5" />
-                  Simulator Alur Fisik & Data Lot (Chain of Custody)
+                  {content.hero.pipeline.simulatorLabel}
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
-                  Klik Tahap untuk Melihat Jejak Riwayat Biji Kopi
+                  {content.hero.pipeline.title}
                 </h3>
               </div>
               <div className="text-xs font-mono text-stone-400 bg-stone-900 px-3 py-1.5 rounded-xl border border-stone-800 shrink-0">
-                Status: <span className="text-emerald-400 font-bold">Terverifikasi Real-Time</span>
+                {content.hero.pipeline.statusLabel} <span className="text-emerald-400 font-bold">{content.hero.pipeline.statusValue}</span>
               </div>
             </div>
 
@@ -284,7 +204,7 @@ export const LandingPage: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center justify-between text-[11px] font-mono mb-1">
-                      <span>TAHAP 0{stage.step}</span>
+                      <span>{content.hero.pipeline.stepLabel(stage.step)}</span>
                       {isActive && <span className="w-2 h-2 rounded-full bg-stone-950 animate-ping"></span>}
                     </div>
                     <div className="text-xs font-black truncate">{stage.title}</div>
@@ -301,7 +221,7 @@ export const LandingPage: React.FC = () => {
                   <div className="md:col-span-2 space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-md ${current.tagColor}`}>
-                        Tahap {current.step}: {current.title}
+                        {content.hero.pipeline.stagePrefix} {current.step}: {current.title}
                       </span>
                       <span className="text-xs font-mono bg-stone-800 text-amber-300 px-2 py-0.5 rounded border border-stone-700">
                         {current.lotCode}
@@ -331,16 +251,16 @@ export const LandingPage: React.FC = () => {
                       {current.role === 'cafe' && <Coffee className="w-6 h-6" />}
                     </div>
                     <div>
-                      <span className="text-xs font-bold text-white block">Akses Operasional Peran Ini</span>
+                      <span className="text-xs font-bold text-white block">{content.hero.pipeline.accessTitle}</span>
                       <span className="text-[11px] text-stone-400 block mt-0.5">
-                        Buka simulator & dashboard mandiri
+                        {content.hero.pipeline.accessSubtitle}
                       </span>
                     </div>
                     <button
                       onClick={() => loginAsRole(current.role)}
                       className="w-full py-2 px-3 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <span>Coba Panel {current.role.toUpperCase()}</span>
+                      <span>{content.hero.pipeline.tryPanelPrefix} {current.role.toUpperCase()}</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -359,26 +279,29 @@ export const LandingPage: React.FC = () => {
           <div className="text-center max-w-3xl mx-auto mb-14">
             <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 px-3.5 py-1 rounded-full text-xs font-bold mb-3">
               <Layers className="w-3.5 h-3.5 text-amber-600" />
-              Layanan & Fitur Komprehensif
+              {content.servicesHeader.badge}
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">
-              5 Pilar Ekosistem Kopi sangrAI
+              {content.servicesHeader.title}
             </h2>
             <p className="mt-3 text-stone-600 text-sm sm:text-base">
-              Setiap pemangku kepentingan memiliki modul khusus yang saling tersambung secara otomatis dalam satu basis data terdesentralisasi.
+              {content.servicesHeader.subtitle}
             </p>
           </div>
 
           {/* Role Navigation Tabs */}
           <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10">
-            {[
-              { id: 'petani' as UserRole, label: '1. Petani Kopi', icon: <Sprout className="w-4 h-4" /> },
-              { id: 'pengolah' as UserRole, label: '2. Pengolah Mill', icon: <Cog className="w-4 h-4" /> },
-              { id: 'gudang' as UserRole, label: '3. Gudang & Silo QA', icon: <Warehouse className="w-4 h-4" /> },
-              { id: 'roaster' as UserRole, label: '4. Artisan Roastery', icon: <Flame className="w-4 h-4" /> },
-              { id: 'cafe' as UserRole, label: '5. Pemilik Cafe', icon: <Coffee className="w-4 h-4" /> },
-            ].map((tab) => {
+            {(
+              [
+                { id: 'petani' as UserRole, icon: <Sprout className="w-4 h-4" /> },
+                { id: 'pengolah' as UserRole, icon: <Cog className="w-4 h-4" /> },
+                { id: 'gudang' as UserRole, icon: <Warehouse className="w-4 h-4" /> },
+                { id: 'roaster' as UserRole, icon: <Flame className="w-4 h-4" /> },
+                { id: 'cafe' as UserRole, icon: <Coffee className="w-4 h-4" /> },
+              ] as { id: UserRole; icon: React.ReactNode }[]
+            ).map((tab) => {
               const isActive = activeTabService === tab.id;
+              const label = content.roleTabs.find((t) => t.id === tab.id)?.label ?? '';
               return (
                 <button
                   key={tab.id}
@@ -390,7 +313,7 @@ export const LandingPage: React.FC = () => {
                   }`}
                 >
                   {tab.icon}
-                  <span>{tab.label}</span>
+                  <span>{label}</span>
                 </button>
               );
             })}
@@ -403,26 +326,26 @@ export const LandingPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 rounded-full text-xs font-bold">
                     <Sprout className="w-3.5 h-3.5 text-emerald-600" />
-                    Pilar 1: Hulu Pertanian & Panen
+                    {content.servicePanels.petani.badge}
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    Digitalisasi Panen Ceri Kopi dari Lereng Kebun
+                    {content.servicePanels.petani.title}
                   </h3>
                   <p className="text-stone-600 text-sm leading-relaxed">
-                    Petani dapat mendokumentasikan hasil panen dengan parameter ilmiah: elevasi mdpl, varietas pohon (Typica, Ateng, Sigarar Utang), tingkat kemanisan buah (Brix 20°Bx+), serta metode petik merah 98% untuk mendapatkan harga jual optimal.
+                    {content.servicePanels.petani.desc}
                   </p>
                   <ul className="space-y-2.5 text-xs text-stone-700">
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      Pencatatan batch panen instan dan otomatis terbit ID Lot Unik.
+                      {content.servicePanels.petani.bullets[0]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      Penjualan langsung ke stasiun pengolah mill tanpa potongan tengkulak.
+                      {content.servicePanels.petani.bullets[1]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      Cetak kartu barcode fisik untuk ditempel pada karung ceri segar.
+                      {content.servicePanels.petani.bullets[2]}
                     </li>
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
@@ -430,45 +353,45 @@ export const LandingPage: React.FC = () => {
                       onClick={() => loginAsRole('petani')}
                       className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>Buka Panel Petani</span>
+                      <span>{content.servicePanels.petani.ctaOpen}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => openRegister('petani')}
                       className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
                     >
-                      Daftar Kelompok Tani
+                      {content.servicePanels.petani.ctaRegister}
                     </button>
                   </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">Preview Kartu Lot Panen Petani</span>
+                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.petani.previewTitle}</span>
                     <span className="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">
                       LOT-PTN-001
                     </span>
                   </div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Nama Petani</span>
-                      <span className="font-bold text-stone-900">Asep Supriatna</span>
+                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[0].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.petani.previewRows[0].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Lokasi Kebun</span>
-                      <span className="font-bold text-stone-900">Pangalengan, Gn. Tilu (1.550 mdpl)</span>
+                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[1].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.petani.previewRows[1].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Varietas Terpilih</span>
-                      <span className="font-bold text-emerald-700">Ateng Super & Sigarar Utang</span>
+                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[2].label}</span>
+                      <span className="font-bold text-emerald-700">{content.servicePanels.petani.previewRows[2].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Kadar Gula Buah</span>
-                      <span className="font-bold text-amber-600">22.4 °Brix (Optimal)</span>
+                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[3].label}</span>
+                      <span className="font-bold text-amber-600">{content.servicePanels.petani.previewRows[3].value}</span>
                     </div>
                     <div className="flex justify-between py-1">
-                      <span className="text-stone-500">Kualitas Petik</span>
-                      <span className="font-bold text-stone-900">Petik Merah Optimal (98%)</span>
+                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[4].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.petani.previewRows[4].value}</span>
                     </div>
                   </div>
                 </div>
@@ -480,26 +403,26 @@ export const LandingPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1 rounded-full text-xs font-bold">
                     <Cog className="w-3.5 h-3.5 text-amber-600" />
-                    Pilar 2: Wet & Dry Mill Station
+                    {content.servicePanels.pengolah.badge}
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    Manajemen Fermentasi & Eco-Processing Sirkular
+                    {content.servicePanels.pengolah.title}
                   </h3>
                   <p className="text-stone-600 text-sm leading-relaxed">
-                    Stasiun pengolahan dapat mencatat metode proses (Full Washed, Natural, Honey, Anaerobic, Wine), mengontrol kadar air (10-12%), water activity, defect count, serta mencatat pemanfaatan 100% limbah organik ceri.
+                    {content.servicePanels.pengolah.desc}
                   </p>
                   <ul className="space-y-2.5 text-xs text-stone-700">
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-amber-600 shrink-0" />
-                      Konversi bobot ceri ke green bean terukur dengan rasio rendemen akurat.
+                      {content.servicePanels.pengolah.bullets[0]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-amber-600 shrink-0" />
-                      Pencatatan alokasi limbah cascara dan pupuk kompos bersertifikat Zero Waste.
+                      {content.servicePanels.pengolah.bullets[1]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-amber-600 shrink-0" />
-                      Kalkulasi rating Eco-Rating 5.0 bintang untuk daya tarik pembeli green bean.
+                      {content.servicePanels.pengolah.bullets[2]}
                     </li>
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
@@ -507,45 +430,45 @@ export const LandingPage: React.FC = () => {
                       onClick={() => loginAsRole('pengolah')}
                       className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>Buka Panel Pengolah</span>
+                      <span>{content.servicePanels.pengolah.ctaOpen}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => openRegister('pengolah')}
                       className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
                     >
-                      Daftar Stasiun Mill
+                      {content.servicePanels.pengolah.ctaRegister}
                     </button>
                   </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">Spesifikasi Green Bean Olahan</span>
+                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.pengolah.previewTitle}</span>
                     <span className="text-[10px] font-mono bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">
                       LOT-GB-001
                     </span>
                   </div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Metode Proses</span>
-                      <span className="font-bold text-amber-700">Anaerobic Natural (72 Jam)</span>
+                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[0].label}</span>
+                      <span className="font-bold text-amber-700">{content.servicePanels.pengolah.previewRows[0].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Kadar Air & Water Activity</span>
-                      <span className="font-bold text-stone-900">11.2% Moisture • 0.58 Aw</span>
+                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[1].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.pengolah.previewRows[1].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Defect Count</span>
-                      <span className="font-bold text-emerald-700">0 Defect (Specialty Grade 1)</span>
+                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[2].label}</span>
+                      <span className="font-bold text-emerald-700">{content.servicePanels.pengolah.previewRows[2].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Eco-Rating Sirkular</span>
-                      <span className="font-bold text-emerald-600">★★★★★ 5.0 (Zero Waste Standard)</span>
+                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[3].label}</span>
+                      <span className="font-bold text-emerald-600">{content.servicePanels.pengolah.previewRows[3].value}</span>
                     </div>
                     <div className="flex justify-between py-1">
-                      <span className="text-stone-500">Pemanfaatan Limbah</span>
-                      <span className="font-bold text-stone-900">Teh Cascara & Kompos Organik Kebun</span>
+                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[4].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.pengolah.previewRows[4].value}</span>
                     </div>
                   </div>
                 </div>
@@ -557,26 +480,26 @@ export const LandingPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 border border-blue-300 px-3 py-1 rounded-full text-xs font-bold">
                     <Warehouse className="w-3.5 h-3.5 text-blue-600" />
-                    Pilar 3: Silo Pergudangan & Quality Assurance
+                    {content.servicePanels.gudang.badge}
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    Silo Iklim Terkendali & Sertifikasi Skor Cupping SCA
+                    {content.servicePanels.gudang.title}
                   </h3>
                   <p className="text-stone-600 text-sm leading-relaxed">
-                    Pengelola gudang menjaga integritas green bean dengan monitoring suhu dan kelembaban (RH), kemasan hermetik GrainPro, serta verifikasi skor cupping SCA dan pembagian grade tier komoditas.
+                    {content.servicePanels.gudang.desc}
                   </p>
                   <ul className="space-y-2.5 text-xs text-stone-700">
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-blue-600 shrink-0" />
-                      Manajemen stok silo dengan perlindungan kemasan hermetik GrainPro.
+                      {content.servicePanels.gudang.bullets[0]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-blue-600 shrink-0" />
-                      Audit dan verifikasi skor cupping SCA terakreditasi (85+ Specialty).
+                      {content.servicePanels.gudang.bullets[1]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-blue-600 shrink-0" />
-                      Penyaluran green bean tersertifikasi langsung ke roastery di seluruh Indonesia.
+                      {content.servicePanels.gudang.bullets[2]}
                     </li>
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
@@ -584,45 +507,45 @@ export const LandingPage: React.FC = () => {
                       onClick={() => loginAsRole('gudang')}
                       className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>Buka Panel Gudang</span>
+                      <span>{content.servicePanels.gudang.ctaOpen}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => openRegister('gudang')}
                       className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
                     >
-                      Daftar Fasilitas Silo
+                      {content.servicePanels.gudang.ctaRegister}
                     </button>
                   </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">Status Inventaris Silo Gudang</span>
+                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.gudang.previewTitle}</span>
                     <span className="text-[10px] font-mono bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">
                       LOT-WH-001
                     </span>
                   </div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Kondisi Ruang Silo</span>
-                      <span className="font-bold text-blue-700">20°C Suhu • 55% Kelembaban RH</span>
+                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[0].label}</span>
+                      <span className="font-bold text-blue-700">{content.servicePanels.gudang.previewRows[0].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Tipe Kemasan</span>
-                      <span className="font-bold text-stone-900">GrainPro Hermetic Sealed</span>
+                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[1].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.gudang.previewRows[1].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Skor Cupping SCA Terverifikasi</span>
-                      <span className="font-bold text-amber-600">87.25 (Specialty Grade 1)</span>
+                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[2].label}</span>
+                      <span className="font-bold text-amber-600">{content.servicePanels.gudang.previewRows[2].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Tasting Notes Karakteristik</span>
-                      <span className="font-bold text-stone-900">Bergamot, Peach, Honeycomb</span>
+                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[3].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.gudang.previewRows[3].value}</span>
                     </div>
                     <div className="flex justify-between py-1">
-                      <span className="text-stone-500">Status Ketersediaan</span>
-                      <span className="font-bold text-emerald-600">Ready Stock (Siap Kirim ke Roaster)</span>
+                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[4].label}</span>
+                      <span className="font-bold text-emerald-600">{content.servicePanels.gudang.previewRows[4].value}</span>
                     </div>
                   </div>
                 </div>
@@ -634,26 +557,26 @@ export const LandingPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 border border-orange-300 px-3 py-1 rounded-full text-xs font-bold">
                     <Flame className="w-3.5 h-3.5 text-orange-600" />
-                    Pilar 4: Artisan Roastery ERP
+                    {content.servicePanels.roaster.badge}
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    Presisi Profil Sangrai, Spider Radar, & Qrema AI
+                    {content.servicePanels.roaster.title}
                   </h3>
                   <p className="text-stone-600 text-sm leading-relaxed">
-                    Roastery dapat mengelola jadwal Work Order sangrai, menautkan nomor warna Agtron, rasio DTR, sensory spider radar 8 dimensi, serta mendapatkan bantuan formulasi rasa dari asisten cerdas Qrema AI.
+                    {content.servicePanels.roaster.desc}
                   </p>
                   <ul className="space-y-2.5 text-xs text-stone-700">
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-orange-600 shrink-0" />
-                      Simulator kurva sangrai interaktif (Rate of Rise / RoR & First Crack).
+                      {content.servicePanels.roaster.bullets[0]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-orange-600 shrink-0" />
-                      Spider radar sensoris 8 aspek (Fragrance, Flavor, Acidity, Body, dll).
+                      {content.servicePanels.roaster.bullets[1]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-orange-600 shrink-0" />
-                      Manajemen kemasan retail 250g / 1kg dan rekomendasi waktu resting seduh.
+                      {content.servicePanels.roaster.bullets[2]}
                     </li>
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
@@ -661,45 +584,45 @@ export const LandingPage: React.FC = () => {
                       onClick={() => loginAsRole('roaster')}
                       className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>Buka Panel Roastery</span>
+                      <span>{content.servicePanels.roaster.ctaOpen}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => openRegister('roaster')}
                       className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
                     >
-                      Daftar Roastery
+                      {content.servicePanels.roaster.ctaRegister}
                     </button>
                   </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">Spesifikasi Batch Sangrai</span>
+                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.roaster.previewTitle}</span>
                     <span className="text-[10px] font-mono bg-orange-100 text-orange-800 px-2 py-0.5 rounded font-bold">
                       LOT-ROAST-001
                     </span>
                   </div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Tingkat Sangrai (Roast Level)</span>
-                      <span className="font-bold text-orange-700">Light to Medium (Filter Profile)</span>
+                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[0].label}</span>
+                      <span className="font-bold text-orange-700">{content.servicePanels.roaster.previewRows[0].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Agtron Scale & DTR</span>
-                      <span className="font-bold text-stone-900">Agtron 65 • DTR 14.8%</span>
+                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[1].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.roaster.previewRows[1].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Catatan Rasa Sensoris</span>
-                      <span className="font-bold text-amber-700">Jasmine, Blueberry, Brown Sugar</span>
+                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[2].label}</span>
+                      <span className="font-bold text-amber-700">{content.servicePanels.roaster.previewRows[2].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Rekomendasi Resting</span>
-                      <span className="font-bold text-stone-900">7 - 14 Hari Pasca Sangrai</span>
+                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[3].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.roaster.previewRows[3].value}</span>
                     </div>
                     <div className="flex justify-between py-1">
-                      <span className="text-stone-500">Rekomendasi Metode Seduh</span>
-                      <span className="font-bold text-stone-900">V60, Origami, Aeropress</span>
+                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[4].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.roaster.previewRows[4].value}</span>
                     </div>
                   </div>
                 </div>
@@ -711,26 +634,26 @@ export const LandingPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="inline-flex items-center gap-2 bg-stone-200 text-stone-800 border border-stone-300 px-3 py-1 rounded-full text-xs font-bold">
                     <Coffee className="w-3.5 h-3.5 text-stone-700" />
-                    Pilar 5: Cafe, Barista, & Konsumen Akhir
+                    {content.servicePanels.cafe.badge}
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    Smart POS, Cetak Label Barcode, & Kisah Asal-Usul Kopi
+                    {content.servicePanels.cafe.title}
                   </h3>
                   <p className="text-stone-600 text-sm leading-relaxed">
-                    Pemilik cafe dapat menyajikan kopi dengan nilai tambah cerita autentik. Barista dapat mencetak label stiker barcode/QR untuk setiap cangkir atau kantong biji kopi ritel yang dipesan pelanggan.
+                    {content.servicePanels.cafe.desc}
                   </p>
                   <ul className="space-y-2.5 text-xs text-stone-700">
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-stone-900 shrink-0" />
-                      Generator QR Code cangkir seduh instan untuk edukasi penikmat kopi.
+                      {content.servicePanels.cafe.bullets[0]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-stone-900 shrink-0" />
-                      Manajemen stok biji kopi kedai dan ritel beans kemasan konsumen.
+                      {content.servicePanels.cafe.bullets[1]}
                     </li>
                     <li className="flex items-center gap-2 font-medium">
                       <Check className="w-4 h-4 text-stone-900 shrink-0" />
-                      Membangun loyalitas pelanggan melalui transparansi direct trade nyata.
+                      {content.servicePanels.cafe.bullets[2]}
                     </li>
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
@@ -738,45 +661,45 @@ export const LandingPage: React.FC = () => {
                       onClick={() => loginAsRole('cafe')}
                       className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>Buka Panel Cafe</span>
+                      <span>{content.servicePanels.cafe.ctaOpen}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => openRegister('cafe')}
                       className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
                     >
-                      Daftar Kedai Kopi
+                      {content.servicePanels.cafe.ctaRegister}
                     </button>
                   </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">Passport QR Cup Konsumen</span>
+                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.cafe.previewTitle}</span>
                     <span className="text-[10px] font-mono bg-stone-100 text-stone-800 px-2 py-0.5 rounded font-bold">
                       CUP-TEDUH-2026
                     </span>
                   </div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Menu Minuman</span>
-                      <span className="font-bold text-stone-900">Manual Brew Filter V60</span>
+                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[0].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.cafe.previewRows[0].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Asal Biji (Single Origin)</span>
-                      <span className="font-bold text-stone-900">Gunung Tilu Pangalengan</span>
+                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[1].label}</span>
+                      <span className="font-bold text-stone-900">{content.servicePanels.cafe.previewRows[1].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Petani & Ketinggian</span>
-                      <span className="font-bold text-emerald-700">Asep Supriatna (1.550 mdpl)</span>
+                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[2].label}</span>
+                      <span className="font-bold text-emerald-700">{content.servicePanels.cafe.previewRows[2].value}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">Roastery Sangrai</span>
-                      <span className="font-bold text-orange-700">Karsa Craft Roastery</span>
+                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[3].label}</span>
+                      <span className="font-bold text-orange-700">{content.servicePanels.cafe.previewRows[3].value}</span>
                     </div>
                     <div className="flex justify-between py-1">
-                      <span className="text-stone-500">Scan QR Terintegrasi</span>
-                      <span className="font-bold text-amber-600">✓ Siap Ditampilkan ke Ponsel Pelanggan</span>
+                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[4].label}</span>
+                      <span className="font-bold text-amber-600">{content.servicePanels.cafe.previewRows[4].value}</span>
                     </div>
                   </div>
                 </div>
@@ -794,13 +717,13 @@ export const LandingPage: React.FC = () => {
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-900 border border-emerald-300 px-3.5 py-1 rounded-full text-xs font-bold mb-3">
               <Award className="w-3.5 h-3.5 text-emerald-600" />
-              Keunggulan Kompetitif Kami
+              {content.advantages.badge}
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">
-              Mengapa Industri Kopi Memilih sangrAI?
+              {content.advantages.title}
             </h2>
             <p className="mt-3 text-stone-600 text-sm sm:text-base">
-              Menyatukan presisi data teknis, transparansi harga yang adil, serta kepedulian lingkungan hidup dalam satu platform modern.
+              {content.advantages.subtitle}
             </p>
           </div>
 
@@ -812,13 +735,13 @@ export const LandingPage: React.FC = () => {
                 <QrCode className="w-6 h-6 text-amber-700" />
               </div>
               <h3 className="text-lg font-black text-stone-900">
-                1. 100% End-to-End Lot Traceability
+                {content.advantages.cards[0].title}
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Setiap karung dan cangkir memiliki identitas unik yang dapat dilacak balik hingga ke koordinat kebun, tanggal panen, profil sangrai, dan varietas pohon.
+                {content.advantages.cards[0].desc}
               </p>
               <div className="pt-2 flex items-center gap-2 text-xs font-bold text-amber-700">
-                <span>Transparansi tanpa manipulasi data</span>
+                <span>{content.advantages.cards[0].footer}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -829,13 +752,13 @@ export const LandingPage: React.FC = () => {
                 <Leaf className="w-6 h-6 text-emerald-700" />
               </div>
               <h3 className="text-lg font-black text-stone-900">
-                2. Circular Economy & Eco-Rating
+                {content.advantages.cards[1].title}
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Modul pelacakan pemanfaatan limbah kulit ceri (pulp) menjadi teh cascara dan pupuk kompos organik, mengurangi emisi karbon dan menjaga kesuburan tanah.
+                {content.advantages.cards[1].desc}
               </p>
               <div className="pt-2 flex items-center gap-2 text-xs font-bold text-emerald-700">
-                <span>Audit sertifikat Zero Waste 5.0★</span>
+                <span>{content.advantages.cards[1].footer}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -846,13 +769,13 @@ export const LandingPage: React.FC = () => {
                 <BarChart3 className="w-6 h-6 text-orange-700" />
               </div>
               <h3 className="text-lg font-black text-stone-900">
-                3. Sensory Spider Radar 8 Dimensi
+                {content.advantages.cards[2].title}
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Visualisasi interaktif profil sensori standar SCA (Aroma, Flavor, Acidity, Body, Sweetness, Clean Cup, Balance, Aftertaste) yang langsung tersambung ke setiap lot.
+                {content.advantages.cards[2].desc}
               </p>
               <div className="pt-2 flex items-center gap-2 text-xs font-bold text-orange-700">
-                <span>Standar cupping 100 poin internasional</span>
+                <span>{content.advantages.cards[2].footer}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -863,13 +786,13 @@ export const LandingPage: React.FC = () => {
                 <Store className="w-6 h-6 text-blue-700" />
               </div>
               <h3 className="text-lg font-black text-stone-900">
-                4. Multi-Role B2B Marketplace Terpadu
+                {content.advantages.cards[3].title}
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Katalog pasar terintegrasi untuk 4 komoditas (Ceri Kopi, Green Bean Mill, Silo Pergudangan, & Roasted Bean Sangrai) dengan auto-ledger transaksi instan.
+                {content.advantages.cards[3].desc}
               </p>
               <div className="pt-2 flex items-center gap-2 text-xs font-bold text-blue-700">
-                <span>Perdagangan langsung tanpa perantara gelap</span>
+                <span>{content.advantages.cards[3].footer}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -880,30 +803,30 @@ export const LandingPage: React.FC = () => {
                 <Thermometer className="w-6 h-6 text-indigo-700" />
               </div>
               <h3 className="text-lg font-black text-stone-900">
-                5. Kontrol Iklim & Kemasan GrainPro
+                {content.advantages.cards[4].title}
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Parameter suhu 20°C, kelembaban RH 55%, kadar air 10-12%, dan water activity $A_w \le 0.60$ dipantau untuk menjaga kesegaran biji kopi hijau hingga 12 bulan.
+                {content.advantages.cards[4].desc}
               </p>
               <div className="pt-2 flex items-center gap-2 text-xs font-bold text-indigo-700">
-                <span>Zero mold & zero moisture defect</span>
+                <span>{content.advantages.cards[4].footer}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </div>
 
-            {/* Card 6: AI Roasting & Qrema Assistant */}
+            {/* Card 6: AI Roasting & sangrAI Assistant */}
             <div className="bg-white p-7 rounded-3xl border border-stone-200 shadow-xs hover:shadow-md transition-all space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center font-black">
                 <Zap className="w-6 h-6 text-rose-700" />
               </div>
               <h3 className="text-lg font-black text-stone-900">
-                6. Qrema AI & Roaster Intelligence
+                {content.advantages.cards[5].title}
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Asisten AI cerdas untuk menghitung rasio susut (shrinkage), rekomendasi waktu resting beans, formulasi Agtron roast profile, serta panduan seduh presisi.
+                {content.advantages.cards[5].desc}
               </p>
               <div className="pt-2 flex items-center gap-2 text-xs font-bold text-rose-700">
-                <span>Otomatisasi konsistensi batch sangrai</span>
+                <span>{content.advantages.cards[5].footer}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -921,16 +844,16 @@ export const LandingPage: React.FC = () => {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 px-3.5 py-1 rounded-full text-xs font-bold">
                 <Compass className="w-3.5 h-3.5 text-amber-600" />
-                Latar Belakang & Cerita Kami
+                {content.background.badge}
               </div>
               <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight leading-tight">
-                Membangun Keadilan & Keberlanjutan dalam Setiap Tetesan Kopi
+                {content.background.title}
               </h2>
               <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-                Kopi specialty Indonesia diakui di seluruh dunia, namun di balik kelezatan rasa terdapat tantangan besar: <strong>rantai pasok yang terfragmentasi, asimetri harga di tingkat petani, hilangnya riwayat terroir saat sampai ke barista</strong>, serta timbunan limbah pengolahan basah yang belum terkelola optimal.
+                {content.background.para1Pre}<strong>{content.background.para1Strong}</strong>{content.background.para1Post}
               </p>
               <p className="text-stone-600 text-sm leading-relaxed">
-                <strong>sangrAI</strong> — gabungan "Sangrai" (proses roasting kopi) dan "AI" — lahir sebagai jawaban: sebuah platform yang mengembalikan kehormatan dan transparansi kepada para penanam kopi, memberikan kepastian mutu dan data kepada roaster, serta menyuguhkan integritas cerita kepada setiap penikmat kopi di kedai.
+                <strong>sangrAI</strong>{content.background.para2Rest}
               </p>
 
               {/* Core Mission Pillars */}
@@ -938,20 +861,20 @@ export const LandingPage: React.FC = () => {
                 <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-stone-200 space-y-1.5">
                   <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs">
                     <HeartHandshake className="w-4 h-4" />
-                    <span>Keadilan Nilai (Direct Equity)</span>
+                    <span>{content.background.pillars[0].title}</span>
                   </div>
                   <p className="text-[11px] text-stone-600 leading-snug">
-                    Memastikan petani mendapatkan margin yang layak sesuai dedikasi panen petik merah optimal.
+                    {content.background.pillars[0].desc}
                   </p>
                 </div>
 
                 <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-stone-200 space-y-1.5">
                   <div className="flex items-center gap-2 text-amber-700 font-bold text-xs">
                     <Leaf className="w-4 h-4" />
-                    <span>Ekonomi Sirkular (Zero Waste)</span>
+                    <span>{content.background.pillars[1].title}</span>
                   </div>
                   <p className="text-[11px] text-stone-600 leading-snug">
-                    Mengolah 100% produk sampingan ceri kopi menjadi pupuk organik dan cascara bernilai tinggi.
+                    {content.background.pillars[1].desc}
                   </p>
                 </div>
               </div>
@@ -966,23 +889,23 @@ export const LandingPage: React.FC = () => {
                   ☕
                 </div>
                 <div>
-                  <h4 className="text-white font-black text-lg">Filosofi Circular Trace</h4>
-                  <span className="text-amber-400 text-xs font-mono">From Farm Soil back to Farm Soil</span>
+                  <h4 className="text-white font-black text-lg">{content.background.storyTitle}</h4>
+                  <span className="text-amber-400 text-xs font-mono">{content.background.storyTag}</span>
                 </div>
               </div>
 
               <blockquote className="text-stone-300 text-sm sm:text-base italic leading-relaxed border-l-2 border-amber-500 pl-4">
-                &ldquo;Kami percaya bahwa secangkir kopi terasa paling nikmat saat mereka yang menanam, mengolah, dan menyangrainya dihargai secara adil pada setiap tegukan. Teknologi kami hadir bukan untuk menggantikan sentuhan pengrajin kopi, melainkan untuk merayakan karya mereka.&rdquo;
+                &ldquo;{content.background.quote}&rdquo;
               </blockquote>
 
               <div className="pt-4 border-t border-stone-800 grid grid-cols-2 gap-4 text-xs">
                 <div>
-                  <span className="text-stone-400 block">Jejak Karbon</span>
-                  <span className="text-emerald-400 font-bold font-mono text-sm">-32% Emisi Olahan</span>
+                  <span className="text-stone-400 block">{content.background.statCarbonLabel}</span>
+                  <span className="text-emerald-400 font-bold font-mono text-sm">{content.background.statCarbonValue}</span>
                 </div>
                 <div>
-                  <span className="text-stone-400 block">Kemitraan Petani</span>
-                  <span className="text-amber-400 font-bold font-mono text-sm">100% Transparan</span>
+                  <span className="text-stone-400 block">{content.background.statPartnerLabel}</span>
+                  <span className="text-amber-400 font-bold font-mono text-sm">{content.background.statPartnerValue}</span>
                 </div>
               </div>
             </div>
@@ -1001,95 +924,70 @@ export const LandingPage: React.FC = () => {
           <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
             <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-4 py-1.5 rounded-full text-xs font-bold">
               <Sparkles className="w-4 h-4 text-amber-400" />
-              Mulai Transformasi Digital Sekarang
+              {content.cta.badge}
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
-              Siap Mengembangkan Usaha Kopi Anda Bersama sangrAI?
+              {content.cta.title}
             </h2>
             <p className="text-stone-300 text-sm sm:text-base leading-relaxed">
-              Bergabunglah dengan ribuan petani, pengolah mill, pengelola silo gudang, artisan roastery, dan barista cafe di seluruh Indonesia. Gratis tanpa biaya aktivasi awal.
+              {content.cta.subtitle}
             </p>
           </div>
 
           {/* 5 Role Selection Cards for Fast Registration */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
-            {[
-              {
-                role: 'petani' as UserRole,
-                name: 'Petani Kopi',
-                desc: 'Upload panen ceri & jual langsung ke mill',
-                icon: <Sprout className="w-5 h-5 text-emerald-400" />,
-                btnColor: 'bg-emerald-600 hover:bg-emerald-500',
-              },
-              {
-                role: 'pengolah' as UserRole,
-                name: 'Pengolah Mill',
-                desc: 'Fermentasi, uji mutu & kelola limbah sirkular',
-                icon: <Cog className="w-5 h-5 text-amber-400" />,
-                btnColor: 'bg-amber-600 hover:bg-amber-500',
-              },
-              {
-                role: 'gudang' as UserRole,
-                name: 'Gudang & Silo QA',
-                desc: 'Kelola stok silo GrainPro & sertifikasi SCA',
-                icon: <Warehouse className="w-5 h-5 text-blue-400" />,
-                btnColor: 'bg-blue-600 hover:bg-blue-500',
-              },
-              {
-                role: 'roaster' as UserRole,
-                name: 'Artisan Roastery',
-                desc: 'Work order, kurva Agtron & Qrema AI',
-                icon: <Flame className="w-5 h-5 text-orange-400" />,
-                btnColor: 'bg-orange-600 hover:bg-orange-500',
-              },
-              {
-                role: 'cafe' as UserRole,
-                name: 'Pemilik Cafe',
-                desc: 'Beli roasted beans & cetak QR cup seduh',
-                icon: <Coffee className="w-5 h-5 text-amber-300" />,
-                btnColor: 'bg-stone-800 hover:bg-stone-700',
-              },
-            ].map((card) => (
-              <div
-                key={card.role}
-                className="bg-stone-900/90 border border-stone-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-amber-500/50 hover:bg-stone-850 transition-all text-left"
-              >
-                <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-xl bg-stone-950 border border-stone-800 flex items-center justify-center">
-                    {card.icon}
-                  </div>
-                  <div>
-                    <h4 className="text-white font-black text-sm">{card.name}</h4>
-                    <p className="text-[11px] text-stone-400 mt-1 leading-snug">{card.desc}</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => openRegister(card.role)}
-                  className={`w-full py-2 px-3 rounded-xl text-white font-bold text-xs transition-all flex items-center justify-center gap-1 shadow-xs cursor-pointer ${card.btnColor}`}
+            {(
+              [
+                { role: 'petani' as UserRole, icon: <Sprout className="w-5 h-5 text-emerald-400" />, btnColor: 'bg-emerald-600 hover:bg-emerald-500' },
+                { role: 'pengolah' as UserRole, icon: <Cog className="w-5 h-5 text-amber-400" />, btnColor: 'bg-amber-600 hover:bg-amber-500' },
+                { role: 'gudang' as UserRole, icon: <Warehouse className="w-5 h-5 text-blue-400" />, btnColor: 'bg-blue-600 hover:bg-blue-500' },
+                { role: 'roaster' as UserRole, icon: <Flame className="w-5 h-5 text-orange-400" />, btnColor: 'bg-orange-600 hover:bg-orange-500' },
+                { role: 'cafe' as UserRole, icon: <Coffee className="w-5 h-5 text-amber-300" />, btnColor: 'bg-stone-800 hover:bg-stone-700' },
+              ] as { role: UserRole; icon: React.ReactNode; btnColor: string }[]
+            ).map((cardMeta) => {
+              const card = content.cta.roleCards.find((c) => c.role === cardMeta.role)!;
+              return (
+                <div
+                  key={card.role}
+                  className="bg-stone-900/90 border border-stone-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-amber-500/50 hover:bg-stone-850 transition-all text-left"
                 >
-                  <span>Daftar {card.name.split(' ')[0]}</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
+                  <div className="space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-stone-950 border border-stone-800 flex items-center justify-center">
+                      {cardMeta.icon}
+                    </div>
+                    <div>
+                      <h4 className="text-white font-black text-sm">{card.name}</h4>
+                      <p className="text-[11px] text-stone-400 mt-1 leading-snug">{card.desc}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => openRegister(card.role)}
+                    className={`w-full py-2 px-3 rounded-xl text-white font-bold text-xs transition-all flex items-center justify-center gap-1 shadow-xs cursor-pointer ${cardMeta.btnColor}`}
+                  >
+                    <span>{card.registerLabel}</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
           {/* Central Callout Banner */}
           <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-stone-950 rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 max-w-4xl mx-auto">
             <div className="space-y-2 text-center md:text-left">
               <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
-                Coba Seluruh Fitur Tanpa Komitmen
+                {content.cta.bannerTitle}
               </h3>
               <p className="text-xs sm:text-sm font-semibold text-stone-900 max-w-lg">
-                Pilih peran Anda sekarang untuk menjelajahi simulasi marketplace B2B, manajemen lot, dan generator QR code.
+                {content.cta.bannerDesc}
               </p>
             </div>
             <button
               onClick={() => openRegister('roaster')}
               className="px-8 py-4 bg-stone-950 hover:bg-stone-900 text-amber-400 hover:text-amber-300 font-black text-sm rounded-2xl shadow-xl transition-all flex items-center gap-2 shrink-0 cursor-pointer"
             >
-              <span>Buka Formulir Pendaftaran</span>
+              <span>{content.cta.bannerBtn}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -1097,7 +995,7 @@ export const LandingPage: React.FC = () => {
           {/* FAQ Accordion */}
           <div className="mt-16 max-w-3xl mx-auto space-y-3">
             <h3 className="text-xl font-black text-white text-center mb-6">
-              Pertanyaan yang Sering Diajukan (FAQ)
+              {content.cta.faqTitle}
             </h3>
             {faqs.map((faq, index) => {
               const isOpen = openFaqIndex === index;

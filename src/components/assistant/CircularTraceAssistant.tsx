@@ -217,7 +217,7 @@ export const CircularTraceAssistant: React.FC<CircularTraceAssistantProps> = ({
       <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
         {!isOpen && (
           <div className="hidden sm:flex items-center gap-2 bg-stone-900/90 backdrop-blur-md text-white text-xs font-semibold px-3.5 py-2 rounded-full border border-stone-700 shadow-xl animate-in fade-in slide-in-from-right-3">
-            <span className="w-2 h-2 rounded-full bg-[#00A09D] animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
             <span>Butuh bantuan roastery? Tanya CircularTrace</span>
           </div>
         )}
@@ -225,7 +225,7 @@ export const CircularTraceAssistant: React.FC<CircularTraceAssistantProps> = ({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className={`relative p-3.5 sm:p-4 rounded-full bg-gradient-to-br from-[#714B67] via-[#5A3950] to-[#3B2234] text-white shadow-2xl hover:shadow-purple-900/40 border border-white/25 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center group ${
+          className={`relative p-3.5 sm:p-4 rounded-full bg-gradient-to-br from-stone-900 via-stone-800 to-stone-950 text-amber-400 shadow-2xl hover:shadow-stone-900/40 border border-amber-400/20 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center group ${
             isOpen ? 'rotate-90 bg-stone-800' : ''
           }`}
           title="CircularTrace AI Assistant"
@@ -234,10 +234,10 @@ export const CircularTraceAssistant: React.FC<CircularTraceAssistantProps> = ({
             <X className="w-6 h-6 text-white" />
           ) : (
             <div className="relative">
-              <Bot className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+              <Bot className="w-6 h-6 text-amber-400 group-hover:scale-110 transition-transform" />
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00A09D] opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00A09D]" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
               </span>
             </div>
           )}
@@ -248,9 +248,9 @@ export const CircularTraceAssistant: React.FC<CircularTraceAssistantProps> = ({
       {isOpen && (
         <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[430px] h-[560px] max-h-[82vh] bg-stone-900/95 backdrop-blur-xl border border-stone-700/80 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200 text-stone-100">
           {/* Header Bar */}
-          <div className="p-4 border-b border-stone-800 bg-gradient-to-r from-stone-950 via-[#714B67]/30 to-stone-950 flex items-center justify-between">
+          <div className="p-4 border-b border-stone-800 bg-gradient-to-r from-stone-950 via-amber-900/25 to-stone-950 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#714B67] to-[#00A09D] text-white flex items-center justify-center font-black shadow-md border border-white/20">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-stone-950 flex items-center justify-center font-black shadow-md border border-white/20">
                 <Bot className="w-5 h-5" />
               </div>
               <div>
@@ -258,7 +258,7 @@ export const CircularTraceAssistant: React.FC<CircularTraceAssistantProps> = ({
                   <h3 className="font-black text-sm text-white tracking-tight">
                     CircularTrace Assistant
                   </h3>
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-[#00A09D]/20 text-[#00A09D] border border-[#00A09D]/40">
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                     Online
                   </span>
                 </div>
@@ -296,7 +296,7 @@ export const CircularTraceAssistant: React.FC<CircularTraceAssistantProps> = ({
                 className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.sender === 'assistant' && (
-                  <div className="w-7 h-7 rounded-lg bg-[#714B67] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                  <div className="w-7 h-7 rounded-lg bg-amber-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                     <Bot className="w-3.5 h-3.5" />
                   </div>
                 )}
@@ -315,7 +315,7 @@ export const CircularTraceAssistant: React.FC<CircularTraceAssistantProps> = ({
                     <button
                       type="button"
                       onClick={() => msg.action && handleActionClick(msg.action)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00A09D] hover:bg-[#008986] text-white font-bold text-[11px] transition-all shadow-xs active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] transition-all shadow-xs active:scale-95"
                     >
                       <span>{msg.action.label}</span>
                       <ArrowRight className="w-3 h-3" />
@@ -363,12 +363,12 @@ export const CircularTraceAssistant: React.FC<CircularTraceAssistantProps> = ({
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               placeholder="Tanya CircularTrace AI..."
-              className="flex-1 bg-stone-800/80 border border-stone-700 text-white placeholder-stone-400 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-[#00A09D] focus:outline-hidden transition-all"
+              className="flex-1 bg-stone-800/80 border border-stone-700 text-white placeholder-stone-400 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-hidden transition-all"
             />
             <button
               type="submit"
               disabled={!inputQuery.trim()}
-              className="p-2 rounded-xl bg-[#00A09D] hover:bg-[#008986] text-white disabled:opacity-40 disabled:hover:bg-[#00A09D] transition-all shrink-0"
+              className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-40 disabled:hover:bg-amber-600 transition-all shrink-0"
               title="Kirim pesan"
             >
               <Send className="w-4 h-4" />

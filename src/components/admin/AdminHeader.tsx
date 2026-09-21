@@ -19,9 +19,12 @@ import {
   Award,
   History,
   Recycle,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
-import { OdooAppSwitcherModal } from '../odoo/OdooAppSwitcherModal';
+import { AppLauncherModal } from '../shared/AppLauncherModal';
 import { ProfileMenu } from '../shared/ProfileMenu';
+import { LanguageSwitch } from '../shared/LanguageSwitch';
 
 interface AdminHeaderProps {
   title?: string;
@@ -52,6 +55,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [appSwitcherOpen, setAppSwitcherOpen] = useState(false);
+  const [moduleMenuOpen, setModuleMenuOpen] = useState(false);
 
   if (!currentUser) return null;
 
@@ -118,33 +122,35 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
     } else if (currentUser.role === 'pengolah') {
       setProcessorActiveTab(id as typeof processorActiveTab);
     }
+    setModuleMenuOpen(false);
   };
+  const activeModuleTabInfo = moduleTabs?.find((tabItem) => tabItem.id === activeModuleTab) ?? null;
 
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          {/* Left: Odoo 19 App Switcher 9-Dots & Breadcrumbs */}
+          {/* Left: App Launcher & Breadcrumbs */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            {/* Odoo 19 9-Dots App Switcher Button — now the primary way to move between modules */}
+            {/* App Launcher Button — the primary way to move between modules */}
             <button
               onClick={() => setAppSwitcherOpen(true)}
-              className="p-2 rounded-xl bg-[#714B67]/10 hover:bg-[#714B67]/20 text-[#714B67] transition-all shrink-0 flex items-center justify-center border border-[#714B67]/20 group"
-              title="Buka Odoo 19 App Launcher"
+              className="p-2.5 rounded-xl bg-stone-950 hover:bg-stone-800 text-amber-400 transition-all shrink-0 flex items-center justify-center shadow-xs group"
+              title="Buka Menu Aplikasi"
             >
               <Grid className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
             </button>
 
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-[11px] text-stone-500 font-medium truncate">
-                <span className="font-bold text-[#714B67] hidden sm:inline">sangrAI ERP 19</span>
-                <span className="hidden sm:inline">/</span>
-                <span className="font-bold text-[#714B67] bg-[#714B67]/10 px-2 py-0.5 rounded-md border border-[#714B67]/20">
+                <span className="font-bold text-stone-500 hidden sm:inline">sangrAI</span>
+                <span className="hidden sm:inline text-stone-300">/</span>
+                <span className="font-bold text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-md border border-amber-200">
                   {currentRoleInfo.label}
                 </span>
                 {subtitle && (
                   <>
-                    <span className="hidden sm:inline">/</span>
+                    <span className="hidden sm:inline text-stone-300">/</span>
                     <span className="hidden sm:inline text-stone-600 truncate">{subtitle}</span>
                   </>
                 )}
@@ -197,8 +203,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
                   <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     <div className="flex items-center justify-between pb-3 border-b border-stone-100">
                       <div className="flex items-center gap-2">
-                        <Bell className="w-4 h-4 text-amber-600" />
-                        <span className="font-bold text-xs text-stone-900 uppercase tracking-wider">
+                        <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                          <Bell className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-bold text-xs text-stone-900">
                           Log Aktivitas Terbaru
                         </span>
                       </div>
@@ -263,7 +271,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
               <span className="sm:hidden">Toko</span>
             </button>
 
-            {/* Profile menu: identity, language, demo mode, ledger shortcut & logout — no sidebar needed */}
+            {/* Language switch: always visible here, not tucked inside the Profile dropdown */}
+            <LanguageSwitch variant="light" />
+
+            {/* Profile menu: identity, demo mode, ledger shortcut & logout — no sidebar needed */}
             <ProfileMenu
               variant="light"
               onOpenLedger={() => setActiveView('transactions')}
@@ -271,48 +282,70 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
           </div>
         </div>
 
-        {/* Second row: this role's own pipeline module tabs. Each role has its own module
-            steps (roaster differs from processor, etc.) driven by its own context state.
-            Roles that still render as a single page get no second row here. */}
-        {moduleTabs && (
+        {/* Second row: a breadcrumb showing where you are, plus a single "Select Module"
+            dropdown to jump elsewhere — replaces the old full clickable tab strip so the
+            header stays calm; each role's module list/state is unchanged. Roles that still
+            render as a single page get no second row here. */}
+        {moduleTabs && activeModuleTabInfo && (
           <div className="border-t border-stone-100 bg-stone-50/70">
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
-              <div className="flex items-center gap-1 overflow-x-auto py-1.5 scrollbar-thin scrollbar-thumb-stone-300 [-ms-overflow-style:none] [scrollbar-width:thin]">
-                {moduleTabs.map((tabItem, idx) => {
-                  const TabIcon = tabItem.icon;
-                  const isActive = activeModuleTab === tabItem.id;
-                  return (
-                    <button
-                      key={tabItem.id}
-                      onClick={() => onSelectModuleTab(tabItem.id)}
-                      className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-                        isActive
-                          ? 'bg-stone-900 text-amber-400 shadow-xs'
-                          : 'text-stone-600 hover:bg-white hover:text-stone-900'
-                      }`}
-                      title={tabItem.label}
-                    >
-                      <span
-                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
-                          isActive ? 'bg-amber-400 text-stone-950' : 'bg-stone-200 text-stone-500'
-                        }`}
-                      >
-                        {idx + 1}
-                      </span>
-                      <TabIcon className="w-3.5 h-3.5 shrink-0" />
-                      <span>{tabItem.label}</span>
-                      {tabItem.badge > 0 && (
-                        <span
-                          className={`ml-0.5 text-[9px] font-black px-1.5 py-0.2 rounded-full shrink-0 ${
-                            isActive ? 'bg-amber-500 text-stone-950' : 'bg-stone-800 text-white'
-                          }`}
-                        >
-                          {tabItem.badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-3">
+              {/* Breadcrumb: sangrAI / Role / Current Module — read-only location, not clickable steps */}
+              <nav className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 min-w-0">
+                <span className="hidden sm:inline text-stone-400">{currentRoleInfo.label}</span>
+                <ChevronRight className="hidden sm:inline w-3.5 h-3.5 text-stone-300 shrink-0" />
+                <activeModuleTabInfo.icon className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="font-bold text-stone-900 truncate">{activeModuleTabInfo.label}</span>
+              </nav>
+
+              {/* Select Module dropdown */}
+              <div className="relative shrink-0">
+                <button
+                  onClick={() => setModuleMenuOpen((open) => !open)}
+                  className="flex items-center gap-2 pl-3 pr-2.5 py-1.5 rounded-xl bg-white border border-stone-200 hover:border-amber-300 text-stone-700 text-xs font-bold shadow-2xs transition-all"
+                >
+                  <Layers className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="hidden xs:inline">Pilih Modul</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform ${moduleMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {moduleMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setModuleMenuOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-stone-200 p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                      {moduleTabs.map((tabItem) => {
+                        const TabIcon = tabItem.icon;
+                        const isActive = activeModuleTab === tabItem.id;
+                        return (
+                          <button
+                            key={tabItem.id}
+                            onClick={() => onSelectModuleTab(tabItem.id)}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all text-left ${
+                              isActive ? 'bg-amber-50 text-amber-800' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
+                            }`}
+                          >
+                            <span
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                                isActive ? 'bg-amber-500 text-stone-950' : 'bg-stone-100 text-stone-500'
+                              }`}
+                            >
+                              <TabIcon className="w-3.5 h-3.5" />
+                            </span>
+                            <span className="flex-1 truncate">{tabItem.label}</span>
+                            {tabItem.badge > 0 && (
+                              <span
+                                className={`text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${
+                                  isActive ? 'bg-amber-500 text-stone-950' : 'bg-stone-800 text-white'
+                                }`}
+                              >
+                                {tabItem.badge}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -425,12 +458,24 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
         </div>
       )}
 
-      {/* Odoo 19 App Switcher Modal (9-Dots Launcher) */}
-      <OdooAppSwitcherModal
+      {/* App Launcher Modal */}
+      <AppLauncherModal
         isOpen={appSwitcherOpen}
         onClose={() => setAppSwitcherOpen(false)}
         onSelectRole={(role) => loginAsRole(role)}
         onNavigateView={(view) => setActiveView(view)}
+        onSelectModuleTab={(role, moduleTab) => {
+          // Not just "go to the dashboard view" — actually jump to the specific module tab
+          // that was clicked, so a roaster clicking e.g. "Quality Control" really lands on
+          // the QC screen instead of silently staying on whatever tab was already active.
+          if (moduleTab) {
+            if (role === 'roaster') {
+              setRoasterActiveTab(moduleTab as typeof roasterActiveTab);
+            } else if (role === 'pengolah') {
+              setProcessorActiveTab(moduleTab as typeof processorActiveTab);
+            }
+          }
+        }}
       />
     </>
   );

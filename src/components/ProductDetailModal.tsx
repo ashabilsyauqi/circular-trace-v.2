@@ -28,6 +28,7 @@ import {
 } from '../types/coffee';
 import { calculateProcessorEcoRating } from '../utils/ecoRating';
 import { CoffeeSensorySpiderChart } from './CoffeeSensorySpiderChart';
+import { getNetworkHost, getPublicBaseUrl, isLoopbackHost } from '../utils/baseUrl';
 
 interface ProductDetailModalProps {
   isOpen: boolean;
@@ -52,20 +53,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 }) => {
   const [miniQrUrl, setMiniQrUrl] = useState<string>('');
 
-  // Detect loopback (localhost/127.0.0.1) to automatically provide LAN IP for mobile scanners
-  const isLoopback = typeof window !== 'undefined' && (
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1'
-  );
-
-  const networkHost = typeof window !== 'undefined'
-    ? (localStorage.getItem('cct_network_host') || (isLoopback ? '10.100.5.87:5173' : window.location.host))
-    : '10.100.5.87:5173';
-
-  const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-  const resolvedBaseUrl = isLoopback
-    ? `${protocol}//${networkHost}`
-    : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
+  // Base URL for the QR link: VITE_PUBLIC_BASE_URL when set, otherwise the browser's own
+  // origin (a deployed VPS/domain resolves automatically), falling back to a LAN host override
+  // only during local dev — see src/utils/baseUrl.ts.
+  const isLoopback = isLoopbackHost();
+  const networkHost = getNetworkHost();
+  const resolvedBaseUrl = getPublicBaseUrl(networkHost);
 
   const realtimeScanUrl = item ? `${resolvedBaseUrl}/?lotId=${item.id}` : '';
 

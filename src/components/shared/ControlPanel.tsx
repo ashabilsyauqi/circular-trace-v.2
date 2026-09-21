@@ -15,7 +15,7 @@ import {
   Check,
 } from 'lucide-react';
 
-interface OdooControlPanelProps {
+interface ControlPanelProps {
   breadcrumbs: { label: string; onClick?: () => void }[];
   primaryActionLabel?: string;
   onPrimaryAction?: () => void;
@@ -32,7 +32,7 @@ interface OdooControlPanelProps {
   recordCount?: number;
 }
 
-export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
+export const ControlPanel: React.FC<ControlPanelProps> = ({
   breadcrumbs,
   primaryActionLabel = '+ Baru',
   onPrimaryAction,
@@ -53,7 +53,7 @@ export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
   const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-200/90 shadow-xs p-3.5 sm:p-4 space-y-3">
+    <div className="bg-white rounded-3xl border border-stone-200/80 shadow-xs p-3.5 sm:p-4 space-y-3">
       {/* Top Bar: Breadcrumbs & Action Buttons & Search */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
         {/* Left: Primary Buttons (breadcrumb dropped here — the sidebar already names
@@ -63,14 +63,14 @@ export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
           {onPrimaryAction && (
             <button
               onClick={onPrimaryAction}
-              className="px-3.5 py-1.5 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1 active:scale-95"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1 active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{primaryActionLabel}</span>
             </button>
           )}
 
-          {/* Action Dropdown Menu (Odoo Tindakan) */}
+          {/* Action Dropdown Menu */}
           <div className="relative">
             <button
               onClick={() => setIsActionDropdownOpen(!isActionDropdownOpen)}
@@ -106,7 +106,7 @@ export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
           </div>
         </div>
 
-        {/* Right: Search Box + Odoo Filter / Group By Pills + View Switcher */}
+        {/* Right: Search Box + Filter / Group By Pills + View Switcher */}
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
           {/* Universal Search Bar */}
           <div className="relative w-full sm:w-64">
@@ -116,11 +116,11 @@ export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Cari / Filter..."
-              className="w-full pl-8 pr-3 py-1.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-2 focus:ring-[#714B67] focus:bg-white transition-all text-stone-800"
+              className="w-full pl-8 pr-3 py-1.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all text-stone-800"
             />
           </div>
 
-          {/* Odoo Filter Dropdown */}
+          {/* Filter Dropdown */}
           {filterOptions.length > 0 && onFilterChange && (
             <div className="relative">
               <button
@@ -130,11 +130,11 @@ export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
                 }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 border ${
                   activeFilter && activeFilter !== 'all'
-                    ? 'bg-[#714B67]/10 text-[#714B67] border-[#714B67]/30 font-bold'
+                    ? 'bg-amber-100 text-amber-800 border-amber-300 font-bold'
                     : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border-stone-200'
                 }`}
               >
-                <Filter className="w-3 h-3 text-[#714B67]" />
+                <Filter className="w-3 h-3 text-amber-600" />
                 <span>Filter</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
@@ -154,7 +154,7 @@ export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
                       className="w-full text-left px-3 py-2 hover:bg-stone-50 flex items-center justify-between"
                     >
                       <span>{opt.label}</span>
-                      {activeFilter === opt.id && <Check className="w-3.5 h-3.5 text-[#714B67]" />}
+                      {activeFilter === opt.id && <Check className="w-3.5 h-3.5 text-amber-600" />}
                     </button>
                   ))}
                 </div>
@@ -162,7 +162,7 @@ export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
             </div>
           )}
 
-          {/* Odoo Group By Dropdown */}
+          {/* Group By Dropdown */}
           {groupByOptions.length > 0 && onGroupByChange && (
             <div className="relative">
               <button
@@ -204,7 +204,7 @@ export const OdooControlPanel: React.FC<OdooControlPanelProps> = ({
             </div>
           )}
 
-          {/* View Switchers (Odoo 19 List / Kanban / Graph) */}
+          {/* View Switchers (List / Kanban / Graph) */}
           {onViewModeChange && (
             <div className="flex items-center bg-stone-100 p-0.5 rounded-xl border border-stone-200">
               <button

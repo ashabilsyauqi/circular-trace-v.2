@@ -21,17 +21,17 @@ import {
 import { QCCuppingSession, WorkOrder } from '../../types/roasterErp';
 import { useCoffee } from '../../context/CoffeeContext';
 import { MetricCard } from '../admin/MetricCard';
-import { OdooControlPanel } from '../odoo/OdooControlPanel';
-import { OdooStatusPipeline, OdooPipelineStage } from '../odoo/OdooStatusPipeline';
-import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
-import { OdooChatter } from '../odoo/OdooChatter';
+import { ControlPanel } from '../shared/ControlPanel';
+import { StatusPipeline, PipelineStage } from '../shared/StatusPipeline';
+import { StatButton } from '../shared/StatButton';
+import { ActivityFeed } from '../shared/ActivityFeed';
 import { RecordBreadcrumb } from '../shared/RecordBreadcrumb';
 
 interface QCModuleProps {
   initialWorkOrder?: WorkOrder | null;
 }
 
-const QC_PIPELINE_STAGES: OdooPipelineStage[] = [
+const QC_PIPELINE_STAGES: PipelineStage[] = [
   { id: 'draft', label: 'Persiapan Meja' },
   { id: 'cupping', label: 'Uji Sensori SCA' },
   { id: 'physical', label: 'Analisis Fisik Agtron' },
@@ -196,8 +196,8 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
         />
       </div>
 
-      {/* Odoo 19 Control Panel */}
-      <OdooControlPanel
+      {/* Toolbar / Control Panel */}
+      <ControlPanel
         breadcrumbs={[
           { label: 'Quality Control' },
           { label: 'SCA Cupping Sessions' },
@@ -230,7 +230,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-xs font-bold text-[#714B67] group-hover:underline">
+                  <span className="font-mono text-sm font-bold text-[#EA580C] group-hover:underline">
                     {qc.sessionCode} • {qc.date}
                   </span>
                   <span
@@ -253,7 +253,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                 </p>
 
                 {/* 6-Core Scores Breakdown */}
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4 bg-[#F8F9FA] p-3 rounded-2xl border border-stone-200/80 text-center text-xs">
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4 bg-[#FAF7F2] p-3 rounded-2xl border border-stone-200/80 text-center text-xs">
                   <div>
                     <span className="text-[10px] text-stone-400 block">Fragrance</span>
                     <strong className="text-stone-800 font-mono">{qc.fragranceScore}</strong>
@@ -285,7 +285,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                   {qc.tastingNotes.map((note, i) => (
                     <span
                       key={i}
-                      className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#714B67]/10 text-[#714B67] border border-[#714B67]/20"
+                      className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#EA580C]/10 text-[#EA580C] border border-[#EA580C]/20"
                     >
                       {note}
                     </span>
@@ -316,15 +316,15 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FA] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+              <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-4">No. Sesi</th>
-                  <th className="py-3.5 px-4">Komoditas & Batch</th>
-                  <th className="py-3.5 px-4">Evaluator Q-Grader</th>
-                  <th className="py-3.5 px-4">Skor SCA</th>
-                  <th className="py-3.5 px-4">Agtron (W/G)</th>
-                  <th className="py-3.5 px-4">Status Kelayakan</th>
-                  <th className="py-3.5 px-4 text-right">Aksi</th>
+                  <th className="py-4 px-5">No. Sesi</th>
+                  <th className="py-4 px-5">Komoditas & Batch</th>
+                  <th className="py-4 px-5">Evaluator Q-Grader</th>
+                  <th className="py-4 px-5">Skor SCA</th>
+                  <th className="py-4 px-5">Agtron (W/G)</th>
+                  <th className="py-4 px-5">Status Kelayakan</th>
+                  <th className="py-4 px-5 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -334,21 +334,21 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                     onClick={() => setDetailModalQC(qc)}
                     className="hover:bg-stone-50/80 transition-colors cursor-pointer group"
                   >
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#714B67] group-hover:underline">
+                    <td className="py-4 px-5 font-mono font-bold text-sm text-[#EA580C] group-hover:underline">
                       {qc.sessionCode}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-4 px-5">
                       <div className="font-bold text-stone-900">{qc.beanName}</div>
                       <div className="text-[10px] text-stone-500">{qc.sessionName}</div>
                     </td>
-                    <td className="py-3.5 px-4 font-medium text-stone-800">{qc.cupperName}</td>
-                    <td className="py-3.5 px-4 font-mono font-black text-amber-800">
+                    <td className="py-4 px-5 font-medium text-stone-800">{qc.cupperName}</td>
+                    <td className="py-4 px-5 font-mono font-black text-sm text-amber-800">
                       SCA {qc.totalScaScore}
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-stone-700">
+                    <td className="py-4 px-5 font-mono text-stone-700">
                       #{qc.agtronWhole} / #{qc.agtronGround}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-4 px-5">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           qc.status === 'approved_specialty'
@@ -359,7 +359,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                         {qc.status === 'approved_specialty' ? 'Specialty Grade' : 'Commercial Grade'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-4 px-5 text-right">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -389,19 +389,19 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
             onBack={() => setDetailModalQC(null)}
           />
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="bg-[#F8F9FA] px-6 py-4 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-[#1E2333] text-orange-400">
-                  <Sparkles className="w-4 h-4" />
+            <div className="bg-[#FAF7F2] px-6 py-5 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-orange-100 text-orange-600">
+                  <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-stone-900 font-mono">{detailModalQC.sessionCode}</h3>
+                  <h3 className="text-xl font-black text-stone-900 font-mono">{detailModalQC.sessionCode}</h3>
                   <p className="text-[10px] text-stone-500">{detailModalQC.sessionName} • {detailModalQC.date}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                <OdooStatusPipeline
+                <StatusPipeline
                   stages={QC_PIPELINE_STAGES}
                   currentStageId="approved"
                 />
@@ -410,25 +410,25 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
 
             {/* Smart Stat Buttons */}
             <div className="px-6 py-3 bg-white border-b border-stone-100 flex flex-wrap gap-2">
-              <OdooSmartStatButton
+              <StatButton
                 icon={<Award className="w-4 h-4" />}
                 value={`SCA ${detailModalQC.totalScaScore}`}
                 label="Skor Sensori"
                 color="purple"
               />
-              <OdooSmartStatButton
+              <StatButton
                 icon={<Activity className="w-4 h-4" />}
                 value={`#${detailModalQC.agtronGround}`}
                 label="Agtron Ground"
                 color="amber"
               />
-              <OdooSmartStatButton
+              <StatButton
                 icon={<Thermometer className="w-4 h-4" />}
                 value={`${detailModalQC.moisturePercent}%`}
                 label="Kadar Air Biji"
                 color="blue"
               />
-              <OdooSmartStatButton
+              <StatButton
                 icon={<FileCheck className="w-4 h-4" />}
                 value="Zero Defect"
                 label="Status Fisik"
@@ -438,18 +438,18 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
 
             {/* Modal Body */}
             <div className="p-6 space-y-6 text-xs max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#F8F9FA] p-4 rounded-2xl border border-stone-200/80 text-center">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#FAF7F2] p-4 rounded-2xl border border-stone-200/80 text-center">
                 <div className="p-2 bg-white rounded-xl border border-stone-200/60">
                   <span className="text-[10px] text-stone-400 block">Fragrance / Aroma</span>
-                  <span className="text-base font-bold font-mono text-[#714B67]">{detailModalQC.fragranceScore}</span>
+                  <span className="text-base font-bold font-mono text-[#EA580C]">{detailModalQC.fragranceScore}</span>
                 </div>
                 <div className="p-2 bg-white rounded-xl border border-stone-200/60">
                   <span className="text-[10px] text-stone-400 block">Flavor</span>
-                  <span className="text-base font-bold font-mono text-[#714B67]">{detailModalQC.flavorScore}</span>
+                  <span className="text-base font-bold font-mono text-[#EA580C]">{detailModalQC.flavorScore}</span>
                 </div>
                 <div className="p-2 bg-white rounded-xl border border-stone-200/60">
                   <span className="text-[10px] text-stone-400 block">Acidity</span>
-                  <span className="text-base font-bold font-mono text-[#714B67]">{detailModalQC.acidityScore}</span>
+                  <span className="text-base font-bold font-mono text-[#EA580C]">{detailModalQC.acidityScore}</span>
                 </div>
                 <div className="p-2 bg-white rounded-xl border border-stone-200/60">
                   <span className="text-[10px] text-stone-400 block">Clean Cup</span>
@@ -457,9 +457,9 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                 </div>
               </div>
 
-              {/* Odoo Chatter */}
+              {/* Internal Notes & Activity Feed */}
               <div className="pt-4 border-t border-stone-200">
-                <OdooChatter
+                <ActivityFeed
                   documentTitle={`QC Cupping #${detailModalQC.sessionCode}`}
                   initialMessages={[
                     {
@@ -490,7 +490,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
 
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-stone-100 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="p-2.5 rounded-xl bg-[#1E2333] text-orange-400">
+                <div className="p-2.5 rounded-2xl bg-orange-100 text-orange-600">
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
@@ -505,9 +505,9 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
               </div>
 
               {/* Live Score Pill */}
-              <div className="text-right bg-[#1E2333] text-white px-4 py-2 rounded-2xl">
-                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Total Skor SCA:</span>
-                <span className="text-xl font-black text-orange-400 font-mono">{totalScaScore} / 100</span>
+              <div className="text-right bg-stone-900 text-white px-5 py-3 rounded-2xl">
+                <span className="text-[10px] text-stone-400 uppercase tracking-widest block font-bold">Total Skor SCA</span>
+                <span className="text-2xl font-black text-orange-400 font-mono">{totalScaScore} / 100</span>
               </div>
             </div>
 
@@ -522,7 +522,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                     required
                     value={sessionName}
                     onChange={(e) => setSessionName(e.target.value)}
-                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#EA580C]"
                   />
                 </div>
 
@@ -535,22 +535,22 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                     required
                     value={cupperName}
                     onChange={(e) => setCupperName(e.target.value)}
-                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#714B67]"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:ring-2 focus:ring-[#EA580C]"
                   />
                 </div>
               </div>
 
               {/* 10 Criteria Sliders */}
-              <div className="bg-[#F8F9FA] p-4 rounded-2xl border border-stone-200/80 space-y-3">
+              <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-stone-200/80 space-y-3">
                 <h4 className="font-bold text-xs uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[#714B67]" /> Penilaian 10 Parameter SCA (Skala 6.00 - 10.00)
+                  <Sparkles className="w-4 h-4 text-[#EA580C]" /> Penilaian 10 Parameter SCA (Skala 6.00 - 10.00)
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                   <div>
                     <div className="flex justify-between font-semibold mb-1">
                       <span>1. Fragrance / Dry Aroma:</span>
-                      <strong className="text-[#714B67] font-mono">{fragrance}</strong>
+                      <strong className="text-[#EA580C] font-mono">{fragrance}</strong>
                     </div>
                     <input
                       type="range"
@@ -559,14 +559,14 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                       step="0.25"
                       value={fragrance}
                       onChange={(e) => setFragrance(Number(e.target.value))}
-                      className="w-full accent-[#714B67]"
+                      className="w-full accent-[#EA580C]"
                     />
                   </div>
 
                   <div>
                     <div className="flex justify-between font-semibold mb-1">
                       <span>2. Flavor:</span>
-                      <strong className="text-[#714B67] font-mono">{flavor}</strong>
+                      <strong className="text-[#EA580C] font-mono">{flavor}</strong>
                     </div>
                     <input
                       type="range"
@@ -575,14 +575,14 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                       step="0.25"
                       value={flavor}
                       onChange={(e) => setFlavor(Number(e.target.value))}
-                      className="w-full accent-[#714B67]"
+                      className="w-full accent-[#EA580C]"
                     />
                   </div>
 
                   <div>
                     <div className="flex justify-between font-semibold mb-1">
                       <span>3. Aftertaste:</span>
-                      <strong className="text-[#714B67] font-mono">{aftertaste}</strong>
+                      <strong className="text-[#EA580C] font-mono">{aftertaste}</strong>
                     </div>
                     <input
                       type="range"
@@ -591,14 +591,14 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                       step="0.25"
                       value={aftertaste}
                       onChange={(e) => setAftertaste(Number(e.target.value))}
-                      className="w-full accent-[#714B67]"
+                      className="w-full accent-[#EA580C]"
                     />
                   </div>
 
                   <div>
                     <div className="flex justify-between font-semibold mb-1">
                       <span>4. Acidity:</span>
-                      <strong className="text-[#714B67] font-mono">{acidity}</strong>
+                      <strong className="text-[#EA580C] font-mono">{acidity}</strong>
                     </div>
                     <input
                       type="range"
@@ -607,14 +607,14 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                       step="0.25"
                       value={acidity}
                       onChange={(e) => setAcidity(Number(e.target.value))}
-                      className="w-full accent-[#714B67]"
+                      className="w-full accent-[#EA580C]"
                     />
                   </div>
 
                   <div>
                     <div className="flex justify-between font-semibold mb-1">
                       <span>5. Body / Mouthfeel:</span>
-                      <strong className="text-[#714B67] font-mono">{body}</strong>
+                      <strong className="text-[#EA580C] font-mono">{body}</strong>
                     </div>
                     <input
                       type="range"
@@ -623,14 +623,14 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                       step="0.25"
                       value={body}
                       onChange={(e) => setBody(Number(e.target.value))}
-                      className="w-full accent-[#714B67]"
+                      className="w-full accent-[#EA580C]"
                     />
                   </div>
 
                   <div>
                     <div className="flex justify-between font-semibold mb-1">
                       <span>6. Balance:</span>
-                      <strong className="text-[#714B67] font-mono">{balance}</strong>
+                      <strong className="text-[#EA580C] font-mono">{balance}</strong>
                     </div>
                     <input
                       type="range"
@@ -639,14 +639,14 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                       step="0.25"
                       value={balance}
                       onChange={(e) => setBalance(Number(e.target.value))}
-                      className="w-full accent-[#714B67]"
+                      className="w-full accent-[#EA580C]"
                     />
                   </div>
 
                   <div>
                     <div className="flex justify-between font-semibold mb-1">
                       <span>7. Overall Impression:</span>
-                      <strong className="text-[#714B67] font-mono">{overall}</strong>
+                      <strong className="text-[#EA580C] font-mono">{overall}</strong>
                     </div>
                     <input
                       type="range"
@@ -655,7 +655,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                       step="0.25"
                       value={overall}
                       onChange={(e) => setOverall(Number(e.target.value))}
-                      className="w-full accent-[#714B67]"
+                      className="w-full accent-[#EA580C]"
                     />
                   </div>
 
@@ -734,7 +734,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                   rows={2}
                   value={qcNotes}
                   onChange={(e) => setQcNotes(e.target.value)}
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#714B67]"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-[#EA580C]"
                 />
               </div>
 
@@ -748,7 +748,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white font-bold transition-all shadow-md flex items-center gap-1.5"
+                  className="px-6 py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm transition-all shadow-md flex items-center gap-2"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   Simpan & Terbitkan Sertifikat QC

@@ -16,14 +16,27 @@ import {
   Flame,
   ClipboardCheck,
   Clock,
+  Scale,
+  Award,
+  MapPin,
 } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { MetricCard } from '../admin/MetricCard';
 import { RoasterPackagingItem } from '../../types/roasterErp';
-import { WarehouseLot } from '../../types/coffee';
-import { OdooControlPanel } from '../odoo/OdooControlPanel';
-import { OdooSmartStatButton } from '../odoo/OdooSmartStatButton';
+import { WarehouseLot, RoastedBeanLot } from '../../types/coffee';
+import { ControlPanel } from '../shared/ControlPanel';
+import { StatButton } from '../shared/StatButton';
+import { RecordBreadcrumb } from '../shared/RecordBreadcrumb';
+import { StatusPipeline, PipelineStage } from '../shared/StatusPipeline';
 import { IncomingQCModal } from './IncomingQCModal';
+
+// Same honest stock-level pipeline used across the app for the `available -> partial -> sold`
+// status shape (WarehouseLot and RoastedBeanLot both use it) — no invented workflow steps.
+const STOCK_PIPELINE_STAGES: PipelineStage[] = [
+  { id: 'available', label: 'Tersedia' },
+  { id: 'partial', label: 'Terjual Sebagian' },
+  { id: 'sold', label: 'Habis Terjual' },
+];
 
 export const InventoryModule: React.FC = () => {
   const {
@@ -36,6 +49,8 @@ export const InventoryModule: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<'green' | 'roasted' | 'packaging'>('green');
   const [searchQuery, setSearchQuery] = useState('');
   const [qcModalLot, setQcModalLot] = useState<WarehouseLot | null>(null);
+  const [detailGreenLot, setDetailGreenLot] = useState<WarehouseLot | null>(null);
+  const [detailRoastedLot, setDetailRoastedLot] = useState<RoastedBeanLot | null>(null);
 
   const pendingQcCount = warehouseLots.filter((l) => l.qcStatus === 'pending_qc').length;
 
@@ -79,6 +94,8 @@ export const InventoryModule: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {!detailGreenLot && !detailRoastedLot && (
+      <>
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
@@ -140,7 +157,7 @@ export const InventoryModule: React.FC = () => {
           onClick={() => setActiveCategory('green')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
             activeCategory === 'green'
-              ? 'bg-[#714B67] text-white shadow-xs'
+              ? 'bg-[#EA580C] text-white shadow-xs'
               : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
@@ -152,7 +169,7 @@ export const InventoryModule: React.FC = () => {
           onClick={() => setActiveCategory('roasted')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
             activeCategory === 'roasted'
-              ? 'bg-[#714B67] text-white shadow-xs'
+              ? 'bg-[#EA580C] text-white shadow-xs'
               : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
@@ -164,7 +181,7 @@ export const InventoryModule: React.FC = () => {
           onClick={() => setActiveCategory('packaging')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
             activeCategory === 'packaging'
-              ? 'bg-[#714B67] text-white shadow-xs'
+              ? 'bg-[#EA580C] text-white shadow-xs'
               : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
@@ -173,8 +190,8 @@ export const InventoryModule: React.FC = () => {
         </button>
       </div>
 
-      {/* Odoo 19 Control Panel */}
-      <OdooControlPanel
+      {/* Toolbar / Control Panel */}
+      <ControlPanel
         breadcrumbs={[
           { label: 'Gudang & Inventaris' },
           {
@@ -202,17 +219,17 @@ export const InventoryModule: React.FC = () => {
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FA] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+              <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-4">Lot ID</th>
-                  <th className="py-3.5 px-4">Origin & Varietas</th>
-                  <th className="py-3.5 px-4">Proses & Mutu</th>
-                  <th className="py-3.5 px-4">Lokasi Silo / Bay</th>
-                  <th className="py-3.5 px-4">Stok Tersedia (Kg)</th>
-                  <th className="py-3.5 px-4">HPP Modal (Rp/Kg)</th>
-                  <th className="py-3.5 px-4">Total Nilai Aset</th>
-                  <th className="py-3.5 px-4">Status Stok</th>
-                  <th className="py-3.5 px-4 text-right">Aksi</th>
+                  <th className="py-4 px-5">Lot ID</th>
+                  <th className="py-4 px-5">Origin & Varietas</th>
+                  <th className="py-4 px-5">Proses & Mutu</th>
+                  <th className="py-4 px-5">Lokasi Silo / Bay</th>
+                  <th className="py-4 px-5">Stok Tersedia (Kg)</th>
+                  <th className="py-4 px-5">HPP Modal (Rp/Kg)</th>
+                  <th className="py-4 px-5">Total Nilai Aset</th>
+                  <th className="py-4 px-5">Status Stok</th>
+                  <th className="py-4 px-5 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -223,29 +240,33 @@ export const InventoryModule: React.FC = () => {
                   const isLow = lot.weightKg > 0 && lot.availableWeightKg / lot.weightKg < 0.2;
                   const qc = lot.qcStatus ?? 'passed';
                   return (
-                    <tr key={lot.id} className="hover:bg-stone-50/70 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#1E2333]">{lot.id}</td>
-                      <td className="py-3.5 px-4">
+                    <tr
+                      key={lot.id}
+                      onClick={() => setDetailGreenLot(lot)}
+                      className="hover:bg-amber-50/60 cursor-pointer transition-colors"
+                    >
+                      <td className="py-4 px-5 font-mono font-bold text-sm text-stone-900">{lot.id}</td>
+                      <td className="py-4 px-5">
                         <div className="font-bold text-stone-900">{lot.origin}</div>
                         <div className="text-[10px] text-stone-400">{lot.variety} • {lot.altitude}</div>
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-5">
                         <div className="font-semibold text-stone-800">{lot.processMethod}</div>
                         <div className="text-[10px] text-amber-800 font-mono font-bold">
                           {qc === 'pending_qc' ? 'Menunggu skor QC' : `SCA ${lot.verifiedScaScore} (KA: ${lot.moistureContentPercent || 11.2}%)`}
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-stone-600">{lot.storageLocation}</td>
-                      <td className="py-3.5 px-4 font-mono font-black text-stone-900 text-sm">
+                      <td className="py-4 px-5 text-stone-600">{lot.storageLocation}</td>
+                      <td className="py-4 px-5 font-mono font-black text-stone-900 text-sm">
                         {lot.availableWeightKg} kg
                       </td>
-                      <td className="py-3.5 px-4 text-stone-800">
+                      <td className="py-4 px-5 text-stone-800">
                         Rp {lot.purchasePricePerKg.toLocaleString()}
                       </td>
-                      <td className="py-3.5 px-4 font-black text-[#1E2333]">
+                      <td className="py-4 px-5 font-black text-sm text-stone-900">
                         Rp {(lot.availableWeightKg * lot.purchasePricePerKg).toLocaleString()}
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-5">
                         {qc === 'pending_qc' && (
                           <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300">
                             <Clock className="w-3 h-3 shrink-0" /> Menunggu QC
@@ -267,10 +288,13 @@ export const InventoryModule: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="py-4 px-5 text-right">
                         {qc === 'pending_qc' ? (
                           <button
-                            onClick={() => setQcModalLot(lot)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setQcModalLot(lot);
+                            }}
                             className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-[11px] transition-colors shadow-xs ml-auto"
                           >
                             <ClipboardCheck className="w-3.5 h-3.5 shrink-0" /> QC Masuk
@@ -293,41 +317,45 @@ export const InventoryModule: React.FC = () => {
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FA] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+              <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-4">Lot Sangrai</th>
-                  <th className="py-3.5 px-4">Nama Produk & Asal</th>
-                  <th className="py-3.5 px-4">Roast Level & Agtron</th>
-                  <th className="py-3.5 px-4">Tanggal Sangrai</th>
-                  <th className="py-3.5 px-4">Format Pack</th>
-                  <th className="py-3.5 px-4">Stok Pack Tersedia</th>
-                  <th className="py-3.5 px-4">Harga Jual / Pack</th>
-                  <th className="py-3.5 px-4 text-right">Total Nilai Retail</th>
+                  <th className="py-4 px-5">Lot Sangrai</th>
+                  <th className="py-4 px-5">Nama Produk & Asal</th>
+                  <th className="py-4 px-5">Roast Level & Agtron</th>
+                  <th className="py-4 px-5">Tanggal Sangrai</th>
+                  <th className="py-4 px-5">Format Pack</th>
+                  <th className="py-4 px-5">Stok Pack Tersedia</th>
+                  <th className="py-4 px-5">Harga Jual / Pack</th>
+                  <th className="py-4 px-5 text-right">Total Nilai Retail</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {filteredRoastedLots.map((rLot) => (
-                  <tr key={rLot.id} className="hover:bg-stone-50/70 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#714B67]">{rLot.id}</td>
-                    <td className="py-3.5 px-4">
+                  <tr
+                    key={rLot.id}
+                    onClick={() => setDetailRoastedLot(rLot)}
+                    className="hover:bg-amber-50/60 cursor-pointer transition-colors"
+                  >
+                    <td className="py-4 px-5 font-mono font-bold text-sm text-[#EA580C]">{rLot.id}</td>
+                    <td className="py-4 px-5">
                       <div className="font-bold text-stone-900">{rLot.origin} ({rLot.variety})</div>
                       <div className="text-[10px] text-stone-400">{rLot.processMethod}</div>
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-4 px-5">
                       <div className="font-semibold text-stone-800">{rLot.roastLevel}</div>
                       <div className="text-[10px] text-amber-800 font-mono font-bold">
                         Agtron #{rLot.agtronNumber} (DTR: {rLot.developmentTimeRatio}%)
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-stone-600">{rLot.roastDate}</td>
-                    <td className="py-3.5 px-4 font-mono text-stone-800">{rLot.packageWeightGrams}g Pack</td>
-                    <td className="py-3.5 px-4 font-mono font-black text-[#714B67] text-sm">
+                    <td className="py-4 px-5 text-stone-600">{rLot.roastDate}</td>
+                    <td className="py-4 px-5 font-mono text-stone-800">{rLot.packageWeightGrams}g Pack</td>
+                    <td className="py-4 px-5 font-mono font-black text-[#EA580C] text-sm">
                       {rLot.availablePacks} / {rLot.totalPacks} Pack
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-stone-900">
+                    <td className="py-4 px-5 font-bold text-stone-900">
                       Rp {rLot.pricePerPack.toLocaleString()}
                     </td>
-                    <td className="py-3.5 px-4 text-right font-black text-stone-950">
+                    <td className="py-4 px-5 text-right font-black text-stone-950">
                       Rp {(rLot.availablePacks * rLot.pricePerPack).toLocaleString()}
                     </td>
                   </tr>
@@ -369,7 +397,7 @@ export const InventoryModule: React.FC = () => {
                     <p className="text-xs text-stone-500 mt-0.5">{pack.materialSpec}</p>
                   </div>
 
-                  <div className="bg-[#F8F9FA] p-3 rounded-2xl border border-stone-200/80 text-xs space-y-1.5">
+                  <div className="bg-[#FAF7F2] p-3 rounded-2xl border border-stone-200/80 text-xs space-y-1.5">
                     <div className="flex justify-between">
                       <span className="text-stone-500">Biaya Satuan:</span>
                       <strong className="text-stone-800 font-mono">Rp {pack.unitCost.toLocaleString()} / pcs</strong>
@@ -389,7 +417,7 @@ export const InventoryModule: React.FC = () => {
                 <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-stone-400 block font-medium">Stok Saat Ini:</span>
-                    <span className="text-base font-black text-[#714B67] font-mono">{pack.stockQuantity} Pcs</span>
+                    <span className="text-base font-black text-[#EA580C] font-mono">{pack.stockQuantity} Pcs</span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -402,7 +430,7 @@ export const InventoryModule: React.FC = () => {
                     </button>
                     <button
                       onClick={() => updatePackagingStock(pack.id, 50)}
-                      className="w-8 h-8 rounded-xl bg-[#714B67] hover:bg-[#5A3950] text-white flex items-center justify-center font-black transition-colors shadow-2xs"
+                      className="w-8 h-8 rounded-xl bg-[#EA580C] hover:bg-[#C2410C] text-white flex items-center justify-center font-black transition-colors shadow-2xs"
                       title="Tambah 50 pcs"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -412,6 +440,224 @@ export const InventoryModule: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+      </>
+      )}
+
+      {/* GREEN COFFEE LOT DETAIL PAGE */}
+      {detailGreenLot && (
+        <div>
+          <RecordBreadcrumb
+            listLabel="Green Coffee Silo"
+            recordLabel={detailGreenLot.id}
+            onBack={() => setDetailGreenLot(null)}
+          />
+          <div className="bg-white rounded-3xl border border-stone-200 overflow-hidden">
+            <div className="bg-[#FAF7F2] px-6 py-5 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-emerald-100 text-emerald-600">
+                  <Warehouse className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-stone-900 font-mono">{detailGreenLot.id}</h3>
+                  <p className="text-[10px] text-stone-500">
+                    {detailGreenLot.origin} — {detailGreenLot.variety} • Disimpan: {detailGreenLot.storedDate}
+                  </p>
+                </div>
+              </div>
+              <StatusPipeline stages={STOCK_PIPELINE_STAGES} currentStageId={detailGreenLot.status} />
+            </div>
+
+            <div className="px-6 py-3 bg-white border-b border-stone-100 flex flex-wrap gap-2">
+              <StatButton
+                icon={<Scale className="w-4 h-4" />}
+                value={`${detailGreenLot.availableWeightKg}/${detailGreenLot.weightKg} kg`}
+                label="Stok Tersisa"
+                color="emerald"
+              />
+              <StatButton
+                icon={<DollarSign className="w-4 h-4" />}
+                value={`Rp ${detailGreenLot.purchasePricePerKg.toLocaleString()}`}
+                label="HPP Modal / Kg"
+                color="amber"
+              />
+              <StatButton
+                icon={<Award className="w-4 h-4" />}
+                value={detailGreenLot.verifiedScaScore}
+                label="Skor SCA Terverifikasi"
+                color="purple"
+              />
+              <StatButton
+                icon={<MapPin className="w-4 h-4" />}
+                value={detailGreenLot.storageLocation}
+                label="Lokasi Silo / Bay"
+                color="blue"
+              />
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-[11px] font-black uppercase text-stone-500 tracking-wider mb-3 flex items-center gap-1.5">
+                  <Coffee className="w-3.5 h-3.5" /> Spesifikasi & Mutu
+                </h4>
+                <dl className="space-y-2.5 text-xs">
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Origin / Varietas</dt>
+                    <dd className="font-bold text-stone-900">{detailGreenLot.origin} • {detailGreenLot.variety}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Metode Proses</dt>
+                    <dd className="font-bold text-stone-900">{detailGreenLot.processMethod}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Grade Tier</dt>
+                    <dd className="font-bold text-stone-900">{detailGreenLot.gradeTier}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Screen Size / Defect</dt>
+                    <dd className="font-bold text-stone-900">{detailGreenLot.screenSize} • {detailGreenLot.defectCount} cacat</dd>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <dt className="text-stone-500">Status QC Masuk</dt>
+                    <dd className="font-bold text-stone-900">{detailGreenLot.qcStatus ?? 'passed'}</dd>
+                  </div>
+                </dl>
+              </div>
+              <div>
+                <h4 className="text-[11px] font-black uppercase text-stone-500 tracking-wider mb-3 flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5" /> Asal & Penyimpanan
+                </h4>
+                <dl className="space-y-2.5 text-xs">
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Petani Sumber</dt>
+                    <dd className="font-bold text-stone-900">{detailGreenLot.sourceFarmerName}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Pengolah Sumber</dt>
+                    <dd className="font-bold text-stone-900">{detailGreenLot.sourceProcessorName}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Gudang Pemasok</dt>
+                    <dd className="font-bold text-stone-900">{detailGreenLot.warehouseName}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Suhu / Kelembapan</dt>
+                    <dd className="font-bold text-stone-900">{detailGreenLot.temperatureCelsius}°C • {detailGreenLot.humidityPercent}%</dd>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <dt className="text-stone-500">Kemasan</dt>
+                    <dd className="font-bold text-stone-900 text-right">{detailGreenLot.packagingType}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ROASTED LOT DETAIL PAGE */}
+      {detailRoastedLot && (
+        <div>
+          <RecordBreadcrumb
+            listLabel="Roasted Bulk Coffee"
+            recordLabel={detailRoastedLot.id}
+            onBack={() => setDetailRoastedLot(null)}
+          />
+          <div className="bg-white rounded-3xl border border-stone-200 overflow-hidden">
+            <div className="bg-[#FAF7F2] px-6 py-5 border-b border-stone-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-orange-100 text-orange-600">
+                  <Coffee className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-stone-900 font-mono">{detailRoastedLot.id}</h3>
+                  <p className="text-[10px] text-stone-500">
+                    {detailRoastedLot.origin} — {detailRoastedLot.variety} • Sangrai: {detailRoastedLot.roastDate}
+                  </p>
+                </div>
+              </div>
+              <StatusPipeline stages={STOCK_PIPELINE_STAGES} currentStageId={detailRoastedLot.status} />
+            </div>
+
+            <div className="px-6 py-3 bg-white border-b border-stone-100 flex flex-wrap gap-2">
+              <StatButton
+                icon={<Scale className="w-4 h-4" />}
+                value={`${detailRoastedLot.availablePacks}/${detailRoastedLot.totalPacks} pack`}
+                label="Stok Tersisa"
+                color="emerald"
+              />
+              <StatButton
+                icon={<DollarSign className="w-4 h-4" />}
+                value={`Rp ${detailRoastedLot.pricePerPack.toLocaleString()}`}
+                label="Harga / Pack"
+                color="amber"
+              />
+              <StatButton
+                icon={<Award className="w-4 h-4" />}
+                value={detailRoastedLot.scaCuppingScore}
+                label="Skor Cupping SCA"
+                color="purple"
+              />
+              <StatButton
+                icon={<Package className="w-4 h-4" />}
+                value={`${detailRoastedLot.packageWeightGrams} g`}
+                label="Berat / Pack"
+                color="blue"
+              />
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-[11px] font-black uppercase text-stone-500 tracking-wider mb-3 flex items-center gap-1.5">
+                  <Coffee className="w-3.5 h-3.5" /> Spesifikasi Produk
+                </h4>
+                <dl className="space-y-2.5 text-xs">
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Origin / Varietas</dt>
+                    <dd className="font-bold text-stone-900">{detailRoastedLot.origin} • {detailRoastedLot.variety}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Metode Proses</dt>
+                    <dd className="font-bold text-stone-900">{detailRoastedLot.processMethod}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Tingkat Sangrai</dt>
+                    <dd className="font-bold text-stone-900">{detailRoastedLot.roastLevel}</dd>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <dt className="text-stone-500">Agtron / DTR</dt>
+                    <dd className="font-bold text-stone-900">
+                      {detailRoastedLot.agtronNumber} • {detailRoastedLot.developmentTimeRatio}%
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+              <div>
+                <h4 className="text-[11px] font-black uppercase text-stone-500 tracking-wider mb-3 flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5" /> Produksi & Rekomendasi
+                </h4>
+                <dl className="space-y-2.5 text-xs">
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Petani Sumber</dt>
+                    <dd className="font-bold text-stone-900">{detailRoastedLot.farmerName}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Mesin Roaster</dt>
+                    <dd className="font-bold text-stone-900">{detailRoastedLot.roasterMachine}</dd>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <dt className="text-stone-500">Rekomendasi Resting</dt>
+                    <dd className="font-bold text-stone-900">{detailRoastedLot.restingRecommendationDays} hari</dd>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <dt className="text-stone-500">Metode Seduh</dt>
+                    <dd className="font-bold text-stone-900 text-right">{detailRoastedLot.recommendedBrew.join(', ')}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

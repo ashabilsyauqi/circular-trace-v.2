@@ -14,12 +14,12 @@ import {
 } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
 
-interface QremaAIAssistantProps {
+interface SangraiAssistantProps {
   onTriggerCreateWO?: () => void;
   onNavigateTab?: (tab: string) => void;
 }
 
-export const QremaAIAssistant: React.FC<QremaAIAssistantProps> = ({
+export const SangraiAssistant: React.FC<SangraiAssistantProps> = ({
   onTriggerCreateWO,
   onNavigateTab,
 }) => {
@@ -31,7 +31,7 @@ export const QremaAIAssistant: React.FC<QremaAIAssistantProps> = ({
   >([
     {
       sender: 'assistant',
-      text: 'Halo Roastmaster! Saya Asisten AI Qrema. Anda bisa meminta saya menjadwalkan batch sangrai, memeriksa stok green bean menipis, atau menganalisis data rata-rata susut bobot (roast loss).',
+      text: 'Halo Roastmaster! Saya Asisten sangrAI. Anda bisa meminta saya menjadwalkan batch sangrai, memeriksa stok green bean menipis, atau menganalisis data rata-rata susut bobot (roast loss).',
     },
   ]);
 
@@ -117,7 +117,7 @@ export const QremaAIAssistant: React.FC<QremaAIAssistantProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-black text-sm text-white">Qrema AI Roaster Assistant</h3>
+              <h3 className="font-black text-sm text-white">sangrAI Roaster Assistant</h3>
               <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-amber-400" /> Smart Command
               </span>

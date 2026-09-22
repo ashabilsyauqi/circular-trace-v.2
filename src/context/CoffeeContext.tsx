@@ -206,6 +206,7 @@ interface CoffeeContextType {
     quantity: number
   ) => { success: boolean; message: string };
   resetToDefaultData: () => void;
+  seedFarmerLots: () => void;
   getTraceabilityForRoastedLot: (roastedLotId: string) => {
     farmerLot?: FarmerHarvestLot;
     processedLot?: ProcessedGreenBeanLot;
@@ -328,7 +329,17 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [farmerLots, setFarmerLots] = useState<FarmerHarvestLot[]>(() => {
     const saved = localStorage.getItem('cct_farmerLots');
-    return saved ? JSON.parse(saved) : INITIAL_FARMER_LOTS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed.some((l: FarmerHarvestLot) => l.availableWeightKg > 0)) {
+          return parsed;
+        }
+      } catch (e) {
+        // Fallback to fresh seed lots
+      }
+    }
+    return INITIAL_FARMER_LOTS;
   });
 
   const [processedLots, setProcessedLots] = useState<ProcessedGreenBeanLot[]>(() => {
@@ -2287,6 +2298,11 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     );
   };
 
+  const seedFarmerLots = () => {
+    setFarmerLots(INITIAL_FARMER_LOTS);
+    localStorage.setItem('cct_farmerLots', JSON.stringify(INITIAL_FARMER_LOTS));
+  };
+
   const resetToDefaultData = () => {
     setFarmerLots(INITIAL_FARMER_LOTS);
     setProcessedLots(INITIAL_PROCESSED_LOTS);
@@ -2350,6 +2366,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addCafeRetailProduct,
         buyFromUnifiedMarketplace,
         resetToDefaultData,
+        seedFarmerLots,
         getTraceabilityForRoastedLot,
         // --- QREMA ROASTERY ERP ---
         workOrders,

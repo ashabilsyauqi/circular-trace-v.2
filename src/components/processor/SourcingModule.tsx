@@ -45,6 +45,7 @@ export const SourcingModule: React.FC = () => {
     buyCherryAndCreateProcess,
     createProcessingBatch,
     setProcessorActiveTab,
+    seedFarmerLots,
   } = useCoffee();
 
   const [selectedLotToProcess, setSelectedLotToProcess] = useState<FarmerHarvestLot | null>(null);
@@ -248,11 +249,18 @@ export const SourcingModule: React.FC = () => {
 
           {filteredLots.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center border border-stone-200">
-              <Sparkles className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-stone-800">Belum ada ceri yang sesuai filter</h3>
-              <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto">
-                Silakan ubah kata kunci pencarian atau daftarkan panen baru melalui peran Petani.
+              <Sparkles className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-stone-800">Belum ada ceri petani yang tersedia</h3>
+              <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto mb-4">
+                Semua lot panen petani telah dibeli atau tersaring. Klik tombol di bawah untuk memuat 10 data seeder panen petani Nusantara.
               </p>
+              <button
+                onClick={seedFarmerLots}
+                className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs inline-flex items-center gap-2 shadow-md transition-all"
+              >
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Muat Ulang Seeder Panen Petani (10 Lot)</span>
+              </button>
             </div>
           ) : (
             <>

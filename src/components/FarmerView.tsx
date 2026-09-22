@@ -48,7 +48,7 @@ const FARMER_PIPELINE_STAGES: PipelineStage[] = [
 ];
 
 export const FarmerView: React.FC = () => {
-  const { currentUser, farmerLots, addFarmerHarvest, transactions } = useCoffee();
+  const { currentUser, farmerLots, addFarmerHarvest, seedFarmerLots, transactions } = useCoffee();
   const [activeTab, setActiveTab] = useState<'catalog' | 'upload' | 'history'>('catalog');
 
   // Filter & Search State
@@ -507,9 +507,35 @@ export const FarmerView: React.FC = () => {
                 recordCount={filteredLots.length}
               />
 
-              {/* VIEW 1: CARDS GRID VIEW */}
-              {viewMode === 'cards' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredLots.length === 0 ? (
+                <div className="bg-white rounded-3xl p-12 text-center border border-stone-200">
+                  <Sprout className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+                  <h3 className="text-base font-bold text-stone-800">Belum ada lot panen di katalog</h3>
+                  <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto mb-4">
+                    Katalog panen saat ini kosong. Daftarkan panen baru atau muat data seeder panen petani Nusantara (10 lot).
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-2.5">
+                    <button
+                      onClick={() => setActiveTab('upload')}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-colors"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      <span>Input Panen Baru</span>
+                    </button>
+                    <button
+                      onClick={seedFarmerLots}
+                      className="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-colors"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span>Muat Ulang Seeder Panen (10 Lot)</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* VIEW 1: CARDS GRID VIEW */}
+                  {viewMode === 'cards' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filteredLots.map((lot) => {
                     const isAvailable = lot.availableWeightKg > 0;
                     return (
@@ -762,8 +788,10 @@ export const FarmerView: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </>
           )}
+        </div>
+      )}
 
           {/* TAB 3: BUKU KAS & RIWAYAT PENJUALAN */}
           {activeTab === 'history' && (

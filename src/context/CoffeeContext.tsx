@@ -32,6 +32,7 @@ import {
   ProcessingBatch,
   ProcessingStageId,
   DryingDayLog,
+  ProcessorCherryStockItem,
 } from '../types/processorErp';
 import {
   MOCK_USERS,
@@ -53,7 +54,10 @@ import {
   INITIAL_SALES_ORDERS,
   INITIAL_ROASTER_MACHINES,
 } from '../data/mockRoasterErpData';
-import { INITIAL_PROCESSING_BATCHES } from '../data/mockProcessorErpData';
+import {
+  INITIAL_PROCESSING_BATCHES,
+  INITIAL_PROCESSOR_CHERRY_STOCK,
+} from '../data/mockProcessorErpData';
 import { calculateProcessorEcoRating } from '../utils/ecoRating';
 import { validateStageQualityGate } from '../utils/coffeeQualityGates';
 
@@ -77,9 +81,12 @@ interface CoffeeContextType {
   setRoasterActiveTab: (tab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
   processorActiveTab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history';
   setProcessorActiveTab: (tab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history') => void;
+  processorCherryStock: ProcessorCherryStockItem[];
+  buyCherryToStock: (farmerLotId: string, boughtKg: number) => ProcessorCherryStockItem | null;
   processingBatches: ProcessingBatch[];
   createProcessingBatch: (params: {
-    sourceFarmerLotId: string;
+    sourceFarmerLotId?: string;
+    sourceCherryStockId?: string;
     boughtCherryKg: number;
     method: ProcessingBatch['fermentationLog']['method'];
     dryingMethod: ProcessingBatch['dryingLog']['dryingMethod'];
@@ -302,6 +309,11 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return saved ? JSON.parse(saved) : INITIAL_PROCESSING_BATCHES;
   });
 
+  const [processorCherryStock, setProcessorCherryStock] = useState<ProcessorCherryStockItem[]>(() => {
+    const saved = localStorage.getItem('cct_processorCherryStock');
+    return saved ? JSON.parse(saved) : INITIAL_PROCESSOR_CHERRY_STOCK;
+  });
+
   useEffect(() => {
     localStorage.setItem('cct_users', JSON.stringify(users));
   }, [users]);
@@ -309,6 +321,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     localStorage.setItem('cct_processingBatches', JSON.stringify(processingBatches));
   }, [processingBatches]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_processorCherryStock', JSON.stringify(processorCherryStock));
+  }, [processorCherryStock]);
 
   const [farmerLots, setFarmerLots] = useState<FarmerHarvestLot[]>(() => {
     const saved = localStorage.getItem('cct_farmerLots');
@@ -657,25 +673,16 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // --- COFFEE POST-HARVEST PROCESSING & MANUFACTURING 7-STAGE METHODS ---
 
-  const createProcessingBatch = (params: {
-    sourceFarmerLotId: string;
-    boughtCherryKg: number;
-    method: ProcessingBatch['fermentationLog']['method'];
-    dryingMethod: ProcessingBatch['dryingLog']['dryingMethod'];
-    operatorName: string;
-    notes?: string;
-    wasteData?: CoffeeWasteManagement;
-  }): ProcessingBatch | null => {
+  const buyCherryToStock = (farmerLotId: string, boughtKg: number): ProcessorCherryStockItem | null => {
     if (!currentUser) return null;
-    const sourceFarmerLot = farmerLots.find((l) => l.id === params.sourceFarmerLotId);
-    if (!sourceFarmerLot) return null;
+    const sourceFarmerLot = farmerLots.find((l) => l.id === farmerLotId);
+    if (!sourceFarmerLot || sourceFarmerLot.availableWeightKg < boughtKg) return null;
 
-    const boughtKg = params.boughtCherryKg;
     const remainingKg = Math.max(0, sourceFarmerLot.availableWeightKg - boughtKg);
 
     setFarmerLots((prev) =>
       prev.map((lot) =>
-        lot.id === params.sourceFarmerLotId
+        lot.id === farmerLotId
           ? {
               ...lot,
               availableWeightKg: remainingKg,
@@ -685,20 +692,114 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       )
     );
 
-    const totalTrx = boughtKg * sourceFarmerLot.pricePerKg;
+    const totalCost = boughtKg * sourceFarmerLot.pricePerKg;
     const newTrx: SupplyChainTransaction = {
       id: `TRX-${Date.now().toString().slice(-4)}`,
       date: new Date().toISOString().split('T')[0],
       fromRole: 'petani',
       fromName: sourceFarmerLot.farmerName,
       toRole: 'pengolah',
-      toName: currentUser.name,
+      toName: currentUser.organization || currentUser.name,
       itemName: `Cherry Segar ${sourceFarmerLot.variety} (${boughtKg} kg)`,
       quantity: `${boughtKg} kg`,
-      totalAmount: totalTrx,
+      totalAmount: totalCost,
       status: 'Selesai',
     };
     setTransactions((prev) => [newTrx, ...prev]);
+
+    const newStockItem: ProcessorCherryStockItem = {
+      id: `STK-CHR-${Date.now().toString().slice(-4)}`,
+      processorId: currentUser.id,
+      sourceFarmerLotId: sourceFarmerLot.id,
+      farmerName: sourceFarmerLot.farmerName,
+      origin: sourceFarmerLot.farmLocation,
+      variety: sourceFarmerLot.variety,
+      altitude: sourceFarmerLot.altitude,
+      harvestDate: sourceFarmerLot.harvestDate,
+      pickingMethod: sourceFarmerLot.pickingMethod,
+      brix: sourceFarmerLot.brix,
+      totalWeightKg: boughtKg,
+      availableWeightKg: boughtKg,
+      purchasePricePerKg: sourceFarmerLot.pricePerKg,
+      purchaseDate: new Date().toISOString().split('T')[0],
+      notes: `Stok ceri segar dari petani ${sourceFarmerLot.farmerName} (${sourceFarmerLot.farmLocation}).`,
+      photoUrl: sourceFarmerLot.photoUrl,
+    };
+
+    setProcessorCherryStock((prev) => [newStockItem, ...prev]);
+    return newStockItem;
+  };
+
+  const createProcessingBatch = (params: {
+    sourceFarmerLotId?: string;
+    sourceCherryStockId?: string;
+    boughtCherryKg: number;
+    method: ProcessingBatch['fermentationLog']['method'];
+    dryingMethod: ProcessingBatch['dryingLog']['dryingMethod'];
+    operatorName: string;
+    notes?: string;
+    wasteData?: CoffeeWasteManagement;
+  }): ProcessingBatch | null => {
+    if (!currentUser) return null;
+
+    // Check if sourcing from processorCherryStock
+    let cherryStock = params.sourceCherryStockId
+      ? processorCherryStock.find((s) => s.id === params.sourceCherryStockId)
+      : processorCherryStock.find((s) => s.sourceFarmerLotId === params.sourceFarmerLotId && s.availableWeightKg >= params.boughtCherryKg);
+
+    let sourceFarmerLot = farmerLots.find((l) => l.id === (cherryStock?.sourceFarmerLotId || params.sourceFarmerLotId));
+
+    if (!cherryStock && !sourceFarmerLot) return null;
+
+    const boughtKg = params.boughtCherryKg;
+
+    if (cherryStock) {
+      // Deduct from cherry stock in processor's warehouse
+      const remainingStock = Math.max(0, cherryStock.availableWeightKg - boughtKg);
+      setProcessorCherryStock((prev) =>
+        prev.map((s) =>
+          s.id === cherryStock!.id
+            ? { ...s, availableWeightKg: remainingStock }
+            : s
+        )
+      );
+    } else if (sourceFarmerLot) {
+      // Fallback: direct deduct from farmer lot
+      const remainingKg = Math.max(0, sourceFarmerLot.availableWeightKg - boughtKg);
+      setFarmerLots((prev) =>
+        prev.map((lot) =>
+          lot.id === sourceFarmerLot!.id
+            ? {
+                ...lot,
+                availableWeightKg: remainingKg,
+                status: remainingKg === 0 ? 'sold' : 'partial',
+              }
+            : lot
+        )
+      );
+
+      const totalTrx = boughtKg * sourceFarmerLot.pricePerKg;
+      const newTrx: SupplyChainTransaction = {
+        id: `TRX-${Date.now().toString().slice(-4)}`,
+        date: new Date().toISOString().split('T')[0],
+        fromRole: 'petani',
+        fromName: sourceFarmerLot.farmerName,
+        toRole: 'pengolah',
+        toName: currentUser.name,
+        itemName: `Cherry Segar ${sourceFarmerLot.variety} (${boughtKg} kg)`,
+        quantity: `${boughtKg} kg`,
+        totalAmount: totalTrx,
+        status: 'Selesai',
+      };
+      setTransactions((prev) => [newTrx, ...prev]);
+    }
+
+    const farmerName = cherryStock?.farmerName || sourceFarmerLot?.farmerName || 'Petani Mitra';
+    const origin = cherryStock?.origin || sourceFarmerLot?.farmLocation || 'Pangalengan, Jawa Barat';
+    const variety = cherryStock?.variety || sourceFarmerLot?.variety || 'Arabica Typica';
+    const altitude = cherryStock?.altitude || sourceFarmerLot?.altitude || '1.550 mdpl';
+    const brix = cherryStock?.brix || sourceFarmerLot?.brix || 21.5;
+    const sourceLotId = cherryStock?.sourceFarmerLotId || sourceFarmerLot?.id || params.sourceFarmerLotId || 'LOT-PTN-001';
 
     const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '').slice(0, 6);
     const randomSuffix = Date.now().toString().slice(-3);
@@ -706,8 +807,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const batchCode = `LOT-${dateStr}-ARB-${randomSuffix}`;
 
     const estGreenKg = Math.round(boughtKg * 0.16);
-    const estParchmentKg = Math.round(boughtKg * 0.32);
-    const estHuskKg = Math.round(boughtKg * 0.05);
+    const estParchmentKg = Math.round(boughtKg * 0.20);
+    const estHuskKg = Math.round(boughtKg * 0.04);
 
     const rawWaste = params.wasteData || {
       wasteType: 'Kulit Ceri (Pulp / Cascara)',
@@ -733,11 +834,11 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       batchCode,
       processorId: currentUser.id,
       processorName: currentUser.organization || currentUser.name,
-      sourceFarmerLotId: sourceFarmerLot.id,
-      sourceFarmerName: sourceFarmerLot.farmerName,
-      sourceOrigin: sourceFarmerLot.farmLocation,
-      variety: sourceFarmerLot.variety,
-      altitude: sourceFarmerLot.altitude,
+      sourceFarmerLotId: sourceLotId,
+      sourceFarmerName: farmerName,
+      sourceOrigin: origin,
+      variety,
+      altitude,
       currentStage: 'intake_sorting',
       status: 'in_progress',
       startDate: new Date().toISOString().split('T')[0],
@@ -745,12 +846,12 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         cherryWeightKg: boughtKg,
         floatersWeightKg: Math.round(boughtKg * 0.04),
         sinkersWeightKg: Math.round(boughtKg * 0.96),
-        brix: sourceFarmerLot.brix || 21.0,
+        brix,
         sortingDate: new Date().toISOString().split('T')[0],
         destoned: true,
         visualQualityGrade: 'A (95%+ Petik Merah)',
         operatorName: params.operatorName || 'Petugas Intake Stasiun',
-        notes: params.notes || `Penerimaan ${boughtKg} kg ceri varietas ${sourceFarmerLot.variety} dari ${sourceFarmerLot.farmerName}.`,
+        notes: params.notes || `Penerimaan ${boughtKg} kg ceri varietas ${variety} dari ${farmerName}.`,
       },
       fermentationLog: {
         tankId: `TANK-${params.method.includes('Anaerobic') ? 'ANAEROB' : 'FERM'}-01`,
@@ -848,7 +949,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       },
       wasteManagement: finalWaste,
       targetMarketplacePricePerKg: 125000,
-      photoUrl: sourceFarmerLot.photoUrl || 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&auto=format&fit=crop&q=80',
+      photoUrl: sourceFarmerLot?.photoUrl || cherryStock?.photoUrl || 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&auto=format&fit=crop&q=80',
     };
 
     setProcessingBatches((prev) => [newBatch, ...prev]);
@@ -1558,9 +1659,32 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       };
       setTransactions((prev) => [newTrx, ...prev]);
 
+      // If Pengolah buys cherry, automatically put it in their raw material cherry stock!
+      if (currentUser.role === 'pengolah') {
+        const newStockItem: ProcessorCherryStockItem = {
+          id: `STK-CHR-${Date.now().toString().slice(-4)}`,
+          processorId: currentUser.id,
+          sourceFarmerLotId: sourceLot.id,
+          farmerName: sourceLot.farmerName,
+          origin: sourceLot.farmLocation,
+          variety: sourceLot.variety,
+          altitude: sourceLot.altitude,
+          harvestDate: sourceLot.harvestDate,
+          pickingMethod: sourceLot.pickingMethod,
+          brix: sourceLot.brix,
+          totalWeightKg: quantity,
+          availableWeightKg: quantity,
+          purchasePricePerKg: sourceLot.pricePerKg,
+          purchaseDate: new Date().toISOString().split('T')[0],
+          notes: `Beli dari Marketplace (${sourceLot.farmerName} - ${sourceLot.farmLocation}).`,
+          photoUrl: sourceLot.photoUrl,
+        };
+        setProcessorCherryStock((prev) => [newStockItem, ...prev]);
+      }
+
       return {
         success: true,
-        message: `Sukses membeli ${quantity} kg ceri dari ${item.sellerName} senilai Rp ${totalCost.toLocaleString()}!`,
+        message: `Sukses membeli ${quantity} kg ceri dari ${item.sellerName} senilai Rp ${totalCost.toLocaleString()}! Stok masuk ke Gudang Ceri Anda.`,
       };
     }
 
@@ -2172,6 +2296,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCafeProducts(INITIAL_CAFE_PRODUCTS);
     setTransactions(INITIAL_TRANSACTIONS);
     setProcessingBatches(INITIAL_PROCESSING_BATCHES);
+    setProcessorCherryStock(INITIAL_PROCESSOR_CHERRY_STOCK);
     setWorkOrders(INITIAL_WORK_ORDERS);
     setMasterProfiles(INITIAL_MASTER_PROFILES);
     setPurchaseOrders(INITIAL_PURCHASE_ORDERS);
@@ -2198,6 +2323,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setRoasterActiveTab,
         processorActiveTab,
         setProcessorActiveTab,
+        processorCherryStock,
+        buyCherryToStock,
         processingBatches,
         createProcessingBatch,
         advanceBatchStage,

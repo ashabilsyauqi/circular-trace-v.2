@@ -101,6 +101,38 @@ export const SellingModule: React.FC = () => {
       {/* ----------------------------------------------------------------- */}
       {!selectedLotForDetail ? (
         <>
+          {/* Marketplace Storefront & Merchant Admin Header */}
+          <div className="bg-gradient-to-r from-stone-950 via-stone-900 to-amber-950 text-white rounded-3xl p-6 sm:p-7 shadow-sm border border-stone-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                  Panel Admin Marketplace Pengolah
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Toko Terverifikasi &amp; Listing Aktif
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+                {currentUser?.organization || currentUser?.name || 'Stasiun Mill Pengolah Kopi'}
+              </h2>
+              <p className="text-xs text-stone-400 mt-1 max-w-xl">
+                Kelola etalase green bean specialty hasil olahan pabrik yang telah selesai dari lembar kerja. Atur harga jual, pantau pesanan dari Roastery &amp; Cafe, serta kelola lembar kerja produk marketplace.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setActiveView('marketplace')}
+                className="px-5 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
+              >
+                <Store className="w-4 h-4" />
+                <span>Lihat Tampilan Toko Publik ↗</span>
+              </button>
+            </div>
+          </div>
+
           {/* Executive KPI Header */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white rounded-2xl border border-stone-200/90 p-4 shadow-2xs">

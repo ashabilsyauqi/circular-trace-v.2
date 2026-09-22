@@ -76,6 +76,7 @@ export const BatchesModule: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [stageFilter, setStageFilter] = useState<string>('all');
+  const [batchStatusFilter, setBatchStatusFilter] = useState<'in_progress' | 'all' | 'completed'>('in_progress');
   const [viewMode, setViewMode] = useState<'table' | 'cards' | 'kanban'>('table');
   const [detailBatch, setDetailBatch] = useState<ProcessingBatch | null>(null);
   const [activeStageId, setActiveStageId] = useState<ProcessingStageId>('intake_sorting');
@@ -359,12 +360,18 @@ export const BatchesModule: React.FC = () => {
       b.sourceOrigin.toLowerCase().includes(q) ||
       b.fermentationLog.method.toLowerCase().includes(q);
     const matchStage = stageFilter === 'all' || b.currentStage === stageFilter;
-    return matchSearch && matchStage;
+    const matchStatus =
+      batchStatusFilter === 'all'
+        ? true
+        : batchStatusFilter === 'in_progress'
+        ? b.status === 'in_progress' || (b.status as string) === 'draft' || !b.status
+        : b.status === 'completed';
+    return matchSearch && matchStage && matchStatus;
   });
 
   // KPIs
   const totalBatchesCount = processingBatches.length;
-  const inProgressBatches = processingBatches.filter((b) => b.status === 'in_progress');
+  const inProgressBatches = processingBatches.filter((b) => b.status === 'in_progress' || (b.status as string) === 'draft' || !b.status);
   const totalCherryProcessedKg = processingBatches.reduce((acc, b) => acc + (b.intakeLog?.cherryWeightKg || 0), 0);
   const totalGreenBeanProducedKg = processingBatches.reduce(
     (acc, b) => acc + (b.packingLog?.finalGreenBeanWeightKg || b.millingLog?.outputGreenBeanWeightKg || 0),
@@ -443,6 +450,58 @@ export const BatchesModule: React.FC = () => {
             />
           </div>
 
+          {/* Status Filter Sub-Tabs */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-stone-200/90 shadow-2xs">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setBatchStatusFilter('in_progress')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  batchStatusFilter === 'in_progress'
+                    ? 'bg-amber-600 text-white shadow-2xs'
+                    : 'text-stone-600 hover:bg-stone-100'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Batch Sedang Dikerjakan ({inProgressBatches.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBatchStatusFilter('all')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  batchStatusFilter === 'all'
+                    ? 'bg-amber-600 text-white shadow-2xs'
+                    : 'text-stone-600 hover:bg-stone-100'
+                }`}
+              >
+                Semua Batch ({processingBatches.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBatchStatusFilter('completed')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  batchStatusFilter === 'completed'
+                    ? 'bg-amber-600 text-white shadow-2xs'
+                    : 'text-stone-600 hover:bg-stone-100'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Selesai / Terbit di Marketplace ({processingBatches.filter((b) => b.status === 'completed').length})</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setProcessorActiveTab('selling')}
+              className="px-3.5 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer ml-auto"
+            >
+              <Store className="w-3.5 h-3.5 text-amber-700" />
+              <span>Buka Panel Marketplace →</span>
+            </button>
+          </div>
+
           {/* Control Panel: Filters & View Modes */}
           <ControlPanel
             breadcrumbs={[{ label: 'Processing Mill' }, { label: '7-Stage Work Orders' }]}
@@ -462,7 +521,7 @@ export const BatchesModule: React.FC = () => {
               { id: 'grading_qc', label: '6. Grading QC' },
               { id: 'packing_closure', label: '7. Kemas & Rilis' },
             ]}
-            viewMode={viewMode === 'cards' ? 'kanban' : viewMode}
+            viewMode={viewMode === 'table' ? 'table' : 'kanban'}
             onViewModeChange={(m) => setViewMode(m === 'table' ? 'table' : 'cards')}
             recordCount={filteredBatches.length}
           />

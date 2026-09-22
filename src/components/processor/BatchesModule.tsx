@@ -1378,12 +1378,12 @@ export const BatchesModule: React.FC = () => {
                     onChange={(e) => setFormMethod(e.target.value as any)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800"
                   >
-                    <option value="Anaerobic Natural">Anaerobic Natural</option>
-                    <option value="Full Washed">Full Washed</option>
-                    <option value="Natural / Dry">Natural / Dry</option>
-                    <option value="Honey (Yellow/Red/Black)">Honey Process</option>
-                    <option value="Wet Hulled (Giling Basah)">Wet Hulled (Giling Basah)</option>
-                    <option value="Wine Process">Wine Process</option>
+                    <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur (Sun Dried)</option>
+                    <option value="Full Washed">2. Washed (Wet) — Depulper, Tangki Fermentasi & Cuci</option>
+                    <option value="Honey (Yellow/Red/Black)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir Lengket</option>
+                    <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek pada Moisture ~30-40%</option>
+                    <option value="Anaerobic Natural">Anaerobic Natural — Fermentasi Ragi Kedap Udara</option>
+                    <option value="Wine Process">Wine Process — Extended Fermentation</option>
                   </select>
                 </div>
               </div>

@@ -79,7 +79,7 @@ export const InventoryModule: React.FC = () => {
   // Quick Start Processing Modal from Cherry Stock
   const [cherryToProcess, setCherryToProcess] = useState<ProcessorCherryStockItem | null>(null);
   const [processKg, setProcessKg] = useState<number>(500);
-  const [processMethod, setProcessMethod] = useState<'Anaerobic Natural' | 'Full Washed' | 'Natural / Dry' | 'Honey (Yellow/Red)' | 'Wine Process'>('Anaerobic Natural');
+  const [processMethod, setProcessMethod] = useState<'Anaerobic Natural' | 'Full Washed' | 'Natural / Dry' | 'Honey (Yellow/Red)' | 'Wine Process' | 'Wet Hulled (Giling Basah)'>('Natural / Dry');
   const [dryingMethod, setDryingMethod] = useState<'Solar Dryer Raised Bed' | 'Greenhouse Solar Dome' | 'Mechanical Controlled Dryer'>('Solar Dryer Raised Bed');
   const [operatorName, setOperatorName] = useState('Budi Santoso (Mill Master)');
   const [processNotes, setProcessNotes] = useState('Batch olahan dari stok ceri segar di gudang.');
@@ -317,10 +317,11 @@ export const InventoryModule: React.FC = () => {
             filterOptions={
               activeCategory === 'green_bean'
                 ? [
-                    { id: 'all', label: 'Semua Metode' },
-                    { id: 'Full Washed', label: 'Full Washed' },
-                    { id: 'Natural / Dry', label: 'Natural / Dry' },
-                    { id: 'Honey (Yellow/Red)', label: 'Honey' },
+                    { id: 'all', label: 'Semua Metode Olah' },
+                    { id: 'Natural / Dry', label: '1. Natural (Dry)' },
+                    { id: 'Full Washed', label: '2. Washed (Wet)' },
+                    { id: 'Honey (Yellow/Red)', label: '3. Honey (Pulped Natural)' },
+                    { id: 'Wet Hulled (Giling Basah)', label: '4. Wet Hulled (Giling Basah)' },
                     { id: 'Anaerobic Natural', label: 'Anaerobic Natural' },
                     { id: 'Wine Process', label: 'Wine Process' },
                   ]
@@ -1187,11 +1188,12 @@ export const InventoryModule: React.FC = () => {
                   onChange={(e) => setProcessMethod(e.target.value as any)}
                   className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-semibold focus:ring-2 focus:ring-amber-500 bg-white"
                 >
-                  <option value="Anaerobic Natural">Anaerobic Natural (Slow Ferment)</option>
-                  <option value="Full Washed">Full Washed (Clean & Crisp)</option>
-                  <option value="Natural / Dry">Natural / Dry (Fruity Body)</option>
-                  <option value="Honey (Yellow/Red)">Honey (Sweet Balance)</option>
-                  <option value="Wine Process">Wine Process (Extended Ferment)</option>
+                  <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur (Sun Dried)</option>
+                  <option value="Full Washed">2. Washed (Wet) — Depulper, Tangki Fermentasi & Cuci</option>
+                  <option value="Honey (Yellow/Red)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir Lengket</option>
+                  <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek pada Moisture ~30-40%</option>
+                  <option value="Anaerobic Natural">Anaerobic Natural — Slow Sealed Ferment</option>
+                  <option value="Wine Process">Wine Process — Extended Maceration</option>
                 </select>
               </div>
 

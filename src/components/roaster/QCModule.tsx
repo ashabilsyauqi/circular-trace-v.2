@@ -238,7 +238,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                       qc.status === 'approved_specialty'
                         ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
                         : qc.status === 'approved_commercial'
-                        ? 'bg-blue-100 text-blue-900 border-blue-300'
+                        ? 'bg-amber-100 text-amber-900 border-amber-300'
                         : 'bg-rose-100 text-rose-900 border-rose-300'
                     }`}
                   >
@@ -353,7 +353,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           qc.status === 'approved_specialty'
                             ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-blue-100 text-blue-800'
+                            : 'bg-amber-100 text-amber-900'
                         }`}
                       >
                         {qc.status === 'approved_specialty' ? 'Specialty Grade' : 'Commercial Grade'}

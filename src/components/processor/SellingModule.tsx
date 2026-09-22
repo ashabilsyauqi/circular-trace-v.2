@@ -102,10 +102,10 @@ export const SellingModule: React.FC = () => {
       {!selectedLotForDetail ? (
         <>
           {/* Marketplace Storefront & Merchant Admin Header */}
-          <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="bg-gradient-to-r from-[#18110D] via-[#291B13] to-[#1F140E] text-white rounded-2xl p-5 sm:p-6 shadow-sm border border-[#382419] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-200 border border-amber-400/30">
                   Panel Admin Marketplace Pengolah
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
@@ -116,7 +116,7 @@ export const SellingModule: React.FC = () => {
               <h2 className="text-xl sm:text-2xl font-black tracking-tight">
                 {currentUser?.organization || currentUser?.name || 'Stasiun Mill Pengolah Kopi'}
               </h2>
-              <p className="text-xs text-slate-300 mt-1 max-w-xl">
+              <p className="text-xs text-stone-300 mt-1 max-w-xl">
                 Kelola etalase green bean specialty hasil olahan pabrik yang telah selesai dari lembar kerja. Atur harga jual, pantau pesanan dari Roastery &amp; Cafe, serta kelola lembar kerja produk marketplace.
               </p>
             </div>
@@ -135,31 +135,31 @@ export const SellingModule: React.FC = () => {
 
           {/* Executive KPI Header (Skripsi Odoo ERP Stat Buttons) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs">
+            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-stone-200/80 rounded-xl shadow-xs">
               <div className="p-2 rounded-lg bg-emerald-50 text-emerald-700">
                 <DollarSign className="w-5 h-5" />
               </div>
               <div>
-                <span className="o_stat_value !text-base text-slate-900 font-mono">
+                <span className="o_stat_value !text-base text-stone-900 font-mono">
                   Rp {totalRevenue.toLocaleString()}
                 </span>
-                <span className="o_stat_text text-slate-500 block">Total Penjualan ({mySalesTransactions.length} Order)</span>
+                <span className="o_stat_text text-stone-500 block">Total Penjualan ({mySalesTransactions.length} Order)</span>
               </div>
             </div>
 
-            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs">
-              <div className="p-2 rounded-lg bg-blue-50 text-blue-700">
+            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-stone-200/80 rounded-xl shadow-xs">
+              <div className="p-2 rounded-lg bg-amber-50 text-amber-800">
                 <Store className="w-5 h-5" />
               </div>
               <div>
-                <span className="o_stat_value !text-base text-slate-900 font-mono">
-                  {totalAvailableStockKg.toLocaleString()} <span className="text-xs font-normal text-slate-500">kg</span>
+                <span className="o_stat_value !text-base text-stone-900 font-mono">
+                  {totalAvailableStockKg.toLocaleString()} <span className="text-xs font-normal text-stone-500">kg</span>
                 </span>
-                <span className="o_stat_text text-slate-500 block">Green Bean Siap Jual ({totalActiveLots} Lot)</span>
+                <span className="o_stat_text text-stone-500 block">Green Bean Siap Jual ({totalActiveLots} Lot)</span>
               </div>
             </div>
 
-            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs">
+            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-stone-200/80 rounded-xl shadow-xs">
               <div className="p-2 rounded-lg bg-purple-50 text-purple-700">
                 <ShoppingBag className="w-5 h-5" />
               </div>
@@ -290,14 +290,14 @@ export const SellingModule: React.FC = () => {
                             >
                               <td className="!pl-5">
                                 <div className="flex items-center gap-2.5">
-                                  <div className="p-1.5 rounded-lg bg-blue-50 text-blue-700 font-bold">
+                                  <div className="p-1.5 rounded-lg bg-amber-50 text-amber-800 font-bold">
                                     <Coffee className="w-3.5 h-3.5" />
                                   </div>
                                   <div>
-                                    <span className="font-mono font-bold text-slate-900 block">
+                                    <span className="font-mono font-bold text-stone-900 block">
                                       {lot.id}
                                     </span>
-                                    <span className="font-semibold text-slate-600 text-[11px]">{lot.variety}</span>
+                                    <span className="font-semibold text-stone-600 text-[11px]">{lot.variety}</span>
                                   </div>
                                 </div>
                               </td>
@@ -683,23 +683,23 @@ export const SellingModule: React.FC = () => {
             </div>
 
             {/* Header info */}
-            <div className="p-6 border-b border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="p-6 border-b border-stone-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200">
+                <div className="p-3 rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
                   <Store className="w-6 h-6" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-mono font-bold text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-mono font-bold text-stone-900 tracking-tight">
                       {selectedLotForDetail.id}
                     </h2>
                     <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold">
                       {selectedLotForDetail.processMethod}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Varietas: <strong className="text-slate-800">{selectedLotForDetail.variety}</strong> • Petani:{' '}
-                    <strong className="text-slate-800">{selectedLotForDetail.sourceFarmerName}</strong> ({selectedLotForDetail.sourceOrigin})
+                  <p className="text-xs text-stone-500 mt-1">
+                    Varietas: <strong className="text-stone-800">{selectedLotForDetail.variety}</strong> • Petani:{' '}
+                    <strong className="text-stone-800">{selectedLotForDetail.sourceFarmerName}</strong> ({selectedLotForDetail.sourceOrigin})
                   </p>
                 </div>
               </div>
@@ -707,7 +707,7 @@ export const SellingModule: React.FC = () => {
               {/* Stat row */}
               <div className="flex flex-wrap gap-2">
                 <div className="o_stat_button">
-                  <Coffee className="w-4 h-4 text-blue-600" />
+                  <Coffee className="w-4 h-4 text-amber-700" />
                   <div>
                     <span className="o_stat_value">{selectedLotForDetail.availableWeightKg || 0} kg</span>
                     <span className="o_stat_text">Stok Tersedia</span>
@@ -732,9 +732,9 @@ export const SellingModule: React.FC = () => {
 
             {/* Detailed specifications */}
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-              <div className="bg-slate-50/70 p-5 rounded-2xl border border-slate-200 space-y-3">
-                <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2 border-b border-slate-200 pb-2">
-                  <Coffee className="w-4 h-4 text-blue-700" /> Parameter Pasca Panen &amp; Mutu Fisik
+              <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200 space-y-3">
+                <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2 border-b border-stone-200 pb-2">
+                  <Coffee className="w-4 h-4 text-amber-700" /> Parameter Pasca Panen &amp; Mutu Fisik
                 </h4>
                 <div className="grid grid-cols-2 gap-3 text-slate-700">
                   <div>

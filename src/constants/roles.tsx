@@ -26,8 +26,8 @@ export const ROLE_DETAILS: Record<
   },
   gudang: {
     label: 'Gudang (Warehouse QA)',
-    badgeClass: 'bg-blue-100 text-blue-800 border-blue-300',
-    icon: <Warehouse className="w-4 h-4 text-blue-600" />,
+    badgeClass: 'bg-stone-200 text-stone-900 border-stone-300',
+    icon: <Warehouse className="w-4 h-4 text-stone-700" />,
     description: 'Beli green bean, simpan klimatik, & jual ke Roaster',
   },
   roaster: {

@@ -205,15 +205,15 @@ export const InventoryModule: React.FC = () => {
         <>
           {/* 1. Metric KPI Cards (Skripsi Odoo ERP Stat Buttons) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs">
-              <div className="p-2 rounded-lg bg-blue-50 text-blue-700">
-                <DollarSign className="w-5 h-5" />
+            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-stone-200/80 rounded-xl shadow-xs">
+              <div className="p-2 rounded-lg bg-stone-100 text-stone-800">
+                <DollarSign className="w-5 h-5 text-amber-700" />
               </div>
               <div>
-                <span className="o_stat_value !text-base text-slate-900 font-mono">
+                <span className="o_stat_value !text-base text-stone-900 font-mono">
                   Rp {grandTotalValue.toLocaleString()}
                 </span>
-                <span className="o_stat_text text-slate-500 block">Total Aset Gudang (FIFO)</span>
+                <span className="o_stat_text text-stone-500 block">Total Aset Gudang (FIFO)</span>
               </div>
             </div>
 
@@ -928,7 +928,7 @@ export const InventoryModule: React.FC = () => {
                   </div>
                 </div>
                 <div className="o_stat_button">
-                  <DollarSign className="w-4 h-4 text-blue-600" />
+                  <DollarSign className="w-4 h-4 text-amber-700" />
                   <div>
                     <span className="o_stat_value">Rp {detailCherryItem.purchasePricePerKg.toLocaleString()}</span>
                     <span className="o_stat_text">HPP Modal / kg</span>
@@ -1153,7 +1153,7 @@ export const InventoryModule: React.FC = () => {
                   </div>
                 </div>
                 <div className="o_stat_button">
-                  <DollarSign className="w-4 h-4 text-blue-600" />
+                  <DollarSign className="w-4 h-4 text-amber-700" />
                   <div>
                     <span className="o_stat_value">Rp {detailGreenBeanLot.pricePerKg.toLocaleString()}</span>
                     <span className="o_stat_text">Harga Jual / kg</span>

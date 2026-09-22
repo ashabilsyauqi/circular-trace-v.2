@@ -15,7 +15,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   if (!currentUser) return null;
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans antialiased">
+    <div className="min-h-screen bg-[#F8F5F0] text-[#18110D] flex flex-col font-sans antialiased">
       <AdminHeader title={currentUser.organization} subtitle={currentUser.name} />
 
       <main className="o_form_sheet_bg flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto">

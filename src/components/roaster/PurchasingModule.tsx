@@ -57,7 +57,7 @@ const STATUS_BADGE: Record<string, { icon: React.ReactNode; className: string; l
   },
   approved: {
     icon: <ShieldCheck className="w-3 h-3" />,
-    className: 'bg-blue-100 text-blue-800 border-blue-300',
+    className: 'bg-amber-100 text-amber-900 border-amber-300',
     label: 'Disetujui',
   },
   received: {
@@ -576,7 +576,7 @@ export const PurchasingModule: React.FC = () => {
 
               {(detailModalPO.status === 'approved' || detailModalPO.status === 'received') &&
                 detailModalPO.approvalSignedBy && (
-                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-[11px] text-blue-800">
+                  <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-[11px] text-amber-900">
                     <PenTool className="w-4 h-4 shrink-0" />
                     <span>
                       Ditanda tangani secara digital oleh <strong>{detailModalPO.approvalSignedBy}</strong>

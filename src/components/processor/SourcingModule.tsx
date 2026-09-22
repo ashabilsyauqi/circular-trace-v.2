@@ -147,13 +147,13 @@ export const SourcingModule: React.FC = () => {
               </div>
             </div>
 
-            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
-                <DollarSign className="w-5 h-5" />
+            <div className="o_stat_button bg-white shadow-2xs border border-stone-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-stone-100 text-stone-700 flex items-center justify-center shrink-0">
+                <DollarSign className="w-5 h-5 text-amber-700" />
               </div>
               <div>
-                <div className="o_stat_value text-blue-900">Rp {(estTotalCherryValue / 1000000).toFixed(1)} jt</div>
-                <div className="o_stat_text text-slate-500">Est. Nilai Pengadaan</div>
+                <div className="o_stat_value text-stone-900">Rp {(estTotalCherryValue / 1000000).toFixed(1)} jt</div>
+                <div className="o_stat_text text-stone-500">Est. Nilai Pengadaan</div>
               </div>
             </div>
           </div>
@@ -318,10 +318,10 @@ export const SourcingModule: React.FC = () => {
 
               {/* VIEW 2: ODOO ERP LIST TABLE */}
               {viewMode === 'table' && (
-                <div className="o_form_sheet p-0 overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-2xs">
+                <div className="o_form_sheet p-0 overflow-hidden bg-white border border-stone-200 rounded-2xl shadow-2xs">
                   <div className="overflow-x-auto">
-                    <table className="o_list_table w-full text-left text-xs text-slate-700">
-                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                    <table className="o_list_table w-full text-left text-xs text-stone-700">
+                      <thead className="bg-[#FAF7F2] border-b border-stone-200 text-stone-700 font-bold uppercase tracking-wider text-[11px]">
                         <tr>
                           <th className="py-3.5 px-4">ID Lot Ceri</th>
                           <th className="py-3.5 px-4">Petani &amp; Varietas</th>
@@ -332,29 +332,29 @@ export const SourcingModule: React.FC = () => {
                           <th className="py-3.5 px-4 text-right">Tindakan Cepat</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-stone-100">
                         {filteredLots.map((lot) => (
                           <tr
                             key={lot.id}
                             onClick={() => handleOpenDetail(lot)}
-                            className="hover:bg-blue-50/50 cursor-pointer transition-colors"
+                            className="hover:bg-amber-50/40 cursor-pointer transition-colors"
                           >
-                            <td className="py-3.5 px-4 font-mono font-bold text-slate-900">{lot.id}</td>
+                            <td className="py-3.5 px-4 font-mono font-bold text-stone-900">{lot.id}</td>
                             <td className="py-3.5 px-4">
-                              <div className="font-bold text-slate-900">{lot.variety}</div>
-                              <div className="text-[11px] text-slate-500">Petani: {lot.farmerName}</div>
+                              <div className="font-bold text-stone-900">{lot.variety}</div>
+                              <div className="text-[11px] text-stone-500">Petani: {lot.farmerName}</div>
                             </td>
-                            <td className="py-3.5 px-4 text-slate-700">
+                            <td className="py-3.5 px-4 text-stone-700">
                               <div>{lot.farmLocation}</div>
-                              <div className="text-[11px] text-slate-400">{lot.altitude}</div>
+                              <div className="text-[11px] text-stone-400">{lot.altitude}</div>
                             </td>
                             <td className="py-3.5 px-4">
                               <span className="font-black text-emerald-700 font-mono text-sm">{lot.brix}° Brix</span>
                             </td>
-                            <td className="py-3.5 px-4 font-bold text-slate-900 font-mono">
+                            <td className="py-3.5 px-4 font-bold text-stone-900 font-mono">
                               {lot.availableWeightKg} kg
                             </td>
-                            <td className="py-3.5 px-4 font-bold text-slate-900 font-mono">
+                            <td className="py-3.5 px-4 font-bold text-stone-900 font-mono">
                               Rp {lot.pricePerKg.toLocaleString()}
                             </td>
                             <td className="py-3.5 px-4 text-right">
@@ -367,7 +367,7 @@ export const SourcingModule: React.FC = () => {
                                   }}
                                   className="btn-odoo-secondary text-xs py-1 px-2.5"
                                 >
-                                  <Warehouse className="w-3.5 h-3.5 text-emerald-600" />
+                                  <Warehouse className="w-3.5 h-3.5 text-emerald-700" />
                                   <span>Beli ke Gudang</span>
                                 </button>
                                 <button
@@ -376,7 +376,7 @@ export const SourcingModule: React.FC = () => {
                                     e.stopPropagation();
                                     handleDirectStart7Stage(lot);
                                   }}
-                                  className="btn-odoo-primary text-xs py-1 px-3 bg-amber-600 hover:bg-amber-700 border-amber-700"
+                                  className="btn-odoo-primary text-xs py-1 px-3"
                                 >
                                   <Flame className="w-3.5 h-3.5" />
                                   <span>Olah 7-Stage →</span>
@@ -566,7 +566,7 @@ export const SourcingModule: React.FC = () => {
                 icon={<Mountain className="w-4 h-4" />}
                 value={detailLot.altitude}
                 label="Elevasi Kebun"
-                color="blue"
+                color="stone"
               />
               <StatButton
                 icon={<DollarSign className="w-4 h-4" />}

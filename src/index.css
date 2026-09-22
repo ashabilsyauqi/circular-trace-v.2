@@ -2,24 +2,24 @@
 
 @layer base {
   :root {
-    --color-coffee-dark: #231709;
-    --color-coffee-espresso: #3d2410;
-    --color-coffee-roast: #6f4e37;
-    --color-coffee-caramel: #c88a48;
-    --color-coffee-crema: #f4ede4;
+    --color-coffee-dark: #18110D;
+    --color-coffee-espresso: #291B13;
+    --color-coffee-roast: #6F4E37;
+    --color-coffee-caramel: #C88A48;
+    --color-coffee-crema: #F4EDE4;
     
-    --o-primary-color: #1E3A8A;
-    --o-primary-dark: #0F172A;
-    --o-accent-color: #2563EB;
-    --o-accent-dark: #1D4ED8;
-    --o-bg-color: #F8FAFC;
-    --o-border-color: #E2E8F0;
-    --o-sheet-border: #CBD5E1;
+    --o-primary-color: #B45309;
+    --o-primary-dark: #18110D;
+    --o-accent-color: #D97706;
+    --o-accent-dark: #92400E;
+    --o-bg-color: #F8F5F0;
+    --o-border-color: #E6DFD5;
+    --o-sheet-border: #E0D7CC;
   }
 
   body {
-    background-color: #f8fafc;
-    color: #1e293b;
+    background-color: #F8F5F0;
+    color: #261A13;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     margin: 0;
     padding: 0;
@@ -34,30 +34,30 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #F3ECE2;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #D4C9BA;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #B9AA96;
 }
 
 /* ==========================================================================
-   Skripsi ERP Design System: Odoo Style Navigation, Control Panel & Sheets
+   Circular Coffee ERP Design System: Odoo Style Navigation, Control Panel & Sheets
    ========================================================================== */
 
-/* Main Top Navbar */
+/* Main Top Navbar (Deep Roasted Espresso with Warm Amber Accent) */
 .o_main_navbar {
-  background: linear-gradient(90deg, #0f172a 0%, #1e3a8a 45%, #1d4ed8 100%) !important;
-  height: 48px !important;
-  min-height: 48px !important;
-  max-height: 48px !important;
+  background: linear-gradient(90deg, #18110D 0%, #291B13 45%, #1F140E 100%) !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
   z-index: 1040;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid #382419 !important;
   user-select: none;
-  padding: 0 14px;
+  padding: 0 16px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -66,64 +66,71 @@
 
 .o_nav_link, 
 .o_nav_dropdown_toggle {
-  color: rgba(255, 255, 255, 0.9) !important;
-  font-size: 12.5px !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
-  padding: 0 12px !important;
-  height: 48px !important;
-  line-height: 48px !important;
+  padding: 0 11px !important;
+  height: 50px !important;
+  line-height: 50px !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px;
   text-decoration: none !important;
   background: transparent;
   border: none !important;
+  border-bottom: 2px solid transparent !important;
   outline: none !important;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 .o_nav_link:hover,
-.o_nav_dropdown_toggle:hover,
+.o_nav_dropdown_toggle:hover {
+  color: #FFFFFF !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 .o_nav_link.active {
-  color: #ffffff !important;
-  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #FDE68A !important;
+  background-color: rgba(217, 119, 6, 0.15) !important;
+  border-bottom: 2px solid #F59E0B !important;
+  font-weight: 700 !important;
 }
 
 /* Two-Tier Control Panel */
 .o_control_panel {
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   border-bottom: 1px solid var(--o-border-color);
   padding: 10px 18px;
   z-index: 1030;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 2px rgba(35, 23, 9, 0.03);
 }
 
 .o_breadcrumb {
   font-size: 13.5px;
   font-weight: 700;
-  color: #0f172a;
+  color: #18110D;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .o_searchview {
-  background-color: #ffffff;
-  border: 1px solid #cbd5e1;
+  background-color: #FFFFFF;
+  border: 1px solid #D8CFBC;
   border-radius: 8px;
   padding: 4px 10px;
   display: flex;
   align-items: center;
-  min-width: 260px;
-  max-width: 440px;
+  min-width: 240px;
+  max-width: 400px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .o_searchview:focus-within {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: #D97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15);
 }
 
 .o_searchview_input {
@@ -132,15 +139,15 @@
   font-size: 12px;
   width: 100%;
   background: transparent;
-  color: #1e293b;
+  color: #18110D;
 }
 
-/* Action Buttons */
+/* Action Buttons (Circular Coffee Warm Theme) */
 .btn-odoo-primary {
-  background-color: #2563eb;
-  color: #ffffff;
-  border: 1px solid #1d4ed8;
-  font-weight: 600;
+  background-color: #B45309;
+  color: #FFFFFF;
+  border: 1px solid #92400E;
+  font-weight: 700;
   font-size: 12px;
   border-radius: 8px;
   padding: 6px 14px;
@@ -150,18 +157,19 @@
   transition: all 0.15s ease;
   cursor: pointer;
   text-decoration: none;
+  box-shadow: 0 1px 2px rgba(180, 83, 9, 0.2);
 }
 
 .btn-odoo-primary:hover {
-  background-color: #1d4ed8;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  background-color: #92400E;
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.35);
 }
 
 .btn-odoo-secondary {
-  background-color: #ffffff;
-  color: #1e293b;
-  border: 1px solid #cbd5e1;
+  background-color: #FFFFFF;
+  color: #291B13;
+  border: 1px solid #D8CFBC;
   font-weight: 600;
   font-size: 12px;
   border-radius: 8px;
@@ -175,19 +183,18 @@
 }
 
 .btn-odoo-secondary:hover {
-  background-color: #f8fafc;
-  color: #0f172a;
-  border-color: #94a3b8;
+  background-color: #FAF7F2;
+  color: #18110D;
+  border-color: #B9AA96;
 }
-
-/* Stat Buttons */
+/* Stat Buttons (Circular Coffee Warm Theme) */
 .o_stat_button {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   border: 1px solid var(--o-border-color);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 8px 16px;
   min-width: 140px;
   transition: all 0.15s ease;
@@ -195,32 +202,32 @@
 }
 
 .o_stat_button:hover {
-  border-color: #94a3b8;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  border-color: #D8CFBC;
+  box-shadow: 0 2px 5px rgba(35, 23, 9, 0.05);
 }
 
 .o_stat_value {
   font-size: 15px;
   font-weight: 800;
   line-height: 1.15;
-  color: #0f172a;
+  color: #18110D;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .o_stat_text {
   font-size: 10px;
   font-weight: 700;
-  color: #64748b;
+  color: #78695E;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 /* Form Sheets & Form Background */
 .o_form_sheet {
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   border: 1px solid var(--o-sheet-border);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(35, 23, 9, 0.04);
   margin-bottom: 20px;
 }
 
@@ -229,19 +236,19 @@
   padding: 18px;
 }
 
-/* Statusbar & Chevron Arrow Step Bar */
+/* Statusbar & Chevron Arrow Step Bar (Circular Coffee Warm Amber & Forest Green) */
 .o_form_statusbar {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  background-color: #ffffff;
-  border: 1px solid #cbd5e1;
+  background-color: #FFFFFF;
+  border: 1px solid #E2D9CE;
   border-radius: 10px;
   padding: 6px 12px;
   margin-bottom: 14px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 2px rgba(35, 23, 9, 0.03);
 }
 
 .o_statusbar_status {
@@ -260,8 +267,8 @@
   padding: 7px 16px 7px 22px;
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
-  background-color: #f1f5f9;
+  color: #78695E;
+  background-color: #F3ECE2;
   border: none;
   cursor: pointer;
   white-space: nowrap;
@@ -286,24 +293,24 @@
 }
 
 .o_arrow_button:hover {
-  background-color: #e2e8f0;
-  color: #0f172a;
+  background-color: #E7DFD4;
+  color: #18110D;
 }
 
 .o_arrow_button.active {
-  background-color: #2563eb;
-  color: #ffffff;
+  background-color: #B45309;
+  color: #FFFFFF;
   font-weight: 800;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 1px 3px rgba(180, 83, 9, 0.3);
 }
 
 .o_arrow_button.completed {
-  background-color: #ecfdf5;
-  color: #059669;
+  background-color: #ECFDF5;
+  color: #047857;
   font-weight: 700;
 }
 
-/* Odoo ERP List Table */
+/* Odoo ERP List Table (Clean Warm Coffee Theme) */
 .o_list_table {
   border-collapse: separate;
   border-spacing: 0;
@@ -315,9 +322,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #475569;
-  background-color: #f8fafc;
-  border-bottom: 1px solid #cbd5e1;
+  color: #4A382D;
+  background-color: #F7F3EE;
+  border-bottom: 1px solid #E2D9CE;
   padding: 10px 14px;
   user-select: none;
 }
@@ -325,10 +332,11 @@
 .o_list_table td {
   padding: 10px 14px;
   vertical-align: middle;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #F3EDE5;
   font-size: 12.5px;
+  color: #261A13;
 }
 
 .o_list_table tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: #FAF6F0;
 }

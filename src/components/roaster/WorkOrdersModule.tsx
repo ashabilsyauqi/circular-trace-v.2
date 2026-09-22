@@ -158,7 +158,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
     { label: string; bg: string; text: string; border: string; dot: string }
   > = {
     draft: { label: 'Draft', bg: 'bg-stone-100', text: 'text-stone-700', border: 'border-stone-200', dot: 'bg-stone-400' },
-    scheduled: { label: 'Scheduled', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', dot: 'bg-blue-500' },
+    scheduled: { label: 'Scheduled', bg: 'bg-stone-100', text: 'text-stone-800', border: 'border-stone-300', dot: 'bg-stone-500' },
     in_production: { label: 'In Production', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' },
     roasting: { label: 'Roasting Live', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-300', dot: 'bg-orange-500 animate-pulse' },
     qc_pending: { label: 'QC Pending', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', dot: 'bg-purple-500' },

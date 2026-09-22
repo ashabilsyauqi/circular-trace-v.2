@@ -205,13 +205,13 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
     <div
       className="fixed inset-0 z-50 p-4 sm:p-8 flex flex-col items-center justify-start overflow-y-auto"
       style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1d4ed8 100%)',
+        background: 'linear-gradient(135deg, #140D09 0%, #24160E 50%, #18100B 100%)',
       }}
     >
       {/* Close Button */}
       <button
         onClick={onClose}
-        className="fixed top-5 right-5 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition-colors cursor-pointer border border-white/20 shadow-lg z-50"
+        className="fixed top-5 right-5 text-amber-100/80 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition-colors cursor-pointer border border-white/15 shadow-lg z-50"
         title="Tutup Menu (ESC)"
       >
         <X className="w-5 h-5" />
@@ -219,32 +219,32 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
 
       {/* Header: Logo & Subtitle */}
       <div className="text-center mt-4 sm:mt-8 mb-4 max-w-xl">
-        <div className="w-16 h-16 rounded-2xl bg-white/10 border-2 border-white/30 backdrop-blur-md text-amber-400 flex items-center justify-center mx-auto mb-3 shadow-2xl">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 backdrop-blur-md text-amber-400 flex items-center justify-center mx-auto mb-3 shadow-2xl">
           <Cpu className="w-9 h-9" />
         </div>
         <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md">
-          <span className="text-amber-300">Circular</span>Trace ERP
+          <span className="text-amber-400">Circular</span>Trace ERP
         </h2>
-        <p className="text-blue-200 text-xs sm:text-sm mt-1 font-medium">
+        <p className="text-amber-200/80 text-xs sm:text-sm mt-1 font-medium">
           Sistem Terintegrasi Rantai Pasok Kopi &amp; Lembar Kerja Pengolahan Sirkular
         </p>
       </div>
 
       {/* Search Bar */}
       <div className="w-full max-w-lg mb-8 relative">
-        <Search className="w-5 h-5 text-white/50 absolute left-4 top-1/2 -translate-y-1/2" />
+        <Search className="w-5 h-5 text-amber-200/50 absolute left-4 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           autoFocus
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search Apps... (Ketik nama modul, e.g. Lembar Kerja, Roasting, Sourcing)"
-          className="w-full pl-12 pr-4 py-3 bg-white/15 border border-white/25 rounded-2xl text-white text-sm placeholder-white/50 focus:bg-white/20 focus:outline-hidden focus:ring-2 focus:ring-amber-400 transition-all shadow-xl"
+          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-amber-500/20 rounded-2xl text-white text-sm placeholder-amber-100/40 focus:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-amber-400 transition-all shadow-xl"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs font-bold"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-amber-200/60 hover:text-white text-xs font-bold"
           >
             Clear
           </button>
@@ -259,7 +259,7 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
             <button
               key={app.id}
               onClick={() => handleAppClick(app)}
-              className="group relative flex flex-col items-center text-center p-5 rounded-3xl bg-white/10 hover:bg-white/20 border border-white/15 hover:border-white/40 backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
+              className="group relative flex flex-col items-center text-center p-5 rounded-3xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/40 backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
             >
               {/* Tile Icon with Vibrant Gradient */}
               <div
@@ -269,13 +269,13 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
               </div>
 
               {/* Title & Category */}
-              <span className="text-[10px] uppercase font-bold text-amber-300/80 tracking-wider mb-0.5">
+              <span className="text-[10px] uppercase font-bold text-amber-400/80 tracking-wider mb-0.5">
                 {app.category}
               </span>
-              <h3 className="font-bold text-sm text-white leading-tight group-hover:text-amber-200 transition-colors">
+              <h3 className="font-bold text-sm text-white leading-tight group-hover:text-amber-300 transition-colors">
                 {app.name}
               </h3>
-              <p className="text-[11px] text-blue-100/70 mt-1 leading-snug line-clamp-2">
+              <p className="text-[11px] text-stone-300/70 mt-1 leading-snug line-clamp-2">
                 {app.subtitle}
               </p>
 
@@ -291,7 +291,7 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
       </div>
 
       {/* Footer Info */}
-      <div className="mt-auto py-3 text-center text-xs text-blue-200/60 font-mono">
+      <div className="mt-auto py-3 text-center text-xs text-amber-200/60 font-mono">
         Tekan <kbd className="bg-white/20 px-1.5 py-0.5 rounded text-white text-[10px]">ESC</kbd> untuk kembali ke aplikasi &bull; Logged as <strong>{currentUser?.name}</strong> ({currentUser?.role})
       </div>
     </div>

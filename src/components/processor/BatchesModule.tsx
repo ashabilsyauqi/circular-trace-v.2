@@ -416,57 +416,57 @@ export const BatchesModule: React.FC = () => {
         <>
           {/* Top Stat Buttons / Executive ERP KPI Header */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+            <div className="o_stat_button bg-white shadow-2xs border border-stone-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
                 <Flame className="w-5 h-5" />
               </div>
               <div>
-                <div className="o_stat_value text-blue-900">{totalBatchesCount} Batch</div>
-                <div className="o_stat_text text-slate-500">{inProgressBatches.length} Aktif Berjalan</div>
+                <div className="o_stat_value text-amber-950">{totalBatchesCount} Batch</div>
+                <div className="o_stat_text text-stone-500">{inProgressBatches.length} Aktif Berjalan</div>
               </div>
             </div>
 
-            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+            <div className="o_stat_button bg-white shadow-2xs border border-stone-200 p-3.5 rounded-2xl flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
                 <Coffee className="w-5 h-5" />
               </div>
               <div>
                 <div className="o_stat_value text-emerald-900">{totalCherryProcessedKg.toLocaleString()} kg</div>
-                <div className="o_stat_text text-slate-500">Total Ceri Intake</div>
+                <div className="o_stat_text text-stone-500">Total Ceri Intake</div>
               </div>
             </div>
 
-            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
-                <Warehouse className="w-5 h-5" />
+            <div className="o_stat_button bg-white shadow-2xs border border-stone-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-stone-100 text-stone-700 flex items-center justify-center shrink-0">
+                <Warehouse className="w-5 h-5 text-stone-800" />
               </div>
               <div>
-                <div className="o_stat_value text-indigo-900">{totalGreenBeanProducedKg.toLocaleString()} kg</div>
-                <div className="o_stat_text text-slate-500">Green Bean Dihasilkan</div>
+                <div className="o_stat_value text-stone-900">{totalGreenBeanProducedKg.toLocaleString()} kg</div>
+                <div className="o_stat_text text-stone-500">Green Bean Dihasilkan</div>
               </div>
             </div>
 
-            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+            <div className="o_stat_button bg-white shadow-2xs border border-stone-200 p-3.5 rounded-2xl flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
                 <TrendingUp className="w-5 h-5" />
               </div>
               <div>
                 <div className="o_stat_value text-purple-900">{avgYieldPercent}%</div>
-                <div className="o_stat_text text-slate-500">Rendemen Rata-Rata</div>
+                <div className="o_stat_text text-stone-500">Rendemen Rata-Rata</div>
               </div>
             </div>
           </div>
 
           {/* Status Filter Sub-Tabs */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-slate-200/90 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-stone-200/90 shadow-2xs">
             <div className="flex items-center gap-1.5 flex-wrap">
               <button
                 type="button"
                 onClick={() => setBatchStatusFilter('in_progress')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   batchStatusFilter === 'in_progress'
-                    ? 'bg-blue-600 text-white shadow-2xs font-bold'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    ? 'bg-amber-700 text-white shadow-2xs font-bold'
+                    : 'text-stone-600 hover:bg-stone-100'
                 }`}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -478,8 +478,8 @@ export const BatchesModule: React.FC = () => {
                 onClick={() => setBatchStatusFilter('all')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   batchStatusFilter === 'all'
-                    ? 'bg-blue-600 text-white shadow-2xs font-bold'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    ? 'bg-amber-700 text-white shadow-2xs font-bold'
+                    : 'text-stone-600 hover:bg-stone-100'
                 }`}
               >
                 Semua Batch ({processingBatches.length})
@@ -490,8 +490,8 @@ export const BatchesModule: React.FC = () => {
                 onClick={() => setBatchStatusFilter('completed')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   batchStatusFilter === 'completed'
-                    ? 'bg-blue-600 text-white shadow-2xs font-bold'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    ? 'bg-amber-700 text-white shadow-2xs font-bold'
+                    : 'text-stone-600 hover:bg-stone-100'
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -577,44 +577,44 @@ export const BatchesModule: React.FC = () => {
                         <tr
                           key={batch.id}
                           onClick={() => handleSelectBatch(batch)}
-                          className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
+                          className="hover:bg-amber-50/40 transition-colors cursor-pointer group"
                         >
                           <td className="px-5 py-3.5">
                             <div className="flex items-center gap-3">
-                              <div className="p-2 rounded-xl bg-blue-50 text-blue-700 font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                              <div className="p-2 rounded-xl bg-amber-50 text-amber-800 font-bold group-hover:bg-amber-700 group-hover:text-white transition-colors">
                                 <Flame className="w-4 h-4" />
                               </div>
                               <div>
-                                <span className="font-mono font-bold text-slate-900 block group-hover:text-blue-700 transition-colors">
+                                <span className="font-mono font-bold text-stone-900 block group-hover:text-amber-800 transition-colors">
                                   {batch.batchCode}
                                 </span>
-                                <span className="font-semibold text-slate-600">{batch.variety}</span>
+                                <span className="font-semibold text-stone-600">{batch.variety}</span>
                               </div>
                             </div>
                           </td>
 
                           <td className="px-4 py-3.5">
-                            <span className="font-bold text-slate-900 block">{batch.sourceFarmerName}</span>
-                            <span className="text-slate-500 text-[11px] flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3 h-3 text-slate-400" />
+                            <span className="font-bold text-stone-900 block">{batch.sourceFarmerName}</span>
+                            <span className="text-stone-500 text-[11px] flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-stone-400" />
                               {batch.sourceOrigin} ({batch.altitude})
                             </span>
                           </td>
 
                           <td className="px-4 py-3.5">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-100 text-slate-800 border border-slate-200">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-800 border border-stone-200">
                               {batch.fermentationLog.method}
                             </span>
                           </td>
 
                           <td className="px-4 py-3.5">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-blue-900 border border-blue-200">
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
                               {currentStageInfo?.label || batch.currentStage}
                             </span>
                           </td>
 
-                          <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-900">
+                          <td className="px-4 py-3.5 text-right font-mono font-bold text-stone-900">
                             {batch.intakeLog.cherryWeightKg} kg
                           </td>
 
@@ -783,13 +783,13 @@ export const BatchesModule: React.FC = () => {
                   onClick={handleSaveWorksheet}
                   className="btn-odoo-secondary"
                 >
-                  <Save className="w-3.5 h-3.5 text-blue-600" />
+                  <Save className="w-3.5 h-3.5 text-amber-700" />
                   <span>Simpan Perubahan</span>
                 </button>
 
                 <button
                   onClick={handleBackToList}
-                  className="btn-odoo-secondary text-slate-500"
+                  className="btn-odoo-secondary text-stone-500"
                 >
                   <span>Batal / Kembali</span>
                 </button>
@@ -808,45 +808,45 @@ export const BatchesModule: React.FC = () => {
             </div>
 
             {/* Odoo Form Sheet */}
-            <div className="o_form_sheet p-6 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+            <div className="o_form_sheet p-6 bg-white border border-stone-200 rounded-2xl shadow-2xs">
               {/* Sheet Header: Batch Info (Left) & Stat Buttons (Right) */}
-              <div className="pb-5 mb-5 border-b border-slate-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+              <div className="pb-5 mb-5 border-b border-stone-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-900 border border-blue-200">
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
                       Processing Worksheet &bull; 7-Stage
                     </span>
-                    <span className="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase bg-amber-100 text-amber-900 border border-amber-300">
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase bg-stone-100 text-stone-900 border border-stone-300">
                       {editedBatch.fermentationLog.method}
                     </span>
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-stone-900 font-mono tracking-tight">
                     {editedBatch.batchCode}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Petani Asal: <strong className="text-slate-800">{editedBatch.sourceFarmerName}</strong> &bull; {editedBatch.sourceOrigin} ({editedBatch.altitude}) &bull; Varietas: <strong className="text-slate-800">{editedBatch.variety}</strong>
+                  <p className="text-xs text-stone-500 mt-1">
+                    Petani Asal: <strong className="text-stone-800">{editedBatch.sourceFarmerName}</strong> &bull; {editedBatch.sourceOrigin} ({editedBatch.altitude}) &bull; Varietas: <strong className="text-stone-800">{editedBatch.variety}</strong>
                   </p>
                 </div>
 
                 {/* Right Side Stat Widgets */}
                 <div className="flex flex-wrap gap-2">
-                  <div className="o_stat_button bg-slate-50 border border-slate-200">
-                    <Coffee className="w-4 h-4 text-slate-600" />
+                  <div className="o_stat_button bg-[#FAF7F2] border border-stone-200">
+                    <Coffee className="w-4 h-4 text-stone-600" />
                     <div>
-                      <div className="o_stat_value text-slate-800">{editedBatch.intakeLog.cherryWeightKg} kg</div>
+                      <div className="o_stat_value text-stone-800">{editedBatch.intakeLog.cherryWeightKg} kg</div>
                       <div className="o_stat_text">Ceri Intake</div>
                     </div>
                   </div>
 
-                  <div className="o_stat_button bg-slate-50 border border-slate-200">
-                    <TrendingUp className="w-4 h-4 text-blue-600" />
+                  <div className="o_stat_button bg-[#FAF7F2] border border-stone-200">
+                    <TrendingUp className="w-4 h-4 text-amber-700" />
                     <div>
-                      <div className="o_stat_value text-blue-700">{calculateBatchMassBalance(editedBatch).actualYieldPercent}%</div>
+                      <div className="o_stat_value text-amber-800">{calculateBatchMassBalance(editedBatch).actualYieldPercent}%</div>
                       <div className="o_stat_text">Rendemen Yield</div>
                     </div>
                   </div>
 
-                  <div className="o_stat_button bg-slate-50 border border-slate-200">
+                  <div className="o_stat_button bg-[#FAF7F2] border border-stone-200">
                     <Droplets className="w-4 h-4 text-emerald-600" />
                     <div>
                       <div className="o_stat_value text-emerald-700">{editedBatch.dryingLog.finalMoisturePercent}%</div>
@@ -1646,7 +1646,7 @@ export const BatchesModule: React.FC = () => {
                         <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
                           <Sliders className="w-4 h-4 text-amber-600" /> Mesin Huller &amp; Bobot Gabah Masuk
                         </h4>
-                        <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">
                           Stage 5 Active
                         </span>
                       </div>
@@ -1845,7 +1845,7 @@ export const BatchesModule: React.FC = () => {
                       {/* Screen Distribution */}
                       <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-3">
                         <h4 className="font-bold text-stone-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                          <Sliders className="w-4 h-4 text-blue-600" /> Ayakan Fisik (Screen Size)
+                          <Sliders className="w-4 h-4 text-amber-700" /> Ayakan Fisik (Screen Size)
                         </h4>
                         <div className="grid grid-cols-2 gap-2.5">
                           <div>

@@ -718,12 +718,12 @@ export const SourcingModule: React.FC = () => {
                       }
                       className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 bg-white"
                     >
-                      <option value="Anaerobic Natural">Anaerobic Natural (Slow Ferment)</option>
-                      <option value="Full Washed">Full Washed (Clean & Crisp)</option>
-                      <option value="Natural / Dry">Natural / Dry (Fruity Body)</option>
-                      <option value="Honey (Yellow/Red)">Honey (Sweet Balance)</option>
-                      <option value="Wine Process">Wine Process (Extended Ferment)</option>
-                      <option value="Wet Hulled (Giling Basah)">Wet Hulled (Giling Basah Tradisional)</option>
+                      <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur (Sun Dried)</option>
+                      <option value="Full Washed">2. Washed (Wet) — Depulper, Fermentasi & Cuci (Clean Cup)</option>
+                      <option value="Honey (Yellow/Red)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir Lengket</option>
+                      <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek pada Moisture ~30-40%</option>
+                      <option value="Anaerobic Natural">Anaerobic Natural — Extended Sealed Fermentation</option>
+                      <option value="Wine Process">Wine Process — Extended Ferment</option>
                     </select>
                   </div>
 

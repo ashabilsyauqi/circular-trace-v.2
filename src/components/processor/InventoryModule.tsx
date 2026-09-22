@@ -31,7 +31,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { ProcessedGreenBeanLot, CoffeeWasteManagement } from '../../types/coffee';
-import { ProcessorCherryStockItem } from '../../types/processorErp';
+import { ProcessorCherryStockItem, ProcessingMethod } from '../../types/processorErp';
 import { ProcessorBarcodeModal } from '../ProcessorBarcodeModal';
 import { calculateProcessorEcoRating } from '../../utils/ecoRating';
 import { RecordBreadcrumb } from '../shared/RecordBreadcrumb';
@@ -59,6 +59,7 @@ export const InventoryModule: React.FC = () => {
     processorCherryStock,
     updateProcessedLotWaste,
     createProcessingBatch,
+    setActiveProcessingBatchId,
     setProcessorActiveTab,
     setActiveView,
   } = useCoffee();
@@ -72,17 +73,13 @@ export const InventoryModule: React.FC = () => {
   const [detailCherryItem, setDetailCherryItem] = useState<ProcessorCherryStockItem | null>(null);
   const [detailGreenBeanLot, setDetailGreenBeanLot] = useState<ProcessedGreenBeanLot | null>(null);
 
+  // Detail Sheet Form State for Cherry Processing
+  const [detailProcessKg, setDetailProcessKg] = useState<number>(500);
+  const [detailProcessMethod, setDetailProcessMethod] = useState<ProcessingMethod>('Natural / Dry');
+
   // Modals
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
   const [selectedLotForBarcode, setSelectedLotForBarcode] = useState<ProcessedGreenBeanLot | null>(null);
-
-  // Quick Start Processing Modal from Cherry Stock
-  const [cherryToProcess, setCherryToProcess] = useState<ProcessorCherryStockItem | null>(null);
-  const [processKg, setProcessKg] = useState<number>(500);
-  const [processMethod, setProcessMethod] = useState<'Anaerobic Natural' | 'Full Washed' | 'Natural / Dry' | 'Honey (Yellow/Red)' | 'Wine Process' | 'Wet Hulled (Giling Basah)'>('Natural / Dry');
-  const [dryingMethod, setDryingMethod] = useState<'Solar Dryer Raised Bed' | 'Greenhouse Solar Dome' | 'Mechanical Controlled Dryer'>('Solar Dryer Raised Bed');
-  const [operatorName, setOperatorName] = useState('Budi Santoso (Mill Master)');
-  const [processNotes, setProcessNotes] = useState('Batch olahan dari stok ceri segar di gudang.');
 
   // Edit Waste Modal
   const [editingWasteLot, setEditingWasteLot] = useState<ProcessedGreenBeanLot | null>(null);
@@ -127,33 +124,35 @@ export const InventoryModule: React.FC = () => {
     return matchMethod && matchSearch;
   });
 
-  const handleOpenProcessModal = (cherryItem: ProcessorCherryStockItem) => {
-    setCherryToProcess(cherryItem);
-    setProcessKg(Math.min(cherryItem.availableWeightKg, 500));
+  const handleOpenDetailCherry = (item: ProcessorCherryStockItem) => {
+    setDetailCherryItem(item);
+    setDetailProcessKg(item.availableWeightKg);
+    setDetailProcessMethod('Natural / Dry');
   };
 
-  const handleConfirmStartProcess = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cherryToProcess) return;
+  // Direct 1-click create processing batch from cherry warehouse stock & open interactive Lembar Kerja
+  const handleDirectStart7StageFromStock = (
+    item: ProcessorCherryStockItem,
+    kg?: number,
+    method?: ProcessingMethod
+  ) => {
+    const amount = kg || item.availableWeightKg;
+    const chosenMethod = method || 'Natural / Dry';
 
     const newBatch = createProcessingBatch({
-      sourceCherryStockId: cherryToProcess.id,
-      boughtCherryKg: Number(processKg),
-      method: processMethod,
-      dryingMethod,
-      operatorName,
-      notes: processNotes,
+      sourceCherryStockId: item.id,
+      boughtCherryKg: Number(amount),
+      method: chosenMethod,
+      dryingMethod: 'Solar Dryer Raised Bed',
+      operatorName: 'Budi Santoso (Mill Master)',
+      notes: `Batch pengolahan metode ${chosenMethod} dari stok ceri segar gudang (${item.variety} - ${item.origin}).`,
     });
 
-    setCherryToProcess(null);
-    setDetailCherryItem(null);
+    if (detailCherryItem) setDetailCherryItem(null);
 
     if (newBatch) {
-      setSuccessMsg(`Batch pengolahan 7-Stage #${newBatch.batchCode} berhasil dibuat dari stok ceri ${cherryToProcess.id}!`);
-      setTimeout(() => {
-        setSuccessMsg('');
-        setProcessorActiveTab('batches');
-      }, 1200);
+      setActiveProcessingBatchId(newBatch.id);
+      setProcessorActiveTab('batches');
     }
   };
 
@@ -369,7 +368,7 @@ export const InventoryModule: React.FC = () => {
                         return (
                           <div
                             key={item.id}
-                            onClick={() => setDetailCherryItem(item)}
+                            onClick={() => handleOpenDetailCherry(item)}
                             className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-md hover:border-amber-400 transition-all flex flex-col justify-between cursor-pointer group"
                           >
                             <div>
@@ -452,14 +451,15 @@ export const InventoryModule: React.FC = () => {
 
                               {isAvailable && (
                                 <button
+                                  type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleOpenProcessModal(item);
+                                    handleDirectStart7StageFromStock(item);
                                   }}
-                                  className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1.5"
+                                  className="px-3.5 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
                                 >
                                   <Flame className="w-3.5 h-3.5" />
-                                  <span>Mulai Olah (7-Stage)</span>
+                                  <span>Mulai Olah (7-Stage) →</span>
                                 </button>
                               )}
                             </div>
@@ -490,7 +490,7 @@ export const InventoryModule: React.FC = () => {
                             {filteredCherryStock.map((item) => (
                               <tr
                                 key={item.id}
-                                onClick={() => setDetailCherryItem(item)}
+                                onClick={() => handleOpenDetailCherry(item)}
                                 className="hover:bg-amber-50/60 cursor-pointer transition-colors"
                               >
                                 <td className="py-4 px-5 font-mono font-bold text-sm text-stone-900">{item.id}</td>
@@ -517,13 +517,14 @@ export const InventoryModule: React.FC = () => {
                                 <td className="py-4 px-5 text-right">
                                   {item.availableWeightKg > 0 ? (
                                     <button
+                                      type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleOpenProcessModal(item);
+                                        handleDirectStart7StageFromStock(item);
                                       }}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] transition-colors shadow-xs ml-auto"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-[11px] transition-colors shadow-xs ml-auto cursor-pointer"
                                     >
-                                      <Flame className="w-3.5 h-3.5" /> Mulai Olah
+                                      <Flame className="w-3.5 h-3.5" /> Mulai Olah →
                                     </button>
                                   ) : (
                                     <span className="text-stone-400 text-[11px]">Habis</span>
@@ -957,23 +958,85 @@ export const InventoryModule: React.FC = () => {
                 </div>
               </div>
 
-              {/* Action Bar */}
-              <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-2xl flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-amber-800" />
-                  <span className="text-xs font-bold text-amber-950">
-                    Kirim Stok Ceri #{detailCherryItem.id} ke Lembar Kerja Manufaktur 7-Stage
+              {/* ERP Workstation Action Box */}
+              <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50/40 border-2 border-amber-300 rounded-3xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Flame className="w-5 h-5 text-amber-700" />
+                    <div>
+                      <h4 className="text-sm font-black text-amber-950 uppercase tracking-wider">
+                        Workstation Inisiasi Pengolahan 7-Stage
+                      </h4>
+                      <p className="text-[11px] text-stone-600">
+                        Kirim stok ceri segar langsung ke lembar kerja manufaktur stasiun pengolah.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-amber-200 text-amber-950 font-mono font-bold text-xs">
+                    Tersedia {detailCherryItem.availableWeightKg} kg
                   </span>
                 </div>
 
-                {detailCherryItem.availableWeightKg > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
+                      Volume yang Diolah (kg)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={detailCherryItem.availableWeightKg}
+                      value={detailProcessKg}
+                      onChange={(e) => setDetailProcessKg(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white font-mono font-black text-sm text-amber-950 focus:ring-2 focus:ring-amber-500"
+                    />
+                    <span className="text-[10px] text-stone-500 mt-1 block">
+                      Estimasi Yield Green Bean: ~<strong>{Math.round(detailProcessKg * 0.16)} kg</strong> (rendemen ~16%)
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
+                      Pilihan Metode Pengolahan
+                    </label>
+                    <select
+                      value={detailProcessMethod}
+                      onChange={(e) => setDetailProcessMethod(e.target.value as any)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-amber-500"
+                    >
+                      <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur</option>
+                      <option value="Full Washed">2. Washed (Wet) — Depulper, Tangki Fermentasi & Cuci</option>
+                      <option value="Honey (Yellow/Red)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir</option>
+                      <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek</option>
+                      <option value="Anaerobic Natural">Anaerobic Natural — Sealed Tank Ferment</option>
+                      <option value="Wine Process">Wine Process — Extended Ferment</option>
+                    </select>
+                    <span className="text-[10px] text-stone-500 mt-1 block">
+                      Metode dapat disesuaikan di Lembar Kerja.
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col justify-center bg-white p-3.5 rounded-2xl border border-amber-200 shadow-2xs">
+                    <span className="text-[10px] text-stone-500 font-semibold uppercase">Nilai Aset Bahan Baku:</span>
+                    <strong className="text-lg font-black text-amber-950 font-mono mt-0.5">
+                      Rp {(detailProcessKg * detailCherryItem.purchasePricePerKg).toLocaleString()}
+                    </strong>
+                    <span className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                      ✓ Kemanisan {detailCherryItem.brix}° Brix
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-wrap items-center justify-end gap-3 border-t border-amber-200/80">
                   <button
-                    onClick={() => handleOpenProcessModal(detailCherryItem)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all"
+                    type="button"
+                    onClick={() => handleDirectStart7StageFromStock(detailCherryItem, detailProcessKg, detailProcessMethod)}
+                    className="px-6 py-3 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white font-black text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer"
                   >
-                    <Flame className="w-4 h-4" /> Mulai 7-Stage Work Order Batch →
+                    <Flame className="w-4 h-4" />
+                    <span>Mulai Olah 7-Stage Lembar Kerja →</span>
                   </button>
-                )}
+                </div>
               </div>
             </div>
           </div>
@@ -1134,129 +1197,7 @@ export const InventoryModule: React.FC = () => {
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* MODAL: MULAI OLAH DARI STOK CERI GUDANG                  */}
-      {/* ======================================================== */}
-      {cherryToProcess && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
-            <div className="bg-gradient-to-r from-amber-900 to-stone-900 text-white p-6 relative">
-              <button
-                onClick={() => setCherryToProcess(null)}
-                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
 
-              <div className="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-semibold mb-2">
-                <Flame className="w-3.5 h-3.5" />
-                Mulai 7-Stage Processing dari Stok Gudang
-              </div>
-              <h2 className="text-xl font-black">
-                Proses Stok: {cherryToProcess.variety}
-              </h2>
-              <p className="text-xs text-stone-300 mt-1">
-                ID Stok: {cherryToProcess.id} • Petani: {cherryToProcess.farmerName} • Tersedia: {cherryToProcess.availableWeightKg} kg ({cherryToProcess.brix}° Brix)
-              </p>
-            </div>
-
-            <form onSubmit={handleConfirmStartProcess} className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Volume Ceri yang Diolah (kg) - Maks: {cherryToProcess.availableWeightKg} kg
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  max={cherryToProcess.availableWeightKg}
-                  value={processKg}
-                  onChange={(e) => setProcessKg(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm font-bold text-amber-950 focus:ring-2 focus:ring-amber-500"
-                />
-                <span className="text-[10px] text-stone-400 mt-0.5 block">
-                  Estimasi hasil Green Bean: ~{Math.round(processKg * 0.16)} kg (rendemen ~16%)
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Metode Proses Olahan
-                </label>
-                <select
-                  value={processMethod}
-                  onChange={(e) => setProcessMethod(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-semibold focus:ring-2 focus:ring-amber-500 bg-white"
-                >
-                  <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur (Sun Dried)</option>
-                  <option value="Full Washed">2. Washed (Wet) — Depulper, Tangki Fermentasi & Cuci</option>
-                  <option value="Honey (Yellow/Red)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir Lengket</option>
-                  <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek pada Moisture ~30-40%</option>
-                  <option value="Anaerobic Natural">Anaerobic Natural — Slow Sealed Ferment</option>
-                  <option value="Wine Process">Wine Process — Extended Maceration</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Metode Pengeringan
-                </label>
-                <select
-                  value={dryingMethod}
-                  onChange={(e) => setDryingMethod(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-semibold focus:ring-2 focus:ring-amber-500 bg-white"
-                >
-                  <option value="Solar Dryer Raised Bed">Solar Dryer Raised Bed (Dome UV)</option>
-                  <option value="Greenhouse Solar Dome">Greenhouse Solar Dome</option>
-                  <option value="Mechanical Controlled Dryer">Mechanical Controlled Dryer</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Operator / Penanggung Jawab Batch
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={operatorName}
-                  onChange={(e) => setOperatorName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Catatan Batch
-                </label>
-                <textarea
-                  rows={2}
-                  value={processNotes}
-                  onChange={(e) => setProcessNotes(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCherryToProcess(null)}
-                  className="px-4 py-2 rounded-xl border border-stone-300 font-bold"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold flex items-center gap-1.5 shadow-xs"
-                >
-                  <Flame className="w-4 h-4" />
-                  <span>Kirim ke Processing 7-Stage →</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* MODAL: EDIT ALOKASI LIMBAH SIRKULAR */}
       {editingWasteLot && (

@@ -81,6 +81,8 @@ interface CoffeeContextType {
   setRoasterActiveTab: (tab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
   processorActiveTab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history';
   setProcessorActiveTab: (tab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history') => void;
+  activeProcessingBatchId: string | null;
+  setActiveProcessingBatchId: (id: string | null) => void;
   processorCherryStock: ProcessorCherryStockItem[];
   buyCherryToStock: (farmerLotId: string, boughtKg: number) => ProcessorCherryStockItem | null;
   processingBatches: ProcessingBatch[];
@@ -96,6 +98,7 @@ interface CoffeeContextType {
   }) => ProcessingBatch | null;
   advanceBatchStage: (batchId: string, nextStage: ProcessingStageId) => { success: boolean; message: string; errors?: string[] };
   updateBatchStageLog: (batchId: string, stageId: ProcessingStageId, logData: any) => void;
+  updateBatchFull: (updatedBatch: ProcessingBatch) => void;
   addDryingDayLog: (batchId: string, dayLog: DryingDayLog) => void;
   finalizeBatchAndPublish: (
     batchId: string,
@@ -304,6 +307,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [processorActiveTab, setProcessorActiveTab] = useState<
     'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history'
   >('dashboard');
+  const [activeProcessingBatchId, setActiveProcessingBatchId] = useState<string | null>(null);
 
   const [processingBatches, setProcessingBatches] = useState<ProcessingBatch[]>(() => {
     const saved = localStorage.getItem('cct_processingBatches');
@@ -1015,6 +1019,12 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (stageId === 'packing_closure') return { ...b, packingLog: { ...b.packingLog, ...logData } };
         return b;
       })
+    );
+  };
+
+  const updateBatchFull = (updatedBatch: ProcessingBatch) => {
+    setProcessingBatches((prev) =>
+      prev.map((b) => (b.id === updatedBatch.id ? updatedBatch : b))
     );
   };
 
@@ -2339,12 +2349,15 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setRoasterActiveTab,
         processorActiveTab,
         setProcessorActiveTab,
+        activeProcessingBatchId,
+        setActiveProcessingBatchId,
         processorCherryStock,
         buyCherryToStock,
         processingBatches,
         createProcessingBatch,
         advanceBatchStage,
         updateBatchStageLog,
+        updateBatchFull,
         addDryingDayLog,
         finalizeBatchAndPublish,
         farmerLots,

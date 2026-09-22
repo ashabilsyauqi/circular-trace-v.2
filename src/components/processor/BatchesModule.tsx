@@ -91,17 +91,6 @@ export const BatchesModule: React.FC = () => {
   const [newLogFreq, setNewLogFreq] = useState('Tiap 2 Jam');
   const [newLogNotes, setNewLogNotes] = useState('Pembalikan rata di solar dome.');
 
-  // Create Batch Form state (for list view "+ Inisiasi Batch Baru")
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createSourceType, setCreateSourceType] = useState<'stock' | 'farmer'>('stock');
-  const [createCherryStockId, setCreateCherryStockId] = useState('');
-  const [createFarmerLotId, setCreateFarmerLotId] = useState('');
-  const [createCherryKg, setCreateCherryKg] = useState<number>(500);
-  const [createMethod, setCreateMethod] = useState<ProcessingMethod>('Natural / Dry');
-  const [createDryingMethod, setCreateDryingMethod] = useState<DryingMethod>('Solar Dryer Raised Bed');
-  const [createOperator, setCreateOperator] = useState('Budi Santoso (Mill Master)');
-  const [createNotes, setCreateNotes] = useState('Batch olahan ceri petik merah segar.');
-
   // Barcode Modal
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
   const [selectedBatchForBarcode, setSelectedBatchForBarcode] = useState<any>(null);
@@ -333,48 +322,45 @@ export const BatchesModule: React.FC = () => {
     }
   };
 
-  // Create Batch Submit
-  const handleCreateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Direct create new batch & open Lembar Kerja immediately
+  const handleCreateNewBatchFromAvailable = () => {
+    const availableStock = processorCherryStock.find((s) => s.availableWeightKg > 0);
+    const availableFarmer = farmerLots.find((l) => l.availableWeightKg > 0);
 
     let newBatch: ProcessingBatch | null = null;
-    if (createSourceType === 'stock') {
-      const targetStockId = createCherryStockId || processorCherryStock[0]?.id;
-      if (!targetStockId) {
-        setAlertMessage({ type: 'error', text: 'Stok ceri di gudang kosong. Silakan beli ceri dari Petani terlebih dahulu.' });
-        return;
-      }
+    if (availableStock) {
       newBatch = createProcessingBatch({
-        sourceCherryStockId: targetStockId,
-        boughtCherryKg: Number(createCherryKg),
-        method: createMethod,
-        dryingMethod: createDryingMethod,
-        operatorName: createOperator,
-        notes: createNotes,
+        sourceCherryStockId: availableStock.id,
+        boughtCherryKg: Math.min(availableStock.availableWeightKg, 500),
+        method: 'Natural / Dry',
+        dryingMethod: 'Solar Dryer Raised Bed',
+        operatorName: 'Budi Santoso (Mill Master)',
+        notes: `Batch pengolahan baru dari stok ceri ${availableStock.variety} (${availableStock.origin}).`,
+      });
+    } else if (availableFarmer) {
+      newBatch = createProcessingBatch({
+        sourceFarmerLotId: availableFarmer.id,
+        boughtCherryKg: Math.min(availableFarmer.availableWeightKg, 500),
+        method: 'Natural / Dry',
+        dryingMethod: 'Solar Dryer Raised Bed',
+        operatorName: 'Budi Santoso (Mill Master)',
+        notes: `Batch pengolahan baru dari panen ceri petani ${availableFarmer.farmerName} (${availableFarmer.farmLocation}).`,
       });
     } else {
-      const targetLotId = createFarmerLotId || farmerLots.find((l) => l.availableWeightKg > 0)?.id;
-      if (!targetLotId) {
-        setAlertMessage({ type: 'error', text: 'Pilih lot ceri petani yang masih tersedia stoknya.' });
-        return;
-      }
-      newBatch = createProcessingBatch({
-        sourceFarmerLotId: targetLotId,
-        boughtCherryKg: Number(createCherryKg),
-        method: createMethod,
-        dryingMethod: createDryingMethod,
-        operatorName: createOperator,
-        notes: createNotes,
+      setAlertMessage({
+        type: 'error',
+        text: 'Tidak ada stok ceri di gudang ataupun ceri petani. Silakan muat seeder petani terlebih dahulu di menu Pengadaan Ceri.',
       });
+      return;
     }
 
     if (newBatch) {
-      setIsCreateOpen(false);
       handleSelectBatch(newBatch);
       setAlertMessage({
         type: 'success',
-        text: `Batch ${newBatch.batchCode} (${createMethod}) berhasil dibuat! Lembar kerja 7-Stage siap diisi.`,
+        text: `Lembar Kerja Batch #${newBatch.batchCode} berhasil dibuka! Semua parameter dapat langsung Anda isi dan sesuaikan di bawah.`,
       });
+      setTimeout(() => setAlertMessage(null), 5000);
     }
   };
 
@@ -473,151 +459,11 @@ export const BatchesModule: React.FC = () => {
             />
           </div>
 
-          {/* Quick Create Batch Form Card (if toggled) */}
-          {isCreateOpen && (
-            <div className="bg-[#FAF7F2] p-6 rounded-3xl border border-amber-300 shadow-sm space-y-4 animate-in fade-in">
-              <div className="flex items-center justify-between pb-3 border-b border-stone-200">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2.5 rounded-2xl bg-amber-600 text-white">
-                    <PlusCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-stone-900">Inisiasi Lembar Kerja Batch Baru</h3>
-                    <p className="text-xs text-stone-500">Pilih sumber ceri dan mulai lembar kerja 7-Stage</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsCreateOpen(false)} className="p-2 rounded-xl text-stone-400 hover:text-stone-700">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">Sumber Bahan Baku</label>
-                    <select
-                      value={createSourceType}
-                      onChange={(e) => setCreateSourceType(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
-                    >
-                      <option value="stock">Stok Ceri di Gudang ({processorCherryStock.length} Lot)</option>
-                      <option value="farmer">Beli Langsung dari Petani ({farmerLots.filter((l) => l.availableWeightKg > 0).length} Lot)</option>
-                    </select>
-                  </div>
-
-                  {createSourceType === 'stock' ? (
-                    <div>
-                      <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">Pilih Lot Stok Gudang</label>
-                      <select
-                        value={createCherryStockId}
-                        onChange={(e) => setCreateCherryStockId(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
-                      >
-                        {processorCherryStock.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.id} — {s.variety} ({s.availableWeightKg} kg tersedia • {s.farmerName})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">Pilih Panen Petani</label>
-                      <select
-                        value={createFarmerLotId}
-                        onChange={(e) => setCreateFarmerLotId(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
-                      >
-                        {farmerLots
-                          .filter((l) => l.availableWeightKg > 0)
-                          .map((l) => (
-                            <option key={l.id} value={l.id}>
-                              {l.id} — {l.variety} ({l.availableWeightKg} kg • {l.farmerName})
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">Volume Ceri Diolah (kg)</label>
-                    <input
-                      type="number"
-                      min="10"
-                      value={createCherryKg}
-                      onChange={(e) => setCreateCherryKg(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">Metode Pengolahan</label>
-                    <select
-                      value={createMethod}
-                      onChange={(e) => setCreateMethod(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
-                    >
-                      <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur</option>
-                      <option value="Full Washed">2. Washed (Wet) — Depulper, Tangki Fermentasi & Cuci</option>
-                      <option value="Honey (Yellow/Red/Black)">3. Honey (Pulped Natural) — Depulper Biji Berlendir</option>
-                      <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek ~30-40%</option>
-                      <option value="Anaerobic Natural">Anaerobic Natural — Fermentasi Ragi Kedap Udara</option>
-                      <option value="Wine Process">Wine Process — Extended Fermentation</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">Metode Pengeringan</label>
-                    <select
-                      value={createDryingMethod}
-                      onChange={(e) => setCreateDryingMethod(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
-                    >
-                      <option value="Solar Dryer Raised Bed">Solar Dryer Raised Bed (African Bed)</option>
-                      <option value="Greenhouse Solar Dome">Greenhouse Solar Dome</option>
-                      <option value="Patio Penjemuran">Patio Penjemuran</option>
-                      <option value="Mechanical Controlled Dryer">Mechanical Controlled Dryer</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">Operator Penanggung Jawab</label>
-                    <input
-                      type="text"
-                      value={createOperator}
-                      onChange={(e) => setCreateOperator(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateOpen(false)}
-                    className="px-4 py-2.5 rounded-xl border border-stone-300 font-bold text-stone-600 hover:bg-stone-100"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-xs flex items-center gap-2"
-                  >
-                    <Flame className="w-4 h-4" />
-                    <span>Mulai Lembar Kerja Batch →</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
           {/* Control Panel: Filters & View Modes */}
           <ControlPanel
             breadcrumbs={[{ label: 'Processing Mill' }, { label: '7-Stage Work Orders' }]}
             primaryActionLabel="+ Inisiasi Batch Baru"
-            onPrimaryAction={() => setIsCreateOpen(true)}
+            onPrimaryAction={handleCreateNewBatchFromAvailable}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             activeFilter={stageFilter}
@@ -646,8 +492,8 @@ export const BatchesModule: React.FC = () => {
                 Mulai batch baru dari stok ceri gudang atau pengadaan petani untuk mengaktifkan lembar kerja 7-Stage.
               </p>
               <button
-                onClick={() => setIsCreateOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-xs"
+                onClick={handleCreateNewBatchFromAvailable}
+                className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-xs cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Inisiasi Batch Baru</span>

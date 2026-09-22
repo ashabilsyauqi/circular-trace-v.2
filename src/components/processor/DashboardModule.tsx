@@ -12,6 +12,8 @@ import {
   Scale,
   Droplets,
   Award,
+  Warehouse,
+  Package,
 } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { calculateProcessorEcoRating } from '../../utils/ecoRating';
@@ -22,7 +24,7 @@ interface DashboardModuleProps {
 }
 
 export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) => {
-  const { currentUser, farmerLots, processedLots, processingBatches, transactions } = useCoffee();
+  const { currentUser, farmerLots, processedLots, processingBatches, processorCherryStock, transactions } = useCoffee();
 
   const availableFarmerLots = farmerLots.filter((lot) => lot.availableWeightKg > 0);
   const myProcessedLots = processedLots.filter((lot) => lot.processorId === currentUser?.id || true);
@@ -35,6 +37,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
       trx.toRole === 'pengolah'
   );
 
+  const totalCherryStockKg = processorCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
   const totalProcessedKg = myProcessedLots.reduce((acc, curr) => acc + curr.greenBeanWeightKg, 0);
   const availableGreenBeanKg = myProcessedLots.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
 
@@ -76,18 +79,18 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
       color: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
     },
     {
-      tab: 'batches',
-      icon: Flame,
-      label: '2. Batch Processing (7 Stages)',
-      hint: `${inProgressBatches.length} batch aktif berjalan`,
-      color: 'bg-orange-500/10 text-orange-700 border-orange-200',
+      tab: 'inventory',
+      icon: Warehouse,
+      label: '2. Gudang & Silo Stok',
+      hint: `${totalCherryStockKg.toLocaleString()} kg ceri, ${availableGreenBeanKg.toLocaleString()} kg GB`,
+      color: 'bg-teal-500/10 text-teal-700 border-teal-200',
     },
     {
-      tab: 'inventory',
-      icon: Layers,
-      label: '3. Katalog & Limbah Sirkular',
-      hint: `${myProcessedLots.length} lot green bean`,
-      color: 'bg-amber-500/10 text-amber-700 border-amber-200',
+      tab: 'batches',
+      icon: Flame,
+      label: '3. Batch Processing (7 Stages)',
+      hint: `${inProgressBatches.length} batch aktif berjalan`,
+      color: 'bg-orange-500/10 text-orange-700 border-orange-200',
     },
     {
       tab: 'history',
@@ -133,12 +136,12 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
       {/* 4 Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
-          title="Ceri Tersedia di Petani"
-          value={`${farmerLots.reduce((a, b) => a + b.availableWeightKg, 0).toLocaleString()} kg`}
-          subtitle="Bahan baku siap dibeli"
-          icon={<ShoppingCart className="w-5 h-5 text-emerald-600" />}
+          title="Stok Ceri di Gudang"
+          value={`${totalCherryStockKg.toLocaleString()} kg`}
+          subtitle="Bahan baku siap olah"
+          icon={<Warehouse className="w-5 h-5 text-emerald-600" />}
           color="emerald"
-          trend={{ value: 'Stok Baru', isPositive: true }}
+          trend={{ value: 'Stok Gudang', isPositive: true }}
         />
 
         <MetricCard

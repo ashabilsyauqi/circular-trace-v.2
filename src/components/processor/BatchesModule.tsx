@@ -59,6 +59,7 @@ const PIPELINE_STAGES: PipelineStage[] = PROCESSOR_7_STAGES.map((s) => ({
 export const BatchesModule: React.FC = () => {
   const {
     processingBatches,
+    processorCherryStock,
     farmerLots,
     createProcessingBatch,
     advanceBatchStage,
@@ -85,6 +86,8 @@ export const BatchesModule: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
 
   // Form State: Create Batch
+  const [formSourceType, setFormSourceType] = useState<'stock' | 'farmer'>('stock');
+  const [formCherryStockId, setFormCherryStockId] = useState('');
   const [formFarmerLotId, setFormFarmerLotId] = useState('');
   const [formCherryKg, setFormCherryKg] = useState<number>(500);
   const [formMethod, setFormMethod] = useState<ProcessingBatch['fermentationLog']['method']>('Anaerobic Natural');
@@ -139,24 +142,43 @@ export const BatchesModule: React.FC = () => {
     ? ((totalGreenBeanProducedKg / totalCherryProcessedKg) * 100).toFixed(1)
     : '16.5';
 
+  const availableCherryStock = processorCherryStock.filter((s) => s.availableWeightKg > 0);
   const availableFarmerLots = farmerLots.filter((l) => l.availableWeightKg > 0);
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const targetLotId = formFarmerLotId || availableFarmerLots[0]?.id;
-    if (!targetLotId) {
-      setAlertMessage({ type: 'error', text: 'Pilih lot ceri petani yang masih tersedia stoknya.' });
-      return;
-    }
 
-    const newBatch = createProcessingBatch({
-      sourceFarmerLotId: targetLotId,
-      boughtCherryKg: Number(formCherryKg),
-      method: formMethod,
-      dryingMethod: formDryingMethod,
-      operatorName: formOperator,
-      notes: formNotes,
-    });
+    let newBatch: ProcessingBatch | null = null;
+
+    if (formSourceType === 'stock') {
+      const targetStockId = formCherryStockId || availableCherryStock[0]?.id;
+      if (!targetStockId) {
+        setAlertMessage({ type: 'error', text: 'Stok ceri di gudang kosong. Silakan beli ceri dari Petani atau pilih sumber Langsung Petani.' });
+        return;
+      }
+      newBatch = createProcessingBatch({
+        sourceCherryStockId: targetStockId,
+        boughtCherryKg: Number(formCherryKg),
+        method: formMethod,
+        dryingMethod: formDryingMethod,
+        operatorName: formOperator,
+        notes: formNotes,
+      });
+    } else {
+      const targetLotId = formFarmerLotId || availableFarmerLots[0]?.id;
+      if (!targetLotId) {
+        setAlertMessage({ type: 'error', text: 'Pilih lot ceri petani yang masih tersedia stoknya.' });
+        return;
+      }
+      newBatch = createProcessingBatch({
+        sourceFarmerLotId: targetLotId,
+        boughtCherryKg: Number(formCherryKg),
+        method: formMethod,
+        dryingMethod: formDryingMethod,
+        operatorName: formOperator,
+        notes: formNotes,
+      });
+    }
 
     if (newBatch) {
       setAlertMessage({ type: 'success', text: `Batch baru ${newBatch.batchCode} (${formMethod}) berhasil diinisiasi dari panen ceri!` });
@@ -1258,26 +1280,79 @@ export const BatchesModule: React.FC = () => {
 
             <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Pilih Stok Ceri Petani
-                </label>
-                <select
-                  value={formFarmerLotId}
-                  onChange={(e) => {
-                    setFormFarmerLotId(e.target.value);
-                    const selected = availableFarmerLots.find((l) => l.id === e.target.value);
-                    if (selected) {
-                      setFormCherryKg(Math.min(selected.availableWeightKg, 500));
-                    }
-                  }}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800 focus:outline-none focus:border-amber-500"
-                >
-                  {availableFarmerLots.map((lot) => (
-                    <option key={lot.id} value={lot.id}>
-                      {lot.id} - {lot.farmerName} ({lot.variety}, Tersedia {lot.availableWeightKg}kg, {lot.brix}° Bx)
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block font-bold text-stone-700 uppercase tracking-wider">
+                    Sumber Bahan Baku Ceri
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormSourceType('stock')}
+                      className={`px-2.5 py-0.5 rounded-lg font-bold text-[10px] transition-colors ${
+                        formSourceType === 'stock'
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                      }`}
+                    >
+                      Stok Gudang ({availableCherryStock.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormSourceType('farmer')}
+                      className={`px-2.5 py-0.5 rounded-lg font-bold text-[10px] transition-colors ${
+                        formSourceType === 'farmer'
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                      }`}
+                    >
+                      Beli Langsung Petani
+                    </button>
+                  </div>
+                </div>
+
+                {formSourceType === 'stock' ? (
+                  availableCherryStock.length > 0 ? (
+                    <select
+                      value={formCherryStockId || availableCherryStock[0]?.id}
+                      onChange={(e) => {
+                        setFormCherryStockId(e.target.value);
+                        const selected = availableCherryStock.find((s) => s.id === e.target.value);
+                        if (selected) {
+                          setFormCherryKg(Math.min(selected.availableWeightKg, 500));
+                        }
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800 focus:outline-none focus:border-amber-500"
+                    >
+                      {availableCherryStock.map((stock) => (
+                        <option key={stock.id} value={stock.id}>
+                          {stock.id} - {stock.variety} ({stock.farmerName}, Stok {stock.availableWeightKg}kg, {stock.brix}° Brix)
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs">
+                      Stok ceri di gudang kosong. Silakan beralih ke tab <em>"Beli Langsung Petani"</em> atau lakukan pembelian melalui menu Sourcing Ceri.
+                    </div>
+                  )
+                ) : (
+                  <select
+                    value={formFarmerLotId || availableFarmerLots[0]?.id}
+                    onChange={(e) => {
+                      setFormFarmerLotId(e.target.value);
+                      const selected = availableFarmerLots.find((l) => l.id === e.target.value);
+                      if (selected) {
+                        setFormCherryKg(Math.min(selected.availableWeightKg, 500));
+                      }
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800 focus:outline-none focus:border-amber-500"
+                  >
+                    {availableFarmerLots.map((lot) => (
+                      <option key={lot.id} value={lot.id}>
+                        {lot.id} - {lot.farmerName} ({lot.variety}, Tersedia {lot.availableWeightKg}kg, {lot.brix}° Bx)
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

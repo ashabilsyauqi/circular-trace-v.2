@@ -19,6 +19,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Calendar,
+  Flame,
 } from 'lucide-react';
 import { FarmerHarvestLot, ProcessedGreenBeanLot, CoffeeWasteManagement } from '../../types/coffee';
 import { ProcessorBarcodeModal } from '../ProcessorBarcodeModal';
@@ -38,7 +39,12 @@ const SOURCING_PIPELINE_STAGES: PipelineStage[] = [
 ];
 
 export const SourcingModule: React.FC = () => {
-  const { farmerLots, buyCherryAndCreateProcess } = useCoffee();
+  const {
+    farmerLots,
+    buyCherryAndCreateProcess,
+    createProcessingBatch,
+    setProcessorActiveTab,
+  } = useCoffee();
 
   const [selectedLotToProcess, setSelectedLotToProcess] = useState<FarmerHarvestLot | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
@@ -151,6 +157,38 @@ export const SourcingModule: React.FC = () => {
     }
 
     setTimeout(() => setSuccessMsg(''), 6000);
+  };
+
+  const handleStartBatch7Stage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedLotToProcess) return;
+
+    const wasteData: CoffeeWasteManagement = {
+      wasteType,
+      utilization: wasteUtilization,
+      weightKgOrLiters: Number(wasteWeight),
+      recipientOrLocation: wasteRecipient,
+      processingMethod: wasteProcessingMethod,
+      ecoCertificate: 'sangrAI Zero-Waste Circular Standard',
+      notes: wasteNotes,
+    };
+
+    const newBatch = createProcessingBatch({
+      sourceFarmerLotId: selectedLotToProcess.id,
+      boughtCherryKg: Number(boughtCherryKg),
+      method: processMethod,
+      dryingMethod,
+      operatorName: 'Budi Santoso (Mill Master)',
+      notes: `Batch pengolahan ceri dari petani ${selectedLotToProcess.farmerName} (${selectedLotToProcess.farmLocation}).`,
+      wasteData,
+    });
+
+    setSelectedLotToProcess(null);
+    setDetailLot(null);
+
+    if (newBatch) {
+      setProcessorActiveTab('batches');
+    }
   };
 
   return (
@@ -884,20 +922,28 @@ export const SourcingModule: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-end gap-3">
+              <div className="pt-2 flex flex-wrap items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setSelectedLotToProcess(null)}
-                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 text-xs font-bold hover:bg-stone-100 transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-stone-300 text-stone-700 text-xs font-bold hover:bg-stone-100 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs transition-colors shadow-md flex items-center gap-2"
+                  className="px-4 py-2.5 rounded-xl border border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-950 font-bold text-xs transition-colors flex items-center gap-1.5"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Konfirmasi Proses &amp; Buat Green Bean
+                  <CheckCircle2 className="w-4 h-4 text-amber-700" />
+                  <span>Proses Cepat 1-Klik</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStartBatch7Stage}
+                  className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs transition-colors shadow-md flex items-center gap-2"
+                >
+                  <Flame className="w-4 h-4 text-amber-400" />
+                  <span>Mulai 7-Stage Work Order Batch →</span>
                 </button>
               </div>
             </form>

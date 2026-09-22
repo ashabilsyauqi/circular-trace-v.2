@@ -29,6 +29,11 @@ import {
   RoasterMachine,
 } from '../types/roasterErp';
 import {
+  ProcessingBatch,
+  ProcessingStageId,
+  DryingDayLog,
+} from '../types/processorErp';
+import {
   MOCK_USERS,
   INITIAL_FARMER_LOTS,
   INITIAL_PROCESSED_LOTS,
@@ -48,7 +53,9 @@ import {
   INITIAL_SALES_ORDERS,
   INITIAL_ROASTER_MACHINES,
 } from '../data/mockRoasterErpData';
+import { INITIAL_PROCESSING_BATCHES } from '../data/mockProcessorErpData';
 import { calculateProcessorEcoRating } from '../utils/ecoRating';
+import { validateStageQualityGate } from '../utils/coffeeQualityGates';
 
 interface CoffeeContextType {
   currentUser: AppUser | null;
@@ -68,8 +75,31 @@ interface CoffeeContextType {
   setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
   roasterActiveTab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history';
   setRoasterActiveTab: (tab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
-  processorActiveTab: 'dashboard' | 'sourcing' | 'inventory' | 'history';
-  setProcessorActiveTab: (tab: 'dashboard' | 'sourcing' | 'inventory' | 'history') => void;
+  processorActiveTab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history';
+  setProcessorActiveTab: (tab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history') => void;
+  processingBatches: ProcessingBatch[];
+  createProcessingBatch: (params: {
+    sourceFarmerLotId: string;
+    boughtCherryKg: number;
+    method: ProcessingBatch['fermentationLog']['method'];
+    dryingMethod: ProcessingBatch['dryingLog']['dryingMethod'];
+    operatorName: string;
+    notes?: string;
+    wasteData?: CoffeeWasteManagement;
+  }) => ProcessingBatch | null;
+  advanceBatchStage: (batchId: string, nextStage: ProcessingStageId) => { success: boolean; message: string; errors?: string[] };
+  updateBatchStageLog: (batchId: string, stageId: ProcessingStageId, logData: any) => void;
+  addDryingDayLog: (batchId: string, dayLog: DryingDayLog) => void;
+  finalizeBatchAndPublish: (
+    batchId: string,
+    packingData: {
+      baggingType: ProcessingBatch['packingLog']['baggingType'];
+      pricePerKg: number;
+      cuppingNotes: string[];
+      grade: ProcessedGreenBeanLot['grade'];
+      notes?: string;
+    }
+  ) => ProcessedGreenBeanLot | null;
   farmerLots: FarmerHarvestLot[];
   processedLots: ProcessedGreenBeanLot[];
   warehouseLots: WarehouseLot[];
@@ -264,12 +294,21 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history'
   >('dashboard');
   const [processorActiveTab, setProcessorActiveTab] = useState<
-    'dashboard' | 'sourcing' | 'inventory' | 'history'
+    'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history'
   >('dashboard');
+
+  const [processingBatches, setProcessingBatches] = useState<ProcessingBatch[]>(() => {
+    const saved = localStorage.getItem('cct_processingBatches');
+    return saved ? JSON.parse(saved) : INITIAL_PROCESSING_BATCHES;
+  });
 
   useEffect(() => {
     localStorage.setItem('cct_users', JSON.stringify(users));
   }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_processingBatches', JSON.stringify(processingBatches));
+  }, [processingBatches]);
 
   const [farmerLots, setFarmerLots] = useState<FarmerHarvestLot[]>(() => {
     const saved = localStorage.getItem('cct_farmerLots');
@@ -614,6 +653,354 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return { ...lot, wasteManagement: enrichedWaste };
       })
     );
+  };
+
+  // --- COFFEE POST-HARVEST PROCESSING & MANUFACTURING 7-STAGE METHODS ---
+
+  const createProcessingBatch = (params: {
+    sourceFarmerLotId: string;
+    boughtCherryKg: number;
+    method: ProcessingBatch['fermentationLog']['method'];
+    dryingMethod: ProcessingBatch['dryingLog']['dryingMethod'];
+    operatorName: string;
+    notes?: string;
+    wasteData?: CoffeeWasteManagement;
+  }): ProcessingBatch | null => {
+    if (!currentUser) return null;
+    const sourceFarmerLot = farmerLots.find((l) => l.id === params.sourceFarmerLotId);
+    if (!sourceFarmerLot) return null;
+
+    const boughtKg = params.boughtCherryKg;
+    const remainingKg = Math.max(0, sourceFarmerLot.availableWeightKg - boughtKg);
+
+    setFarmerLots((prev) =>
+      prev.map((lot) =>
+        lot.id === params.sourceFarmerLotId
+          ? {
+              ...lot,
+              availableWeightKg: remainingKg,
+              status: remainingKg === 0 ? 'sold' : 'partial',
+            }
+          : lot
+      )
+    );
+
+    const totalTrx = boughtKg * sourceFarmerLot.pricePerKg;
+    const newTrx: SupplyChainTransaction = {
+      id: `TRX-${Date.now().toString().slice(-4)}`,
+      date: new Date().toISOString().split('T')[0],
+      fromRole: 'petani',
+      fromName: sourceFarmerLot.farmerName,
+      toRole: 'pengolah',
+      toName: currentUser.name,
+      itemName: `Cherry Segar ${sourceFarmerLot.variety} (${boughtKg} kg)`,
+      quantity: `${boughtKg} kg`,
+      totalAmount: totalTrx,
+      status: 'Selesai',
+    };
+    setTransactions((prev) => [newTrx, ...prev]);
+
+    const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '').slice(0, 6);
+    const randomSuffix = Date.now().toString().slice(-3);
+    const newBatchId = `PROC-${dateStr}-${randomSuffix}`;
+    const batchCode = `LOT-${dateStr}-ARB-${randomSuffix}`;
+
+    const estGreenKg = Math.round(boughtKg * 0.16);
+    const estParchmentKg = Math.round(boughtKg * 0.32);
+    const estHuskKg = Math.round(boughtKg * 0.05);
+
+    const rawWaste = params.wasteData || {
+      wasteType: 'Kulit Ceri (Pulp / Cascara)',
+      utilization: 'Bahan Baku Minuman Teh Cascara & Kompos Sirkular',
+      weightKgOrLiters: Math.round(boughtKg * 0.45),
+      recipientOrLocation: 'Kelompok Tani Petani Asal & Rumah Kompos Organik',
+      processingMethod: 'Solar Dryer Raised Bed (Food Grade) & Kompos Aerobik 30 Hari',
+      ecoCertificate: 'sangrAI Zero-Waste Circular Standard',
+      notes: 'Kulit ceri disortir higienis untuk teh cascara dan ampas dikomposkan.',
+    };
+
+    const ratingCalc = calculateProcessorEcoRating(rawWaste, boughtKg, estGreenKg);
+    const finalWaste: CoffeeWasteManagement = {
+      ...rawWaste,
+      ecoRating: ratingCalc.starRating,
+      ecoScore: ratingCalc.ecoScore,
+      diversionRatePercent: ratingCalc.diversionRatePercent,
+      carbonOffsetKg: ratingCalc.carbonOffsetKg,
+    };
+
+    const newBatch: ProcessingBatch = {
+      id: newBatchId,
+      batchCode,
+      processorId: currentUser.id,
+      processorName: currentUser.organization || currentUser.name,
+      sourceFarmerLotId: sourceFarmerLot.id,
+      sourceFarmerName: sourceFarmerLot.farmerName,
+      sourceOrigin: sourceFarmerLot.farmLocation,
+      variety: sourceFarmerLot.variety,
+      altitude: sourceFarmerLot.altitude,
+      currentStage: 'intake_sorting',
+      status: 'in_progress',
+      startDate: new Date().toISOString().split('T')[0],
+      intakeLog: {
+        cherryWeightKg: boughtKg,
+        floatersWeightKg: Math.round(boughtKg * 0.04),
+        sinkersWeightKg: Math.round(boughtKg * 0.96),
+        brix: sourceFarmerLot.brix || 21.0,
+        sortingDate: new Date().toISOString().split('T')[0],
+        destoned: true,
+        visualQualityGrade: 'A (95%+ Petik Merah)',
+        operatorName: params.operatorName || 'Petugas Intake Stasiun',
+        notes: params.notes || `Penerimaan ${boughtKg} kg ceri varietas ${sourceFarmerLot.variety} dari ${sourceFarmerLot.farmerName}.`,
+      },
+      fermentationLog: {
+        tankId: `TANK-${params.method.includes('Anaerobic') ? 'ANAEROB' : 'FERM'}-01`,
+        method: params.method,
+        startTime: new Date().toISOString(),
+        endTime: new Date(Date.now() + 72 * 3600000).toISOString(),
+        durationHours: 72,
+        startPh: 5.8,
+        endPh: 4.1,
+        slurryTempCelsius: 19.5,
+        ambientTempCelsius: 22.0,
+        inoculumYeast: 'Lalcafe Intenso Yeast',
+        washWaterLiters: params.method === 'Full Washed' ? Math.round(boughtKg * 1.2) : 0,
+        operatorName: params.operatorName || currentUser.name,
+        notes: 'Inokulasi fermentasi awal terstandarisasi.',
+      },
+      dryingLog: {
+        bedId: 'RAISED-BED-A01',
+        dryingMethod: params.dryingMethod,
+        startDate: new Date().toISOString().split('T')[0],
+        finalMoisturePercent: 52.0,
+        targetMoisturePassed: false,
+        dailyLogs: [
+          {
+            dayNumber: 1,
+            date: new Date().toISOString().split('T')[0],
+            moisturePercent: 52.0,
+            ambientTempCelsius: 29.5,
+            rhPercent: 58,
+            turningFrequency: 'Tiap 2 Jam',
+            notes: 'Mulai proses penjemuran ceri/gabah basah.',
+          },
+        ],
+        operatorName: params.operatorName || currentUser.name,
+        notes: 'Target pengeringan hingga kadar air <= 12.0%.',
+      },
+      conditioningLog: {
+        siloBinId: 'SILO-RESTING-01',
+        packagingType: 'GrainPro Hermetic 50kg',
+        startDate: new Date().toISOString().split('T')[0],
+        targetRestingDays: 30,
+        completedDays: 0,
+        ambientTempCelsius: 20.0,
+        ambientRhPercent: 55,
+        moistureStabilizedPercent: 11.2,
+        waterActivityAw: 0.56,
+        operatorName: params.operatorName || currentUser.name,
+        notes: 'Menunggu proses penjemuran selesai.',
+      },
+      millingLog: {
+        millingDate: new Date().toISOString().split('T')[0],
+        machineId: 'Pinhalense DH-500 Dry Huller',
+        inputParchmentWeightKg: estParchmentKg,
+        outputGreenBeanWeightKg: estGreenKg,
+        outputHuskWeightKg: estHuskKg,
+        outputDustWeightKg: 5,
+        millingEfficiencyPercent: 50.0,
+        operatorName: params.operatorName || currentUser.name,
+        notes: 'Hulling pasca resting.',
+      },
+      qcAssessment: {
+        assessmentDate: new Date().toISOString().split('T')[0],
+        inspectorName: 'Q-Grader Stasiun',
+        sampleWeightGrams: 350,
+        defects: {
+          primaryDefects: 0,
+          secondaryDefects: 2,
+          totalScoreValue: 0.4,
+        },
+        screenDistribution: {
+          screen18PlusKg: Math.round(estGreenKg * 0.7),
+          screen16_17Kg: Math.round(estGreenKg * 0.25),
+          screen14_15Kg: Math.round(estGreenKg * 0.05),
+          peaberryKg: 0,
+        },
+        finalMoisturePercent: 11.2,
+        waterActivityAw: 0.56,
+        densityGramsPerLiter: 720,
+        calculatedGrade: 'Specialty Grade 1',
+        scaCuppingScore: 87.5,
+        cuppingNotes: ['Floral', 'Citrus', 'Brown Sugar'],
+        notes: 'Evaluasi mutu fisik & sensori.',
+      },
+      packingLog: {
+        closureDate: new Date().toISOString().split('T')[0],
+        finalGreenBeanWeightKg: estGreenKg,
+        baggingType: 'GrainPro 60kg + Karung Goni',
+        totalBags: Math.max(1, Math.ceil(estGreenKg / 60)),
+        assignedLotNumber: `GB-${batchCode}`,
+        qrCodeUrl: `https://cct-coffee.dutaglobaltech.com/scan/${newBatchId}`,
+        eudrComplianceVerified: true,
+        closedBy: currentUser.name,
+        finalStatus: 'siap_jual_marketplace',
+        notes: 'Kemas hermetik GrainPro + karung goni.',
+      },
+      wasteManagement: finalWaste,
+      targetMarketplacePricePerKg: 125000,
+      photoUrl: sourceFarmerLot.photoUrl || 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&auto=format&fit=crop&q=80',
+    };
+
+    setProcessingBatches((prev) => [newBatch, ...prev]);
+    return newBatch;
+  };
+
+  const advanceBatchStage = (
+    batchId: string,
+    nextStage: ProcessingStageId
+  ): { success: boolean; message: string; errors?: string[] } => {
+    const batch = processingBatches.find((b) => b.id === batchId);
+    if (!batch) return { success: false, message: 'Batch tidak ditemukan.' };
+
+    const validation = validateStageQualityGate(batch, nextStage);
+    if (!validation.canAdvance) {
+      return {
+        success: false,
+        message: validation.blockingErrors.join(' '),
+        errors: validation.blockingErrors,
+      };
+    }
+
+    setProcessingBatches((prev) =>
+      prev.map((b) =>
+        b.id === batchId
+          ? {
+              ...b,
+              currentStage: nextStage,
+              status: nextStage === 'packing_closure' ? 'completed' : 'in_progress',
+              completedDate: nextStage === 'packing_closure' ? new Date().toISOString().split('T')[0] : b.completedDate,
+            }
+          : b
+      )
+    );
+
+    return {
+      success: true,
+      message: `Batch ${batch.batchCode} berhasil melaju ke tahap "${nextStage}".`,
+    };
+  };
+
+  const updateBatchStageLog = (batchId: string, stageId: ProcessingStageId, logData: any) => {
+    setProcessingBatches((prev) =>
+      prev.map((b) => {
+        if (b.id !== batchId) return b;
+        if (stageId === 'intake_sorting') return { ...b, intakeLog: { ...b.intakeLog, ...logData } };
+        if (stageId === 'fermentation') return { ...b, fermentationLog: { ...b.fermentationLog, ...logData } };
+        if (stageId === 'drying') return { ...b, dryingLog: { ...b.dryingLog, ...logData } };
+        if (stageId === 'conditioning') return { ...b, conditioningLog: { ...b.conditioningLog, ...logData } };
+        if (stageId === 'milling') return { ...b, millingLog: { ...b.millingLog, ...logData } };
+        if (stageId === 'grading_qc') return { ...b, qcAssessment: { ...b.qcAssessment, ...logData } };
+        if (stageId === 'packing_closure') return { ...b, packingLog: { ...b.packingLog, ...logData } };
+        return b;
+      })
+    );
+  };
+
+  const addDryingDayLog = (batchId: string, dayLog: DryingDayLog) => {
+    setProcessingBatches((prev) =>
+      prev.map((b) => {
+        if (b.id !== batchId) return b;
+        const updatedDaily = [...b.dryingLog.dailyLogs, dayLog];
+        const latestMoisture = dayLog.moisturePercent;
+        const passed = latestMoisture <= 12.5;
+
+        return {
+          ...b,
+          dryingLog: {
+            ...b.dryingLog,
+            dailyLogs: updatedDaily,
+            finalMoisturePercent: latestMoisture,
+            targetMoisturePassed: passed,
+          },
+        };
+      })
+    );
+  };
+
+  const finalizeBatchAndPublish = (
+    batchId: string,
+    packingData: {
+      baggingType: ProcessingBatch['packingLog']['baggingType'];
+      pricePerKg: number;
+      cuppingNotes: string[];
+      grade: ProcessedGreenBeanLot['grade'];
+      notes?: string;
+    }
+  ): ProcessedGreenBeanLot | null => {
+    if (!currentUser) return null;
+    const batch = processingBatches.find((b) => b.id === batchId);
+    if (!batch) return null;
+
+    const finalGreenKg = batch.millingLog?.outputGreenBeanWeightKg || batch.packingLog.finalGreenBeanWeightKg || Math.round(batch.intakeLog.cherryWeightKg * 0.16);
+
+    // Update batch to completed
+    setProcessingBatches((prev) =>
+      prev.map((b) =>
+        b.id === batchId
+          ? {
+              ...b,
+              currentStage: 'packing_closure',
+              status: 'completed',
+              completedDate: new Date().toISOString().split('T')[0],
+              targetMarketplacePricePerKg: packingData.pricePerKg,
+              packingLog: {
+                ...b.packingLog,
+                finalGreenBeanWeightKg: finalGreenKg,
+                baggingType: packingData.baggingType,
+                totalBags: Math.max(1, Math.ceil(finalGreenKg / 60)),
+                notes: packingData.notes || b.packingLog.notes,
+                finalStatus: 'siap_jual_marketplace',
+              },
+            }
+          : b
+      )
+    );
+
+    // Create Green Bean Lot in Catalog & Marketplace
+    const newLotId = `GB-${batch.batchCode.replace('LOT-', '')}`;
+    const newGreenBean: ProcessedGreenBeanLot = {
+      id: newLotId,
+      processorId: currentUser.id,
+      processorName: currentUser.organization || currentUser.name,
+      sourceFarmerLotId: batch.sourceFarmerLotId,
+      sourceFarmerName: batch.sourceFarmerName,
+      sourceOrigin: batch.sourceOrigin,
+      variety: batch.variety,
+      altitude: batch.altitude,
+      processMethod: batch.fermentationLog.method as ProcessedGreenBeanLot['processMethod'],
+      fermentationTimeHours: batch.fermentationLog.durationHours,
+      dryingMethod: batch.dryingLog.dryingMethod as ProcessedGreenBeanLot['dryingMethod'],
+      moistureContentPercent: batch.qcAssessment.finalMoisturePercent || batch.dryingLog.finalMoisturePercent,
+      waterActivityAw: batch.qcAssessment.waterActivityAw,
+      grade: packingData.grade || (batch.qcAssessment.calculatedGrade as any),
+      defectCount: batch.qcAssessment.defects.primaryDefects + batch.qcAssessment.defects.secondaryDefects,
+      screenSize: `Screen 18+ (${batch.qcAssessment.screenDistribution.screen18PlusKg}kg)`,
+      greenBeanWeightKg: finalGreenKg,
+      availableWeightKg: finalGreenKg,
+      pricePerKg: packingData.pricePerKg,
+      cuppingNotes: packingData.cuppingNotes.length > 0 ? packingData.cuppingNotes : batch.qcAssessment.cuppingNotes,
+      processedDate: new Date().toISOString().split('T')[0],
+      status: 'available',
+      photoUrl: batch.photoUrl || 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&auto=format&fit=crop&q=80',
+      sourceBrix: batch.intakeLog.brix,
+      sourceHarvestDate: batch.startDate,
+      sourcePickingMethod: batch.intakeLog.visualQualityGrade,
+      sourceTotalCherryWeightKg: batch.intakeLog.cherryWeightKg,
+      wasteManagement: batch.wasteManagement,
+    };
+
+    setProcessedLots((prev) => [newGreenBean, ...prev]);
+    return newGreenBean;
   };
 
   // 3. Gudang simpan green bean & buka penjualan
@@ -1784,6 +2171,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCafeInventory(INITIAL_CAFE_ITEMS);
     setCafeProducts(INITIAL_CAFE_PRODUCTS);
     setTransactions(INITIAL_TRANSACTIONS);
+    setProcessingBatches(INITIAL_PROCESSING_BATCHES);
     setWorkOrders(INITIAL_WORK_ORDERS);
     setMasterProfiles(INITIAL_MASTER_PROFILES);
     setPurchaseOrders(INITIAL_PURCHASE_ORDERS);
@@ -1810,6 +2198,12 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setRoasterActiveTab,
         processorActiveTab,
         setProcessorActiveTab,
+        processingBatches,
+        createProcessingBatch,
+        advanceBatchStage,
+        updateBatchStageLog,
+        addDryingDayLog,
+        finalizeBatchAndPublish,
         farmerLots,
         processedLots,
         warehouseLots,

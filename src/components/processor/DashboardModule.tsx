@@ -8,22 +8,25 @@ import {
   Star,
   ChevronRight,
   History,
+  Flame,
+  Scale,
+  Droplets,
+  Award,
 } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { calculateProcessorEcoRating } from '../../utils/ecoRating';
 import { MetricCard } from '../admin/MetricCard';
 
 interface DashboardModuleProps {
-  onNavigate: (tab: 'sourcing' | 'inventory' | 'history') => void;
+  onNavigate: (tab: 'sourcing' | 'batches' | 'inventory' | 'history') => void;
 }
 
-// Overview for the Processing Mill pipeline: banner + headline metrics + eco/circular rating,
-// plus quick-action shortcuts into the other processor modules (sourcing, inventory, history).
 export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) => {
-  const { currentUser, farmerLots, processedLots, transactions } = useCoffee();
+  const { currentUser, farmerLots, processedLots, processingBatches, transactions } = useCoffee();
 
   const availableFarmerLots = farmerLots.filter((lot) => lot.availableWeightKg > 0);
   const myProcessedLots = processedLots.filter((lot) => lot.processorId === currentUser?.id || true);
+  const inProgressBatches = processingBatches.filter((b) => b.status === 'in_progress');
   const myProcessorTransactions = transactions.filter(
     (trx) =>
       trx.fromName === currentUser?.name ||
@@ -59,7 +62,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
   );
 
   const quickActions: {
-    tab: 'sourcing' | 'inventory' | 'history';
+    tab: 'sourcing' | 'batches' | 'inventory' | 'history';
     icon: React.ElementType;
     label: string;
     hint: string;
@@ -68,40 +71,47 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
     {
       tab: 'sourcing',
       icon: ShoppingCart,
-      label: 'Sourcing Ceri Petani',
+      label: '1. Sourcing Ceri Petani',
       hint: `${availableFarmerLots.length} lot ceri siap dibeli`,
       color: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
     },
     {
+      tab: 'batches',
+      icon: Flame,
+      label: '2. Batch Processing (7 Stages)',
+      hint: `${inProgressBatches.length} batch aktif berjalan`,
+      color: 'bg-orange-500/10 text-orange-700 border-orange-200',
+    },
+    {
       tab: 'inventory',
       icon: Layers,
-      label: 'Katalog & Limbah',
+      label: '3. Katalog & Limbah Sirkular',
       hint: `${myProcessedLots.length} lot green bean`,
       color: 'bg-amber-500/10 text-amber-700 border-amber-200',
     },
     {
       tab: 'history',
       icon: History,
-      label: 'Riwayat Transaksi',
-      hint: `${myProcessorTransactions.length} log tercatat`,
-      color: 'bg-cyan-500/10 text-cyan-700 border-cyan-200 hover:border-cyan-300',
+      label: '4. Riwayat Transaksi Ledger',
+      hint: `${myProcessorTransactions.length} rekam transaksi`,
+      color: 'bg-cyan-500/10 text-cyan-700 border-cyan-200',
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Top Banner (Cruip Amber / Slate Gradient) */}
-      <div className="bg-linear-to-r from-amber-950 via-stone-900 to-amber-900 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden border border-amber-900/60">
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-amber-950 via-stone-900 to-amber-900 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden border border-amber-900/60">
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold mb-3 border border-amber-400/30 backdrop-blur-xs">
             <Cog className="w-4 h-4 text-amber-400" />
             <span>Mill Tier 2 • Stasiun Pengolahan Kopi</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Workstation Pengolahan Ceri & Penjualan Green Bean
+            Workstation Pengolahan Ceri &amp; 7-Stage Post-Harvest ERP
           </h1>
           <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-            Beli ceri segar langsung dari petani, kontrol fermentasi & kadar air secara presisi, alokasikan limbah ceri ke produk bernilai tambah, dan jual beras kopi specialty ke gudang logistik.
+            Inisiasi pengadaan ceri segar petani, pantau kurva fermentasi &amp; kadar air harian, kelola rendemen (mass balance) tanpa susut anomali, dan alokasikan limbah sirkular bernilai tambah.
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-stone-300 pt-1">
@@ -120,7 +130,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
         </div>
       </div>
 
-      {/* 4 Cruip-Style Metric Cards */}
+      {/* 4 Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Ceri Tersedia di Petani"
@@ -128,39 +138,39 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
           subtitle="Bahan baku siap dibeli"
           icon={<ShoppingCart className="w-5 h-5 text-emerald-600" />}
           color="emerald"
-          badge="Marketplace"
+          trend={{ value: 'Stok Baru', isPositive: true }}
         />
 
         <MetricCard
-          title="Total Green Bean Diolah"
-          value={`${totalProcessedKg.toLocaleString()} kg`}
-          subtitle="Beras kopi specialty"
-          icon={<Layers className="w-5 h-5 text-amber-600" />}
+          title="Batch Aktif di Stasiun"
+          value={`${inProgressBatches.length} Batch`}
+          subtitle="Tahap 1-7 terkontrol"
+          icon={<Flame className="w-5 h-5 text-amber-600" />}
           color="amber"
-          trend={{ value: '+14.2%', isPositive: true, label: 'vs target' }}
+          trend={{ value: 'Live Work Order', isPositive: true }}
         />
 
         <MetricCard
           title="Green Bean Siap Jual"
           value={`${availableGreenBeanKg.toLocaleString()} kg`}
-          subtitle="Tersedia untuk Gudang"
+          subtitle="Tersedia untuk Gudang/Roastery"
           icon={<CheckCircle2 className="w-5 h-5 text-blue-600" />}
           color="blue"
           badge="Siap Kirim"
         />
 
         <MetricCard
-          title="Log Transaksi Mill"
+          title="Buku Besar Transaksi"
           value={`${myProcessorTransactions.length} Log`}
-          subtitle="Beli cherry & jual green bean"
+          subtitle="Beli ceri &amp; jual green bean"
           icon={<TrendingUp className="w-5 h-5 text-purple-600" />}
           color="purple"
           trend={{ value: '100% Tercatat', isPositive: true }}
         />
       </div>
 
-      {/* Quick actions into the other processor pipeline modules */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Quick Actions into the 4 Processor Pipeline Modules */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {quickActions.map((action) => {
           const ActionIcon = action.icon;
           return (

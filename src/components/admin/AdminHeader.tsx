@@ -49,6 +49,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
     setProcessorActiveTab,
     farmerLots,
     processedLots,
+    processingBatches,
     t,
   } = useCoffee();
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -86,10 +87,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
     { id: 'history', label: t('sidebar.history.title'), icon: History, badge: myRoasterTransactionsCount },
   ];
 
-  // Pengolah (Processor) has its own, different pipeline: sourcing cherry from farmers ->
-  // processing/waste catalog -> transaction history. Its own tab strip, own state
-  // (processorActiveTab), separate from the roaster's.
+  // Pengolah (Processor) pipeline: sourcing cherry -> 7-stage batch processing -> green bean inventory & circular waste -> transaction history
   const availableFarmerCherryLots = farmerLots.filter((l) => l.availableWeightKg > 0).length;
+  const activeProcessingBatchesCount = processingBatches.filter((b) => b.status === 'in_progress').length;
   const myProcessedLotsCount = processedLots.filter((l) => l.processorId === currentUser.id || true).length;
   const myProcessorTransactionsCount = transactions.filter(
     (trx) =>
@@ -102,6 +102,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
   const processorTabs = [
     { id: 'dashboard', label: t('sidebar.dashboard.title'), icon: LayoutDashboard, badge: 0 },
     { id: 'sourcing', label: t('sidebar.processorSourcing'), icon: ShoppingCart, badge: availableFarmerCherryLots },
+    { id: 'batches', label: t('sidebar.processorBatches'), icon: Flame, badge: activeProcessingBatchesCount },
     { id: 'inventory', label: t('sidebar.processorInventory'), icon: Recycle, badge: myProcessedLotsCount },
     { id: 'history', label: t('sidebar.history.title'), icon: History, badge: myProcessorTransactionsCount },
   ];

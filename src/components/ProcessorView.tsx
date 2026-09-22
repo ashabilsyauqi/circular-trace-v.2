@@ -6,6 +6,7 @@ import { useCoffee } from '../context/CoffeeContext';
 // pattern as RoasterView).
 import { DashboardModule } from './processor/DashboardModule';
 import { SourcingModule } from './processor/SourcingModule';
+import { BatchesModule } from './processor/BatchesModule';
 import { InventoryModule } from './processor/InventoryModule';
 import { HistoryModule } from './processor/HistoryModule';
 
@@ -18,6 +19,7 @@ export const ProcessorView: React.FC = () => {
         <DashboardModule onNavigate={(tab) => setProcessorActiveTab(tab)} />
       )}
       {processorActiveTab === 'sourcing' && <SourcingModule />}
+      {processorActiveTab === 'batches' && <BatchesModule />}
       {processorActiveTab === 'inventory' && <InventoryModule />}
       {processorActiveTab === 'history' && <HistoryModule />}
     </div>

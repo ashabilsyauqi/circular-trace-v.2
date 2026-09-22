@@ -414,52 +414,59 @@ export const BatchesModule: React.FC = () => {
       {/* ========================================================================= */}
       {!detailBatch ? (
         <>
-          {/* Top Metric Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Total Batches Olahan"
-              value={`${totalBatchesCount} Batch`}
-              subtitle={`${inProgressBatches.length} batch aktif berjalan`}
-              icon={<Flame className="w-5 h-5 text-amber-600" />}
-              color="amber"
-              trend={{ value: `${inProgressBatches.length} Active MRP`, isPositive: true }}
-            />
-            <MetricCard
-              title="Ceri Terolah di Stasiun"
-              value={`${totalCherryProcessedKg.toLocaleString()} kg`}
-              subtitle="Bahan baku ceri masuk intake"
-              icon={<Coffee className="w-5 h-5 text-emerald-600" />}
-              color="emerald"
-              trend={{ value: 'Full Traced', isPositive: true }}
-            />
-            <MetricCard
-              title="Green Bean Dihasilkan"
-              value={`${totalGreenBeanProducedKg.toLocaleString()} kg`}
-              subtitle="Siap jual ke gudang & roastery"
-              icon={<Warehouse className="w-5 h-5 text-blue-600" />}
-              color="blue"
-              badge="Specialty"
-            />
-            <MetricCard
-              title="Rata-rata Rendemen Yield"
-              value={`${avgYieldPercent}%`}
-              subtitle="Standar Kopi Arabika 15% - 17%"
-              icon={<TrendingUp className="w-5 h-5 text-purple-600" />}
-              color="purple"
-              trend={{ value: 'Mass Balance Valid', isPositive: true }}
-            />
+          {/* Top Stat Buttons / Executive ERP KPI Header */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+                <Flame className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-blue-900">{totalBatchesCount} Batch</div>
+                <div className="o_stat_text text-slate-500">{inProgressBatches.length} Aktif Berjalan</div>
+              </div>
+            </div>
+
+            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                <Coffee className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-emerald-900">{totalCherryProcessedKg.toLocaleString()} kg</div>
+                <div className="o_stat_text text-slate-500">Total Ceri Intake</div>
+              </div>
+            </div>
+
+            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+                <Warehouse className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-indigo-900">{totalGreenBeanProducedKg.toLocaleString()} kg</div>
+                <div className="o_stat_text text-slate-500">Green Bean Dihasilkan</div>
+              </div>
+            </div>
+
+            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-purple-900">{avgYieldPercent}%</div>
+                <div className="o_stat_text text-slate-500">Rendemen Rata-Rata</div>
+              </div>
+            </div>
           </div>
 
           {/* Status Filter Sub-Tabs */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-stone-200/90 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-slate-200/90 shadow-2xs">
             <div className="flex items-center gap-1.5 flex-wrap">
               <button
                 type="button"
                 onClick={() => setBatchStatusFilter('in_progress')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   batchStatusFilter === 'in_progress'
-                    ? 'bg-amber-600 text-white shadow-2xs'
-                    : 'text-stone-600 hover:bg-stone-100'
+                    ? 'bg-blue-600 text-white shadow-2xs font-bold'
+                    : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -471,8 +478,8 @@ export const BatchesModule: React.FC = () => {
                 onClick={() => setBatchStatusFilter('all')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   batchStatusFilter === 'all'
-                    ? 'bg-amber-600 text-white shadow-2xs'
-                    : 'text-stone-600 hover:bg-stone-100'
+                    ? 'bg-blue-600 text-white shadow-2xs font-bold'
+                    : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 Semua Batch ({processingBatches.length})
@@ -483,8 +490,8 @@ export const BatchesModule: React.FC = () => {
                 onClick={() => setBatchStatusFilter('completed')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   batchStatusFilter === 'completed'
-                    ? 'bg-amber-600 text-white shadow-2xs'
-                    : 'text-stone-600 hover:bg-stone-100'
+                    ? 'bg-blue-600 text-white shadow-2xs font-bold'
+                    : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -495,9 +502,9 @@ export const BatchesModule: React.FC = () => {
             <button
               type="button"
               onClick={() => setProcessorActiveTab('selling')}
-              className="px-3.5 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer ml-auto"
+              className="px-3.5 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer ml-auto"
             >
-              <Store className="w-3.5 h-3.5 text-amber-700" />
+              <Store className="w-3.5 h-3.5 text-emerald-700" />
               <span>Buka Panel Marketplace →</span>
             </button>
           </div>
@@ -543,11 +550,11 @@ export const BatchesModule: React.FC = () => {
               </button>
             </div>
           ) : viewMode === 'table' ? (
-            /* DEFAULT VIEW: TABLE / LIST */
-            <div className="bg-white rounded-2xl border border-stone-200/90 shadow-2xs overflow-hidden">
+            /* DEFAULT VIEW: ODOO ERP LIST TABLE */
+            <div className="o_form_sheet p-0 overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-2xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-stone-700">
-                  <thead className="bg-[#FAF7F2] text-[11px] font-bold uppercase tracking-wider text-stone-600 border-b border-stone-200">
+                <table className="o_list_table w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
                     <tr>
                       <th className="px-5 py-3.5">Batch Code &amp; Varietas</th>
                       <th className="px-4 py-3.5">Petani Asal &amp; Lokasi</th>
@@ -557,10 +564,10 @@ export const BatchesModule: React.FC = () => {
                       <th className="px-4 py-3.5 text-right">Kadar Air</th>
                       <th className="px-4 py-3.5 text-right">Rendemen</th>
                       <th className="px-4 py-3.5">Target Grade</th>
-                      <th className="px-5 py-3.5 text-right">Aksi</th>
+                      <th className="px-5 py-3.5 text-right">Aksi Lembar Kerja</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-100">
+                  <tbody className="divide-y divide-slate-100">
                     {filteredBatches.map((batch) => {
                       const mb = calculateBatchMassBalance(batch);
                       const currentStageInfo = PROCESSOR_7_STAGES.find((s) => s.id === batch.currentStage);
@@ -570,48 +577,48 @@ export const BatchesModule: React.FC = () => {
                         <tr
                           key={batch.id}
                           onClick={() => handleSelectBatch(batch)}
-                          className="hover:bg-amber-50/40 transition-colors cursor-pointer group"
+                          className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
                         >
-                          <td className="px-5 py-4">
+                          <td className="px-5 py-3.5">
                             <div className="flex items-center gap-3">
-                              <div className="p-2 rounded-xl bg-amber-100 text-amber-800 font-bold group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                              <div className="p-2 rounded-xl bg-blue-50 text-blue-700 font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                 <Flame className="w-4 h-4" />
                               </div>
                               <div>
-                                <span className="font-mono font-bold text-stone-900 block group-hover:text-amber-800 transition-colors">
+                                <span className="font-mono font-bold text-slate-900 block group-hover:text-blue-700 transition-colors">
                                   {batch.batchCode}
                                 </span>
-                                <span className="font-semibold text-stone-600">{batch.variety}</span>
+                                <span className="font-semibold text-slate-600">{batch.variety}</span>
                               </div>
                             </div>
                           </td>
 
-                          <td className="px-4 py-4">
-                            <span className="font-bold text-stone-900 block">{batch.sourceFarmerName}</span>
-                            <span className="text-stone-500 text-[11px] flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3 h-3 text-stone-400" />
+                          <td className="px-4 py-3.5">
+                            <span className="font-bold text-slate-900 block">{batch.sourceFarmerName}</span>
+                            <span className="text-slate-500 text-[11px] flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-slate-400" />
                               {batch.sourceOrigin} ({batch.altitude})
                             </span>
                           </td>
 
-                          <td className="px-4 py-4">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-800 border border-stone-200">
+                          <td className="px-4 py-3.5">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-100 text-slate-800 border border-slate-200">
                               {batch.fermentationLog.method}
                             </span>
                           </td>
 
-                          <td className="px-4 py-4">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                          <td className="px-4 py-3.5">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-blue-900 border border-blue-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
                               {currentStageInfo?.label || batch.currentStage}
                             </span>
                           </td>
 
-                          <td className="px-4 py-4 text-right font-mono font-bold text-stone-900">
+                          <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-900">
                             {batch.intakeLog.cherryWeightKg} kg
                           </td>
 
-                          <td className="px-4 py-4 text-right">
+                          <td className="px-4 py-3.5 text-right">
                             <span
                               className={`font-mono font-bold ${
                                 moisturePassed ? 'text-emerald-700' : 'text-amber-700'
@@ -621,20 +628,20 @@ export const BatchesModule: React.FC = () => {
                             </span>
                           </td>
 
-                          <td className="px-4 py-4 text-right font-mono font-bold text-stone-800">
+                          <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-800">
                             {mb.actualYieldPercent}%
                           </td>
 
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-3.5">
                             <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
                               {batch.qcAssessment.calculatedGrade}
                             </span>
                           </td>
 
-                          <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => handleSelectBatch(batch)}
-                              className="px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                              className="btn-odoo-primary text-xs py-1 px-3"
                             >
                               <span>Buka Lembar Kerja</span>
                               <ChevronRight className="w-3.5 h-3.5" />
@@ -751,109 +758,114 @@ export const BatchesModule: React.FC = () => {
               onBack={handleBackToList}
             />
 
-            <div className="bg-white rounded-3xl border border-stone-200/90 shadow-sm overflow-hidden">
-              {/* Header & Status Pipeline */}
-              <div className="bg-[#FAF7F2] px-6 py-5 border-b border-stone-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="p-3 rounded-2xl bg-amber-500 text-stone-950 font-bold shadow-xs">
-                    <Flame className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-xl sm:text-2xl font-black text-stone-900 font-mono tracking-tight">
-                        {editedBatch.batchCode}
-                      </h2>
-                      <span className="px-3 py-0.5 rounded-full text-xs font-bold uppercase bg-amber-600 text-white shadow-2xs">
-                        {editedBatch.fermentationLog.method}
-                      </span>
-                    </div>
-                    <p className="text-xs text-stone-500 mt-1">
-                      Petani Asal: <strong className="text-stone-800">{editedBatch.sourceFarmerName}</strong> • {editedBatch.sourceOrigin} ({editedBatch.altitude})
-                    </p>
-                  </div>
-                </div>
+            {/* Odoo Statusbar: Action Buttons on Left, Arrow Chevron Status on Right */}
+            <div className="o_form_statusbar">
+              <div className="flex items-center gap-2 flex-wrap">
+                {editedBatch.currentStage === 'packing_closure' ? (
+                  <button
+                    onClick={handleFinalizeBatch}
+                    className="btn-odoo-primary bg-emerald-600 border-emerald-700 hover:bg-emerald-700 font-bold"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Rilis Green Bean ke Marketplace 🚀</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleAdvanceStage}
+                    className="btn-odoo-primary"
+                  >
+                    <span>Lanjut Tahap Berikutnya</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
 
-                {/* Status Pipeline */}
-                {/* Status Pipeline: Primary Interactive Stage Selector */}
-                <div className="w-full lg:w-auto overflow-x-auto pb-1">
-                  <StatusPipeline
-                    stages={PIPELINE_STAGES}
-                    currentStageId={editedBatch.currentStage}
-                    selectedStageId={activeStageId}
-                    isClickable={true}
-                    onSelectStage={(stageId) => setActiveStageId(stageId as ProcessingStageId)}
-                  />
-                </div>
+                <button
+                  onClick={handleSaveWorksheet}
+                  className="btn-odoo-secondary"
+                >
+                  <Save className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Simpan Perubahan</span>
+                </button>
+
+                <button
+                  onClick={handleBackToList}
+                  className="btn-odoo-secondary text-slate-500"
+                >
+                  <span>Batal / Kembali</span>
+                </button>
               </div>
 
-              {/* Action Bar & Stat Buttons */}
-              <div className="px-6 py-4 bg-white border-b border-stone-100 flex flex-wrap gap-3 items-center justify-between">
-                {/* Stat Buttons */}
-                <div className="flex flex-wrap gap-2">
-                  <StatButton
-                    icon={<Coffee className="w-4 h-4" />}
-                    value={`${editedBatch.intakeLog.cherryWeightKg} kg`}
-                    label="Ceri Intake"
-                    color="stone"
-                  />
-                  <StatButton
-                    icon={<TrendingUp className="w-4 h-4" />}
-                    value={`${calculateBatchMassBalance(editedBatch).actualYieldPercent}%`}
-                    label="Rendemen Yield"
-                    color="amber"
-                  />
-                  <StatButton
-                    icon={<Droplets className="w-4 h-4" />}
-                    value={`${editedBatch.dryingLog.finalMoisturePercent}%`}
-                    label={editedBatch.dryingLog.finalMoisturePercent <= 12.5 ? 'Kadar Air (Lulus ≤12.5%)' : 'Kadar Air (>12.5%)'}
-                    color={editedBatch.dryingLog.finalMoisturePercent <= 12.5 ? 'emerald' : 'amber'}
-                  />
-                  <StatButton
-                    icon={<Award className="w-4 h-4" />}
-                    value={editedBatch.qcAssessment.calculatedGrade}
-                    label={`SCA ${editedBatch.qcAssessment.scaCuppingScore}`}
-                    color="purple"
-                  />
-                  <StatButton
-                    icon={<Recycle className="w-4 h-4" />}
-                    value={`${editedBatch.wasteManagement.weightKgOrLiters} kg`}
-                    label="Limbah Terkelola"
-                    color="emerald"
-                  />
+              {/* Status Pipeline Chevron Bar */}
+              <div className="overflow-x-auto">
+                <StatusPipeline
+                  stages={PIPELINE_STAGES}
+                  currentStageId={editedBatch.currentStage}
+                  selectedStageId={activeStageId}
+                  isClickable={true}
+                  onSelectStage={(stageId) => setActiveStageId(stageId as ProcessingStageId)}
+                />
+              </div>
+            </div>
+
+            {/* Odoo Form Sheet */}
+            <div className="o_form_sheet p-6 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+              {/* Sheet Header: Batch Info (Left) & Stat Buttons (Right) */}
+              <div className="pb-5 mb-5 border-b border-slate-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-900 border border-blue-200">
+                      Processing Worksheet &bull; 7-Stage
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase bg-amber-100 text-amber-900 border border-amber-300">
+                      {editedBatch.fermentationLog.method}
+                    </span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
+                    {editedBatch.batchCode}
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Petani Asal: <strong className="text-slate-800">{editedBatch.sourceFarmerName}</strong> &bull; {editedBatch.sourceOrigin} ({editedBatch.altitude}) &bull; Varietas: <strong className="text-slate-800">{editedBatch.variety}</strong>
+                  </p>
                 </div>
 
-                {/* Primary Action Buttons */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={handleSaveWorksheet}
-                    className="px-4 py-2 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-                  >
-                    <Save className="w-4 h-4 text-stone-600" />
-                    <span>Simpan Perubahan</span>
-                  </button>
+                {/* Right Side Stat Widgets */}
+                <div className="flex flex-wrap gap-2">
+                  <div className="o_stat_button bg-slate-50 border border-slate-200">
+                    <Coffee className="w-4 h-4 text-slate-600" />
+                    <div>
+                      <div className="o_stat_value text-slate-800">{editedBatch.intakeLog.cherryWeightKg} kg</div>
+                      <div className="o_stat_text">Ceri Intake</div>
+                    </div>
+                  </div>
 
-                  {editedBatch.currentStage === 'packing_closure' ? (
-                    <button
-                      onClick={handleFinalizeBatch}
-                      className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all animate-pulse cursor-pointer"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Rilis Green Bean ke Marketplace 🚀</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleAdvanceStage}
-                      className="px-5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                    >
-                      <span>Lanjut Tahap Berikutnya</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  )}
+                  <div className="o_stat_button bg-slate-50 border border-slate-200">
+                    <TrendingUp className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <div className="o_stat_value text-blue-700">{calculateBatchMassBalance(editedBatch).actualYieldPercent}%</div>
+                      <div className="o_stat_text">Rendemen Yield</div>
+                    </div>
+                  </div>
+
+                  <div className="o_stat_button bg-slate-50 border border-slate-200">
+                    <Droplets className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <div className="o_stat_value text-emerald-700">{editedBatch.dryingLog.finalMoisturePercent}%</div>
+                      <div className="o_stat_text">Kadar Air</div>
+                    </div>
+                  </div>
+
+                  <div className="o_stat_button bg-slate-50 border border-slate-200">
+                    <Award className="w-4 h-4 text-purple-600" />
+                    <div>
+                      <div className="o_stat_value text-purple-700">{editedBatch.qcAssessment.calculatedGrade}</div>
+                      <div className="o_stat_text">SCA {editedBatch.qcAssessment.scaCuppingScore} pts</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Worksheet Form Container */}
-              <div className="p-6 text-xs space-y-6">
+              <div className="space-y-6">
                 {/* Stage Header Info Banner */}
                 {(() => {
                   const currentStageMeta = PROCESSOR_7_STAGES.find((s) => s.id === activeStageId);

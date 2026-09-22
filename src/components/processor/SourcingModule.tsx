@@ -107,18 +107,54 @@ export const SourcingModule: React.FC = () => {
     }
   };
 
+  const totalAvailableCherryKg = availableFarmerLots.reduce((acc, lot) => acc + lot.availableWeightKg, 0);
+  const avgBrix = availableFarmerLots.length > 0 ? (availableFarmerLots.reduce((acc, l) => acc + l.brix, 0) / availableFarmerLots.length).toFixed(1) : '21.5';
+  const estTotalCherryValue = availableFarmerLots.reduce((acc, lot) => acc + (lot.availableWeightKg * lot.pricePerKg), 0);
+
   return (
     <div className="space-y-4">
       {!detailLot && (
         <>
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-stone-900">
-                Pilih Ceri Segar Petani untuk Diolah di Stasiun Anda
-              </h2>
-              <p className="text-xs text-stone-500">
-                Beli ceri segar masuk ke stok gudang atau langsung inisiasi ke lembar kerja <strong>Processing 7-Stage</strong>.
-              </p>
+          {/* Top Stat Buttons (Skripsi ERP Executive Header) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
+            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                <Cherry className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-amber-900">{availableFarmerLots.length} Lot Panen</div>
+                <div className="o_stat_text text-slate-500">Tersedia di Petani</div>
+              </div>
+            </div>
+
+            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                <Scale className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-emerald-900">{totalAvailableCherryKg.toLocaleString()} kg</div>
+                <div className="o_stat_text text-slate-500">Total Pasokan Ceri</div>
+              </div>
+            </div>
+
+            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
+                <Droplets className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-purple-900">{avgBrix}° Brix</div>
+                <div className="o_stat_text text-slate-500">Rata-rata Kemanisan</div>
+              </div>
+            </div>
+
+            <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+                <DollarSign className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-blue-900">Rp {(estTotalCherryValue / 1000000).toFixed(1)} jt</div>
+                <div className="o_stat_text text-slate-500">Est. Nilai Pengadaan</div>
+              </div>
             </div>
           </div>
 
@@ -140,7 +176,7 @@ export const SourcingModule: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setSuccessMsg(null)}
-                  className="text-stone-400 hover:text-stone-700 font-bold px-1 cursor-pointer"
+                  className="text-slate-400 hover:text-slate-700 font-bold px-1 cursor-pointer"
                 >
                   &times;
                 </button>
@@ -150,11 +186,11 @@ export const SourcingModule: React.FC = () => {
 
           {/* Control Panel */}
           <ControlPanel
-            breadcrumbs={[{ label: 'Pengadaan Ceri Petani' }]}
+            breadcrumbs={[{ label: 'Processing Mill' }, { label: '1. Sourcing Ceri Petani' }]}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            viewMode={viewMode === 'cards' ? 'table' : viewMode}
-            onViewModeChange={(m) => setViewMode(m as any)}
+            viewMode={viewMode === 'cards' ? 'kanban' : 'table'}
+            onViewModeChange={(m) => setViewMode(m === 'table' ? 'table' : 'cards')}
             recordCount={filteredLots.length}
           />
 
@@ -280,45 +316,45 @@ export const SourcingModule: React.FC = () => {
                 </div>
               )}
 
-              {/* VIEW 2: TABLE VIEW */}
+              {/* VIEW 2: ODOO ERP LIST TABLE */}
               {viewMode === 'table' && (
-                <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
+                <div className="o_form_sheet p-0 overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-2xs">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-[#FAF7F2] border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
+                    <table className="o_list_table w-full text-left text-xs text-slate-700">
+                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
                         <tr>
                           <th className="py-3.5 px-4">ID Lot Ceri</th>
-                          <th className="py-3.5 px-4">Petani & Varietas</th>
-                          <th className="py-3.5 px-4">Lokasi & Elevasi</th>
+                          <th className="py-3.5 px-4">Petani &amp; Varietas</th>
+                          <th className="py-3.5 px-4">Lokasi &amp; Elevasi</th>
                           <th className="py-3.5 px-4">Kemanisan Brix</th>
                           <th className="py-3.5 px-4">Stok Ceri</th>
                           <th className="py-3.5 px-4">Harga / kg</th>
                           <th className="py-3.5 px-4 text-right">Tindakan Cepat</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-stone-100">
+                      <tbody className="divide-y divide-slate-100">
                         {filteredLots.map((lot) => (
                           <tr
                             key={lot.id}
                             onClick={() => handleOpenDetail(lot)}
-                            className="hover:bg-amber-50/40 cursor-pointer transition-colors"
+                            className="hover:bg-blue-50/50 cursor-pointer transition-colors"
                           >
-                            <td className="py-3.5 px-4 font-mono font-bold text-stone-900">{lot.id}</td>
+                            <td className="py-3.5 px-4 font-mono font-bold text-slate-900">{lot.id}</td>
                             <td className="py-3.5 px-4">
-                              <div className="font-bold text-stone-900">{lot.variety}</div>
-                              <div className="text-[11px] text-stone-500">Petani: {lot.farmerName}</div>
+                              <div className="font-bold text-slate-900">{lot.variety}</div>
+                              <div className="text-[11px] text-slate-500">Petani: {lot.farmerName}</div>
                             </td>
-                            <td className="py-3.5 px-4 text-stone-700">
+                            <td className="py-3.5 px-4 text-slate-700">
                               <div>{lot.farmLocation}</div>
-                              <div className="text-[11px] text-stone-400">{lot.altitude}</div>
+                              <div className="text-[11px] text-slate-400">{lot.altitude}</div>
                             </td>
                             <td className="py-3.5 px-4">
                               <span className="font-black text-emerald-700 font-mono text-sm">{lot.brix}° Brix</span>
                             </td>
-                            <td className="py-3.5 px-4 font-bold text-stone-900 font-mono">
+                            <td className="py-3.5 px-4 font-bold text-slate-900 font-mono">
                               {lot.availableWeightKg} kg
                             </td>
-                            <td className="py-3.5 px-4 font-bold text-stone-900 font-mono">
+                            <td className="py-3.5 px-4 font-bold text-slate-900 font-mono">
                               Rp {lot.pricePerKg.toLocaleString()}
                             </td>
                             <td className="py-3.5 px-4 text-right">
@@ -329,9 +365,9 @@ export const SourcingModule: React.FC = () => {
                                     e.stopPropagation();
                                     handleDirectBuyToStock(lot);
                                   }}
-                                  className="px-2.5 py-1.5 rounded-lg border border-stone-300 hover:border-emerald-500 hover:bg-emerald-50 text-stone-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                  className="btn-odoo-secondary text-xs py-1 px-2.5"
                                 >
-                                  <Warehouse className="w-3 h-3 text-emerald-700" />
+                                  <Warehouse className="w-3.5 h-3.5 text-emerald-600" />
                                   <span>Beli ke Gudang</span>
                                 </button>
                                 <button
@@ -340,9 +376,9 @@ export const SourcingModule: React.FC = () => {
                                     e.stopPropagation();
                                     handleDirectStart7Stage(lot);
                                   }}
-                                  className="px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-[11px] transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                                  className="btn-odoo-primary text-xs py-1 px-3 bg-amber-600 hover:bg-amber-700 border-amber-700"
                                 >
-                                  <Flame className="w-3 h-3" />
+                                  <Flame className="w-3.5 h-3.5" />
                                   <span>Olah 7-Stage →</span>
                                 </button>
                               </div>

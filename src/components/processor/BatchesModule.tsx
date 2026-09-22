@@ -71,11 +71,12 @@ export const BatchesModule: React.FC = () => {
     finalizeBatchAndPublish,
     activeProcessingBatchId,
     setActiveProcessingBatchId,
+    setProcessorActiveTab,
   } = useCoffee();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [stageFilter, setStageFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'cards' | 'kanban' | 'table'>('cards');
+  const [viewMode, setViewMode] = useState<'table' | 'cards' | 'kanban'>('table');
   const [detailBatch, setDetailBatch] = useState<ProcessingBatch | null>(null);
   const [activeStageId, setActiveStageId] = useState<ProcessingStageId>('intake_sorting');
 
@@ -297,10 +298,11 @@ export const BatchesModule: React.FC = () => {
     if (published) {
       setAlertMessage({
         type: 'success',
-        text: `Batch ${editedBatch.batchCode} sukses difinalisasi! Menghasilkan ${published.greenBeanWeightKg} kg Green Bean (${published.grade}) dan otomatis terbit di Gudang & Marketplace.`,
+        text: `Batch ${editedBatch.batchCode} sukses difinalisasi! Menghasilkan ${published.greenBeanWeightKg} kg Green Bean (${published.grade}). Data diterbitkan ke Marketplace & Penjualan.`,
       });
-      setTimeout(() => setAlertMessage(null), 6000);
+      setTimeout(() => setAlertMessage(null), 5000);
       handleBackToList();
+      setProcessorActiveTab('selling');
     }
   };
 
@@ -465,7 +467,7 @@ export const BatchesModule: React.FC = () => {
             recordCount={filteredBatches.length}
           />
 
-          {/* LIST VIEW: CARDS / GRID */}
+          {/* LIST VIEW: DEFAULT ERP TABLE / LIST */}
           {filteredBatches.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center border border-stone-200">
               <Flame className="w-12 h-12 text-amber-400 mx-auto mb-3" />
@@ -481,7 +483,113 @@ export const BatchesModule: React.FC = () => {
                 <span>Inisiasi Batch Baru</span>
               </button>
             </div>
+          ) : viewMode === 'table' ? (
+            /* DEFAULT VIEW: TABLE / LIST */
+            <div className="bg-white rounded-2xl border border-stone-200/90 shadow-2xs overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-stone-700">
+                  <thead className="bg-[#FAF7F2] text-[11px] font-bold uppercase tracking-wider text-stone-600 border-b border-stone-200">
+                    <tr>
+                      <th className="px-5 py-3.5">Batch Code &amp; Varietas</th>
+                      <th className="px-4 py-3.5">Petani Asal &amp; Lokasi</th>
+                      <th className="px-4 py-3.5">Metode Olah</th>
+                      <th className="px-4 py-3.5">Tahap Berjalan</th>
+                      <th className="px-4 py-3.5 text-right">Ceri Intake</th>
+                      <th className="px-4 py-3.5 text-right">Kadar Air</th>
+                      <th className="px-4 py-3.5 text-right">Rendemen</th>
+                      <th className="px-4 py-3.5">Target Grade</th>
+                      <th className="px-5 py-3.5 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {filteredBatches.map((batch) => {
+                      const mb = calculateBatchMassBalance(batch);
+                      const currentStageInfo = PROCESSOR_7_STAGES.find((s) => s.id === batch.currentStage);
+                      const moisturePassed = batch.dryingLog.finalMoisturePercent <= 12.5;
+
+                      return (
+                        <tr
+                          key={batch.id}
+                          onClick={() => handleSelectBatch(batch)}
+                          className="hover:bg-amber-50/40 transition-colors cursor-pointer group"
+                        >
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-xl bg-amber-100 text-amber-800 font-bold group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                                <Flame className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <span className="font-mono font-bold text-stone-900 block group-hover:text-amber-800 transition-colors">
+                                  {batch.batchCode}
+                                </span>
+                                <span className="font-semibold text-stone-600">{batch.variety}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-4">
+                            <span className="font-bold text-stone-900 block">{batch.sourceFarmerName}</span>
+                            <span className="text-stone-500 text-[11px] flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-stone-400" />
+                              {batch.sourceOrigin} ({batch.altitude})
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-4">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-800 border border-stone-200">
+                              {batch.fermentationLog.method}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-4">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                              {currentStageInfo?.label || batch.currentStage}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-4 text-right font-mono font-bold text-stone-900">
+                            {batch.intakeLog.cherryWeightKg} kg
+                          </td>
+
+                          <td className="px-4 py-4 text-right">
+                            <span
+                              className={`font-mono font-bold ${
+                                moisturePassed ? 'text-emerald-700' : 'text-amber-700'
+                              }`}
+                            >
+                              {batch.dryingLog.finalMoisturePercent}%
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-4 text-right font-mono font-bold text-stone-800">
+                            {mb.actualYieldPercent}%
+                          </td>
+
+                          <td className="px-4 py-4">
+                            <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                              {batch.qcAssessment.calculatedGrade}
+                            </span>
+                          </td>
+
+                          <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => handleSelectBatch(batch)}
+                              className="px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                            >
+                              <span>Buka Lembar Kerja</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           ) : (
+            /* OPTIONAL CARDS / GRID VIEW */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredBatches.map((batch) => {
                 const mb = calculateBatchMassBalance(batch);

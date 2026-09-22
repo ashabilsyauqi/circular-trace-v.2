@@ -67,7 +67,7 @@ export const InventoryModule: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<'cherry' | 'green_bean' | 'waste'>('cherry');
   const [searchQuery, setSearchQuery] = useState('');
   const [processMethodFilter, setProcessMethodFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('kanban');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
 
   // Detail Sheet States
   const [detailCherryItem, setDetailCherryItem] = useState<ProcessorCherryStockItem | null>(null);

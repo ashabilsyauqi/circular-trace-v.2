@@ -46,7 +46,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
   const [detailModalQC, setDetailModalQC] = useState<QCCuppingSession | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'graph'>('kanban');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'graph'>('table');
 
   // Form State for SCA Cupping Session
   const [sessionName, setSessionName] = useState('Uji Pelepasan Batch Sangrai Baru');

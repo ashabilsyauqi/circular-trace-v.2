@@ -63,8 +63,9 @@ export const translations: Record<Language, Record<string, string>> = {
     'sidebar.ledger': 'Buku Besar Transaksi',
     'sidebar.demoSwitch': 'Pindah Peran (Demo)',
     'sidebar.processorSourcing': '1. Sourcing Ceri',
-    'sidebar.processorBatches': '2. Batch Processing',
-    'sidebar.processorInventory': '3. Katalog & Limbah',
+    'sidebar.processorBatches': '2. Lembar Kerja Batch',
+    'sidebar.processorInventory': '3. Gudang & Limbah',
+    'sidebar.processorSelling': '4. Marketplace & Penjualan',
 
     // Module headers (RoasterView)
     'module.dashboard.title': 'Dashboard',
@@ -138,7 +139,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'sidebar.demoSwitch': 'Switch Role (Demo)',
     'sidebar.processorSourcing': '1. Cherry Sourcing',
     'sidebar.processorBatches': '2. Batch Processing',
-    'sidebar.processorInventory': '3. Catalog & Waste',
+    'sidebar.processorInventory': '3. Warehouse & Waste',
+    'sidebar.processorSelling': '4. Marketplace & Sales',
 
     'module.dashboard.title': 'Dashboard',
     'module.dashboard.subtitle': 'Your roastery business overview',

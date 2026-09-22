@@ -54,7 +54,7 @@ export const FarmerView: React.FC = () => {
   // Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'sold'>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('cards');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
   const [selectedLotDetail, setSelectedLotDetail] = useState<FarmerHarvestLot | null>(null);
 
   // Form State for uploading new harvest lot

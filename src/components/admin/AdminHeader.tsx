@@ -104,6 +104,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
     { id: 'sourcing', label: t('sidebar.processorSourcing'), icon: ShoppingCart, badge: availableFarmerCherryLots },
     { id: 'batches', label: t('sidebar.processorBatches'), icon: Flame, badge: activeProcessingBatchesCount },
     { id: 'inventory', label: t('sidebar.processorInventory'), icon: Recycle, badge: myProcessedLotsCount },
+    { id: 'selling', label: t('sidebar.processorSelling'), icon: Store, badge: processedLots.filter((l) => l.availableWeightKg > 0).length },
     { id: 'history', label: t('sidebar.history.title'), icon: History, badge: myProcessorTransactionsCount },
   ];
 

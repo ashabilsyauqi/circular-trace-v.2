@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Cog,
   ShoppingCart,
@@ -14,13 +13,14 @@ import {
   Award,
   Warehouse,
   Package,
+  Store,
 } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { calculateProcessorEcoRating } from '../../utils/ecoRating';
 import { MetricCard } from '../admin/MetricCard';
 
 interface DashboardModuleProps {
-  onNavigate: (tab: 'sourcing' | 'batches' | 'inventory' | 'history') => void;
+  onNavigate: (tab: 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history') => void;
 }
 
 export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) => {
@@ -65,7 +65,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
   );
 
   const quickActions: {
-    tab: 'sourcing' | 'batches' | 'inventory' | 'history';
+    tab: 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history';
     icon: React.ElementType;
     label: string;
     hint: string;
@@ -88,14 +88,21 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
     {
       tab: 'batches',
       icon: Flame,
-      label: '3. Batch Processing (7 Stages)',
+      label: '3. Lembar Kerja 7-Stage',
       hint: `${inProgressBatches.length} batch aktif berjalan`,
       color: 'bg-orange-500/10 text-orange-700 border-orange-200',
     },
     {
+      tab: 'selling',
+      icon: Store,
+      label: '4. Marketplace & Penjualan',
+      hint: `${myProcessedLots.length} lot green bean siap jual`,
+      color: 'bg-amber-500/10 text-amber-700 border-amber-200',
+    },
+    {
       tab: 'history',
       icon: History,
-      label: '4. Riwayat Transaksi Ledger',
+      label: '5. Riwayat Ledger',
       hint: `${myProcessorTransactions.length} rekam transaksi`,
       color: 'bg-cyan-500/10 text-cyan-700 border-cyan-200',
     },

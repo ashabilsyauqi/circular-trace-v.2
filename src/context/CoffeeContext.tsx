@@ -79,8 +79,8 @@ interface CoffeeContextType {
   setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
   roasterActiveTab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history';
   setRoasterActiveTab: (tab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
-  processorActiveTab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history';
-  setProcessorActiveTab: (tab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history') => void;
+  processorActiveTab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history';
+  setProcessorActiveTab: (tab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history') => void;
   activeProcessingBatchId: string | null;
   setActiveProcessingBatchId: (id: string | null) => void;
   processorCherryStock: ProcessorCherryStockItem[];
@@ -305,7 +305,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history'
   >('dashboard');
   const [processorActiveTab, setProcessorActiveTab] = useState<
-    'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'history'
+    'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history'
   >('dashboard');
   const [activeProcessingBatchId, setActiveProcessingBatchId] = useState<string | null>(null);
 

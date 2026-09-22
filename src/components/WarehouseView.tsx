@@ -172,7 +172,7 @@ export const WarehouseView: React.FC = () => {
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
   const [gradeFilter, setGradeFilter] = useState<'all' | WarehouseGradeTier>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('cards');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
 
   // Form state for warehouse storage, grading & dynamic pricing
   const [boughtKg, setBoughtKg] = useState<number>(100);

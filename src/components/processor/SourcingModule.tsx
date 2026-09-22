@@ -50,7 +50,7 @@ export const SourcingModule: React.FC = () => {
 
   // ControlPanel & View Mode
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('cards');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
 
   const availableFarmerLots = farmerLots.filter((lot) => lot.availableWeightKg > 0);
 

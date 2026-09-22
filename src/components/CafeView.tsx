@@ -64,7 +64,7 @@ export const CafeView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'inventory' | 'create_product' | 'my_products' | 'calculator' | 'history'>('inventory');
   const [searchQuery, setSearchQuery] = useState('');
   const [roastFilter, setRoastFilter] = useState<'all' | string>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('cards');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
   const [selectedItemDetail, setSelectedItemDetail] = useState<CafeInventoryItem | null>(null);
   const [traceModalData, setTraceModalData] = useState<any | null>(null);
   const [tableCardItem, setTableCardItem] = useState<CafeInventoryItem | null>(null);

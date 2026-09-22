@@ -77,7 +77,7 @@ export const BatchesModule: React.FC = () => {
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'cards' | 'kanban' | 'table'>('cards');
   const [detailBatch, setDetailBatch] = useState<ProcessingBatch | null>(null);
-  const [activeTab, setActiveTab] = useState<'stage1' | 'stage2' | 'stage3' | 'stage4' | 'stage5' | 'stage6' | 'stage7'>('stage1');
+  const [activeStageId, setActiveStageId] = useState<ProcessingStageId>('intake_sorting');
 
   // Local editable worksheet state
   const [editedBatch, setEditedBatch] = useState<ProcessingBatch | null>(null);
@@ -102,6 +102,7 @@ export const BatchesModule: React.FC = () => {
       if (found) {
         setDetailBatch(found);
         setEditedBatch(JSON.parse(JSON.stringify(found)));
+        setActiveStageId(found.currentStage || 'intake_sorting');
       }
     }
   }, [activeProcessingBatchId, processingBatches]);
@@ -111,15 +112,7 @@ export const BatchesModule: React.FC = () => {
     setDetailBatch(batch);
     setEditedBatch(JSON.parse(JSON.stringify(batch)));
     setActiveProcessingBatchId(batch.id);
-
-    // Auto navigate to current stage's tab
-    if (batch.currentStage === 'intake_sorting') setActiveTab('stage1');
-    else if (batch.currentStage === 'fermentation') setActiveTab('stage2');
-    else if (batch.currentStage === 'drying') setActiveTab('stage3');
-    else if (batch.currentStage === 'conditioning') setActiveTab('stage4');
-    else if (batch.currentStage === 'milling') setActiveTab('stage5');
-    else if (batch.currentStage === 'grading_qc') setActiveTab('stage6');
-    else if (batch.currentStage === 'packing_closure') setActiveTab('stage7');
+    setActiveStageId(batch.currentStage || 'intake_sorting');
   };
 
   const handleBackToList = () => {
@@ -182,18 +175,7 @@ export const BatchesModule: React.FC = () => {
       updateBatchFull(updated);
       setDetailBatch(updated);
       setEditedBatch(updated);
-
-      // Advance active tab
-      const nextTabMap: Record<ProcessingStageId, typeof activeTab> = {
-        intake_sorting: 'stage1',
-        fermentation: 'stage2',
-        drying: 'stage3',
-        conditioning: 'stage4',
-        milling: 'stage5',
-        grading_qc: 'stage6',
-        packing_closure: 'stage7',
-      };
-      setActiveTab(nextTabMap[nextStage]);
+      setActiveStageId(nextStage);
 
       setAlertMessage({ type: 'success', text: `Berhasil! Batch melaju ke tahap "${nextStage}". Silakan isi lembar kerja tahap ini.` });
       setTimeout(() => setAlertMessage(null), 5000);
@@ -625,8 +607,15 @@ export const BatchesModule: React.FC = () => {
                 </div>
 
                 {/* Status Pipeline */}
+                {/* Status Pipeline: Primary Interactive Stage Selector */}
                 <div className="w-full lg:w-auto overflow-x-auto pb-1">
-                  <StatusPipeline stages={PIPELINE_STAGES} currentStageId={editedBatch.currentStage} />
+                  <StatusPipeline
+                    stages={PIPELINE_STAGES}
+                    currentStageId={editedBatch.currentStage}
+                    selectedStageId={activeStageId}
+                    isClickable={true}
+                    onSelectStage={(stageId) => setActiveStageId(stageId as ProcessingStageId)}
+                  />
                 </div>
               </div>
 
@@ -670,7 +659,7 @@ export const BatchesModule: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={handleSaveWorksheet}
-                    className="px-4 py-2 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors"
+                    className="px-4 py-2 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-800 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                   >
                     <Save className="w-4 h-4 text-stone-600" />
                     <span>Simpan Perubahan</span>
@@ -679,7 +668,7 @@ export const BatchesModule: React.FC = () => {
                   {editedBatch.currentStage === 'packing_closure' ? (
                     <button
                       onClick={handleFinalizeBatch}
-                      className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all animate-pulse"
+                      className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all animate-pulse cursor-pointer"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>Rilis Green Bean ke Marketplace 🚀</span>
@@ -687,7 +676,7 @@ export const BatchesModule: React.FC = () => {
                   ) : (
                     <button
                       onClick={handleAdvanceStage}
-                      className="px-5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                      className="px-5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                     >
                       <span>Lanjut Tahap Berikutnya</span>
                       <ChevronRight className="w-4 h-4" />
@@ -696,42 +685,67 @@ export const BatchesModule: React.FC = () => {
                 </div>
               </div>
 
-              {/* 7-Stage Interactive Worksheet Tabs */}
-              <div className="px-6 pt-3 border-b border-stone-200 bg-stone-50/50 flex flex-wrap gap-1.5 overflow-x-auto">
-                {[
-                  { id: 'stage1', label: '1. Intake & Sortasi Ceri', icon: Coffee },
-                  { id: 'stage2', label: '2. Pengolahan & Fermentasi', icon: Flame },
-                  { id: 'stage3', label: '3. Penjemuran & Log Air', icon: Droplets },
-                  { id: 'stage4', label: '4. Resting & Pemeraman', icon: Warehouse },
-                  { id: 'stage5', label: '5. Hulling & Dry Milling', icon: Sliders },
-                  { id: 'stage6', label: '6. Grading & SCA QC', icon: Award },
-                  { id: 'stage7', label: '7. Kemas & Rilis Pasar', icon: Store },
-                ].map((tab) => {
-                  const TabIcon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
-                      className={`px-4 py-2.5 rounded-t-xl text-xs font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
-                        isActive
-                          ? 'border-amber-600 text-amber-900 bg-white shadow-2xs'
-                          : 'border-transparent text-stone-500 hover:text-stone-800 hover:bg-stone-100/60'
-                      }`}
-                    >
-                      <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-amber-600' : 'text-stone-400'}`} />
-                      <span>{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
               {/* Worksheet Form Container */}
               <div className="p-6 text-xs space-y-6">
+                {/* Stage Header Info Banner */}
+                {(() => {
+                  const currentStageMeta = PROCESSOR_7_STAGES.find((s) => s.id === activeStageId);
+                  const isCurrentMilestone = activeStageId === editedBatch.currentStage;
+                  return (
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-stone-200">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-md bg-stone-900 text-amber-400 font-mono font-bold text-xs">
+                            Tahap {currentStageMeta?.stepNumber} / 7
+                          </span>
+                          <h3 className="text-base font-black text-stone-900">
+                            {currentStageMeta?.label}
+                          </h3>
+                          {isCurrentMilestone && (
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                              ● Tahap Aktif Batch
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-stone-500 mt-1">{currentStageMeta?.description}</p>
+                      </div>
+
+                      {/* Quick Prev / Next Stage buttons */}
+                      {(() => {
+                        const idx = PROCESSOR_7_STAGES.findIndex((s) => s.id === activeStageId);
+                        const prev = idx > 0 ? PROCESSOR_7_STAGES[idx - 1] : null;
+                        const next = idx < PROCESSOR_7_STAGES.length - 1 ? PROCESSOR_7_STAGES[idx + 1] : null;
+                        return (
+                          <div className="flex items-center gap-2">
+                            {prev && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveStageId(prev.id)}
+                                className="px-3 py-1.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                ← {prev.shortLabel}
+                              </button>
+                            )}
+                            {next && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveStageId(next.id)}
+                                className="px-3 py-1.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                {next.shortLabel} →
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })()}
+
                 {/* ------------------------------------------------------------------------- */}
                 {/* TAB 1: INTAKE & SORTASI CERI (STAGE 1)                                   */}
                 {/* ------------------------------------------------------------------------- */}
-                {activeTab === 'stage1' && (
+                {activeStageId === 'intake_sorting' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
                       <div className="flex items-center justify-between border-b border-stone-200 pb-2">
@@ -881,7 +895,7 @@ export const BatchesModule: React.FC = () => {
                 {/* ------------------------------------------------------------------------- */}
                 {/* TAB 2: PENGOLAHAN & FERMENTASI (STAGE 2)                                 */}
                 {/* ------------------------------------------------------------------------- */}
-                {activeTab === 'stage2' && (
+                {activeStageId === 'fermentation' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
                       <div className="flex items-center justify-between border-b border-stone-200 pb-2">
@@ -1070,7 +1084,7 @@ export const BatchesModule: React.FC = () => {
                 {/* ------------------------------------------------------------------------- */}
                 {/* TAB 3: PENJEMURAN & LOG HARIAN KADAR AIR (STAGE 3)                       */}
                 {/* ------------------------------------------------------------------------- */}
-                {activeTab === 'stage3' && (
+                {activeStageId === 'drying' && (
                   <div className="space-y-6">
                     {/* Header Spec */}
                     <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80">
@@ -1277,7 +1291,7 @@ export const BatchesModule: React.FC = () => {
                 {/* ------------------------------------------------------------------------- */}
                 {/* TAB 4: PEMERAMAN / RESTING SILO (STAGE 4)                                */}
                 {/* ------------------------------------------------------------------------- */}
-                {activeTab === 'stage4' && (
+                {activeStageId === 'conditioning' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
                       <div className="flex items-center justify-between border-b border-stone-200 pb-2">
@@ -1446,7 +1460,7 @@ export const BatchesModule: React.FC = () => {
                 {/* ------------------------------------------------------------------------- */}
                 {/* TAB 5: DRY MILLING & HULLING (STAGE 5)                                   */}
                 {/* ------------------------------------------------------------------------- */}
-                {activeTab === 'stage5' && (
+                {activeStageId === 'milling' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
                       <div className="flex items-center justify-between border-b border-stone-200 pb-2">
@@ -1589,7 +1603,7 @@ export const BatchesModule: React.FC = () => {
                 {/* ------------------------------------------------------------------------- */}
                 {/* TAB 6: GRADING & SCA QC (STAGE 6)                                        */}
                 {/* ------------------------------------------------------------------------- */}
-                {activeTab === 'stage6' && (
+                {activeStageId === 'grading_qc' && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* Defect SCA 350g */}
@@ -1857,7 +1871,7 @@ export const BatchesModule: React.FC = () => {
                 {/* ------------------------------------------------------------------------- */}
                 {/* TAB 7: PENGEMASAN & RILIS MARKETPLACE (STAGE 7)                           */}
                 {/* ------------------------------------------------------------------------- */}
-                {activeTab === 'stage7' && (
+                {activeStageId === 'packing_closure' && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">

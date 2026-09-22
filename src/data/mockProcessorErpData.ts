@@ -1,4 +1,43 @@
-import { ProcessingBatch } from '../types/processorErp';
+import { ProcessingBatch, ProcessorCherryStockItem } from '../types/processorErp';
+
+export const INITIAL_PROCESSOR_CHERRY_STOCK: ProcessorCherryStockItem[] = [
+  {
+    id: 'STK-CHR-001',
+    processorId: 'user-pengolah-1',
+    sourceFarmerLotId: 'LOT-PTN-001',
+    farmerName: 'Asep Supriatna',
+    origin: 'Pangalengan, Gn. Tilu, Jawa Barat',
+    variety: 'Ateng Super & Sigarar Utang',
+    altitude: '1.550 - 1.620 mdpl',
+    harvestDate: '2026-09-08',
+    pickingMethod: 'Petik Merah Optimal (95%+)',
+    brix: 22.4,
+    totalWeightKg: 850,
+    availableWeightKg: 600,
+    purchasePricePerKg: 14500,
+    purchaseDate: '2026-09-08',
+    notes: 'Stok ceri segar baru tiba di stasiun intake, disimpan di bak aerasi dingin.',
+    photoUrl: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'STK-CHR-002',
+    processorId: 'user-pengolah-1',
+    sourceFarmerLotId: 'LOT-PTN-002',
+    farmerName: 'Asep Supriatna',
+    origin: 'Malabar Barat, Jawa Barat',
+    variety: 'Typica Java Preanger',
+    altitude: '1.600 mdpl',
+    harvestDate: '2026-09-12',
+    pickingMethod: 'Petik Merah Optimal (95%+)',
+    brix: 21.8,
+    totalWeightKg: 500,
+    availableWeightKg: 500,
+    purchasePricePerKg: 16000,
+    purchaseDate: '2026-09-12',
+    notes: 'Varietas Typica tua mutu tinggi, siap diolah dengan metode Full Washed atau Anaerobic.',
+    photoUrl: 'https://images.unsplash.com/photo-1611162458324-aae1eb4129a4?w=600&auto=format&fit=crop&q=80',
+  },
+];
 
 export const INITIAL_PROCESSING_BATCHES: ProcessingBatch[] = [
   {

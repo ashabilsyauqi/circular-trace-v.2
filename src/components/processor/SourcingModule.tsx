@@ -41,6 +41,7 @@ const SOURCING_PIPELINE_STAGES: PipelineStage[] = [
 export const SourcingModule: React.FC = () => {
   const {
     farmerLots,
+    buyCherryToStock,
     buyCherryAndCreateProcess,
     createProcessingBatch,
     setProcessorActiveTab,
@@ -157,6 +158,23 @@ export const SourcingModule: React.FC = () => {
     }
 
     setTimeout(() => setSuccessMsg(''), 6000);
+  };
+
+  const handleBuyToWarehouseStock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedLotToProcess) return;
+
+    const stockItem = buyCherryToStock(selectedLotToProcess.id, Number(boughtCherryKg));
+
+    setSelectedLotToProcess(null);
+    setDetailLot(null);
+
+    if (stockItem) {
+      setSuccessMsg(
+        `Sukses membeli ${boughtCherryKg} kg ceri dari ${selectedLotToProcess.farmerName} senilai Rp ${(boughtCherryKg * selectedLotToProcess.pricePerKg).toLocaleString()}! Ceri telah masuk ke Stok Gudang Bahan Baku Anda.`
+      );
+      setTimeout(() => setSuccessMsg(''), 6000);
+    }
   };
 
   const handleStartBatch7Stage = (e: React.FormEvent) => {
@@ -929,6 +947,14 @@ export const SourcingModule: React.FC = () => {
                   className="px-4 py-2.5 rounded-xl border border-stone-300 text-stone-700 text-xs font-bold hover:bg-stone-100 transition-colors"
                 >
                   Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBuyToWarehouseStock}
+                  className="px-4 py-2.5 rounded-xl border border-emerald-500 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-xs"
+                >
+                  <Package className="w-4 h-4 text-emerald-700" />
+                  <span>Beli Masuk ke Stok Gudang</span>
                 </button>
                 <button
                   type="submit"

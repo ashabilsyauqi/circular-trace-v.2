@@ -9,6 +9,26 @@ export type ProcessingStageId =
   | 'grading_qc'
   | 'packing_closure';
 
+// Raw Material Cherry in Processor's Warehouse/Cold Storage
+export interface ProcessorCherryStockItem {
+  id: string; // e.g. STK-CHR-001
+  processorId: string;
+  sourceFarmerLotId: string;
+  farmerName: string;
+  origin: string;
+  variety: string;
+  altitude: string;
+  harvestDate: string;
+  pickingMethod: string;
+  brix: number;
+  totalWeightKg: number;
+  availableWeightKg: number;
+  purchasePricePerKg: number;
+  purchaseDate: string;
+  notes?: string;
+  photoUrl?: string;
+}
+
 export type ProcessingMethod =
   | 'Full Washed'
   | 'Natural / Dry'

@@ -39,14 +39,16 @@ const QC_PIPELINE_STAGES: PipelineStage[] = [
 ];
 
 export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
-  const { qcSessions, workOrders, createCuppingSession } = useCoffee();
+  const { currentUser, qcSessions, workOrders, createCuppingSession } = useCoffee();
+  const myQcSessions = qcSessions.filter((s) => !s.roasterId || s.roasterId === currentUser?.id);
+  const myWorkOrders = workOrders.filter((w) => !w.roasterId || w.roasterId === currentUser?.id);
 
   const [isCuppingModalOpen, setIsCuppingModalOpen] = useState(!!initialWorkOrder);
   const [selectedWorkOrderId, setSelectedWorkOrderId] = useState(initialWorkOrder?.id || '');
   const [detailModalQC, setDetailModalQC] = useState<QCCuppingSession | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'graph'>('kanban');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'graph'>('table');
 
   // Form State for SCA Cupping Session
   const [sessionName, setSessionName] = useState('Uji Pelepasan Batch Sangrai Baru');
@@ -139,14 +141,14 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
 
   // Metrics
   const avgScaScore =
-    qcSessions.length > 0
-      ? (qcSessions.reduce((acc, q) => acc + q.totalScaScore, 0) / qcSessions.length).toFixed(2)
+    myQcSessions.length > 0
+      ? (myQcSessions.reduce((acc, q) => acc + q.totalScaScore, 0) / myQcSessions.length).toFixed(2)
       : '87.75';
-  const approvedSpecialtyCount = qcSessions.filter(
+  const approvedSpecialtyCount = myQcSessions.filter(
     (q) => q.status === 'approved_specialty'
   ).length;
 
-  const filteredQc = qcSessions.filter((qc) => {
+  const filteredQc = myQcSessions.filter((qc) => {
     const matchesQuery =
       qc.sessionCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       qc.sessionName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -164,7 +166,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Sesi QC Cupping"
-          value={`${qcSessions.length} Sesi`}
+          value={`${myQcSessions.length} Sesi`}
           subtitle="Protokol SCA 100-Point Standard"
           trend={{ value: 'Tervalidasi Q-Grader', isPositive: true }}
           icon={<Award className="w-5 h-5" />}
@@ -238,7 +240,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                       qc.status === 'approved_specialty'
                         ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
                         : qc.status === 'approved_commercial'
-                        ? 'bg-blue-100 text-blue-900 border-blue-300'
+                        ? 'bg-amber-100 text-amber-900 border-amber-300'
                         : 'bg-rose-100 text-rose-900 border-rose-300'
                     }`}
                   >
@@ -353,7 +355,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           qc.status === 'approved_specialty'
                             ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-blue-100 text-blue-800'
+                            : 'bg-amber-100 text-amber-900'
                         }`}
                       >
                         {qc.status === 'approved_specialty' ? 'Specialty Grade' : 'Commercial Grade'}

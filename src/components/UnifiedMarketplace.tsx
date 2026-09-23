@@ -32,6 +32,7 @@ import { ProcessorBarcodeModal } from './ProcessorBarcodeModal';
 import { WarehouseBarcodeModal } from './WarehouseBarcodeModal';
 import { ProductDetailModal } from './ProductDetailModal';
 import { ProcessedGreenBeanLot, WarehouseLot } from '../types/coffee';
+import { VerificationStampBadge } from './shared/VerificationStampBadge';
 
 export const UnifiedMarketplace: React.FC = () => {
   const {
@@ -363,12 +364,15 @@ export const UnifiedMarketplace: React.FC = () => {
                       {item.id}
                     </div>
 
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
                       <span
                         className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border shadow-xs ${meta.badgeClass}`}
                       >
                         {meta.label.split(' ')[0]} {meta.label.split(' ')[1] || ''}
                       </span>
+                      {item.verificationStamp && (
+                        <VerificationStampBadge stamp={item.verificationStamp} size="sm" />
+                      )}
                     </div>
 
                     {item.scaScore && (
@@ -395,9 +399,11 @@ export const UnifiedMarketplace: React.FC = () => {
                           {item.sellerName}
                         </span>
                       </div>
-                      <span className="text-[10px] uppercase font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md">
-                        {item.sellerRole}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md">
+                          {item.sellerRole}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Title & Origin */}

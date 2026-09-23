@@ -10,6 +10,7 @@ import { ProcessorView } from './components/ProcessorView';
 import { WarehouseView } from './components/WarehouseView';
 import { RoasterView } from './components/RoasterView';
 import { CafeView } from './components/CafeView';
+import { VerifierView } from './components/verifier/VerifierView';
 import { PublicLotScanView } from './components/PublicLotScanView';
 import { LandingPage } from './components/LandingPage';
 
@@ -62,6 +63,7 @@ const MainLayout: React.FC = () => {
         {currentUser.role === 'gudang' && <WarehouseView />}
         {currentUser.role === 'roaster' && <RoasterView />}
         {currentUser.role === 'cafe' && <CafeView />}
+        {currentUser.role === 'verifikator' && <VerifierView />}
       </AdminLayout>
     );
   }

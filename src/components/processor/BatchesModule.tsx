@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Flame,
   PlusCircle,
@@ -37,9 +37,13 @@ import {
   Check,
   AlertTriangle,
   Printer,
+  Save,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
-import { ProcessingBatch, ProcessingStageId, DryingDayLog } from '../../types/processorErp';
+import { ProcessedGreenBeanLot } from '../../types/coffee';
+import { ProcessingBatch, ProcessingStageId, DryingDayLog, ProcessingMethod, DryingMethod } from '../../types/processorErp';
 import { PROCESSOR_7_STAGES, validateStageQualityGate, autoCalculateCoffeeGrade } from '../../utils/coffeeQualityGates';
 import { calculateBatchMassBalance } from '../../utils/coffeeMassBalance';
 import { calculateProcessorEcoRating } from '../../utils/ecoRating';
@@ -58,68 +62,299 @@ const PIPELINE_STAGES: PipelineStage[] = PROCESSOR_7_STAGES.map((s) => ({
 
 export const BatchesModule: React.FC = () => {
   const {
+    currentUser,
     processingBatches,
     processorCherryStock,
     farmerLots,
     createProcessingBatch,
     advanceBatchStage,
-    addDryingDayLog,
-    updateBatchStageLog,
+    updateBatchFull,
     finalizeBatchAndPublish,
+    activeProcessingBatchId,
+    setActiveProcessingBatchId,
+    setProcessorActiveTab,
   } = useCoffee();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [stageFilter, setStageFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'cards' | 'kanban' | 'table'>('cards');
+  const [batchStatusFilter, setBatchStatusFilter] = useState<'in_progress' | 'all' | 'completed'>('in_progress');
+  const [viewMode, setViewMode] = useState<'table' | 'cards' | 'kanban'>('table');
   const [detailBatch, setDetailBatch] = useState<ProcessingBatch | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'telemetry' | 'milling' | 'grading' | 'mass_balance' | 'waste' | 'eudr'>('overview');
+  const [activeStageId, setActiveStageId] = useState<ProcessingStageId>('intake_sorting');
 
-  // Modals
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isDryingModalOpen, setIsDryingModalOpen] = useState(false);
-  const [isQcModalOpen, setIsQcModalOpen] = useState(false);
-  const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
+  // Local editable worksheet state
+  const [editedBatch, setEditedBatch] = useState<ProcessingBatch | null>(null);
+  const [newCuppingNote, setNewCuppingNote] = useState('');
+  const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
+
+  // New Daily Log Form inline in Stage 3
+  const [newLogMoisture, setNewLogMoisture] = useState<number>(11.5);
+  const [newLogTemp, setNewLogTemp] = useState<number>(29.5);
+  const [newLogRh, setNewLogRh] = useState<number>(55);
+  const [newLogFreq, setNewLogFreq] = useState('Tiap 2 Jam');
+  const [newLogNotes, setNewLogNotes] = useState('Pembalikan rata di solar dome.');
+
+  // Barcode Modal
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
   const [selectedBatchForBarcode, setSelectedBatchForBarcode] = useState<any>(null);
 
-  // Quick feedback messages
-  const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
+  // Auto load active batch if signaled from Sourcing or Inventory
+  useEffect(() => {
+    if (activeProcessingBatchId) {
+      const found = processingBatches.find((b) => b.id === activeProcessingBatchId);
+      if (found) {
+        setDetailBatch(found);
+        setEditedBatch(JSON.parse(JSON.stringify(found)));
+        setActiveStageId(found.currentStage || 'intake_sorting');
+      }
+    }
+  }, [activeProcessingBatchId, processingBatches]);
 
-  // Form State: Create Batch
-  const [formSourceType, setFormSourceType] = useState<'stock' | 'farmer'>('stock');
-  const [formCherryStockId, setFormCherryStockId] = useState('');
-  const [formFarmerLotId, setFormFarmerLotId] = useState('');
-  const [formCherryKg, setFormCherryKg] = useState<number>(500);
-  const [formMethod, setFormMethod] = useState<ProcessingBatch['fermentationLog']['method']>('Anaerobic Natural');
-  const [formDryingMethod, setFormDryingMethod] = useState<ProcessingBatch['dryingLog']['dryingMethod']>('Solar Dryer Raised Bed');
-  const [formOperator, setFormOperator] = useState('Budi Santoso (Mill Master)');
-  const [formNotes, setFormNotes] = useState('Batch olahan ceri petik merah segar.');
+  // Sync editedBatch when detailBatch is selected
+  const handleSelectBatch = (batch: ProcessingBatch) => {
+    setDetailBatch(batch);
+    setEditedBatch(JSON.parse(JSON.stringify(batch)));
+    setActiveProcessingBatchId(batch.id);
+    setActiveStageId(batch.currentStage || 'intake_sorting');
+  };
 
-  // Form State: Add Daily Drying Log
-  const [formDryingDayMoisture, setFormDryingDayMoisture] = useState<number>(11.5);
-  const [formDryingDayTemp, setFormDryingDayTemp] = useState<number>(29.5);
-  const [formDryingDayRh, setFormDryingDayRh] = useState<number>(54);
-  const [formDryingDayFreq, setFormDryingDayFreq] = useState('Tiap 2 Jam');
-  const [formDryingDayNotes, setFormDryingDayNotes] = useState('Pembalikan rata di raised bed solar dome.');
+  const handleBackToList = () => {
+    setDetailBatch(null);
+    setEditedBatch(null);
+    setActiveProcessingBatchId(null);
+  };
 
-  // Form State: QC Grading
-  const [formPrimaryDefects, setFormPrimaryDefects] = useState<number>(0);
-  const [formSecondaryDefects, setFormSecondaryDefects] = useState<number>(2);
-  const [formScreen18Kg, setFormScreen18Kg] = useState<number>(95);
-  const [formScreen16Kg, setFormScreen16Kg] = useState<number>(35);
-  const [formScreen14Kg, setFormScreen14Kg] = useState<number>(15);
-  const [formMoistureQC, setFormMoistureQC] = useState<number>(11.2);
-  const [formAwQC, setFormAwQC] = useState<number>(0.56);
-  const [formScaScore, setFormScaScore] = useState<number>(88.25);
-  const [formCuppingNotes, setFormCuppingNotes] = useState<string>('Dark Cherry, Blackberry Wine, Dark Chocolate, Molasses');
+  // Save changes to current worksheet
+  const handleSaveWorksheet = () => {
+    if (!editedBatch) return;
 
-  // Form State: Finalize & Packing
-  const [formBaggingType, setFormBaggingType] = useState<ProcessingBatch['packingLog']['baggingType']>('GrainPro 60kg + Karung Goni');
-  const [formPricePerKg, setFormPricePerKg] = useState<number>(135000);
-  const [formFinalGrade, setFormFinalGrade] = useState<'Specialty Grade 1' | 'Grade 2' | 'Commercial Fine'>('Specialty Grade 1');
+    // Recalculate auto grade for stage 6
+    const gradeResult = autoCalculateCoffeeGrade(
+      editedBatch.qcAssessment.defects.primaryDefects,
+      editedBatch.qcAssessment.defects.secondaryDefects,
+      editedBatch.dryingLog.finalMoisturePercent,
+      editedBatch.qcAssessment.scaCuppingScore
+    );
 
-  // Filtered batches
-  const filteredBatches = processingBatches.filter((b) => {
+    const batchToSave: ProcessingBatch = {
+      ...editedBatch,
+      qcAssessment: {
+        ...editedBatch.qcAssessment,
+        calculatedGrade: gradeResult.grade,
+      },
+    };
+
+    updateBatchFull(batchToSave);
+    setDetailBatch(batchToSave);
+    setEditedBatch(batchToSave);
+    setAlertMessage({ type: 'success', text: 'Data Lembar Kerja Batch berhasil disimpan!' });
+    setTimeout(() => setAlertMessage(null), 4000);
+  };
+
+  // Advance stage with Quality Gate check
+  const handleAdvanceStage = () => {
+    if (!editedBatch) return;
+
+    const currentIdx = PROCESSOR_7_STAGES.findIndex((s) => s.id === editedBatch.currentStage);
+    if (currentIdx === -1 || currentIdx >= PROCESSOR_7_STAGES.length - 1) {
+      setAlertMessage({ type: 'warning', text: 'Batch sudah mencapai tahap akhir (Packing & Rilis Pasar).' });
+      return;
+    }
+
+    const nextStage = PROCESSOR_7_STAGES[currentIdx + 1].id;
+    const validation = validateStageQualityGate(editedBatch, nextStage);
+
+    if (!validation.canAdvance) {
+      setAlertMessage({ type: 'error', text: `Quality Gate Menolak: ${validation.blockingErrors.join(' ')}` });
+      return;
+    }
+
+    const result = advanceBatchStage(editedBatch.id, nextStage);
+    if (result.success) {
+      const updated: ProcessingBatch = {
+        ...editedBatch,
+        currentStage: nextStage,
+      };
+      updateBatchFull(updated);
+      setDetailBatch(updated);
+      setEditedBatch(updated);
+      setActiveStageId(nextStage);
+
+      setAlertMessage({ type: 'success', text: `Berhasil! Batch melaju ke tahap "${nextStage}". Silakan isi lembar kerja tahap ini.` });
+      setTimeout(() => setAlertMessage(null), 5000);
+    } else {
+      setAlertMessage({ type: 'error', text: result.message });
+    }
+  };
+
+  // Add daily drying log row
+  const handleAddDailyLog = () => {
+    if (!editedBatch) return;
+
+    const currentDaily = editedBatch.dryingLog.dailyLogs || [];
+    const nextDayNum = currentDaily.length + 1;
+    const newEntry: DryingDayLog = {
+      dayNumber: nextDayNum,
+      date: new Date().toISOString().split('T')[0],
+      moisturePercent: Number(newLogMoisture),
+      ambientTempCelsius: Number(newLogTemp),
+      rhPercent: Number(newLogRh),
+      turningFrequency: newLogFreq,
+      notes: newLogNotes,
+    };
+
+    const updatedDaily = [...currentDaily, newEntry];
+    const updatedBatch: ProcessingBatch = {
+      ...editedBatch,
+      dryingLog: {
+        ...editedBatch.dryingLog,
+        dailyLogs: updatedDaily,
+        finalMoisturePercent: Number(newLogMoisture),
+        targetMoisturePassed: Number(newLogMoisture) <= 12.5,
+      },
+    };
+
+    setEditedBatch(updatedBatch);
+    updateBatchFull(updatedBatch);
+    setDetailBatch(updatedBatch);
+
+    setAlertMessage({
+      type: 'success',
+      text: `Log Penjemuran Hari #${nextDayNum} berhasil dicatat! Kadar air terkini: ${newLogMoisture}%. ${
+        newLogMoisture <= 12.5 ? '✓ Lolos Quality Gate (≤ 12.5%)' : '⚠ Belum memenuhi Quality Gate (≤ 12.5%)'
+      }`,
+    });
+    setTimeout(() => setAlertMessage(null), 4000);
+  };
+
+  // Delete a daily drying log row
+  const handleDeleteDailyLog = (index: number) => {
+    if (!editedBatch) return;
+    const updatedDaily = editedBatch.dryingLog.dailyLogs.filter((_, i) => i !== index);
+    const lastMoisture = updatedDaily.length > 0 ? updatedDaily[updatedDaily.length - 1].moisturePercent : 52.0;
+
+    const updatedBatch: ProcessingBatch = {
+      ...editedBatch,
+      dryingLog: {
+        ...editedBatch.dryingLog,
+        dailyLogs: updatedDaily,
+        finalMoisturePercent: lastMoisture,
+        targetMoisturePassed: lastMoisture <= 12.5,
+      },
+    };
+
+    setEditedBatch(updatedBatch);
+    updateBatchFull(updatedBatch);
+    setDetailBatch(updatedBatch);
+  };
+
+  // Add cupping flavor note
+  const handleAddCuppingNote = () => {
+    if (!editedBatch || !newCuppingNote.trim()) return;
+    const currentNotes = editedBatch.qcAssessment.cuppingNotes || [];
+    if (!currentNotes.includes(newCuppingNote.trim())) {
+      const updatedNotes = [...currentNotes, newCuppingNote.trim()];
+      setEditedBatch({
+        ...editedBatch,
+        qcAssessment: {
+          ...editedBatch.qcAssessment,
+          cuppingNotes: updatedNotes,
+        },
+      });
+      setNewCuppingNote('');
+    }
+  };
+
+  const handleRemoveCuppingNote = (noteToRemove: string) => {
+    if (!editedBatch) return;
+    const updatedNotes = (editedBatch.qcAssessment.cuppingNotes || []).filter((n) => n !== noteToRemove);
+    setEditedBatch({
+      ...editedBatch,
+      qcAssessment: {
+        ...editedBatch.qcAssessment,
+        cuppingNotes: updatedNotes,
+      },
+    });
+  };
+
+  // Finalize Batch and publish to green bean inventory + marketplace
+  const handleFinalizeBatch = () => {
+    if (!editedBatch) return;
+
+    const gradeString = editedBatch.qcAssessment.calculatedGrade || 'Specialty Grade 1';
+    const mappedGrade: ProcessedGreenBeanLot['grade'] =
+      gradeString === 'Specialty Grade 1'
+        ? 'Specialty Grade 1'
+        : gradeString.includes('Grade 2')
+        ? 'Grade 2'
+        : 'Commercial Fine';
+
+    const published = finalizeBatchAndPublish(editedBatch.id, {
+      baggingType: editedBatch.packingLog.baggingType,
+      pricePerKg: editedBatch.targetMarketplacePricePerKg || 125000,
+      cuppingNotes: editedBatch.qcAssessment.cuppingNotes || ['Specialty Clean Cup'],
+      grade: mappedGrade,
+      notes: editedBatch.packingLog.notes || 'Batch pengolahan 7-stage selesai diverifikasi.',
+    });
+
+    if (published) {
+      setAlertMessage({
+        type: 'success',
+        text: `Batch ${editedBatch.batchCode} sukses difinalisasi! Menghasilkan ${published.greenBeanWeightKg} kg Green Bean (${published.grade}). Data diterbitkan ke Marketplace & Penjualan.`,
+      });
+      setTimeout(() => setAlertMessage(null), 5000);
+      handleBackToList();
+      setProcessorActiveTab('selling');
+    }
+  };
+
+  // Direct create new batch & open Lembar Kerja immediately
+  const handleCreateNewBatchFromAvailable = () => {
+    const availableStock = processorCherryStock.find((s) => s.availableWeightKg > 0);
+    const availableFarmer = farmerLots.find((l) => l.availableWeightKg > 0);
+
+    let newBatch: ProcessingBatch | null = null;
+    if (availableStock) {
+      newBatch = createProcessingBatch({
+        sourceCherryStockId: availableStock.id,
+        boughtCherryKg: Math.min(availableStock.availableWeightKg, 500),
+        method: 'Natural / Dry',
+        dryingMethod: 'Solar Dryer Raised Bed',
+        operatorName: 'Budi Santoso (Mill Master)',
+        notes: `Batch pengolahan baru dari stok ceri ${availableStock.variety} (${availableStock.origin}).`,
+      });
+    } else if (availableFarmer) {
+      newBatch = createProcessingBatch({
+        sourceFarmerLotId: availableFarmer.id,
+        boughtCherryKg: Math.min(availableFarmer.availableWeightKg, 500),
+        method: 'Natural / Dry',
+        dryingMethod: 'Solar Dryer Raised Bed',
+        operatorName: 'Budi Santoso (Mill Master)',
+        notes: `Batch pengolahan baru dari panen ceri petani ${availableFarmer.farmerName} (${availableFarmer.farmLocation}).`,
+      });
+    } else {
+      setAlertMessage({
+        type: 'error',
+        text: 'Tidak ada stok ceri di gudang ataupun ceri petani. Silakan muat seeder petani terlebih dahulu di menu Pengadaan Ceri.',
+      });
+      return;
+    }
+
+    if (newBatch) {
+      handleSelectBatch(newBatch);
+      setAlertMessage({
+        type: 'success',
+        text: `Lembar Kerja Batch #${newBatch.batchCode} berhasil dibuka! Semua parameter dapat langsung Anda isi dan sesuaikan di bawah.`,
+      });
+      setTimeout(() => setAlertMessage(null), 5000);
+    }
+  };
+
+  // Filtered Batches
+  const myBatches = processingBatches.filter((b) => !b.processorId || b.processorId === currentUser?.id);
+  const myCherryStock = processorCherryStock.filter((s) => !s.processorId || s.processorId === currentUser?.id);
+
+  const filteredBatches = myBatches.filter((b) => {
     const q = searchQuery.toLowerCase();
     const matchSearch =
       b.id.toLowerCase().includes(q) ||
@@ -129,555 +364,291 @@ export const BatchesModule: React.FC = () => {
       b.sourceOrigin.toLowerCase().includes(q) ||
       b.fermentationLog.method.toLowerCase().includes(q);
     const matchStage = stageFilter === 'all' || b.currentStage === stageFilter;
-    return matchSearch && matchStage;
+    const matchStatus =
+      batchStatusFilter === 'all'
+        ? true
+        : batchStatusFilter === 'in_progress'
+        ? b.status === 'in_progress' || (b.status as string) === 'draft' || !b.status
+        : b.status === 'completed';
+    return matchSearch && matchStage && matchStatus;
   });
 
-  // KPI calculations
-  const totalBatchesCount = processingBatches.length;
-  const inProgressBatches = processingBatches.filter((b) => b.status === 'in_progress');
-  const totalCherryProcessedKg = processingBatches.reduce((acc, b) => acc + (b.intakeLog?.cherryWeightKg || 0), 0);
-  const totalGreenBeanProducedKg = processingBatches.reduce((acc, b) => acc + (b.packingLog?.finalGreenBeanWeightKg || b.millingLog?.outputGreenBeanWeightKg || 0), 0);
-  
-  const avgYieldPercent = totalCherryProcessedKg > 0
-    ? ((totalGreenBeanProducedKg / totalCherryProcessedKg) * 100).toFixed(1)
-    : '16.5';
-
-  const availableCherryStock = processorCherryStock.filter((s) => s.availableWeightKg > 0);
-  const availableFarmerLots = farmerLots.filter((l) => l.availableWeightKg > 0);
-
-  const handleCreateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    let newBatch: ProcessingBatch | null = null;
-
-    if (formSourceType === 'stock') {
-      const targetStockId = formCherryStockId || availableCherryStock[0]?.id;
-      if (!targetStockId) {
-        setAlertMessage({ type: 'error', text: 'Stok ceri di gudang kosong. Silakan beli ceri dari Petani atau pilih sumber Langsung Petani.' });
-        return;
-      }
-      newBatch = createProcessingBatch({
-        sourceCherryStockId: targetStockId,
-        boughtCherryKg: Number(formCherryKg),
-        method: formMethod,
-        dryingMethod: formDryingMethod,
-        operatorName: formOperator,
-        notes: formNotes,
-      });
-    } else {
-      const targetLotId = formFarmerLotId || availableFarmerLots[0]?.id;
-      if (!targetLotId) {
-        setAlertMessage({ type: 'error', text: 'Pilih lot ceri petani yang masih tersedia stoknya.' });
-        return;
-      }
-      newBatch = createProcessingBatch({
-        sourceFarmerLotId: targetLotId,
-        boughtCherryKg: Number(formCherryKg),
-        method: formMethod,
-        dryingMethod: formDryingMethod,
-        operatorName: formOperator,
-        notes: formNotes,
-      });
-    }
-
-    if (newBatch) {
-      setAlertMessage({ type: 'success', text: `Batch baru ${newBatch.batchCode} (${formMethod}) berhasil diinisiasi dari panen ceri!` });
-      setIsCreateModalOpen(false);
-      setDetailBatch(newBatch);
-    }
-  };
-
-  const handleAdvanceStage = (batch: ProcessingBatch) => {
-    const currentIdx = PROCESSOR_7_STAGES.findIndex((s) => s.id === batch.currentStage);
-    if (currentIdx === -1 || currentIdx >= PROCESSOR_7_STAGES.length - 1) {
-      setAlertMessage({ type: 'warning', text: 'Batch sudah mencapai tahap akhir (Packing & Penutupan Lot).' });
-      return;
-    }
-
-    const nextStage = PROCESSOR_7_STAGES[currentIdx + 1].id;
-    const result = advanceBatchStage(batch.id, nextStage);
-
-    if (result.success) {
-      setAlertMessage({ type: 'success', text: result.message });
-      // Update local selected state
-      const updated = processingBatches.find((b) => b.id === batch.id);
-      if (updated) {
-        setDetailBatch({ ...updated, currentStage: nextStage });
-      }
-    } else {
-      setAlertMessage({ type: 'error', text: `Quality Gate Menolak: ${result.message}` });
-    }
-  };
-
-  const handleAddDryingSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!detailBatch) return;
-
-    const nextDayNum = (detailBatch.dryingLog.dailyLogs?.length || 0) + 1;
-    const dayLog: DryingDayLog = {
-      dayNumber: nextDayNum,
-      date: new Date().toISOString().split('T')[0],
-      moisturePercent: Number(formDryingDayMoisture),
-      ambientTempCelsius: Number(formDryingDayTemp),
-      rhPercent: Number(formDryingDayRh),
-      turningFrequency: formDryingDayFreq,
-      notes: formDryingDayNotes,
-    };
-
-    addDryingDayLog(detailBatch.id, dayLog);
-    setIsDryingModalOpen(false);
-    setAlertMessage({
-      type: 'success',
-      text: `Log Penjemuran Hari ke-${nextDayNum} berhasil disimpan! Kadar air saat ini: ${formDryingDayMoisture}%. ${
-        formDryingDayMoisture <= 12.5 ? '✓ Lolos Quality Gate (<= 12.5%)' : '⚠ Belum memenuhi Quality Gate (<= 12.5%)'
-      }`,
-    });
-
-    // Refresh active detail
-    setDetailBatch((prev) => {
-      if (!prev) return null;
-      const updatedDaily = [...prev.dryingLog.dailyLogs, dayLog];
-      return {
-        ...prev,
-        dryingLog: {
-          ...prev.dryingLog,
-          dailyLogs: updatedDaily,
-          finalMoisturePercent: Number(formDryingDayMoisture),
-          targetMoisturePassed: Number(formDryingDayMoisture) <= 12.5,
-        },
-      };
-    });
-  };
-
-  const handleQcSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!detailBatch) return;
-
-    const autoGradeResult = autoCalculateCoffeeGrade(
-      Number(formPrimaryDefects),
-      Number(formSecondaryDefects),
-      Number(formMoistureQC),
-      Number(formAwQC)
-    );
-
-    const notesList = formCuppingNotes
-      .split(',')
-      .map((n) => n.trim())
-      .filter(Boolean);
-
-    const qcData = {
-      assessmentDate: new Date().toISOString().split('T')[0],
-      inspectorName: 'Q-Grader Stasiun',
-      sampleWeightGrams: 350,
-      defects: {
-        primaryDefects: Number(formPrimaryDefects),
-        secondaryDefects: Number(formSecondaryDefects),
-        totalScoreValue: autoGradeResult.totalDefectScore,
-      },
-      screenDistribution: {
-        screen18PlusKg: Number(formScreen18Kg),
-        screen16_17Kg: Number(formScreen16Kg),
-        screen14_15Kg: Number(formScreen14Kg),
-        peaberryKg: 0,
-      },
-      finalMoisturePercent: Number(formMoistureQC),
-      waterActivityAw: Number(formAwQC),
-      densityGramsPerLiter: 725,
-      calculatedGrade: autoGradeResult.grade,
-      scaCuppingScore: Number(formScaScore),
-      cuppingNotes: notesList.length > 0 ? notesList : ['Clean', 'Sweet'],
-      notes: autoGradeResult.gradeDescription,
-    };
-
-    updateBatchStageLog(detailBatch.id, 'grading_qc', qcData);
-    setIsQcModalOpen(false);
-    setAlertMessage({
-      type: 'success',
-      text: `Uji Mutu Fisik SCA Selesai! Grade Otomatis: ${autoGradeResult.grade} (Score SCA ${formScaScore}).`,
-    });
-
-    setDetailBatch((prev) => (prev ? { ...prev, qcAssessment: qcData as any } : null));
-  };
-
-  const handleFinalizeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!detailBatch) return;
-
-    const notesList = formCuppingNotes
-      .split(',')
-      .map((n) => n.trim())
-      .filter(Boolean);
-
-    const createdLot = finalizeBatchAndPublish(detailBatch.id, {
-      baggingType: formBaggingType,
-      pricePerKg: Number(formPricePerKg),
-      cuppingNotes: notesList.length > 0 ? notesList : detailBatch.qcAssessment.cuppingNotes,
-      grade: formFinalGrade,
-      notes: 'Batch ditutup sempurna & diterbitkan ke katalog penjualan.',
-    });
-
-    setIsFinalizeModalOpen(false);
-    setAlertMessage({
-      type: 'success',
-      text: `Batch ${detailBatch.batchCode} berhasil ditutup & diterbitkan sebagai Green Bean Lot di Marketplace!`,
-    });
-
-    if (createdLot) {
-      setSelectedBatchForBarcode(createdLot);
-      setBarcodeModalOpen(true);
-    }
-  };
+  // KPIs
+  const totalBatchesCount = myBatches.length;
+  const inProgressBatches = myBatches.filter((b) => b.status === 'in_progress' || (b.status as string) === 'draft' || !b.status);
+  const totalCherryProcessedKg = myBatches.reduce((acc, b) => acc + (b.intakeLog?.cherryWeightKg || 0), 0);
+  const totalGreenBeanProducedKg = myBatches.reduce(
+    (acc, b) => acc + (b.packingLog?.finalGreenBeanWeightKg || b.millingLog?.outputGreenBeanWeightKg || 0),
+    0
+  );
+  const avgYieldPercent =
+    totalCherryProcessedKg > 0 ? ((totalGreenBeanProducedKg / totalCherryProcessedKg) * 100).toFixed(1) : '16.5';
 
   return (
-    <div className="space-y-5">
-      {/* Alert Banner */}
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Toast Alert Banner */}
       {alertMessage && (
         <div
-          className={`p-4 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-2xs animate-in fade-in ${
+          className={`p-4 rounded-2xl text-xs font-bold flex items-center justify-between border shadow-2xs ${
             alertMessage.type === 'success'
-              ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+              ? 'bg-emerald-50 text-emerald-950 border-emerald-300'
               : alertMessage.type === 'error'
-              ? 'bg-rose-50 border-rose-300 text-rose-950'
-              : 'bg-amber-50 border-amber-300 text-amber-950'
+              ? 'bg-rose-50 text-rose-950 border-rose-300'
+              : 'bg-amber-50 text-amber-950 border-amber-300'
           }`}
         >
-          <div className="flex items-center gap-2.5">
-            {alertMessage.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
-            {alertMessage.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
-            {alertMessage.type === 'warning' && <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />}
+          <div className="flex items-center gap-2">
+            {alertMessage.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+            ) : alertMessage.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
+            )}
             <span>{alertMessage.text}</span>
           </div>
-          <button onClick={() => setAlertMessage(null)} className="text-stone-400 hover:text-stone-700 text-xs font-bold">
+          <button onClick={() => setAlertMessage(null)} className="text-stone-400 hover:text-stone-700 text-xs">
             Tutup
           </button>
         </div>
       )}
 
+      {/* ========================================================================= */}
+      {/* MODE 1: BATCHES LIST VIEW (TABLE / KANBAN / CARDS)                        */}
+      {/* ========================================================================= */}
       {!detailBatch ? (
         <>
-          {/* Top Title & Quick Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-black text-stone-900 tracking-tight flex items-center gap-2">
-                <Flame className="w-5 h-5 text-amber-600" />
-                Work Orders &amp; 7-Stage Post-Harvest Processing
-              </h2>
-              <p className="text-xs text-stone-500 mt-0.5">
-                Alur manufaktur pengolahan kopi specialty hulu ke hilir dengan kontrol Rendemen (Mass Balance) &amp; Quality Gates.
-              </p>
+          {/* Top Stat Buttons / Executive ERP KPI Header */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="o_stat_button bg-white shadow-2xs border border-stone-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                <Flame className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-amber-950">{totalBatchesCount} Batch</div>
+                <div className="o_stat_text text-stone-500">{inProgressBatches.length} Aktif Berjalan</div>
+              </div>
+            </div>
+
+            <div className="o_stat_button bg-white shadow-2xs border border-stone-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                <Coffee className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-emerald-900">{totalCherryProcessedKg.toLocaleString()} kg</div>
+                <div className="o_stat_text text-stone-500">Total Ceri Intake</div>
+              </div>
+            </div>
+
+            <div className="o_stat_button bg-white shadow-2xs border border-stone-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-stone-100 text-stone-700 flex items-center justify-center shrink-0">
+                <Warehouse className="w-5 h-5 text-stone-800" />
+              </div>
+              <div>
+                <div className="o_stat_value text-stone-900">{totalGreenBeanProducedKg.toLocaleString()} kg</div>
+                <div className="o_stat_text text-stone-500">Green Bean Dihasilkan</div>
+              </div>
+            </div>
+
+            <div className="o_stat_button bg-white shadow-2xs border border-stone-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="o_stat_value text-purple-900">{avgYieldPercent}%</div>
+                <div className="o_stat_text text-stone-500">Rendemen Rata-Rata</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Status Filter Sub-Tabs */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-stone-200/90 shadow-2xs">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setBatchStatusFilter('in_progress')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  batchStatusFilter === 'in_progress'
+                    ? 'bg-amber-700 text-white shadow-2xs font-bold'
+                    : 'text-stone-600 hover:bg-stone-100'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Batch Sedang Dikerjakan ({inProgressBatches.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBatchStatusFilter('all')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  batchStatusFilter === 'all'
+                    ? 'bg-amber-700 text-white shadow-2xs font-bold'
+                    : 'text-stone-600 hover:bg-stone-100'
+                }`}
+              >
+                Semua Batch ({myBatches.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBatchStatusFilter('completed')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  batchStatusFilter === 'completed'
+                    ? 'bg-amber-700 text-white shadow-2xs font-bold'
+                    : 'text-stone-600 hover:bg-stone-100'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Selesai / Terbit di Marketplace ({myBatches.filter((b) => b.status === 'completed').length})</span>
+              </button>
             </div>
 
             <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-all shrink-0"
+              type="button"
+              onClick={() => setProcessorActiveTab('selling')}
+              className="px-3.5 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer ml-auto"
             >
-              <PlusCircle className="w-4 h-4" />
-              <span>Mulai Batch Pengolahan Baru</span>
+              <Store className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Buka Panel Marketplace →</span>
             </button>
           </div>
 
-          {/* KPI Metric Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Total Batch Aktif"
-              value={inProgressBatches.length}
-              subtitle={`Dari ${totalBatchesCount} total siklus olah`}
-              icon={<Activity className="w-5 h-5 text-amber-600" />}
-              color="amber"
-              trend={{ value: 'Operasional', isPositive: true }}
-            />
-            <MetricCard
-              title="Total Ceri Masuk (Intake)"
-              value={`${totalCherryProcessedKg.toLocaleString()} kg`}
-              subtitle="Volume ceri segar terkelola"
-              icon={<Coffee className="w-5 h-5 text-emerald-600" />}
-              color="emerald"
-            />
-            <MetricCard
-              title="Rata-rata Rendemen Yield"
-              value={`${avgYieldPercent}%`}
-              subtitle="Benchmark Arabica 14-18%"
-              icon={<TrendingUp className="w-5 h-5 text-blue-600" />}
-              color="blue"
-              trend={{ value: 'Optimal', isPositive: true }}
-            />
-            <MetricCard
-              title="Output Green Bean"
-              value={`${totalGreenBeanProducedKg.toLocaleString()} kg`}
-              subtitle="Hasil giling siap gudang/jual"
-              icon={<Warehouse className="w-5 h-5 text-purple-600" />}
-              color="purple"
-            />
-          </div>
-
-          {/* Control Panel */}
+          {/* Control Panel: Filters & View Modes */}
           <ControlPanel
-            breadcrumbs={[{ label: 'Daftar Batch Pengolahan (7 Stages)' }]}
+            breadcrumbs={[{ label: 'Processing Mill' }, { label: '7-Stage Work Orders' }]}
+            primaryActionLabel="+ Inisiasi Batch Baru"
+            onPrimaryAction={handleCreateNewBatchFromAvailable}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             activeFilter={stageFilter}
             onFilterChange={setStageFilter}
             filterOptions={[
               { id: 'all', label: 'Semua Tahap' },
-              { id: 'intake_sorting', label: '1. Intake & Sortasi' },
+              { id: 'intake_sorting', label: '1. Intake' },
               { id: 'fermentation', label: '2. Fermentasi' },
               { id: 'drying', label: '3. Penjemuran' },
-              { id: 'conditioning', label: '4. Pemeraman' },
+              { id: 'conditioning', label: '4. Resting Silo' },
               { id: 'milling', label: '5. Hulling Mill' },
-              { id: 'grading_qc', label: '6. Grading & QC' },
-              { id: 'packing_closure', label: '7. Packing & Rilis' },
+              { id: 'grading_qc', label: '6. Grading QC' },
+              { id: 'packing_closure', label: '7. Kemas & Rilis' },
             ]}
-            viewMode={viewMode === 'cards' ? 'table' : (viewMode as any)}
-            onViewModeChange={(m) => setViewMode(m as any)}
+            viewMode={viewMode === 'table' ? 'table' : 'kanban'}
+            onViewModeChange={(m) => setViewMode(m === 'table' ? 'table' : 'cards')}
             recordCount={filteredBatches.length}
           />
 
-          {/* VIEW 1: CARDS GRID VIEW */}
-          {viewMode === 'cards' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredBatches.map((batch) => {
-                const massBalance = calculateBatchMassBalance(batch);
-                const currentStageInfo = PROCESSOR_7_STAGES.find((s) => s.id === batch.currentStage) || PROCESSOR_7_STAGES[0];
-                const isCompleted = batch.status === 'completed';
-
-                return (
-                  <div
-                    key={batch.id}
-                    onClick={() => {
-                      setDetailBatch(batch);
-                      setActiveTab('overview');
-                    }}
-                    className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-md hover:border-amber-400 transition-all flex flex-col justify-between cursor-pointer group"
-                  >
-                    <div>
-                      <div className="relative h-44 bg-stone-100 overflow-hidden">
-                        <img
-                          src={batch.photoUrl}
-                          alt={batch.variety}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute top-3 left-3 bg-stone-900/85 backdrop-blur-xs text-white text-[11px] font-mono px-2.5 py-0.5 rounded-md">
-                          {batch.batchCode}
-                        </div>
-                        <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                          <span className="bg-amber-700 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
-                            {batch.fermentationLog.method}
-                          </span>
-                          {isCompleted ? (
-                            <span className="bg-emerald-600 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shadow-xs">
-                              Selesai
-                            </span>
-                          ) : (
-                            <span className="bg-amber-500 text-stone-950 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shadow-xs animate-pulse">
-                              Step {currentStageInfo.stepNumber}/7
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="p-5 space-y-3">
-                        <div>
-                          <div className="flex items-center gap-1 text-[11px] text-stone-500 mb-1">
-                            <span>Petani Asal:</span>
-                            <strong className="text-stone-800">{batch.sourceFarmerName}</strong>
-                            <span>({batch.sourceFarmerLotId})</span>
-                          </div>
-                          <h3 className="font-bold text-base text-stone-900 group-hover:text-amber-800 transition-colors">
-                            {batch.variety} - {currentStageInfo.shortLabel}
-                          </h3>
-                          <p className="text-xs text-stone-500 flex items-center gap-1 mt-0.5">
-                            <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                            {batch.sourceOrigin} ({batch.altitude})
-                          </p>
-                        </div>
-
-                        {/* Stage Progress Bar */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-[10px] font-semibold text-stone-500">
-                            <span>Tahap: {currentStageInfo.label}</span>
-                            <span>{Math.round((currentStageInfo.stepNumber / 7) * 100)}%</span>
-                          </div>
-                          <div className="w-full bg-stone-100 rounded-full h-2 overflow-hidden">
-                            <div
-                              className="bg-amber-500 h-2 rounded-full transition-all duration-500"
-                              style={{ width: `${(currentStageInfo.stepNumber / 7) * 100}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-stone-100">
-                          <div>
-                            <span className="text-[10px] text-stone-400 block font-semibold">Ceri Masuk:</span>
-                            <span className="font-bold text-stone-800">{batch.intakeLog.cherryWeightKg} kg</span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-stone-400 block font-semibold">Rendemen:</span>
-                            <span className="font-black text-amber-700">{massBalance.actualYieldPercent}% Yield</span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-stone-400 block font-semibold">Brix Buah:</span>
-                            <span className="font-semibold text-stone-800">{batch.intakeLog.brix}° Bx</span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-stone-400 block font-semibold">Kadar Air:</span>
-                            <span className="font-semibold text-stone-800">{batch.dryingLog.finalMoisturePercent}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="px-5 pb-5 pt-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDetailBatch(batch);
-                          setActiveTab('overview');
-                        }}
-                        className="w-full py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-2xs"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>Buka Lembar Kerja 7-Stage</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+          {/* LIST VIEW: DEFAULT ERP TABLE / LIST */}
+          {filteredBatches.length === 0 ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-stone-200">
+              <Flame className="w-12 h-12 text-amber-400 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-stone-800">Belum ada batch pengolahan aktif</h3>
+              <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto mb-4">
+                Mulai batch baru dari stok ceri gudang atau pengadaan petani untuk mengaktifkan lembar kerja 7-Stage.
+              </p>
+              <button
+                onClick={handleCreateNewBatchFromAvailable}
+                className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-xs cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Inisiasi Batch Baru</span>
+              </button>
             </div>
-          )}
-
-          {/* VIEW 2: KANBAN 7-STAGE VIEW */}
-          {viewMode === 'kanban' && (
-            <div className="overflow-x-auto pb-4">
-              <div className="flex gap-4 min-w-[1400px]">
-                {PROCESSOR_7_STAGES.map((stage) => {
-                  const stageBatches = processingBatches.filter((b) => b.currentStage === stage.id);
-                  return (
-                    <div key={stage.id} className="w-80 flex-shrink-0 bg-stone-100/70 rounded-2xl p-3 border border-stone-200/80">
-                      <div className="flex items-center justify-between pb-2 mb-3 border-b border-stone-200">
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-amber-500 text-stone-950 text-[10px] font-black flex items-center justify-center">
-                            {stage.stepNumber}
-                          </span>
-                          <h4 className="font-bold text-xs text-stone-900 truncate">{stage.shortLabel}</h4>
-                        </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-stone-600 border border-stone-200">
-                          {stageBatches.length}
-                        </span>
-                      </div>
-
-                      <div className="space-y-3 max-h-[650px] overflow-y-auto pr-1">
-                        {stageBatches.length === 0 ? (
-                          <div className="p-6 text-center text-stone-400 text-xs italic">
-                            Kosong
-                          </div>
-                        ) : (
-                          stageBatches.map((batch) => {
-                            const massBalance = calculateBatchMassBalance(batch);
-                            return (
-                              <div
-                                key={batch.id}
-                                onClick={() => {
-                                  setDetailBatch(batch);
-                                  setActiveTab('overview');
-                                }}
-                                className="bg-white p-3.5 rounded-xl border border-stone-200 shadow-2xs hover:border-amber-400 cursor-pointer transition-all space-y-2 group"
-                              >
-                                <div className="flex items-center justify-between text-[10px]">
-                                  <span className="font-mono font-bold text-stone-700 bg-stone-100 px-1.5 py-0.5 rounded">
-                                    {batch.batchCode}
-                                  </span>
-                                  <span className="text-amber-700 font-semibold">{batch.fermentationLog.method}</span>
-                                </div>
-
-                                <div>
-                                  <h5 className="font-bold text-xs text-stone-900 group-hover:text-amber-800">{batch.variety}</h5>
-                                  <p className="text-[10px] text-stone-500">{batch.sourceFarmerName} • {batch.intakeLog.cherryWeightKg}kg</p>
-                                </div>
-
-                                <div className="flex items-center justify-between text-[10px] pt-1 border-t border-stone-100">
-                                  <span className="text-stone-500">Rendemen:</span>
-                                  <span className="font-black text-amber-700">{massBalance.actualYieldPercent}%</span>
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* VIEW 3: TABLE VIEW */}
-          {viewMode === 'table' && (
-            <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
+          ) : viewMode === 'table' ? (
+            /* DEFAULT VIEW: ODOO ERP LIST TABLE */
+            <div className="o_form_sheet p-0 overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-2xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider text-[11px]">
+                <table className="o_list_table w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
                     <tr>
-                      <th className="py-3.5 px-4">Batch ID</th>
-                      <th className="py-3.5 px-4">Petani &amp; Asal</th>
-                      <th className="py-3.5 px-4">Metode Olah</th>
-                      <th className="py-3.5 px-4">Tahap Aktif</th>
-                      <th className="py-3.5 px-4">Ceri (kg)</th>
-                      <th className="py-3.5 px-4">Rendemen %</th>
-                      <th className="py-3.5 px-4">Kadar Air</th>
-                      <th className="py-3.5 px-4">Status Gate</th>
-                      <th className="py-3.5 px-4 text-right">Aksi</th>
+                      <th className="px-5 py-3.5">Batch Code &amp; Varietas</th>
+                      <th className="px-4 py-3.5">Petani Asal &amp; Lokasi</th>
+                      <th className="px-4 py-3.5">Metode Olah</th>
+                      <th className="px-4 py-3.5">Tahap Berjalan</th>
+                      <th className="px-4 py-3.5 text-right">Ceri Intake</th>
+                      <th className="px-4 py-3.5 text-right">Kadar Air</th>
+                      <th className="px-4 py-3.5 text-right">Rendemen</th>
+                      <th className="px-4 py-3.5">Target Grade</th>
+                      <th className="px-5 py-3.5 text-right">Aksi Lembar Kerja</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-100">
+                  <tbody className="divide-y divide-slate-100">
                     {filteredBatches.map((batch) => {
-                      const massBalance = calculateBatchMassBalance(batch);
-                      const currentStageInfo = PROCESSOR_7_STAGES.find((s) => s.id === batch.currentStage) || PROCESSOR_7_STAGES[0];
-                      const isDryingPassed = batch.dryingLog.finalMoisturePercent <= 12.5;
+                      const mb = calculateBatchMassBalance(batch);
+                      const currentStageInfo = PROCESSOR_7_STAGES.find((s) => s.id === batch.currentStage);
+                      const moisturePassed = batch.dryingLog.finalMoisturePercent <= 12.5;
 
                       return (
                         <tr
                           key={batch.id}
-                          onClick={() => {
-                            setDetailBatch(batch);
-                            setActiveTab('overview');
-                          }}
-                          className="hover:bg-amber-50/50 cursor-pointer transition-colors"
+                          onClick={() => handleSelectBatch(batch)}
+                          className="hover:bg-amber-50/40 transition-colors cursor-pointer group"
                         >
-                          <td className="py-3.5 px-4 font-mono font-bold text-stone-900">{batch.batchCode}</td>
-                          <td className="py-3.5 px-4">
-                            <strong className="text-stone-900 block">{batch.sourceFarmerName}</strong>
-                            <span className="text-[10px] text-stone-500">{batch.variety}</span>
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-xl bg-amber-50 text-amber-800 font-bold group-hover:bg-amber-700 group-hover:text-white transition-colors">
+                                <Flame className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <span className="font-mono font-bold text-stone-900 block group-hover:text-amber-800 transition-colors">
+                                  {batch.batchCode}
+                                </span>
+                                <span className="font-semibold text-stone-600">{batch.variety}</span>
+                              </div>
+                            </div>
                           </td>
-                          <td className="py-3.5 px-4 font-semibold text-stone-800">{batch.fermentationLog.method}</td>
-                          <td className="py-3.5 px-4">
-                            <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">
-                              Step {currentStageInfo.stepNumber}: {currentStageInfo.shortLabel}
+
+                          <td className="px-4 py-3.5">
+                            <span className="font-bold text-stone-900 block">{batch.sourceFarmerName}</span>
+                            <span className="text-stone-500 text-[11px] flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-stone-400" />
+                              {batch.sourceOrigin} ({batch.altitude})
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 font-mono font-bold text-stone-800">{batch.intakeLog.cherryWeightKg}</td>
-                          <td className="py-3.5 px-4 font-black text-amber-700">{massBalance.actualYieldPercent}%</td>
-                          <td className="py-3.5 px-4 font-mono">{batch.dryingLog.finalMoisturePercent}%</td>
-                          <td className="py-3.5 px-4">
-                            {isDryingPassed ? (
-                              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700">
-                                <CheckCircle2 className="w-3.5 h-3.5" /> Lolos
-                              </span>
-                            ) : (
-                              <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600">
-                                <AlertTriangle className="w-3.5 h-3.5" /> Jemur ({batch.dryingLog.finalMoisturePercent}%)
-                              </span>
-                            )}
+
+                          <td className="px-4 py-3.5">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-800 border border-stone-200">
+                              {batch.fermentationLog.method}
+                            </span>
                           </td>
-                          <td className="py-3.5 px-4 text-right">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDetailBatch(batch);
-                                setActiveTab('overview');
-                              }}
-                              className="px-3 py-1 bg-stone-900 hover:bg-stone-800 text-amber-400 text-xs font-bold rounded-lg transition-colors"
+
+                          <td className="px-4 py-3.5">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                              {currentStageInfo?.label || batch.currentStage}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-3.5 text-right font-mono font-bold text-stone-900">
+                            {batch.intakeLog.cherryWeightKg} kg
+                          </td>
+
+                          <td className="px-4 py-3.5 text-right">
+                            <span
+                              className={`font-mono font-bold ${
+                                moisturePassed ? 'text-emerald-700' : 'text-amber-700'
+                              }`}
                             >
-                              Detail
+                              {batch.dryingLog.finalMoisturePercent}%
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-800">
+                            {mb.actualYieldPercent}%
+                          </td>
+
+                          <td className="px-4 py-3.5">
+                            <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                              {batch.qcAssessment.calculatedGrade}
+                            </span>
+                          </td>
+
+                          <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => handleSelectBatch(batch)}
+                              className="btn-odoo-primary text-xs py-1 px-3"
+                            >
+                              <span>Buka Lembar Kerja</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                           </td>
                         </tr>
@@ -687,1103 +658,1583 @@ export const BatchesModule: React.FC = () => {
                 </table>
               </div>
             </div>
+          ) : (
+            /* OPTIONAL CARDS / GRID VIEW */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredBatches.map((batch) => {
+                const mb = calculateBatchMassBalance(batch);
+                const currentStageInfo = PROCESSOR_7_STAGES.find((s) => s.id === batch.currentStage);
+
+                return (
+                  <div
+                    key={batch.id}
+                    onClick={() => handleSelectBatch(batch)}
+                    className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-md hover:border-amber-400 transition-all flex flex-col justify-between cursor-pointer group"
+                  >
+                    <div>
+                      {/* Header bar */}
+                      <div className="p-4 bg-gradient-to-r from-stone-900 to-amber-950 text-white flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-amber-300 text-xs">{batch.batchCode}</span>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-600/80 text-white border border-amber-400/30">
+                          {batch.fermentationLog.method}
+                        </span>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-5 space-y-3">
+                        <div>
+                          <div className="flex items-center justify-between text-[11px] text-stone-500 mb-1">
+                            <span>Petani: <strong className="text-stone-800">{batch.sourceFarmerName}</strong></span>
+                            <span className="font-mono text-emerald-700 font-bold">{batch.intakeLog.brix}° Brix</span>
+                          </div>
+                          <h3 className="font-bold text-base text-stone-900 group-hover:text-amber-800 transition-colors">
+                            {batch.variety}
+                          </h3>
+                          <p className="text-xs text-stone-500 flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-3.5 h-3.5 text-stone-400" />
+                            {batch.sourceOrigin} ({batch.altitude})
+                          </p>
+                        </div>
+
+                        {/* Stage Progress Pill */}
+                        <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-950 text-xs">
+                          <div className="flex items-center justify-between font-bold text-[11px]">
+                            <span>Tahap Aktif:</span>
+                            <span className="text-amber-800">{currentStageInfo?.label}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-stone-100">
+                          <div>
+                            <span className="text-[10px] text-stone-400 block font-semibold">Ceri Masuk:</span>
+                            <span className="font-bold text-stone-800">{batch.intakeLog.cherryWeightKg} kg</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-stone-400 block font-semibold">Kadar Air:</span>
+                            <span className={`font-bold ${batch.dryingLog.finalMoisturePercent <= 12.5 ? 'text-emerald-700' : 'text-amber-700'}`}>
+                              {batch.dryingLog.finalMoisturePercent}%
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-stone-400 block font-semibold">Estimasi Yield:</span>
+                            <span className="font-bold text-stone-800">{mb.actualYieldPercent}%</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-stone-400 block font-semibold">Target Grade:</span>
+                            <span className="font-bold text-purple-700">{batch.qcAssessment.calculatedGrade}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-4 bg-stone-50 border-t border-stone-100 flex items-center justify-between">
+                      <span className="text-[11px] text-stone-500 font-medium">Mulai: {batch.startDate}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectBatch(batch);
+                        }}
+                        className="px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs flex items-center gap-1.5 transition-all shadow-2xs"
+                      >
+                        <span>Buka Lembar Kerja</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </>
       ) : (
         /* ========================================================================= */
-        /* ENTERPRISE DOCUMENT DETAIL SHEET (7 STAGES, MASS BALANCE, TELEMETRY, QC) */
+        /* MODE 2: INTERACTIVE 7-STAGE PROCESSING WORKSHEET (LEMBAR KERJA PENGOLAHAN)*/
         /* ========================================================================= */
-        <div>
-          <RecordBreadcrumb
-            listLabel="Daftar Batch Pengolahan"
-            recordLabel={detailBatch.batchCode}
-            onBack={() => setDetailBatch(null)}
-          />
+        editedBatch && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Breadcrumb Navigation */}
+            <RecordBreadcrumb
+              listLabel="Daftar Batch Pengolahan"
+              recordLabel={editedBatch.batchCode}
+              onBack={handleBackToList}
+            />
 
-          <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-            {/* Header & Status Pipeline */}
-            <div className="bg-[#FAF7F2] px-6 py-5 border-b border-stone-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-2xl bg-amber-100 text-amber-800">
-                  <Flame className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-black text-stone-900 font-mono tracking-tight">
-                      {detailBatch.batchCode}
-                    </h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-600 text-white">
-                      {detailBatch.fermentationLog.method}
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-500 mt-0.5">
-                    Petani: <strong className="text-stone-800">{detailBatch.sourceFarmerName}</strong> • Asal:{' '}
-                    {detailBatch.sourceOrigin} ({detailBatch.altitude})
-                  </p>
-                </div>
+            {/* Odoo Statusbar: Action Buttons on Left, Arrow Chevron Status on Right */}
+            <div className="o_form_statusbar">
+              <div className="flex items-center gap-2 flex-wrap">
+                {editedBatch.currentStage === 'packing_closure' ? (
+                  <button
+                    onClick={handleFinalizeBatch}
+                    className="btn-odoo-primary bg-emerald-600 border-emerald-700 hover:bg-emerald-700 font-bold"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Rilis Green Bean ke Marketplace 🚀</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleAdvanceStage}
+                    className="btn-odoo-primary"
+                  >
+                    <span>Lanjut Tahap Berikutnya</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                <button
+                  onClick={handleSaveWorksheet}
+                  className="btn-odoo-secondary"
+                >
+                  <Save className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Simpan Perubahan</span>
+                </button>
+
+                <button
+                  onClick={handleBackToList}
+                  className="btn-odoo-secondary text-stone-500"
+                >
+                  <span>Batal / Kembali</span>
+                </button>
               </div>
 
-              {/* Status Chevron Pipeline */}
-              <div className="w-full lg:w-auto overflow-x-auto pb-1">
+              {/* Status Pipeline Chevron Bar */}
+              <div className="overflow-x-auto">
                 <StatusPipeline
                   stages={PIPELINE_STAGES}
-                  currentStageId={detailBatch.currentStage}
+                  currentStageId={editedBatch.currentStage}
+                  selectedStageId={activeStageId}
+                  isClickable={true}
+                  onSelectStage={(stageId) => setActiveStageId(stageId as ProcessingStageId)}
                 />
               </div>
             </div>
 
-            {/* Smart Stat Buttons Header */}
-            {(() => {
-              const mb = calculateBatchMassBalance(detailBatch);
-              const isMoistureSafe = detailBatch.dryingLog.finalMoisturePercent <= 12.5;
-
-              return (
-                <div className="px-6 py-4 bg-white border-b border-stone-100 flex flex-wrap gap-2.5 items-center justify-between">
-                  <div className="flex flex-wrap gap-2.5">
-                    <StatButton
-                      icon={<Coffee className="w-4 h-4" />}
-                      value={`${detailBatch.intakeLog.cherryWeightKg} kg`}
-                      label="Ceri Segar (Intake)"
-                      color="stone"
-                    />
-                    <StatButton
-                      icon={<TrendingUp className="w-4 h-4" />}
-                      value={`${mb.actualYieldPercent}%`}
-                      label="Rendemen Yield"
-                      color="amber"
-                    />
-                    <StatButton
-                      icon={<Droplets className="w-4 h-4" />}
-                      value={`${detailBatch.dryingLog.finalMoisturePercent}%`}
-                      label={isMoistureSafe ? 'Kadar Air (Lolos)' : 'Kadar Air (Gate >12.5%)'}
-                      color={isMoistureSafe ? 'blue' : 'amber'}
-                    />
-                    <StatButton
-                      icon={<Award className="w-4 h-4" />}
-                      value={detailBatch.qcAssessment.calculatedGrade}
-                      label={`SCA ${detailBatch.qcAssessment.scaCuppingScore}`}
-                      color="purple"
-                    />
-                    <StatButton
-                      icon={<Recycle className="w-4 h-4" />}
-                      value={`${detailBatch.wasteManagement.weightKgOrLiters} kg`}
-                      label="Limbah Sirkular"
-                      color="emerald"
-                    />
+            {/* Odoo Form Sheet */}
+            <div className="o_form_sheet p-6 bg-white border border-stone-200 rounded-2xl shadow-2xs">
+              {/* Sheet Header: Batch Info (Left) & Stat Buttons (Right) */}
+              <div className="pb-5 mb-5 border-b border-stone-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                      Processing Worksheet &bull; 7-Stage
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase bg-stone-100 text-stone-900 border border-stone-300">
+                      {editedBatch.fermentationLog.method}
+                    </span>
                   </div>
-
-                  {/* Stage Action Controls */}
-                  <div className="flex items-center gap-2">
-                    {detailBatch.currentStage === 'drying' && (
-                      <button
-                        onClick={() => setIsDryingModalOpen(true)}
-                        className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-300 hover:bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1.5 transition-colors"
-                      >
-                        <PlusCircle className="w-3.5 h-3.5 text-amber-700" />
-                        <span>Input Log Harian Penjemuran</span>
-                      </button>
-                    )}
-
-                    {detailBatch.currentStage === 'grading_qc' && (
-                      <button
-                        onClick={() => setIsQcModalOpen(true)}
-                        className="px-3.5 py-2 rounded-xl bg-purple-50 border border-purple-300 hover:bg-purple-100 text-purple-900 font-bold text-xs flex items-center gap-1.5 transition-colors"
-                      >
-                        <Award className="w-3.5 h-3.5 text-purple-700" />
-                        <span>Uji Mutu Sensori &amp; Defect</span>
-                      </button>
-                    )}
-
-                    {detailBatch.currentStage === 'packing_closure' && (
-                      <button
-                        onClick={() => setIsFinalizeModalOpen(true)}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Finalisasi &amp; Rilis Marketplace</span>
-                      </button>
-                    )}
-
-                    {detailBatch.currentStage !== 'packing_closure' && (
-                      <button
-                        onClick={() => handleAdvanceStage(detailBatch)}
-                        className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
-                      >
-                        <span>Lanjut ke Tahap Berikutnya</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-stone-900 font-mono tracking-tight">
+                    {editedBatch.batchCode}
+                  </h2>
+                  <p className="text-xs text-stone-500 mt-1">
+                    Petani Asal: <strong className="text-stone-800">{editedBatch.sourceFarmerName}</strong> &bull; {editedBatch.sourceOrigin} ({editedBatch.altitude}) &bull; Varietas: <strong className="text-stone-800">{editedBatch.variety}</strong>
+                  </p>
                 </div>
-              );
-            })()}
 
-            {/* Document Tabs */}
-            <div className="px-6 pt-3 border-b border-stone-200 bg-stone-50/50 flex flex-wrap gap-2">
-              {[
-                { id: 'overview', label: '1. Silsilah Ceri & Fermentasi', icon: Coffee },
-                { id: 'telemetry', label: '2. Log Harian Penjemuran', icon: Droplets },
-                { id: 'milling', label: '3. Resting & Hulling Mill', icon: Warehouse },
-                { id: 'grading', label: '4. Grading & QC SCA', icon: Award },
-                { id: 'mass_balance', label: '5. Mass Balance & Rendemen', icon: Scale },
-                { id: 'waste', label: '6. Alokasi Limbah Sirkular', icon: Recycle },
-                { id: 'eudr', label: '7. QR Code & Traceability', icon: QrCode },
-              ].map((tab) => {
-                const TabIcon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`px-4 py-2.5 rounded-t-xl text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
-                      isActive
-                        ? 'border-amber-600 text-amber-900 bg-white shadow-2xs'
-                        : 'border-transparent text-stone-500 hover:text-stone-800 hover:bg-stone-100/60'
-                    }`}
-                  >
-                    <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-amber-600' : 'text-stone-400'}`} />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Document Body */}
-            <div className="p-6 text-xs space-y-6">
-              {/* TAB 1: OVERVIEW & INTAKE & FERMENTATION */}
-              {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Stage 1 Intake */}
-                  <div className="bg-stone-50/80 p-5 rounded-2xl border border-stone-200/80 space-y-3">
-                    <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                      <Coffee className="w-4 h-4 text-amber-600" /> Stage 1: Penerimaan &amp; Sortasi Ceri Segar
-                    </h4>
-                    <div className="space-y-2 text-stone-700">
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Lot Sumber Petani:</span>
-                        <span className="font-mono font-bold text-stone-900">{detailBatch.sourceFarmerLotId}</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Nama Petani Mitra:</span>
-                        <span className="font-bold text-stone-900">{detailBatch.sourceFarmerName}</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Total Berat Ceri:</span>
-                        <span className="font-mono font-bold text-stone-900">{detailBatch.intakeLog.cherryWeightKg} kg</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Kadar Gula Buah:</span>
-                        <span className="font-bold text-emerald-700">{detailBatch.intakeLog.brix}° Brix (Refraktometer)</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Uji Apung (Sinkers vs Floaters):</span>
-                        <span className="font-medium text-stone-800">
-                          {detailBatch.intakeLog.sinkersWeightKg}kg Dense / {detailBatch.intakeLog.floatersWeightKg}kg Float
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-stone-500">Standar Petik:</span>
-                        <span className="font-semibold text-stone-900">{detailBatch.intakeLog.visualQualityGrade}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stage 2 Fermentation */}
-                  <div className="bg-stone-50/80 p-5 rounded-2xl border border-stone-200/80 space-y-3">
-                    <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                      <Flame className="w-4 h-4 text-amber-600" /> Stage 2: Pengolahan &amp; Fermentasi
-                    </h4>
-                    <div className="space-y-2 text-stone-700">
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Metode Pengolahan:</span>
-                        <span className="font-bold text-amber-800">{detailBatch.fermentationLog.method}</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Tangki Fermentasi:</span>
-                        <span className="font-mono font-bold text-stone-900">{detailBatch.fermentationLog.tankId}</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Durasi Fermentasi:</span>
-                        <span className="font-mono font-bold text-stone-900">{detailBatch.fermentationLog.durationHours} Jam</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Kurva pH Asidifikasi:</span>
-                        <span className="font-bold text-stone-900">
-                          pH {detailBatch.fermentationLog.startPh} → pH {detailBatch.fermentationLog.endPh} (Optimal)
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Suhu Slurry / Ambient:</span>
-                        <span className="font-medium text-stone-800">
-                          {detailBatch.fermentationLog.slurryTempCelsius}°C / {detailBatch.fermentationLog.ambientTempCelsius}°C
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-stone-500">Inokulan Ragi / Yeast:</span>
-                        <span className="font-semibold text-stone-900">{detailBatch.fermentationLog.inoculumYeast}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: DAILY DRYING LOGS */}
-              {activeTab === 'telemetry' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                {/* Right Side Stat Widgets */}
+                <div className="flex flex-wrap gap-2">
+                  <div className="o_stat_button bg-[#FAF7F2] border border-stone-200">
+                    <Coffee className="w-4 h-4 text-stone-600" />
                     <div>
-                      <h4 className="font-bold text-stone-900 text-sm">
-                        Stage 3: Log Pengeringan Harian ({detailBatch.dryingLog.dryingMethod})
-                      </h4>
-                      <p className="text-stone-500 text-[11px]">
-                        Lokasi Bed: <strong>{detailBatch.dryingLog.bedId}</strong> • Ambang Quality Gate Maksimal 12.5%
-                      </p>
+                      <div className="o_stat_value text-stone-800">{editedBatch.intakeLog.cherryWeightKg} kg</div>
+                      <div className="o_stat_text">Ceri Intake</div>
                     </div>
-
-                    <button
-                      onClick={() => setIsDryingModalOpen(true)}
-                      className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs"
-                    >
-                      <PlusCircle className="w-3.5 h-3.5" />
-                      <span>Tambah Log Hari Ini</span>
-                    </button>
                   </div>
 
-                  <div className="border border-stone-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase text-[10px]">
-                        <tr>
-                          <th className="py-2.5 px-4">Hari Ke</th>
-                          <th className="py-2.5 px-4">Tanggal</th>
-                          <th className="py-2.5 px-4">Kadar Air (%)</th>
-                          <th className="py-2.5 px-4">Suhu Dome (°C)</th>
-                          <th className="py-2.5 px-4">Kelembaban RH%</th>
-                          <th className="py-2.5 px-4">Frekuensi Balik</th>
-                          <th className="py-2.5 px-4">Catatan</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-stone-100">
-                        {detailBatch.dryingLog.dailyLogs.map((log) => (
-                          <tr key={log.dayNumber} className="hover:bg-stone-50/80">
-                            <td className="py-2.5 px-4 font-bold text-stone-900">Hari #{log.dayNumber}</td>
-                            <td className="py-2.5 px-4 text-stone-600">{log.date}</td>
-                            <td className="py-2.5 px-4 font-black font-mono text-amber-800">
-                              {log.moisturePercent}%
-                            </td>
-                            <td className="py-2.5 px-4 font-mono">{log.ambientTempCelsius}°C</td>
-                            <td className="py-2.5 px-4 font-mono">{log.rhPercent}%</td>
-                            <td className="py-2.5 px-4 text-stone-700">{log.turningFrequency}</td>
-                            <td className="py-2.5 px-4 text-stone-500 italic">{log.notes || '-'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="o_stat_button bg-[#FAF7F2] border border-stone-200">
+                    <TrendingUp className="w-4 h-4 text-amber-700" />
+                    <div>
+                      <div className="o_stat_value text-amber-800">{calculateBatchMassBalance(editedBatch).actualYieldPercent}%</div>
+                      <div className="o_stat_text">Rendemen Yield</div>
+                    </div>
+                  </div>
+
+                  <div className="o_stat_button bg-[#FAF7F2] border border-stone-200">
+                    <Droplets className="w-4 h-4 text-emerald-600" />
+                    <div>
+                      <div className="o_stat_value text-emerald-700">{editedBatch.dryingLog.finalMoisturePercent}%</div>
+                      <div className="o_stat_text">Kadar Air</div>
+                    </div>
+                  </div>
+
+                  <div className="o_stat_button bg-slate-50 border border-slate-200">
+                    <Award className="w-4 h-4 text-purple-600" />
+                    <div>
+                      <div className="o_stat_value text-purple-700">{editedBatch.qcAssessment.calculatedGrade}</div>
+                      <div className="o_stat_text">SCA {editedBatch.qcAssessment.scaCuppingScore} pts</div>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* TAB 3: RESTING & MILLING */}
-              {activeTab === 'milling' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Stage 4 Conditioning */}
-                  <div className="bg-stone-50/80 p-5 rounded-2xl border border-stone-200/80 space-y-3">
-                    <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                      <Warehouse className="w-4 h-4 text-amber-600" /> Stage 4: Pemeraman / Resting Gabah Kering
-                    </h4>
-                    <div className="space-y-2 text-stone-700">
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Silo / Bin ID:</span>
-                        <span className="font-mono font-bold text-stone-900">{detailBatch.conditioningLog.siloBinId}</span>
+              {/* Worksheet Form Container */}
+              <div className="space-y-6">
+                {/* Stage Header Info Banner */}
+                {(() => {
+                  const currentStageMeta = PROCESSOR_7_STAGES.find((s) => s.id === activeStageId);
+                  const isCurrentMilestone = activeStageId === editedBatch.currentStage;
+                  return (
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-stone-200">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-md bg-stone-900 text-amber-400 font-mono font-bold text-xs">
+                            Tahap {currentStageMeta?.stepNumber} / 7
+                          </span>
+                          <h3 className="text-base font-black text-stone-900">
+                            {currentStageMeta?.label}
+                          </h3>
+                          {isCurrentMilestone && (
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                              ● Tahap Aktif Batch
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-stone-500 mt-1">{currentStageMeta?.description}</p>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Wadah Penyimpanan:</span>
-                        <span className="font-semibold text-stone-800">{detailBatch.conditioningLog.packagingType}</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Masa Pemeraman (Hari):</span>
-                        <span className="font-mono font-bold text-amber-800">
-                          {detailBatch.conditioningLog.completedDays} / {detailBatch.conditioningLog.targetRestingDays} Hari
+
+                      {/* Quick Prev / Next Stage buttons */}
+                      {(() => {
+                        const idx = PROCESSOR_7_STAGES.findIndex((s) => s.id === activeStageId);
+                        const prev = idx > 0 ? PROCESSOR_7_STAGES[idx - 1] : null;
+                        const next = idx < PROCESSOR_7_STAGES.length - 1 ? PROCESSOR_7_STAGES[idx + 1] : null;
+                        return (
+                          <div className="flex items-center gap-2">
+                            {prev && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveStageId(prev.id)}
+                                className="px-3 py-1.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                ← {prev.shortLabel}
+                              </button>
+                            )}
+                            {next && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveStageId(next.id)}
+                                className="px-3 py-1.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                {next.shortLabel} →
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })()}
+
+                {/* ------------------------------------------------------------------------- */}
+                {/* TAB 1: INTAKE & SORTASI CERI (STAGE 1)                                   */}
+                {/* ------------------------------------------------------------------------- */}
+                {activeStageId === 'intake_sorting' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                      <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+                        <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+                          <Coffee className="w-4 h-4 text-amber-600" /> Timbangan &amp; Refraktometer Brix
+                        </h4>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                          Stage 1 Active
                         </span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Kadar Air Terstabilisasi:</span>
-                        <span className="font-bold text-stone-900">{detailBatch.conditioningLog.moistureStabilizedPercent}%</span>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Total Bobot Ceri (kg)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.intakeLog.cherryWeightKg}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                intakeLog: { ...editedBatch.intakeLog, cherryWeightKg: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Kadar Gula Buah (°Bx)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editedBatch.intakeLog.brix}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                intakeLog: { ...editedBatch.intakeLog, brix: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-black text-emerald-700"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Ceri Tenggelam / Sinkers (kg)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.intakeLog.sinkersWeightKg}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                intakeLog: { ...editedBatch.intakeLog, sinkersWeightKg: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Ceri Terapung / Floaters (kg)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.intakeLog.floatersWeightKg}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                intakeLog: { ...editedBatch.intakeLog, floatersWeightKg: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
                       </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-stone-500">Aktivitas Air (aW):</span>
-                        <span className="font-mono font-bold text-emerald-700">{detailBatch.conditioningLog.waterActivityAw} aw</span>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 uppercase mb-1">Standar Petik Visual</label>
+                        <select
+                          value={editedBatch.intakeLog.visualQualityGrade}
+                          onChange={(e) =>
+                            setEditedBatch({
+                              ...editedBatch,
+                              intakeLog: { ...editedBatch.intakeLog, visualQualityGrade: e.target.value as any },
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                        >
+                          <option value="A (95%+ Petik Merah)">A (95%+ Petik Merah)</option>
+                          <option value="B (85-94% Merah)">B (85-94% Merah)</option>
+                          <option value="C (Campur)">C (Campur)</option>
+                        </select>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Stage 5 Dry Milling */}
-                  <div className="bg-stone-50/80 p-5 rounded-2xl border border-stone-200/80 space-y-3">
-                    <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                      <Sliders className="w-4 h-4 text-amber-600" /> Stage 5: Dry Milling &amp; Hulling
-                    </h4>
-                    <div className="space-y-2 text-stone-700">
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Mesin Huller:</span>
-                        <span className="font-bold text-stone-900">{detailBatch.millingLog.machineId}</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Input Gabah / Dried Pods:</span>
-                        <span className="font-mono font-bold text-stone-900">{detailBatch.millingLog.inputParchmentWeightKg} kg</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Output Green Bean:</span>
-                        <span className="font-mono font-bold text-emerald-700">{detailBatch.millingLog.outputGreenBeanWeightKg} kg</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-stone-200/60">
-                        <span className="text-stone-500">Limbah Kulit Tanduk (Husk):</span>
-                        <span className="font-mono font-bold text-amber-800">{detailBatch.millingLog.outputHuskWeightKg} kg</span>
-                      </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-stone-500">Efisiensi Pengupasan:</span>
-                        <span className="font-black text-stone-900">{detailBatch.millingLog.millingEfficiencyPercent}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 4: GRADING & QC SCA */}
-              {activeTab === 'grading' && (
-                <div className="space-y-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-stone-900 text-sm">
-                        Stage 6: Lembar Evaluasi Mutu Fisik &amp; Sensori SCA (Sample 350g)
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                      <h4 className="font-bold text-stone-900 text-sm border-b border-stone-200 pb-2">
+                        Silsilah Asal Petani &amp; Operator
                       </h4>
-                      <p className="text-stone-500 text-[11px]">
-                        Grade Otomatis Terkalkulasi: <strong className="text-purple-800">{detailBatch.qcAssessment.calculatedGrade}</strong>
-                      </p>
-                    </div>
 
-                    <button
-                      onClick={() => setIsQcModalOpen(true)}
-                      className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs"
-                    >
-                      <Award className="w-3.5 h-3.5" />
-                      <span>Ubah Hasil Uji QC</span>
-                    </button>
+                      <div className="space-y-2 text-stone-600">
+                        <div className="flex justify-between py-1 border-b border-stone-200/60">
+                          <span>Lot Sumber:</span>
+                          <span className="font-mono font-bold text-stone-900">{editedBatch.sourceFarmerLotId}</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-stone-200/60">
+                          <span>Nama Petani:</span>
+                          <span className="font-bold text-stone-900">{editedBatch.sourceFarmerName}</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-stone-200/60">
+                          <span>Varietas &amp; Elevasi:</span>
+                          <span className="font-semibold text-stone-800">{editedBatch.variety} ({editedBatch.altitude})</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 uppercase mb-1">Operator Petugas Intake</label>
+                        <input
+                          type="text"
+                          value={editedBatch.intakeLog.operatorName}
+                          onChange={(e) =>
+                            setEditedBatch({
+                              ...editedBatch,
+                              intakeLog: { ...editedBatch.intakeLog, operatorName: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 uppercase mb-1">Catatan Sortasi Penerimaan</label>
+                        <textarea
+                          rows={2}
+                          value={editedBatch.intakeLog.notes}
+                          onChange={(e) =>
+                            setEditedBatch({
+                              ...editedBatch,
+                              intakeLog: { ...editedBatch.intakeLog, notes: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-stone-800"
+                        />
+                      </div>
+                    </div>
                   </div>
+                )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 space-y-2">
-                      <span className="text-[10px] font-bold text-stone-400 uppercase">Defect Cacat Fisik / 350g</span>
-                      <div className="text-xl font-black text-stone-900">
-                        {detailBatch.qcAssessment.defects.totalScoreValue} Defect
+                {/* ------------------------------------------------------------------------- */}
+                {/* TAB 2: PENGOLAHAN & FERMENTASI (STAGE 2)                                 */}
+                {/* ------------------------------------------------------------------------- */}
+                {activeStageId === 'fermentation' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                      <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+                        <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+                          <Flame className="w-4 h-4 text-amber-600" /> Parameter Pengolahan &amp; Fermentasi
+                        </h4>
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                          Stage 2 Active
+                        </span>
                       </div>
-                      <p className="text-[11px] text-stone-600">
-                        Primer: {detailBatch.qcAssessment.defects.primaryDefects} • Sekunder:{' '}
-                        {detailBatch.qcAssessment.defects.secondaryDefects}
-                      </p>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 uppercase mb-1">Pilih Metode Olah</label>
+                        <select
+                          value={editedBatch.fermentationLog.method}
+                          onChange={(e) =>
+                            setEditedBatch({
+                              ...editedBatch,
+                              fermentationLog: { ...editedBatch.fermentationLog, method: e.target.value as any },
+                            })
+                          }
+                          className="w-full px-3 py-2.5 rounded-xl border border-stone-300 bg-white font-bold text-amber-900 text-xs"
+                        >
+                          <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur (Sun Dried)</option>
+                          <option value="Full Washed">2. Washed (Wet) — Depulper, Tangki Fermentasi & Cuci</option>
+                          <option value="Honey (Yellow/Red/Black)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir Lengket</option>
+                          <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek pada Moisture ~30-40%</option>
+                          <option value="Anaerobic Natural">Anaerobic Natural — Fermentasi Ragi Kedap Udara</option>
+                          <option value="Wine Process">Wine Process — Extended Fermentation</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">ID Tangki Fermentasi</label>
+                          <input
+                            type="text"
+                            value={editedBatch.fermentationLog.tankId}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                fermentationLog: { ...editedBatch.fermentationLog, tankId: e.target.value },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-mono font-bold text-stone-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Durasi Fermentasi (Jam)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.fermentationLog.durationHours}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                fermentationLog: { ...editedBatch.fermentationLog, durationHours: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">pH Awal Fermentasi</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editedBatch.fermentationLog.startPh}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                fermentationLog: { ...editedBatch.fermentationLog, startPh: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">pH Akhir (Asidifikasi)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editedBatch.fermentationLog.endPh}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                fermentationLog: { ...editedBatch.fermentationLog, endPh: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-800"
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 space-y-2">
-                      <span className="text-[10px] font-bold text-stone-400 uppercase">Distribusi Ukuran Ayakan (Screen)</span>
-                      <div className="text-xl font-black text-stone-900">
-                        Screen 18+: {detailBatch.qcAssessment.screenDistribution.screen18PlusKg} kg
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                      <h4 className="font-bold text-stone-900 text-sm border-b border-stone-200 pb-2">
+                        Suhu, Ragi Inokulasi &amp; Air Cuci
+                      </h4>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Suhu Slurry Adukan (°C)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editedBatch.fermentationLog.slurryTempCelsius}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                fermentationLog: { ...editedBatch.fermentationLog, slurryTempCelsius: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Suhu Ruang Ambient (°C)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editedBatch.fermentationLog.ambientTempCelsius}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                fermentationLog: { ...editedBatch.fermentationLog, ambientTempCelsius: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
                       </div>
-                      <p className="text-[11px] text-stone-600">
-                        Screen 16-17: {detailBatch.qcAssessment.screenDistribution.screen16_17Kg}kg • Screen 14-15:{' '}
-                        {detailBatch.qcAssessment.screenDistribution.screen14_15Kg}kg
-                      </p>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 uppercase mb-1">Inokulum Ragi / Kultur</label>
+                        <input
+                          type="text"
+                          value={editedBatch.fermentationLog.inoculumYeast}
+                          onChange={(e) =>
+                            setEditedBatch({
+                              ...editedBatch,
+                              fermentationLog: { ...editedBatch.fermentationLog, inoculumYeast: e.target.value },
+                            })
+                          }
+                          placeholder="Contoh: Lalcafe Intenso Yeast / Ragi Liar Terkontrol"
+                          className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 uppercase mb-1">Debit Air Pencucian Lendir (Liter)</label>
+                        <input
+                          type="number"
+                          value={editedBatch.fermentationLog.washWaterLiters}
+                          onChange={(e) =>
+                            setEditedBatch({
+                              ...editedBatch,
+                              fermentationLog: { ...editedBatch.fermentationLog, washWaterLiters: Number(e.target.value) },
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 uppercase mb-1">Catatan Fermentasi</label>
+                        <textarea
+                          rows={2}
+                          value={editedBatch.fermentationLog.notes}
+                          onChange={(e) =>
+                            setEditedBatch({
+                              ...editedBatch,
+                              fermentationLog: { ...editedBatch.fermentationLog, notes: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-stone-800"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ------------------------------------------------------------------------- */}
+                {/* TAB 3: PENJEMURAN & LOG HARIAN KADAR AIR (STAGE 3)                       */}
+                {/* ------------------------------------------------------------------------- */}
+                {activeStageId === 'drying' && (
+                  <div className="space-y-6">
+                    {/* Header Spec */}
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Metode Penjemuran</label>
+                          <select
+                            value={editedBatch.dryingLog.dryingMethod}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                dryingLog: { ...editedBatch.dryingLog, dryingMethod: e.target.value as any },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          >
+                            <option value="Solar Dryer Raised Bed">Solar Dryer Raised Bed (African Bed)</option>
+                            <option value="Greenhouse Solar Dome">Greenhouse Solar Dome</option>
+                            <option value="Patio Penjemuran">Patio Penjemuran</option>
+                            <option value="Mechanical Controlled Dryer">Mechanical Controlled Dryer</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Nomor / ID Bed Jemur</label>
+                          <input
+                            type="text"
+                            value={editedBatch.dryingLog.bedId}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                dryingLog: { ...editedBatch.dryingLog, bedId: e.target.value },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-mono font-bold text-stone-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">
+                            Kadar Air Final Terkini (%)
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={editedBatch.dryingLog.finalMoisturePercent}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  dryingLog: {
+                                    ...editedBatch.dryingLog,
+                                    finalMoisturePercent: Number(e.target.value),
+                                    targetMoisturePassed: Number(e.target.value) <= 12.5,
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-black text-amber-900 text-sm"
+                            />
+                            <span
+                              className={`px-3 py-2 rounded-xl text-xs font-bold shrink-0 ${
+                                editedBatch.dryingLog.finalMoisturePercent <= 12.5
+                                  ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                  : 'bg-amber-100 text-amber-900 border border-amber-300'
+                              }`}
+                            >
+                              {editedBatch.dryingLog.finalMoisturePercent <= 12.5 ? '✓ Lulus Gate' : 'Belum Lulus (>12.5%)'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 space-y-2">
-                      <span className="text-[10px] font-bold text-stone-400 uppercase">SCA Cupping Score</span>
-                      <div className="text-xl font-black text-purple-700">
-                        {detailBatch.qcAssessment.scaCuppingScore} Points
+                    {/* Interactive Daily Log Input Form */}
+                    <div className="bg-amber-50/70 p-5 rounded-2xl border border-amber-200 space-y-4">
+                      <div className="flex items-center justify-between border-b border-amber-200/80 pb-2">
+                        <h4 className="font-bold text-amber-950 text-sm flex items-center gap-2">
+                          <PlusCircle className="w-4 h-4 text-amber-700" /> Form Input Log Harian Penjemuran
+                        </h4>
+                        <span className="text-[11px] text-amber-800">
+                          Catat penurunan kadar air harian secara live
+                        </span>
                       </div>
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {detailBatch.qcAssessment.cuppingNotes.map((note, i) => (
-                          <span key={i} className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
-                            {note}
+
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div>
+                          <label className="block font-bold text-stone-700 mb-1">Kadar Air (%)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={newLogMoisture}
+                            onChange={(e) => setNewLogMoisture(Number(e.target.value))}
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-amber-950"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 mb-1">Suhu Dome (°C)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={newLogTemp}
+                            onChange={(e) => setNewLogTemp(Number(e.target.value))}
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 mb-1">Kelembaban RH (%)</label>
+                          <input
+                            type="number"
+                            value={newLogRh}
+                            onChange={(e) => setNewLogRh(Number(e.target.value))}
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 mb-1">Frekuensi Balik</label>
+                          <input
+                            type="text"
+                            value={newLogFreq}
+                            onChange={(e) => setNewLogFreq(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 mb-1">Catatan</label>
+                          <input
+                            type="text"
+                            value={newLogNotes}
+                            onChange={(e) => setNewLogNotes(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-stone-800"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={handleAddDailyLog}
+                          className="px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>+ Catat Log Hari Ini ke Tabel</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Daily Logs Table */}
+                    <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-2xs">
+                      <div className="px-5 py-3.5 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
+                        <h4 className="font-bold text-stone-900 text-xs uppercase tracking-wider">
+                          Daftar Log Harian Penjemuran Terdaftar ({editedBatch.dryingLog.dailyLogs?.length || 0} Hari)
+                        </h4>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase text-[10px]">
+                            <tr>
+                              <th className="py-3 px-4">Hari Ke</th>
+                              <th className="py-3 px-4">Tanggal</th>
+                              <th className="py-3 px-4">Kadar Air (%)</th>
+                              <th className="py-3 px-4">Suhu Dome (°C)</th>
+                              <th className="py-3 px-4">Kelembaban (RH%)</th>
+                              <th className="py-3 px-4">Frekuensi Balik</th>
+                              <th className="py-3 px-4">Catatan</th>
+                              <th className="py-3 px-4 text-right">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-stone-100">
+                            {(editedBatch.dryingLog.dailyLogs || []).map((log, index) => (
+                              <tr key={index} className="hover:bg-amber-50/40">
+                                <td className="py-3 px-4 font-bold text-stone-900">Hari #{log.dayNumber}</td>
+                                <td className="py-3 px-4 text-stone-600">{log.date}</td>
+                                <td className="py-3 px-4 font-mono font-black text-amber-900">
+                                  {log.moisturePercent}%
+                                </td>
+                                <td className="py-3 px-4 font-mono">{log.ambientTempCelsius}°C</td>
+                                <td className="py-3 px-4 font-mono">{log.rhPercent}%</td>
+                                <td className="py-3 px-4 text-stone-700">{log.turningFrequency}</td>
+                                <td className="py-3 px-4 text-stone-500 italic">{log.notes || '-'}</td>
+                                <td className="py-3 px-4 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteDailyLog(index)}
+                                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
+                                    title="Hapus baris log"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ------------------------------------------------------------------------- */}
+                {/* TAB 4: PEMERAMAN / RESTING SILO (STAGE 4)                                */}
+                {/* ------------------------------------------------------------------------- */}
+                {activeStageId === 'conditioning' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                      <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+                        <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+                          <Warehouse className="w-4 h-4 text-amber-600" /> Parameter Pemeraman (Resting Gabah)
+                        </h4>
+                        <span className="text-[10px] font-bold text-stone-700 bg-stone-200 px-2 py-0.5 rounded-full">
+                          Stage 4 Active
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">ID Silo / Bin</label>
+                          <input
+                            type="text"
+                            value={editedBatch.conditioningLog.siloBinId}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                conditioningLog: { ...editedBatch.conditioningLog, siloBinId: e.target.value },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-mono font-bold text-stone-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Wadah Hermetik</label>
+                          <select
+                            value={editedBatch.conditioningLog.packagingType}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                conditioningLog: { ...editedBatch.conditioningLog, packagingType: e.target.value as any },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          >
+                            <option value="GrainPro Hermetic 50kg">GrainPro Hermetic 50kg</option>
+                            <option value="Ecotact 50kg">Ecotact 50kg</option>
+                            <option value="Wooden Bin (Pine)">Wooden Bin (Pine)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Target Resting (Hari)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.conditioningLog.targetRestingDays}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                conditioningLog: {
+                                  ...editedBatch.conditioningLog,
+                                  targetRestingDays: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Hari Selesai Berjalan</label>
+                          <input
+                            type="number"
+                            value={editedBatch.conditioningLog.completedDays}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                conditioningLog: { ...editedBatch.conditioningLog, completedDays: Number(e.target.value) },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-amber-900"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                      <h4 className="font-bold text-stone-900 text-sm border-b border-stone-200 pb-2">
+                        Stabilisasi Kadar Air &amp; Lingkungan
+                      </h4>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Kadar Air Stabil (%)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editedBatch.conditioningLog.moistureStabilizedPercent}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                conditioningLog: {
+                                  ...editedBatch.conditioningLog,
+                                  moistureStabilizedPercent: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Water Activity (aW)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editedBatch.conditioningLog.waterActivityAw}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                conditioningLog: {
+                                  ...editedBatch.conditioningLog,
+                                  waterActivityAw: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-black text-emerald-700"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Suhu Silo (°C)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editedBatch.conditioningLog.ambientTempCelsius}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                conditioningLog: {
+                                  ...editedBatch.conditioningLog,
+                                  ambientTempCelsius: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Kelembaban Silo (RH%)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.conditioningLog.ambientRhPercent}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                conditioningLog: {
+                                  ...editedBatch.conditioningLog,
+                                  ambientRhPercent: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ------------------------------------------------------------------------- */}
+                {/* TAB 5: DRY MILLING & HULLING (STAGE 5)                                   */}
+                {/* ------------------------------------------------------------------------- */}
+                {activeStageId === 'milling' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                      <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+                        <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+                          <Sliders className="w-4 h-4 text-amber-600" /> Mesin Huller &amp; Bobot Gabah Masuk
+                        </h4>
+                        <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">
+                          Stage 5 Active
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 uppercase mb-1">Mesin Pengupas (Huller ID)</label>
+                        <input
+                          type="text"
+                          value={editedBatch.millingLog.machineId}
+                          onChange={(e) =>
+                            setEditedBatch({
+                              ...editedBatch,
+                              millingLog: { ...editedBatch.millingLog, machineId: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Input Gabah Kering (kg)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.millingLog.inputParchmentWeightKg}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                millingLog: {
+                                  ...editedBatch.millingLog,
+                                  inputParchmentWeightKg: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Output Green Bean (kg)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.millingLog.outputGreenBeanWeightKg}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                millingLog: {
+                                  ...editedBatch.millingLog,
+                                  outputGreenBeanWeightKg: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-black text-emerald-700"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Output Sekam/Husk (kg)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.millingLog.outputHuskWeightKg}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                millingLog: {
+                                  ...editedBatch.millingLog,
+                                  outputHuskWeightKg: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Output Debu / Loss (kg)</label>
+                          <input
+                            type="number"
+                            value={editedBatch.millingLog.outputDustWeightKg}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                millingLog: {
+                                  ...editedBatch.millingLog,
+                                  outputDustWeightKg: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                      <h4 className="font-bold text-stone-900 text-sm border-b border-stone-200 pb-2">
+                        Kalkulasi Rendemen &amp; Efisiensi Mesin
+                      </h4>
+
+                      <div className="p-4 rounded-xl bg-white border border-stone-200 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-stone-500">Rasio Rendemen Ceri ke Green Bean:</span>
+                          <span className="font-mono font-black text-stone-900">
+                            {((editedBatch.millingLog.outputGreenBeanWeightKg / editedBatch.intakeLog.cherryWeightKg) * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-stone-500">Efisiensi Pengupasan Mesin:</span>
+                          <span className="font-mono font-bold text-emerald-700">
+                            {editedBatch.millingLog.millingEfficiencyPercent}%
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 uppercase mb-1">Catatan Hulling Mill</label>
+                        <textarea
+                          rows={2}
+                          value={editedBatch.millingLog.notes}
+                          onChange={(e) =>
+                            setEditedBatch({
+                              ...editedBatch,
+                              millingLog: { ...editedBatch.millingLog, notes: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-stone-800"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ------------------------------------------------------------------------- */}
+                {/* TAB 6: GRADING & SCA QC (STAGE 6)                                        */}
+                {/* ------------------------------------------------------------------------- */}
+                {activeStageId === 'grading_qc' && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Defect SCA 350g */}
+                      <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-3">
+                        <h4 className="font-bold text-stone-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                          <Award className="w-4 h-4 text-purple-600" /> Cacat Fisik SCA (Sample 350g)
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div>
+                            <label className="block font-bold text-stone-700 mb-1">Cacat Primer (Count)</label>
+                            <input
+                              type="number"
+                              value={editedBatch.qcAssessment.defects.primaryDefects}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  qcAssessment: {
+                                    ...editedBatch.qcAssessment,
+                                    defects: {
+                                      ...editedBatch.qcAssessment.defects,
+                                      primaryDefects: Number(e.target.value),
+                                    },
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-stone-700 mb-1">Cacat Sekunder (Count)</label>
+                            <input
+                              type="number"
+                              value={editedBatch.qcAssessment.defects.secondaryDefects}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  qcAssessment: {
+                                    ...editedBatch.qcAssessment,
+                                    defects: {
+                                      ...editedBatch.qcAssessment.defects,
+                                      secondaryDefects: Number(e.target.value),
+                                    },
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-purple-950 font-bold flex justify-between items-center">
+                          <span>Grade Terkalkulasi:</span>
+                          <span className="text-purple-900 text-xs font-black">
+                            {editedBatch.qcAssessment.calculatedGrade}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Screen Distribution */}
+                      <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-3">
+                        <h4 className="font-bold text-stone-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                          <Sliders className="w-4 h-4 text-amber-700" /> Ayakan Fisik (Screen Size)
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div>
+                            <label className="block font-bold text-stone-700 mb-1">Screen 18+ (kg)</label>
+                            <input
+                              type="number"
+                              value={editedBatch.qcAssessment.screenDistribution.screen18PlusKg}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  qcAssessment: {
+                                    ...editedBatch.qcAssessment,
+                                    screenDistribution: {
+                                      ...editedBatch.qcAssessment.screenDistribution,
+                                      screen18PlusKg: Number(e.target.value),
+                                    },
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-stone-700 mb-1">Screen 16-17 (kg)</label>
+                            <input
+                              type="number"
+                              value={editedBatch.qcAssessment.screenDistribution.screen16_17Kg}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  qcAssessment: {
+                                    ...editedBatch.qcAssessment,
+                                    screenDistribution: {
+                                      ...editedBatch.qcAssessment.screenDistribution,
+                                      screen16_17Kg: Number(e.target.value),
+                                    },
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-stone-700 mb-1">Screen 14-15 (kg)</label>
+                            <input
+                              type="number"
+                              value={editedBatch.qcAssessment.screenDistribution.screen14_15Kg}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  qcAssessment: {
+                                    ...editedBatch.qcAssessment,
+                                    screenDistribution: {
+                                      ...editedBatch.qcAssessment.screenDistribution,
+                                      screen14_15Kg: Number(e.target.value),
+                                    },
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-stone-700 mb-1">Peaberry / Lanang (kg)</label>
+                            <input
+                              type="number"
+                              value={editedBatch.qcAssessment.screenDistribution.peaberryKg}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  qcAssessment: {
+                                    ...editedBatch.qcAssessment,
+                                    screenDistribution: {
+                                      ...editedBatch.qcAssessment.screenDistribution,
+                                      peaberryKg: Number(e.target.value),
+                                    },
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* SCA Sensory Score & Water Activity */}
+                      <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-3">
+                        <h4 className="font-bold text-stone-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-amber-600" /> Skor Cupping SCA (0-100 Pts)
+                        </h4>
+                        <div>
+                          <label className="block font-bold text-stone-700 mb-1">Skor Sensori Cupping</label>
+                          <input
+                            type="number"
+                            step="0.25"
+                            value={editedBatch.qcAssessment.scaCuppingScore}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                qcAssessment: {
+                                  ...editedBatch.qcAssessment,
+                                  scaCuppingScore: Number(e.target.value),
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-black text-purple-700 text-base"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block font-bold text-stone-700 mb-1">Kadar Air Final (%)</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={editedBatch.qcAssessment.finalMoisturePercent}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  qcAssessment: {
+                                    ...editedBatch.qcAssessment,
+                                    finalMoisturePercent: Number(e.target.value),
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-stone-700 mb-1">Water Activity (aW)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editedBatch.qcAssessment.waterActivityAw}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  qcAssessment: {
+                                    ...editedBatch.qcAssessment,
+                                    waterActivityAw: Number(e.target.value),
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Flavor Notes Tag Input */}
+                    <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-3">
+                      <h4 className="font-bold text-stone-900 text-sm">Cupping Flavor Notes</h4>
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        {(editedBatch.qcAssessment.cuppingNotes || []).map((note, i) => (
+                          <span
+                            key={i}
+                            className="px-3 py-1 rounded-xl text-xs font-bold bg-amber-100 text-amber-950 border border-amber-300 flex items-center gap-1.5 shadow-2xs"
+                          >
+                            <span>{note}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCuppingNote(note)}
+                              className="text-amber-800 hover:text-rose-600"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
                           </span>
                         ))}
                       </div>
+
+                      <div className="flex items-center gap-2 max-w-md pt-1">
+                        <input
+                          type="text"
+                          value={newCuppingNote}
+                          onChange={(e) => setNewCuppingNote(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddCuppingNote();
+                            }
+                          }}
+                          placeholder="Ketik rasa (cth: Jasmine, Citrus, Brown Sugar)..."
+                          className="flex-1 px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs font-semibold"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddCuppingNote}
+                          className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs"
+                        >
+                          + Tambah
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* TAB 5: MASS BALANCE & RENDEMEN INTEGRITY */}
-              {activeTab === 'mass_balance' && (() => {
-                const mb = calculateBatchMassBalance(detailBatch);
-                return (
+                {/* ------------------------------------------------------------------------- */}
+                {/* TAB 7: PENGEMASAN & RILIS MARKETPLACE (STAGE 7)                           */}
+                {/* ------------------------------------------------------------------------- */}
+                {activeStageId === 'packing_closure' && (
                   <div className="space-y-6">
-                    <div className="bg-amber-50/60 p-5 rounded-2xl border border-amber-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                      <div>
-                        <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
-                          <Scale className="w-4 h-4 text-amber-700" />
-                          Integritas Neraca Massa (Mass Balance) &amp; Rendemen
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                        <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+                          <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+                            <Store className="w-4 h-4 text-emerald-600" /> Spesifikasi Kemas &amp; Listing Jual
+                          </h4>
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                            Tahap Akhir
+                          </span>
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Jenis Karung / Kemasan</label>
+                          <select
+                            value={editedBatch.packingLog.baggingType}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                packingLog: { ...editedBatch.packingLog, baggingType: e.target.value as any },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          >
+                            <option value="GrainPro 60kg + Karung Goni">GrainPro 60kg + Karung Goni</option>
+                            <option value="GrainPro 30kg Box">GrainPro 30kg Box</option>
+                            <option value="Vacuum Pack 5kg Foil">Vacuum Pack 5kg Foil</option>
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block font-bold text-stone-700 uppercase mb-1">Total Karung (Bags)</label>
+                            <input
+                              type="number"
+                              value={editedBatch.packingLog.totalBags}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  packingLog: { ...editedBatch.packingLog, totalBags: Number(e.target.value) },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-stone-700 uppercase mb-1">Harga Jual / kg (Rp)</label>
+                            <input
+                              type="number"
+                              step="5000"
+                              value={editedBatch.targetMarketplacePricePerKg || 125000}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  targetMarketplacePricePerKg: Number(e.target.value),
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-black text-emerald-800 text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2">
+                          <input
+                            type="checkbox"
+                            id="eudrCheck"
+                            checked={editedBatch.packingLog.eudrComplianceVerified}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                packingLog: {
+                                  ...editedBatch.packingLog,
+                                  eudrComplianceVerified: e.target.checked,
+                                },
+                              })
+                            }
+                            className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                          />
+                          <label htmlFor="eudrCheck" className="text-xs font-bold text-stone-800">
+                            Kepatuhan EUDR Anti-Deforestasi &amp; Geolocation Terverifikasi
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                        <h4 className="font-bold text-stone-900 text-sm border-b border-stone-200 pb-2">
+                          Alokasi Limbah Sirkular &amp; Eco-Credit
                         </h4>
-                        <p className="text-xs text-stone-600 mt-0.5">{mb.notes}</p>
-                      </div>
 
-                      <div className="text-right">
-                        <span className="text-[10px] text-stone-500 block uppercase font-bold">Rendemen Aktual</span>
-                        <span className="text-2xl font-black text-amber-700">{mb.actualYieldPercent}%</span>
-                      </div>
-                    </div>
+                        <div>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Pemanfaatan Limbah</label>
+                          <select
+                            value={editedBatch.wasteManagement.utilization}
+                            onChange={(e) =>
+                              setEditedBatch({
+                                ...editedBatch,
+                                wasteManagement: { ...editedBatch.wasteManagement, utilization: e.target.value },
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                          >
+                            <option value="Bahan Baku Minuman Teh Cascara & Kompos Sirkular">
+                              Bahan Baku Minuman Teh Cascara &amp; Kompos Sirkular
+                            </option>
+                            <option value="Dekomposisi Pupuk Organik Cair & Padat Kebun">
+                              Dekomposisi Pupuk Organik Cair &amp; Padat Kebun
+                            </option>
+                            <option value="Pakan Ternak & Bahan Briket Arang Biomassa">
+                              Pakan Ternak &amp; Bahan Briket Arang Biomassa
+                            </option>
+                          </select>
+                        </div>
 
-                    {/* Visual Bar Breakdown */}
-                    <div className="space-y-2">
-                      <span className="text-xs font-bold text-stone-700">Komposisi Fraksi Massa Total ({mb.inputCherryKg} kg):</span>
-                      <div className="w-full h-8 bg-stone-200 rounded-xl overflow-hidden flex shadow-inner text-[11px] font-black text-white text-center leading-8">
-                        <div style={{ width: `${mb.breakdownShares.greenBeanPercent}%` }} className="bg-emerald-600" title="Green Bean">
-                          {mb.breakdownShares.greenBeanPercent}% GB
-                        </div>
-                        <div style={{ width: `${mb.breakdownShares.pulpPercent}%` }} className="bg-rose-600" title="Pulp / Kulit">
-                          {mb.breakdownShares.pulpPercent}% Pulp
-                        </div>
-                        <div style={{ width: `${mb.breakdownShares.huskPercent}%` }} className="bg-amber-600" title="Sekam / Husk">
-                          {mb.breakdownShares.huskPercent}% Husk
-                        </div>
-                        <div style={{ width: `${mb.breakdownShares.evaporationPercent}%` }} className="bg-sky-500" title="Evaporasi Air">
-                          {mb.breakdownShares.evaporationPercent}% Evaporasi
-                        </div>
-                      </div>
-                    </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block font-bold text-stone-700 uppercase mb-1">Berat Limbah (kg)</label>
+                            <input
+                              type="number"
+                              value={editedBatch.wasteManagement.weightKgOrLiters}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  wasteManagement: {
+                                    ...editedBatch.wasteManagement,
+                                    weightKgOrLiters: Number(e.target.value),
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-stone-800"
+                            />
+                          </div>
 
-                    {/* Material Details Table */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-950">
-                        <span className="text-[10px] font-bold uppercase block text-emerald-700">Green Bean Output</span>
-                        <strong className="text-lg font-black">{mb.greenBeanOutputKg} kg</strong>
-                        <span className="block text-[10px] text-emerald-600 mt-0.5">{mb.breakdownShares.greenBeanPercent}% dari ceri</span>
-                      </div>
-                      <div className="p-4 bg-rose-50 rounded-xl border border-rose-200 text-rose-950">
-                        <span className="text-[10px] font-bold uppercase block text-rose-700">Pulp / Kulit Ceri</span>
-                        <strong className="text-lg font-black">{mb.pulpCascaraKg} kg</strong>
-                        <span className="block text-[10px] text-rose-600 mt-0.5">{mb.breakdownShares.pulpPercent}% dari ceri</span>
-                      </div>
-                      <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-amber-950">
-                        <span className="text-[10px] font-bold uppercase block text-amber-700">Kulit Tanduk (Husk)</span>
-                        <strong className="text-lg font-black">{mb.huskSekamKg} kg</strong>
-                        <span className="block text-[10px] text-amber-600 mt-0.5">{mb.breakdownShares.huskPercent}% dari ceri</span>
-                      </div>
-                      <div className="p-4 bg-sky-50 rounded-xl border border-sky-200 text-sky-950">
-                        <span className="text-[10px] font-bold uppercase block text-sky-700">Susut Air (Evaporasi)</span>
-                        <strong className="text-lg font-black">{mb.waterEvaporationKg} kg</strong>
-                        <span className="block text-[10px] text-sky-600 mt-0.5">{mb.breakdownShares.evaporationPercent}% dari ceri</span>
+                          <div>
+                            <label className="block font-bold text-stone-700 uppercase mb-1">Penerima Limbah</label>
+                            <input
+                              type="text"
+                              value={editedBatch.wasteManagement.recipientOrLocation}
+                              onChange={(e) =>
+                                setEditedBatch({
+                                  ...editedBatch,
+                                  wasteManagement: {
+                                    ...editedBatch.wasteManagement,
+                                    recipientOrLocation: e.target.value,
+                                  },
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-semibold text-stone-800"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Rilis CTA */}
+                        <div className="pt-3">
+                          <button
+                            type="button"
+                            onClick={handleFinalizeBatch}
+                            className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01]"
+                          >
+                            <Store className="w-5 h-5" />
+                            <span>🚀 Selesaikan Batch &amp; Terbitkan Green Bean ke Marketplace</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                );
-              })()}
-
-              {/* TAB 6: CIRCULAR WASTE ALLOCATION */}
-              {activeTab === 'waste' && (() => {
-                const eco = calculateProcessorEcoRating(
-                  detailBatch.wasteManagement,
-                  detailBatch.intakeLog.cherryWeightKg,
-                  detailBatch.packingLog.finalGreenBeanWeightKg || 100
-                );
-
-                return (
-                  <div className="space-y-5">
-                    <div className="bg-emerald-50/70 p-5 rounded-2xl border border-emerald-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                      <div>
-                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-200/80 px-2.5 py-0.5 rounded-full uppercase">
-                          Zero-Waste Circular Standard
-                        </span>
-                        <h4 className="font-bold text-base text-stone-900 mt-1">
-                          Alokasi &amp; Pemanfaatan Limbah Olahan Kopi
-                        </h4>
-                        <p className="text-xs text-stone-600 mt-0.5">
-                          Penerima: <strong>{detailBatch.wasteManagement.recipientOrLocation}</strong>
-                        </p>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="text-[10px] text-stone-500 uppercase font-bold block">Eco Score</span>
-                        <span className="text-2xl font-black text-emerald-700">{eco.ecoScore} / 100</span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 bg-white rounded-xl border border-stone-200 space-y-1.5">
-                        <span className="text-[10px] font-bold text-stone-400 uppercase">Jenis &amp; Volume Limbah</span>
-                        <strong className="text-stone-900 block text-sm">{detailBatch.wasteManagement.wasteType}</strong>
-                        <p className="text-stone-600 text-xs font-mono font-bold">
-                          {detailBatch.wasteManagement.weightKgOrLiters} kg terkelola secara sirkular ({eco.diversionRatePercent}% diversion)
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-white rounded-xl border border-stone-200 space-y-1.5">
-                        <span className="text-[10px] font-bold text-stone-400 uppercase">Pemanfaatan Nilai Tambah</span>
-                        <strong className="text-stone-900 block text-sm">{detailBatch.wasteManagement.utilization}</strong>
-                        <p className="text-stone-600 text-xs">
-                          Metode: {detailBatch.wasteManagement.processingMethod}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* TAB 7: EUDR & QR CODE */}
-              {activeTab === 'eudr' && (
-                <div className="space-y-6">
-                  <div className="bg-stone-900 text-white p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                        <h4 className="font-bold text-base">EUDR &amp; Farm-to-Cup Digital Passport</h4>
-                      </div>
-                      <p className="text-stone-300 text-xs max-w-lg">
-                        Lot ini terikat dengan koordinat poligon kebun {detailBatch.sourceFarmerName}, bebas deforestasi, dan lolos uji mutu 7-tahap.
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        setSelectedBatchForBarcode(detailBatch);
-                        setBarcodeModalOpen(true);
-                      }}
-                      className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs flex items-center gap-2 shrink-0 transition-colors shadow-xs"
-                    >
-                      <Printer className="w-4 h-4" />
-                      <span>Cetak Stiker QR Barcode Karung</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CREATE BATCH MODAL */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 border border-stone-200 shadow-2xl relative my-8 animate-in fade-in">
-            <button
-              onClick={() => setIsCreateModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-stone-100">
-              <div className="p-3 rounded-2xl bg-amber-100 text-amber-800">
-                <Flame className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-stone-900">Mulai Batch Pengolahan Baru (7-Stage)</h3>
-                <p className="text-xs text-stone-500">Inisiasi siklus olah pasca panen dari lot ceri petani.</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider">
-                    Sumber Bahan Baku Ceri
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setFormSourceType('stock')}
-                      className={`px-2.5 py-0.5 rounded-lg font-bold text-[10px] transition-colors ${
-                        formSourceType === 'stock'
-                          ? 'bg-amber-600 text-white'
-                          : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                      }`}
-                    >
-                      Stok Gudang ({availableCherryStock.length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormSourceType('farmer')}
-                      className={`px-2.5 py-0.5 rounded-lg font-bold text-[10px] transition-colors ${
-                        formSourceType === 'farmer'
-                          ? 'bg-amber-600 text-white'
-                          : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                      }`}
-                    >
-                      Beli Langsung Petani
-                    </button>
-                  </div>
-                </div>
-
-                {formSourceType === 'stock' ? (
-                  availableCherryStock.length > 0 ? (
-                    <select
-                      value={formCherryStockId || availableCherryStock[0]?.id}
-                      onChange={(e) => {
-                        setFormCherryStockId(e.target.value);
-                        const selected = availableCherryStock.find((s) => s.id === e.target.value);
-                        if (selected) {
-                          setFormCherryKg(Math.min(selected.availableWeightKg, 500));
-                        }
-                      }}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800 focus:outline-none focus:border-amber-500"
-                    >
-                      {availableCherryStock.map((stock) => (
-                        <option key={stock.id} value={stock.id}>
-                          {stock.id} - {stock.variety} ({stock.farmerName}, Stok {stock.availableWeightKg}kg, {stock.brix}° Brix)
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs">
-                      Stok ceri di gudang kosong. Silakan beralih ke tab <em>"Beli Langsung Petani"</em> atau lakukan pembelian melalui menu Sourcing Ceri.
-                    </div>
-                  )
-                ) : (
-                  <select
-                    value={formFarmerLotId || availableFarmerLots[0]?.id}
-                    onChange={(e) => {
-                      setFormFarmerLotId(e.target.value);
-                      const selected = availableFarmerLots.find((l) => l.id === e.target.value);
-                      if (selected) {
-                        setFormCherryKg(Math.min(selected.availableWeightKg, 500));
-                      }
-                    }}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800 focus:outline-none focus:border-amber-500"
-                  >
-                    {availableFarmerLots.map((lot) => (
-                      <option key={lot.id} value={lot.id}>
-                        {lot.id} - {lot.farmerName} ({lot.variety}, Tersedia {lot.availableWeightKg}kg, {lot.brix}° Bx)
-                      </option>
-                    ))}
-                  </select>
                 )}
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Volume Ceri Masuk (kg)
-                  </label>
-                  <input
-                    type="number"
-                    value={formCherryKg}
-                    onChange={(e) => setFormCherryKg(Number(e.target.value))}
-                    min={50}
-                    max={2000}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-mono font-bold text-stone-800"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Metode Pengolahan
-                  </label>
-                  <select
-                    value={formMethod}
-                    onChange={(e) => setFormMethod(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800"
-                  >
-                    <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur (Sun Dried)</option>
-                    <option value="Full Washed">2. Washed (Wet) — Depulper, Tangki Fermentasi & Cuci</option>
-                    <option value="Honey (Yellow/Red/Black)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir Lengket</option>
-                    <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek pada Moisture ~30-40%</option>
-                    <option value="Anaerobic Natural">Anaerobic Natural — Fermentasi Ragi Kedap Udara</option>
-                    <option value="Wine Process">Wine Process — Extended Fermentation</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Metode Pengeringan (Stage 3)
-                </label>
-                <select
-                  value={formDryingMethod}
-                  onChange={(e) => setFormDryingMethod(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800"
-                >
-                  <option value="Solar Dryer Raised Bed">Solar Dryer Raised Bed (African Bed)</option>
-                  <option value="Greenhouse Solar Dome">Greenhouse Solar Dome</option>
-                  <option value="Patio Penjemuran">Patio Penjemuran</option>
-                  <option value="Mechanical Controlled Dryer">Mechanical Controlled Dryer</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Operator / Mill Master
-                </label>
-                <input
-                  type="text"
-                  value={formOperator}
-                  onChange={(e) => setFormOperator(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 font-semibold"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-stone-100 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 font-bold text-stone-600 text-xs"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs"
-                >
-                  Inisiasi Batch Pengolahan
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* DAILY DRYING MODAL */}
-      {isDryingModalOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 border border-stone-200 shadow-2xl relative my-8 animate-in fade-in">
-            <button
-              onClick={() => setIsDryingModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-stone-100">
-              <div className="p-3 rounded-2xl bg-blue-100 text-blue-800">
-                <Droplets className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-stone-900">Input Log Harian Penjemuran</h3>
-                <p className="text-xs text-stone-500">Ambang batas maksimal lolos Quality Gate: &le; 12.5%</p>
-              </div>
             </div>
-
-            <form onSubmit={handleAddDryingSubmit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Kadar Air Hasil Ukur (%)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={formDryingDayMoisture}
-                    onChange={(e) => setFormDryingDayMoisture(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Suhu Dome / Ambient (°C)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={formDryingDayTemp}
-                    onChange={(e) => setFormDryingDayTemp(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Kelembaban Udara (RH %)
-                  </label>
-                  <input
-                    type="number"
-                    value={formDryingDayRh}
-                    onChange={(e) => setFormDryingDayRh(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Frekuensi Pembalikan
-                  </label>
-                  <input
-                    type="text"
-                    value={formDryingDayFreq}
-                    onChange={(e) => setFormDryingDayFreq(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-medium text-stone-800"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Catatan Pengeringan
-                </label>
-                <input
-                  type="text"
-                  value={formDryingDayNotes}
-                  onChange={(e) => setFormDryingDayNotes(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-stone-800"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-stone-100 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsDryingModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 font-bold text-stone-600 text-xs"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs"
-                >
-                  Simpan Log Pengeringan
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
+        )
       )}
 
-      {/* QC GRADING MODAL */}
-      {isQcModalOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 border border-stone-200 shadow-2xl relative my-8 animate-in fade-in">
-            <button
-              onClick={() => setIsQcModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-stone-100">
-              <div className="p-3 rounded-2xl bg-purple-100 text-purple-800">
-                <Award className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-stone-900">Uji Mutu Fisik SCA &amp; Cupping Lab (Stage 6)</h3>
-                <p className="text-xs text-stone-500">Standar sampel 350g untuk auto-kalkulasi Grade &amp; Defect.</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleQcSubmit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Cacat Primer (Black/Sour/Mold)
-                  </label>
-                  <input
-                    type="number"
-                    value={formPrimaryDefects}
-                    onChange={(e) => setFormPrimaryDefects(Number(e.target.value))}
-                    min={0}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Cacat Sekunder (Broken/Insect/Husk)
-                  </label>
-                  <input
-                    type="number"
-                    value={formSecondaryDefects}
-                    onChange={(e) => setFormSecondaryDefects(Number(e.target.value))}
-                    min={0}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Screen 18+ (kg)
-                  </label>
-                  <input
-                    type="number"
-                    value={formScreen18Kg}
-                    onChange={(e) => setFormScreen18Kg(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Screen 16-17 (kg)
-                  </label>
-                  <input
-                    type="number"
-                    value={formScreen16Kg}
-                    onChange={(e) => setFormScreen16Kg(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Screen 14-15 (kg)
-                  </label>
-                  <input
-                    type="number"
-                    value={formScreen14Kg}
-                    onChange={(e) => setFormScreen14Kg(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    SCA Cupping Score
-                  </label>
-                  <input
-                    type="number"
-                    step="0.25"
-                    value={formScaScore}
-                    onChange={(e) => setFormScaScore(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-purple-700"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Aktivitas Air (aW)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formAwQC}
-                    onChange={(e) => setFormAwQC(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Tasting &amp; Cupping Notes (Pisahkan Koma)
-                </label>
-                <input
-                  type="text"
-                  value={formCuppingNotes}
-                  onChange={(e) => setFormCuppingNotes(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-semibold text-stone-800"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-stone-100 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsQcModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 font-bold text-stone-600 text-xs"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs"
-                >
-                  Simpan &amp; Tetapkan Grade
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* FINALIZE & PACKING MODAL */}
-      {isFinalizeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 border border-stone-200 shadow-2xl relative my-8 animate-in fade-in">
-            <button
-              onClick={() => setIsFinalizeModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-stone-100">
-              <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-800">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-stone-900">Finalisasi Batch &amp; Rilis ke Marketplace (Stage 7)</h3>
-                <p className="text-xs text-stone-500">Tutup batch olahan dan terbitkan sebagai Green Bean siap jual.</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleFinalizeSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Kemasan Hermetik / Karung
-                </label>
-                <select
-                  value={formBaggingType}
-                  onChange={(e) => setFormBaggingType(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800"
-                >
-                  <option value="GrainPro 60kg + Karung Goni">GrainPro 60kg + Karung Goni Luar</option>
-                  <option value="Ecotact 30kg">Ecotact Hermetic 30kg</option>
-                  <option value="Vacuum Bag 20kg">Vacuum Bag 20kg</option>
-                  <option value="Jute Bag 60kg Standard">Jute Bag 60kg Standard</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Harga Jual per kg (Rp)
-                  </label>
-                  <input
-                    type="number"
-                    step={1000}
-                    value={formPricePerKg}
-                    onChange={(e) => setFormPricePerKg(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 font-mono font-bold text-stone-800"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-stone-700 uppercase tracking-wider mb-1">
-                    Grade Akhir
-                  </label>
-                  <select
-                    value={formFinalGrade}
-                    onChange={(e) => setFormFinalGrade(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800"
-                  >
-                    <option value="Specialty Grade 1">Specialty Grade 1</option>
-                    <option value="Grade 2">Grade 2 (Premium)</option>
-                    <option value="Commercial Fine">Commercial Fine</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-stone-100 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsFinalizeModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 font-bold text-stone-600 text-xs"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
-                >
-                  Finalisasi &amp; Terbitkan Lot
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Barcode Modal */}
-      {selectedBatchForBarcode && (
-        <ProcessorBarcodeModal
-          isOpen={barcodeModalOpen}
-          onClose={() => {
-            setBarcodeModalOpen(false);
-            setSelectedBatchForBarcode(null);
-          }}
-          lot={selectedBatchForBarcode}
-        />
-      )}
+      {/* Barcode Modal (if printing bag barcode) */}
+      <ProcessorBarcodeModal
+        isOpen={barcodeModalOpen}
+        onClose={() => setBarcodeModalOpen(false)}
+        lot={selectedBatchForBarcode}
+        isNewProcess={false}
+      />
     </div>
   );
 };

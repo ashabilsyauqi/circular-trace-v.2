@@ -24,7 +24,9 @@ import { ControlPanel } from '../shared/ControlPanel';
 import { StatButton } from '../shared/StatButton';
 
 export const ProductionModule: React.FC = () => {
-  const { masterProfiles, roasterMachines, createMasterProfile } = useCoffee();
+  const { currentUser, masterProfiles, roasterMachines, createMasterProfile } = useCoffee();
+  const myMasterProfiles = masterProfiles.filter((p) => !p.roasterId || p.roasterId === currentUser?.id);
+  const myRoasterMachines = roasterMachines.filter((m) => !m.roasterId || m.roasterId === currentUser?.id);
 
   const [activeTab, setActiveTab] = useState<'profiles' | 'machines'>('profiles');
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,6 +47,7 @@ export const ProductionModule: React.FC = () => {
   const handleCreateProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createMasterProfile({
+      roasterId: currentUser?.id,
       name: profName,
       targetRoastLevel: profLevel,
       agtronGourmet: Number(profAgtronGourmet),
@@ -72,14 +75,14 @@ export const ProductionModule: React.FC = () => {
     return 'bg-[#311608] text-white'; // Dark
   };
 
-  const filteredProfiles = masterProfiles.filter(
+  const filteredProfiles = myMasterProfiles.filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.targetRoastLevel.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.flavorProfile.some((f) => f.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const filteredMachines = roasterMachines.filter(
+  const filteredMachines = myRoasterMachines.filter(
     (m) =>
       m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.model.toLowerCase().includes(searchQuery.toLowerCase())

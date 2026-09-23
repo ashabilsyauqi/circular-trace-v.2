@@ -8,6 +8,7 @@ import { DashboardModule } from './processor/DashboardModule';
 import { SourcingModule } from './processor/SourcingModule';
 import { BatchesModule } from './processor/BatchesModule';
 import { InventoryModule } from './processor/InventoryModule';
+import { SellingModule } from './processor/SellingModule';
 import { HistoryModule } from './processor/HistoryModule';
 
 export const ProcessorView: React.FC = () => {
@@ -21,6 +22,7 @@ export const ProcessorView: React.FC = () => {
       {processorActiveTab === 'sourcing' && <SourcingModule />}
       {processorActiveTab === 'batches' && <BatchesModule />}
       {processorActiveTab === 'inventory' && <InventoryModule />}
+      {processorActiveTab === 'selling' && <SellingModule />}
       {processorActiveTab === 'history' && <HistoryModule />}
     </div>
   );

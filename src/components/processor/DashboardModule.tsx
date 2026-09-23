@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Cog,
   ShoppingCart,
@@ -14,30 +13,33 @@ import {
   Award,
   Warehouse,
   Package,
+  Store,
 } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { calculateProcessorEcoRating } from '../../utils/ecoRating';
 import { MetricCard } from '../admin/MetricCard';
 
 interface DashboardModuleProps {
-  onNavigate: (tab: 'sourcing' | 'batches' | 'inventory' | 'history') => void;
+  onNavigate: (tab: 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history') => void;
 }
 
 export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) => {
   const { currentUser, farmerLots, processedLots, processingBatches, processorCherryStock, transactions } = useCoffee();
 
   const availableFarmerLots = farmerLots.filter((lot) => lot.availableWeightKg > 0);
-  const myProcessedLots = processedLots.filter((lot) => lot.processorId === currentUser?.id || true);
-  const inProgressBatches = processingBatches.filter((b) => b.status === 'in_progress');
+  const myProcessedLots = processedLots.filter((lot) => !lot.processorId || lot.processorId === currentUser?.id);
+  const myBatches = processingBatches.filter((b) => !b.processorId || b.processorId === currentUser?.id);
+  const inProgressBatches = myBatches.filter((b) => b.status === 'in_progress');
+  const myCherryStock = processorCherryStock.filter((s) => !s.processorId || s.processorId === currentUser?.id);
   const myProcessorTransactions = transactions.filter(
     (trx) =>
       trx.fromName === currentUser?.name ||
       trx.toName === currentUser?.name ||
-      trx.fromRole === 'pengolah' ||
-      trx.toRole === 'pengolah'
+      trx.fromName === currentUser?.organization ||
+      trx.toName === currentUser?.organization
   );
 
-  const totalCherryStockKg = processorCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
+  const totalCherryStockKg = myCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
   const totalProcessedKg = myProcessedLots.reduce((acc, curr) => acc + curr.greenBeanWeightKg, 0);
   const availableGreenBeanKg = myProcessedLots.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
 
@@ -65,7 +67,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
   );
 
   const quickActions: {
-    tab: 'sourcing' | 'batches' | 'inventory' | 'history';
+    tab: 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history';
     icon: React.ElementType;
     label: string;
     hint: string;
@@ -88,14 +90,21 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
     {
       tab: 'batches',
       icon: Flame,
-      label: '3. Batch Processing (7 Stages)',
+      label: '3. Lembar Kerja 7-Stage',
       hint: `${inProgressBatches.length} batch aktif berjalan`,
       color: 'bg-orange-500/10 text-orange-700 border-orange-200',
     },
     {
+      tab: 'selling',
+      icon: Store,
+      label: '4. Marketplace & Penjualan',
+      hint: `${myProcessedLots.length} lot green bean siap jual`,
+      color: 'bg-amber-500/10 text-amber-700 border-amber-200',
+    },
+    {
       tab: 'history',
       icon: History,
-      label: '4. Riwayat Transaksi Ledger',
+      label: '5. Riwayat Ledger',
       hint: `${myProcessorTransactions.length} rekam transaksi`,
       color: 'bg-cyan-500/10 text-cyan-700 border-cyan-200',
     },
@@ -104,10 +113,10 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-amber-950 via-stone-900 to-amber-900 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden border border-amber-900/60">
+      <div className="bg-gradient-to-r from-[#18110D] via-[#291B13] to-[#1F140E] text-white rounded-2xl p-6 sm:p-7 shadow-md relative overflow-hidden border border-[#382419]">
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold mb-3 border border-amber-400/30 backdrop-blur-xs">
-            <Cog className="w-4 h-4 text-amber-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-200 text-xs font-semibold mb-3 border border-amber-400/30 backdrop-blur-xs">
+            <Cog className="w-4 h-4 text-amber-300" />
             <span>Mill Tier 2 • Stasiun Pengolahan Kopi</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
@@ -117,81 +126,93 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
             Inisiasi pengadaan ceri segar petani, pantau kurva fermentasi &amp; kadar air harian, kelola rendemen (mass balance) tanpa susut anomali, dan alokasikan limbah sirkular bernilai tambah.
           </p>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-stone-300 pt-1">
-            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs flex items-center gap-1.5">
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-stone-200 pt-1">
+            <span className="bg-white/10 px-3 py-1 rounded-lg backdrop-blur-xs flex items-center gap-1.5">
               <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
               Rating Sirkular: <strong>{avgStarRating} / 5.00 ⭐ ({avgEcoScore} Pts)</strong>
             </span>
-            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs">
+            <span className="bg-white/10 px-3 py-1 rounded-lg backdrop-blur-xs">
               Limbah Terkelola: <strong className="text-emerald-300">{totalWasteManagedKg.toLocaleString()} kg</strong>
             </span>
           </div>
         </div>
 
-        <div className="absolute right-4 -bottom-6 opacity-10 text-white pointer-events-none">
+        <div className="absolute right-4 -bottom-6 opacity-10 text-amber-500 pointer-events-none">
           <Cog className="w-48 h-48" />
         </div>
       </div>
 
-      {/* 4 Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Stok Ceri di Gudang"
-          value={`${totalCherryStockKg.toLocaleString()} kg`}
-          subtitle="Bahan baku siap olah"
-          icon={<Warehouse className="w-5 h-5 text-emerald-600" />}
-          color="emerald"
-          trend={{ value: 'Stok Gudang', isPositive: true }}
-        />
+      {/* 4 Metric Cards (Skripsi Odoo ERP Stat Buttons) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-stone-200/80 rounded-xl shadow-xs">
+          <div className="p-2 rounded-lg bg-rose-50 text-rose-700">
+            <Warehouse className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="o_stat_value !text-base text-stone-900 font-mono">
+              {totalCherryStockKg.toLocaleString()} <span className="text-xs font-normal text-stone-500">kg</span>
+            </span>
+            <span className="o_stat_text text-stone-500 block">Stok Ceri di Gudang</span>
+          </div>
+        </div>
 
-        <MetricCard
-          title="Batch Aktif di Stasiun"
-          value={`${inProgressBatches.length} Batch`}
-          subtitle="Tahap 1-7 terkontrol"
-          icon={<Flame className="w-5 h-5 text-amber-600" />}
-          color="amber"
-          trend={{ value: 'Live Work Order', isPositive: true }}
-        />
+        <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-stone-200/80 rounded-xl shadow-xs">
+          <div className="p-2 rounded-lg bg-amber-50 text-amber-700">
+            <Flame className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="o_stat_value !text-base text-stone-900 font-mono">
+              {inProgressBatches.length} <span className="text-xs font-normal text-stone-500">Batch</span>
+            </span>
+            <span className="o_stat_text text-stone-500 block">Batch Aktif di Stasiun</span>
+          </div>
+        </div>
 
-        <MetricCard
-          title="Green Bean Siap Jual"
-          value={`${availableGreenBeanKg.toLocaleString()} kg`}
-          subtitle="Tersedia untuk Gudang/Roastery"
-          icon={<CheckCircle2 className="w-5 h-5 text-blue-600" />}
-          color="blue"
-          badge="Siap Kirim"
-        />
+        <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-stone-200/80 rounded-xl shadow-xs">
+          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-700">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="o_stat_value !text-base text-stone-900 font-mono">
+              {availableGreenBeanKg.toLocaleString()} <span className="text-xs font-normal text-stone-500">kg</span>
+            </span>
+            <span className="o_stat_text text-stone-500 block">Green Bean Siap Jual</span>
+          </div>
+        </div>
 
-        <MetricCard
-          title="Buku Besar Transaksi"
-          value={`${myProcessorTransactions.length} Log`}
-          subtitle="Beli ceri &amp; jual green bean"
-          icon={<TrendingUp className="w-5 h-5 text-purple-600" />}
-          color="purple"
-          trend={{ value: '100% Tercatat', isPositive: true }}
-        />
+        <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-stone-200/80 rounded-xl shadow-xs">
+          <div className="p-2 rounded-lg bg-purple-50 text-purple-700">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="o_stat_value !text-base text-stone-900 font-mono">
+              {myProcessorTransactions.length} <span className="text-xs font-normal text-stone-500">Log</span>
+            </span>
+            <span className="o_stat_text text-stone-500 block">Buku Besar Transaksi</span>
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions into the 4 Processor Pipeline Modules */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {quickActions.map((action) => {
           const ActionIcon = action.icon;
           return (
             <button
               key={action.tab}
               onClick={() => onNavigate(action.tab)}
-              className={`group flex items-center justify-between gap-3 p-4 rounded-2xl border bg-white hover:shadow-md transition-all text-left ${action.color}`}
+              className="group flex items-center justify-between gap-3 p-4 rounded-xl border border-stone-200 bg-white hover:border-amber-600 hover:shadow-md transition-all text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-current/20 shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-200 shrink-0 group-hover:bg-amber-700 group-hover:text-white transition-colors">
                   <ActionIcon className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <span className="font-bold text-xs text-stone-900 block truncate">{action.label}</span>
+                  <span className="font-bold text-xs text-stone-900 block truncate group-hover:text-amber-800 transition-colors">{action.label}</span>
                   <span className="text-[11px] text-stone-500 block truncate">{action.hint}</span>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 group-hover:text-amber-700 transition-all shrink-0" />
             </button>
           );
         })}

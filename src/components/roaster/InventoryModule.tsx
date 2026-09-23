@@ -40,11 +40,15 @@ const STOCK_PIPELINE_STAGES: PipelineStage[] = [
 
 export const InventoryModule: React.FC = () => {
   const {
+    currentUser,
     warehouseLots,
     roastedLots,
     packagingInventory,
     updatePackagingStock,
   } = useCoffee();
+
+  const myRoastedLots = roastedLots.filter((r) => !r.roasterId || r.roasterId === currentUser?.id);
+  const myPackagingInventory = packagingInventory.filter((p) => !p.roasterId || p.roasterId === currentUser?.id);
 
   const [activeCategory, setActiveCategory] = useState<'green' | 'roasted' | 'packaging'>('green');
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,14 +65,14 @@ export const InventoryModule: React.FC = () => {
     0
   );
 
-  const totalRoastedPacks = roastedLots.reduce((acc, curr) => acc + curr.availablePacks, 0);
-  const totalRoastedValue = roastedLots.reduce(
+  const totalRoastedPacks = myRoastedLots.reduce((acc, curr) => acc + curr.availablePacks, 0);
+  const totalRoastedValue = myRoastedLots.reduce(
     (acc, curr) => acc + curr.availablePacks * curr.pricePerPack,
     0
   );
 
-  const totalPackagingPcs = packagingInventory.reduce((acc, curr) => acc + curr.stockQuantity, 0);
-  const totalPackagingValue = packagingInventory.reduce(
+  const totalPackagingPcs = myPackagingInventory.reduce((acc, curr) => acc + curr.stockQuantity, 0);
+  const totalPackagingValue = myPackagingInventory.reduce(
     (acc, curr) => acc + curr.stockQuantity * curr.unitCost,
     0
   );
@@ -81,13 +85,13 @@ export const InventoryModule: React.FC = () => {
     l.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredRoastedLots = roastedLots.filter((r) =>
+  const filteredRoastedLots = myRoastedLots.filter((r) =>
     r.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.roastLevel.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredPackaging = packagingInventory.filter((p) =>
+  const filteredPackaging = myPackagingInventory.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.category.toLowerCase().includes(searchQuery.toLowerCase())
   );

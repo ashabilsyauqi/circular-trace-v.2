@@ -118,12 +118,12 @@ export const GRADE_TIERS_CONFIG: Record<
     tier: 'Grade 3 - Medium Commercial',
     label: 'Grade 3: Medium Commercial (Standard)',
     shortLabel: 'Medium Commercial',
-    badgeBg: 'bg-blue-100',
-    badgeText: 'text-blue-950',
-    badgeBorder: 'border-blue-300',
-    borderColor: 'border-blue-400',
-    activeRing: 'ring-blue-500',
-    lightBg: 'bg-blue-50/80',
+    badgeBg: 'bg-stone-200',
+    badgeText: 'text-stone-900',
+    badgeBorder: 'border-stone-300',
+    borderColor: 'border-stone-400',
+    activeRing: 'ring-stone-500',
+    lightBg: 'bg-stone-100',
     icon: ShieldCheck,
     scaRange: '80.0 - 82.75',
     defaultSca: 81.0,
@@ -164,15 +164,18 @@ export const WarehouseView: React.FC = () => {
     buyGreenBeanAndStoreWarehouse,
     updateWarehouseLotGrading,
     transactions,
+    warehouseActiveTab,
+    setWarehouseActiveTab,
   } = useCoffee();
 
-  const [activeTab, setActiveTab] = useState<'inventory' | 'marketplace' | 'history'>('inventory');
+  const activeTab = warehouseActiveTab || 'inventory';
+  const setActiveTab = setWarehouseActiveTab;
   const [selectedGreenBeanToBuy, setSelectedGreenBeanToBuy] = useState<ProcessedGreenBeanLot | null>(null);
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
   const [gradeFilter, setGradeFilter] = useState<'all' | WarehouseGradeTier>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('cards');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
 
   // Form state for warehouse storage, grading & dynamic pricing
   const [boughtKg, setBoughtKg] = useState<number>(100);
@@ -213,15 +216,15 @@ export const WarehouseView: React.FC = () => {
   // Data lot & transactions
   const availableGreenBeans = processedLots.filter((lot) => lot.availableWeightKg > 0);
   const myWarehouseLots = warehouseLots.filter(
-    (lot) => lot.warehouseId === currentUser?.id || true
+    (lot) => !lot.warehouseId || lot.warehouseId === currentUser?.id
   );
 
   const myWarehouseTransactions = transactions.filter(
     (t) =>
       t.fromName === currentUser?.name ||
       t.toName === currentUser?.name ||
-      t.fromRole === 'gudang' ||
-      t.toRole === 'gudang'
+      t.fromName === (currentUser?.organization || currentUser?.name) ||
+      t.toName === (currentUser?.organization || currentUser?.name)
   );
 
   const totalStoredKg = myWarehouseLots.reduce((acc, curr) => acc + curr.weightKg, 0);
@@ -351,11 +354,11 @@ export const WarehouseView: React.FC = () => {
     <div className="space-y-6">
       {!detailLot && (
       <>
-      {/* Top Banner (Cruip Blue / Indigo Gradient) */}
-      <div className="bg-linear-to-r from-blue-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden border border-blue-900/60">
+      {/* Top Banner (Circular Coffee Warm Roast Gradient) */}
+      <div className="bg-gradient-to-r from-[#18110D] via-[#291B13] to-[#1F140E] text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden border border-[#382419]">
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold mb-3 border border-blue-400/30 backdrop-blur-xs">
-            <Warehouse className="w-4 h-4 text-blue-400" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-200 text-xs font-semibold mb-3 border border-amber-400/30 backdrop-blur-xs">
+            <Warehouse className="w-4 h-4 text-amber-300" />
             <span>Warehouse & QA Tier 3 • Silo Klimatik & Sertifikasi Mutu</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
@@ -367,17 +370,17 @@ export const WarehouseView: React.FC = () => {
 
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-stone-300 pt-1">
             <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs flex items-center gap-1.5">
-              <Thermometer className="w-3.5 h-3.5 text-blue-400" />
+              <Thermometer className="w-3.5 h-3.5 text-amber-300" />
               Suhu Rata-rata Silo: <strong className="text-white">20.4°C (Optimal)</strong>
             </span>
             <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs flex items-center gap-1.5">
-              <Droplets className="w-3.5 h-3.5 text-blue-400" />
+              <Droplets className="w-3.5 h-3.5 text-emerald-300" />
               Kelembaban RH: <strong className="text-emerald-300">54% (Aman Jamur)</strong>
             </span>
           </div>
         </div>
 
-        <div className="absolute right-4 -bottom-6 opacity-10 text-white pointer-events-none">
+        <div className="absolute right-4 -bottom-6 opacity-10 text-amber-500 pointer-events-none">
           <Warehouse className="w-48 h-48" />
         </div>
       </div>

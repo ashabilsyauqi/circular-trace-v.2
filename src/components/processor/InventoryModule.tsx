@@ -31,7 +31,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { ProcessedGreenBeanLot, CoffeeWasteManagement } from '../../types/coffee';
-import { ProcessorCherryStockItem } from '../../types/processorErp';
+import { ProcessorCherryStockItem, ProcessingMethod } from '../../types/processorErp';
 import { ProcessorBarcodeModal } from '../ProcessorBarcodeModal';
 import { calculateProcessorEcoRating } from '../../utils/ecoRating';
 import { RecordBreadcrumb } from '../shared/RecordBreadcrumb';
@@ -59,6 +59,7 @@ export const InventoryModule: React.FC = () => {
     processorCherryStock,
     updateProcessedLotWaste,
     createProcessingBatch,
+    setActiveProcessingBatchId,
     setProcessorActiveTab,
     setActiveView,
   } = useCoffee();
@@ -66,23 +67,19 @@ export const InventoryModule: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<'cherry' | 'green_bean' | 'waste'>('cherry');
   const [searchQuery, setSearchQuery] = useState('');
   const [processMethodFilter, setProcessMethodFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('kanban');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
 
   // Detail Sheet States
   const [detailCherryItem, setDetailCherryItem] = useState<ProcessorCherryStockItem | null>(null);
   const [detailGreenBeanLot, setDetailGreenBeanLot] = useState<ProcessedGreenBeanLot | null>(null);
 
+  // Detail Sheet Form State for Cherry Processing
+  const [detailProcessKg, setDetailProcessKg] = useState<number>(500);
+  const [detailProcessMethod, setDetailProcessMethod] = useState<ProcessingMethod>('Natural / Dry');
+
   // Modals
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
   const [selectedLotForBarcode, setSelectedLotForBarcode] = useState<ProcessedGreenBeanLot | null>(null);
-
-  // Quick Start Processing Modal from Cherry Stock
-  const [cherryToProcess, setCherryToProcess] = useState<ProcessorCherryStockItem | null>(null);
-  const [processKg, setProcessKg] = useState<number>(500);
-  const [processMethod, setProcessMethod] = useState<'Anaerobic Natural' | 'Full Washed' | 'Natural / Dry' | 'Honey (Yellow/Red)' | 'Wine Process' | 'Wet Hulled (Giling Basah)'>('Natural / Dry');
-  const [dryingMethod, setDryingMethod] = useState<'Solar Dryer Raised Bed' | 'Greenhouse Solar Dome' | 'Mechanical Controlled Dryer'>('Solar Dryer Raised Bed');
-  const [operatorName, setOperatorName] = useState('Budi Santoso (Mill Master)');
-  const [processNotes, setProcessNotes] = useState('Batch olahan dari stok ceri segar di gudang.');
 
   // Edit Waste Modal
   const [editingWasteLot, setEditingWasteLot] = useState<ProcessedGreenBeanLot | null>(null);
@@ -95,10 +92,12 @@ export const InventoryModule: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   // Computations
-  const totalCherryKg = processorCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
-  const totalCherryValue = processorCherryStock.reduce((acc, curr) => acc + (curr.availableWeightKg * curr.purchasePricePerKg), 0);
+  const myCherryStock = processorCherryStock.filter((item) => !item.processorId || item.processorId === currentUser?.id);
+  const myProcessedLots = processedLots.filter((lot) => !lot.processorId || lot.processorId === currentUser?.id);
 
-  const myProcessedLots = processedLots.filter((lot) => lot.processorId === currentUser?.id || true);
+  const totalCherryKg = myCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
+  const totalCherryValue = myCherryStock.reduce((acc, curr) => acc + (curr.availableWeightKg * curr.purchasePricePerKg), 0);
+
   const totalGreenKg = myProcessedLots.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
   const totalGreenValue = myProcessedLots.reduce((acc, curr) => acc + (curr.availableWeightKg * curr.pricePerKg), 0);
 
@@ -106,7 +105,7 @@ export const InventoryModule: React.FC = () => {
   const totalWasteKg = myProcessedLots.reduce((acc, curr) => acc + (curr.wasteManagement?.weightKgOrLiters || Math.round(curr.greenBeanWeightKg * 2.2)), 0);
 
   // Filterings
-  const filteredCherryStock = processorCherryStock.filter((item) => {
+  const filteredCherryStock = myCherryStock.filter((item) => {
     const q = searchQuery.toLowerCase();
     return (
       item.id.toLowerCase().includes(q) ||
@@ -127,33 +126,35 @@ export const InventoryModule: React.FC = () => {
     return matchMethod && matchSearch;
   });
 
-  const handleOpenProcessModal = (cherryItem: ProcessorCherryStockItem) => {
-    setCherryToProcess(cherryItem);
-    setProcessKg(Math.min(cherryItem.availableWeightKg, 500));
+  const handleOpenDetailCherry = (item: ProcessorCherryStockItem) => {
+    setDetailCherryItem(item);
+    setDetailProcessKg(item.availableWeightKg);
+    setDetailProcessMethod('Natural / Dry');
   };
 
-  const handleConfirmStartProcess = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cherryToProcess) return;
+  // Direct 1-click create processing batch from cherry warehouse stock & open interactive Lembar Kerja
+  const handleDirectStart7StageFromStock = (
+    item: ProcessorCherryStockItem,
+    kg?: number,
+    method?: ProcessingMethod
+  ) => {
+    const amount = kg || item.availableWeightKg;
+    const chosenMethod = method || 'Natural / Dry';
 
     const newBatch = createProcessingBatch({
-      sourceCherryStockId: cherryToProcess.id,
-      boughtCherryKg: Number(processKg),
-      method: processMethod,
-      dryingMethod,
-      operatorName,
-      notes: processNotes,
+      sourceCherryStockId: item.id,
+      boughtCherryKg: Number(amount),
+      method: chosenMethod,
+      dryingMethod: 'Solar Dryer Raised Bed',
+      operatorName: 'Budi Santoso (Mill Master)',
+      notes: `Batch pengolahan metode ${chosenMethod} dari stok ceri segar gudang (${item.variety} - ${item.origin}).`,
     });
 
-    setCherryToProcess(null);
-    setDetailCherryItem(null);
+    if (detailCherryItem) setDetailCherryItem(null);
 
     if (newBatch) {
-      setSuccessMsg(`Batch pengolahan 7-Stage #${newBatch.batchCode} berhasil dibuat dari stok ceri ${cherryToProcess.id}!`);
-      setTimeout(() => {
-        setSuccessMsg('');
-        setProcessorActiveTab('batches');
-      }, 1200);
+      setActiveProcessingBatchId(newBatch.id);
+      setProcessorActiveTab('batches');
     }
   };
 
@@ -204,54 +205,69 @@ export const InventoryModule: React.FC = () => {
 
       {!detailCherryItem && !detailGreenBeanLot && (
         <>
-          {/* 1. Metric KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Nilai Total Aset Gudang"
-              value={`Rp ${grandTotalValue.toLocaleString()}`}
-              subtitle="Valuasi Ceri Segar + Green Bean"
-              trend={{ value: 'Audit FIFO Valid', isPositive: true }}
-              icon={<DollarSign className="w-5 h-5 text-amber-600" />}
-              color="amber"
-            />
-            <MetricCard
-              title="Stok Bahan Baku Ceri"
-              value={`${totalCherryKg.toLocaleString()} kg`}
-              subtitle={`Nilai Rp ${totalCherryValue.toLocaleString()}`}
-              trend={{ value: `${processorCherryStock.length} Lot Siap Olah`, isPositive: true }}
-              icon={<Cherry className="w-5 h-5 text-rose-600" />}
-              color="rose"
-            />
-            <MetricCard
-              title="Stok Green Bean Siap Jual"
-              value={`${totalGreenKg.toLocaleString()} kg`}
-              subtitle={`Nilai Rp ${totalGreenValue.toLocaleString()}`}
-              trend={{ value: `${myProcessedLots.length} Lot Siap Pasar`, isPositive: true }}
-              icon={<Package className="w-5 h-5 text-emerald-600" />}
-              color="emerald"
-            />
-            <MetricCard
-              title="Limbah Sirkular Terkelola"
-              value={`${totalWasteKg.toLocaleString()} kg`}
-              subtitle="Cascara, Kompos & Bio-Pellet"
-              trend={{ value: 'Zero-Waste 5.0 ⭐', isPositive: true }}
-              icon={<Recycle className="w-5 h-5 text-teal-600" />}
-              color="purple"
-            />
+          {/* 1. Metric KPI Cards (Skripsi Odoo ERP Stat Buttons) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-stone-200/80 rounded-xl shadow-xs">
+              <div className="p-2 rounded-lg bg-stone-100 text-stone-800">
+                <DollarSign className="w-5 h-5 text-amber-700" />
+              </div>
+              <div>
+                <span className="o_stat_value !text-base text-stone-900 font-mono">
+                  Rp {grandTotalValue.toLocaleString()}
+                </span>
+                <span className="o_stat_text text-stone-500 block">Total Aset Gudang (FIFO)</span>
+              </div>
+            </div>
+
+            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs">
+              <div className="p-2 rounded-lg bg-rose-50 text-rose-700">
+                <Cherry className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="o_stat_value !text-base text-slate-900 font-mono">
+                  {totalCherryKg.toLocaleString()} <span className="text-xs font-normal text-slate-500">kg</span>
+                </span>
+                <span className="o_stat_text text-slate-500 block">Bahan Baku Ceri ({processorCherryStock.length} Lot)</span>
+              </div>
+            </div>
+
+            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs">
+              <div className="p-2 rounded-lg bg-emerald-50 text-emerald-700">
+                <Package className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="o_stat_value !text-base text-slate-900 font-mono">
+                  {totalGreenKg.toLocaleString()} <span className="text-xs font-normal text-slate-500">kg</span>
+                </span>
+                <span className="o_stat_text text-slate-500 block">Green Bean Siap Jual ({myProcessedLots.length} Lot)</span>
+              </div>
+            </div>
+
+            <div className="o_stat_button !w-full !justify-start !p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-xs">
+              <div className="p-2 rounded-lg bg-teal-50 text-teal-700">
+                <Recycle className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="o_stat_value !text-base text-teal-900 font-mono">
+                  {totalWasteKg.toLocaleString()} <span className="text-xs font-normal text-slate-500">kg</span>
+                </span>
+                <span className="o_stat_text text-slate-500 block">Limbah Sirkular (Zero-Waste 5.0 ⭐)</span>
+              </div>
+            </div>
           </div>
 
           {/* Quick Notice Banner if Raw Cherry is Available */}
           {totalCherryKg > 0 && (
-            <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2.5 text-amber-900">
-                <Clock className="w-4.5 h-4.5 text-amber-700 shrink-0" />
-                <p className="text-xs font-semibold">
-                  Terdapat <strong className="text-amber-950">{totalCherryKg.toLocaleString()} kg ceri segar</strong> di gudang penyimpanan Anda yang siap dikirim ke lembar kerja <strong>Processing 7-Stage</strong>.
+            <div className="bg-amber-50/90 border border-amber-300/80 rounded-xl p-3.5 flex items-center justify-between gap-3 flex-wrap shadow-2xs">
+              <div className="flex items-center gap-2.5 text-amber-900 text-xs">
+                <Clock className="w-4 h-4 text-amber-700 shrink-0" />
+                <p>
+                  Terdapat <strong className="text-amber-950">{totalCherryKg.toLocaleString()} kg ceri segar</strong> di gudang penyimpanan yang siap dialokasikan ke lembar kerja <strong>Processing 7-Stage</strong>.
                 </p>
               </div>
               <button
                 onClick={() => setActiveCategory('cherry')}
-                className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shrink-0 shadow-xs transition-colors"
+                className="btn-odoo-secondary !py-1 !px-3 !text-xs shrink-0"
               >
                 Lihat Stok Ceri →
               </button>
@@ -259,13 +275,13 @@ export const InventoryModule: React.FC = () => {
           )}
 
           {/* 2. Subtab Switcher */}
-          <div className="flex items-center gap-2 border-b border-stone-200 pb-2">
+          <div className="flex items-center gap-1.5 border-b border-slate-200 pb-2">
             <button
               onClick={() => setActiveCategory('cherry')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 activeCategory === 'cherry'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-stone-600 hover:bg-stone-100'
+                  ? 'bg-[#1E3A8A] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-200/70'
               }`}
             >
               <Cherry className="w-4 h-4" />
@@ -274,10 +290,10 @@ export const InventoryModule: React.FC = () => {
 
             <button
               onClick={() => setActiveCategory('green_bean')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 activeCategory === 'green_bean'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-stone-600 hover:bg-stone-100'
+                  ? 'bg-[#1E3A8A] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-200/70'
               }`}
             >
               <Package className="w-4 h-4" />
@@ -286,10 +302,10 @@ export const InventoryModule: React.FC = () => {
 
             <button
               onClick={() => setActiveCategory('waste')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 activeCategory === 'waste'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-stone-600 hover:bg-stone-100'
+                  ? 'bg-[#1E3A8A] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-200/70'
               }`}
             >
               <Recycle className="w-4 h-4" />
@@ -369,7 +385,7 @@ export const InventoryModule: React.FC = () => {
                         return (
                           <div
                             key={item.id}
-                            onClick={() => setDetailCherryItem(item)}
+                            onClick={() => handleOpenDetailCherry(item)}
                             className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-md hover:border-amber-400 transition-all flex flex-col justify-between cursor-pointer group"
                           >
                             <div>
@@ -452,14 +468,15 @@ export const InventoryModule: React.FC = () => {
 
                               {isAvailable && (
                                 <button
+                                  type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleOpenProcessModal(item);
+                                    handleDirectStart7StageFromStock(item);
                                   }}
-                                  className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1.5"
+                                  className="px-3.5 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
                                 >
                                   <Flame className="w-3.5 h-3.5" />
-                                  <span>Mulai Olah (7-Stage)</span>
+                                  <span>Mulai Olah (7-Stage) →</span>
                                 </button>
                               )}
                             </div>
@@ -471,62 +488,64 @@ export const InventoryModule: React.FC = () => {
 
                   {/* Table View */}
                   {viewMode === 'table' && (
-                    <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
+                    <div className="o_form_sheet overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+                        <table className="o_list_table">
+                          <thead>
                             <tr>
-                              <th className="py-4 px-5">ID Stok</th>
-                              <th className="py-4 px-5">Varietas & Petani</th>
-                              <th className="py-4 px-5">Origin & Elevasi</th>
-                              <th className="py-4 px-5">Brix Kemanisan</th>
-                              <th className="py-4 px-5">Stok Tersedia (kg)</th>
-                              <th className="py-4 px-5">HPP Modal (Rp/kg)</th>
-                              <th className="py-4 px-5">Total Nilai Aset</th>
-                              <th className="py-4 px-5 text-right">Aksi</th>
+                              <th className="!pl-5">ID Stok</th>
+                              <th>Varietas & Petani</th>
+                              <th>Origin & Elevasi</th>
+                              <th>Brix Kemanisan</th>
+                              <th>Stok Tersedia (kg)</th>
+                              <th>HPP Modal (Rp/kg)</th>
+                              <th>Total Nilai Aset</th>
+                              <th className="!pr-5 text-right">Aksi</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-stone-100">
+                          <tbody>
                             {filteredCherryStock.map((item) => (
                               <tr
                                 key={item.id}
-                                onClick={() => setDetailCherryItem(item)}
-                                className="hover:bg-amber-50/60 cursor-pointer transition-colors"
+                                onClick={() => handleOpenDetailCherry(item)}
                               >
-                                <td className="py-4 px-5 font-mono font-bold text-sm text-stone-900">{item.id}</td>
-                                <td className="py-4 px-5">
-                                  <div className="font-bold text-stone-900">{item.variety}</div>
-                                  <div className="text-[10px] text-stone-400">Petani: {item.farmerName}</div>
+                                <td className="!pl-5 font-mono font-bold text-slate-900">{item.id}</td>
+                                <td>
+                                  <div className="font-bold text-slate-900">{item.variety}</div>
+                                  <div className="text-[10px] text-slate-400">Petani: {item.farmerName}</div>
                                 </td>
-                                <td className="py-4 px-5">
-                                  <div className="font-semibold text-stone-800">{item.origin}</div>
-                                  <div className="text-[10px] text-stone-400">{item.altitude}</div>
+                                <td>
+                                  <div className="font-semibold text-slate-800">{item.origin}</div>
+                                  <div className="text-[10px] text-slate-400">{item.altitude}</div>
                                 </td>
-                                <td className="py-4 px-5">
-                                  <span className="font-black text-emerald-700 font-mono text-sm">{item.brix}° Brix</span>
+                                <td>
+                                  <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-xs">
+                                    {item.brix}° Brix
+                                  </span>
                                 </td>
-                                <td className="py-4 px-5 font-mono font-black text-stone-900 text-sm">
+                                <td className="font-mono font-black text-slate-900 text-sm">
                                   {item.availableWeightKg} kg
                                 </td>
-                                <td className="py-4 px-5 text-stone-800 font-mono">
+                                <td className="text-slate-800 font-mono">
                                   Rp {item.purchasePricePerKg.toLocaleString()}
                                 </td>
-                                <td className="py-4 px-5 font-black text-stone-900 font-mono">
+                                <td className="font-mono font-bold text-slate-900">
                                   Rp {(item.availableWeightKg * item.purchasePricePerKg).toLocaleString()}
                                 </td>
-                                <td className="py-4 px-5 text-right">
+                                <td className="!pr-5 text-right">
                                   {item.availableWeightKg > 0 ? (
                                     <button
+                                      type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleOpenProcessModal(item);
+                                        handleDirectStart7StageFromStock(item);
                                       }}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] transition-colors shadow-xs ml-auto"
+                                      className="btn-odoo-primary !py-1 !px-2.5 !text-[11px] inline-flex items-center gap-1.5 ml-auto"
                                     >
-                                      <Flame className="w-3.5 h-3.5" /> Mulai Olah
+                                      <Flame className="w-3.5 h-3.5" /> Mulai Olah →
                                     </button>
                                   ) : (
-                                    <span className="text-stone-400 text-[11px]">Habis</span>
+                                    <span className="text-slate-400 text-[11px]">Habis</span>
                                   )}
                                 </td>
                               </tr>
@@ -706,54 +725,53 @@ export const InventoryModule: React.FC = () => {
 
                   {/* Table View */}
                   {viewMode === 'table' && (
-                    <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
+                    <div className="o_form_sheet overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+                        <table className="o_list_table">
+                          <thead>
                             <tr>
-                              <th className="py-4 px-5">ID Green Bean</th>
-                              <th className="py-4 px-5">Varietas & Metode Olah</th>
-                              <th className="py-4 px-5">Petani & Origin</th>
-                              <th className="py-4 px-5">Kadar Air & aW</th>
-                              <th className="py-4 px-5">Stok Tersedia</th>
-                              <th className="py-4 px-5">Grade & Eco</th>
-                              <th className="py-4 px-5">Harga / kg</th>
-                              <th className="py-4 px-5 text-right">Tindakan</th>
+                              <th className="!pl-5">ID Green Bean</th>
+                              <th>Varietas & Metode Olah</th>
+                              <th>Petani & Origin</th>
+                              <th>Kadar Air & aW</th>
+                              <th>Stok Tersedia</th>
+                              <th>Grade & Eco</th>
+                              <th>Harga / kg</th>
+                              <th className="!pr-5 text-right">Tindakan</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-stone-100">
+                          <tbody>
                             {filteredGreenBeans.map((gb) => (
                               <tr
                                 key={gb.id}
                                 onClick={() => setDetailGreenBeanLot(gb)}
-                                className="hover:bg-amber-50/60 cursor-pointer transition-colors"
                               >
-                                <td className="py-4 px-5 font-mono font-bold text-stone-900">{gb.id}</td>
-                                <td className="py-4 px-5">
-                                  <div className="font-bold text-stone-900">{gb.variety}</div>
-                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">
+                                <td className="!pl-5 font-mono font-bold text-slate-900">{gb.id}</td>
+                                <td>
+                                  <div className="font-bold text-slate-900">{gb.variety}</div>
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
                                     {gb.processMethod}
                                   </span>
                                 </td>
-                                <td className="py-4 px-5">
-                                  <div className="font-medium text-stone-800">{gb.sourceFarmerName}</div>
-                                  <div className="text-[11px] text-stone-400">{gb.sourceOrigin}</div>
+                                <td>
+                                  <div className="font-medium text-slate-800">{gb.sourceFarmerName}</div>
+                                  <div className="text-[11px] text-slate-400">{gb.sourceOrigin}</div>
                                 </td>
-                                <td className="py-4 px-5">
-                                  <div className="font-bold text-stone-900">{gb.moistureContentPercent}%</div>
-                                  <div className="text-[11px] text-stone-500">{gb.waterActivityAw} aW</div>
+                                <td>
+                                  <div className="font-bold text-slate-900">{gb.moistureContentPercent}%</div>
+                                  <div className="text-[11px] text-slate-500">{gb.waterActivityAw} aW</div>
                                 </td>
-                                <td className="py-4 px-5 font-bold text-stone-900">
+                                <td className="font-mono font-bold text-slate-900">
                                   {gb.availableWeightKg} / {gb.greenBeanWeightKg} kg
                                 </td>
-                                <td className="py-4 px-5">
-                                  <div className="font-bold text-stone-900">{gb.grade}</div>
+                                <td>
+                                  <div className="font-bold text-slate-900">{gb.grade}</div>
                                   <div className="text-[11px] text-teal-700 font-semibold">Zero Waste Eco</div>
                                 </td>
-                                <td className="py-4 px-5 font-bold text-stone-900">
+                                <td className="font-mono font-bold text-slate-900">
                                   Rp {gb.pricePerKg.toLocaleString()}
                                 </td>
-                                <td className="py-4 px-5 text-right">
+                                <td className="!pr-5 text-right">
                                   <div className="flex items-center justify-end gap-1.5">
                                     <button
                                       onClick={(e) => {
@@ -761,7 +779,7 @@ export const InventoryModule: React.FC = () => {
                                         setSelectedLotForBarcode(gb);
                                         setBarcodeModalOpen(true);
                                       }}
-                                      className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1"
+                                      className="btn-odoo-secondary !py-1 !px-2.5 !text-[11px] inline-flex items-center gap-1"
                                     >
                                       <Printer className="w-3 h-3" /> Barcode
                                     </button>
@@ -850,23 +868,24 @@ export const InventoryModule: React.FC = () => {
             onBack={() => setDetailCherryItem(null)}
           />
 
-          <div className="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-xs">
-            <div className="bg-[#FAF7F2] px-6 py-5 border-b border-stone-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-2xl bg-rose-100 text-rose-700">
-                  <Cherry className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-black text-stone-900 font-mono">{detailCherryItem.id}</h2>
-                    <span className="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-900 text-[10px] font-bold">
-                      Ceri Segar
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-500 mt-0.5">
-                    Petani: <strong>{detailCherryItem.farmerName}</strong> • {detailCherryItem.origin} ({detailCherryItem.altitude}) • Masuk Gudang: {detailCherryItem.purchaseDate}
-                  </p>
-                </div>
+          <div className="o_form_sheet overflow-hidden">
+            {/* Statusbar */}
+            <div className="o_form_statusbar flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDirectStart7StageFromStock(detailCherryItem, detailProcessKg, detailProcessMethod)}
+                  className="btn-odoo-primary inline-flex items-center gap-1.5 text-xs"
+                >
+                  <Flame className="w-3.5 h-3.5" /> Mulai Olah 7-Stage
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailCherryItem(null)}
+                  className="btn-odoo-secondary text-xs"
+                >
+                  Kembali ke Daftar
+                </button>
               </div>
 
               <StatusPipeline
@@ -875,31 +894,49 @@ export const InventoryModule: React.FC = () => {
               />
             </div>
 
-            <div className="px-6 py-4 bg-white border-b border-stone-100 flex flex-wrap gap-2.5">
-              <StatButton
-                icon={<Scale className="w-4 h-4" />}
-                value={`${detailCherryItem.availableWeightKg} / ${detailCherryItem.totalWeightKg} kg`}
-                label="Stok Ceri Tersisa"
-                color="emerald"
-              />
-              <StatButton
-                icon={<Droplets className="w-4 h-4" />}
-                value={`${detailCherryItem.brix}° Brix`}
-                label="Kemanisan Buah"
-                color="purple"
-              />
-              <StatButton
-                icon={<DollarSign className="w-4 h-4" />}
-                value={`Rp ${detailCherryItem.purchasePricePerKg.toLocaleString()}`}
-                label="HPP Modal / kg"
-                color="amber"
-              />
-              <StatButton
-                icon={<Warehouse className="w-4 h-4" />}
-                value={`Rp ${(detailCherryItem.availableWeightKg * detailCherryItem.purchasePricePerKg).toLocaleString()}`}
-                label="Total Nilai Aset"
-                color="blue"
-              />
+            {/* Header info */}
+            <div className="p-6 border-b border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 rounded-xl bg-rose-50 text-rose-700 border border-rose-200">
+                  <Cherry className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-mono font-bold text-slate-900">{detailCherryItem.id}</h2>
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[11px] font-bold">
+                      Ceri Segar
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Petani: <strong className="text-slate-800">{detailCherryItem.farmerName}</strong> • {detailCherryItem.origin} ({detailCherryItem.altitude}) • Masuk Gudang: {detailCherryItem.purchaseDate}
+                  </p>
+                </div>
+              </div>
+
+              {/* Stat Buttons Ribbon */}
+              <div className="flex flex-wrap gap-2">
+                <div className="o_stat_button">
+                  <Scale className="w-4 h-4 text-emerald-600" />
+                  <div>
+                    <span className="o_stat_value">{detailCherryItem.availableWeightKg} / {detailCherryItem.totalWeightKg} kg</span>
+                    <span className="o_stat_text">Stok Tersisa</span>
+                  </div>
+                </div>
+                <div className="o_stat_button">
+                  <Droplets className="w-4 h-4 text-purple-600" />
+                  <div>
+                    <span className="o_stat_value">{detailCherryItem.brix}° Brix</span>
+                    <span className="o_stat_text">Kemanisan Buah</span>
+                  </div>
+                </div>
+                <div className="o_stat_button">
+                  <DollarSign className="w-4 h-4 text-amber-700" />
+                  <div>
+                    <span className="o_stat_value">Rp {detailCherryItem.purchasePricePerKg.toLocaleString()}</span>
+                    <span className="o_stat_text">HPP Modal / kg</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="p-6 space-y-6 text-xs">
@@ -957,23 +994,85 @@ export const InventoryModule: React.FC = () => {
                 </div>
               </div>
 
-              {/* Action Bar */}
-              <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-2xl flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-amber-800" />
-                  <span className="text-xs font-bold text-amber-950">
-                    Kirim Stok Ceri #{detailCherryItem.id} ke Lembar Kerja Manufaktur 7-Stage
+              {/* ERP Workstation Action Box */}
+              <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50/40 border-2 border-amber-300 rounded-3xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Flame className="w-5 h-5 text-amber-700" />
+                    <div>
+                      <h4 className="text-sm font-black text-amber-950 uppercase tracking-wider">
+                        Workstation Inisiasi Pengolahan 7-Stage
+                      </h4>
+                      <p className="text-[11px] text-stone-600">
+                        Kirim stok ceri segar langsung ke lembar kerja manufaktur stasiun pengolah.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-amber-200 text-amber-950 font-mono font-bold text-xs">
+                    Tersedia {detailCherryItem.availableWeightKg} kg
                   </span>
                 </div>
 
-                {detailCherryItem.availableWeightKg > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
+                      Volume yang Diolah (kg)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={detailCherryItem.availableWeightKg}
+                      value={detailProcessKg}
+                      onChange={(e) => setDetailProcessKg(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white font-mono font-black text-sm text-amber-950 focus:ring-2 focus:ring-amber-500"
+                    />
+                    <span className="text-[10px] text-stone-500 mt-1 block">
+                      Estimasi Yield Green Bean: ~<strong>{Math.round(detailProcessKg * 0.16)} kg</strong> (rendemen ~16%)
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
+                      Pilihan Metode Pengolahan
+                    </label>
+                    <select
+                      value={detailProcessMethod}
+                      onChange={(e) => setDetailProcessMethod(e.target.value as any)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-amber-500"
+                    >
+                      <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur</option>
+                      <option value="Full Washed">2. Washed (Wet) — Depulper, Tangki Fermentasi & Cuci</option>
+                      <option value="Honey (Yellow/Red)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir</option>
+                      <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek</option>
+                      <option value="Anaerobic Natural">Anaerobic Natural — Sealed Tank Ferment</option>
+                      <option value="Wine Process">Wine Process — Extended Ferment</option>
+                    </select>
+                    <span className="text-[10px] text-stone-500 mt-1 block">
+                      Metode dapat disesuaikan di Lembar Kerja.
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col justify-center bg-white p-3.5 rounded-2xl border border-amber-200 shadow-2xs">
+                    <span className="text-[10px] text-stone-500 font-semibold uppercase">Nilai Aset Bahan Baku:</span>
+                    <strong className="text-lg font-black text-amber-950 font-mono mt-0.5">
+                      Rp {(detailProcessKg * detailCherryItem.purchasePricePerKg).toLocaleString()}
+                    </strong>
+                    <span className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                      ✓ Kemanisan {detailCherryItem.brix}° Brix
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-wrap items-center justify-end gap-3 border-t border-amber-200/80">
                   <button
-                    onClick={() => handleOpenProcessModal(detailCherryItem)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all"
+                    type="button"
+                    onClick={() => handleDirectStart7StageFromStock(detailCherryItem, detailProcessKg, detailProcessMethod)}
+                    className="px-6 py-3 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white font-black text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer"
                   >
-                    <Flame className="w-4 h-4" /> Mulai 7-Stage Work Order Batch →
+                    <Flame className="w-4 h-4" />
+                    <span>Mulai Olah 7-Stage Lembar Kerja →</span>
                   </button>
-                )}
+                </div>
               </div>
             </div>
           </div>
@@ -991,23 +1090,34 @@ export const InventoryModule: React.FC = () => {
             onBack={() => setDetailGreenBeanLot(null)}
           />
 
-          <div className="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-xs">
-            <div className="bg-[#FAF7F2] px-6 py-5 border-b border-stone-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-2xl bg-amber-100 text-amber-700">
-                  <Package className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-black text-stone-900 font-mono">{detailGreenBeanLot.id}</h2>
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">
-                      {detailGreenBeanLot.processMethod}
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-500 mt-0.5">
-                    {detailGreenBeanLot.sourceOrigin} — {detailGreenBeanLot.variety} ({detailGreenBeanLot.altitude}) • Diolah: {detailGreenBeanLot.processedDate}
-                  </p>
-                </div>
+          <div className="o_form_sheet overflow-hidden">
+            {/* Statusbar */}
+            <div className="o_form_statusbar flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveView('marketplace')}
+                  className="btn-odoo-primary inline-flex items-center gap-1.5 text-xs"
+                >
+                  <Store className="w-3.5 h-3.5" /> Pasarkan di Marketplace
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedLotForBarcode(detailGreenBeanLot);
+                    setBarcodeModalOpen(true);
+                  }}
+                  className="btn-odoo-secondary inline-flex items-center gap-1.5 text-xs"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Cetak Barcode Karung
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailGreenBeanLot(null)}
+                  className="btn-odoo-secondary text-xs"
+                >
+                  Kembali ke Daftar
+                </button>
               </div>
 
               <StatusPipeline
@@ -1016,31 +1126,49 @@ export const InventoryModule: React.FC = () => {
               />
             </div>
 
-            <div className="px-6 py-4 bg-white border-b border-stone-100 flex flex-wrap gap-2.5">
-              <StatButton
-                icon={<Scale className="w-4 h-4" />}
-                value={`${detailGreenBeanLot.availableWeightKg} / ${detailGreenBeanLot.greenBeanWeightKg} kg`}
-                label="Stok Green Bean Tersedia"
-                color="emerald"
-              />
-              <StatButton
-                icon={<DollarSign className="w-4 h-4" />}
-                value={`Rp ${detailGreenBeanLot.pricePerKg.toLocaleString()}`}
-                label="Harga Green Bean / kg"
-                color="amber"
-              />
-              <StatButton
-                icon={<Award className="w-4 h-4" />}
-                value={detailGreenBeanLot.grade}
-                label="Grade Mutu"
-                color="purple"
-              />
-              <StatButton
-                icon={<Droplets className="w-4 h-4" />}
-                value={`${detailGreenBeanLot.moistureContentPercent}% • ${detailGreenBeanLot.waterActivityAw} aW`}
-                label="Kadar Air / aW"
-                color="blue"
-              />
+            {/* Header Info */}
+            <div className="p-6 border-b border-slate-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
+                  <Package className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-mono font-bold text-slate-900">{detailGreenBeanLot.id}</h2>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold">
+                      {detailGreenBeanLot.processMethod}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {detailGreenBeanLot.sourceOrigin} — {detailGreenBeanLot.variety} ({detailGreenBeanLot.altitude}) • Diolah: {detailGreenBeanLot.processedDate}
+                  </p>
+                </div>
+              </div>
+
+              {/* Stat Buttons Ribbon */}
+              <div className="flex flex-wrap gap-2">
+                <div className="o_stat_button">
+                  <Scale className="w-4 h-4 text-emerald-600" />
+                  <div>
+                    <span className="o_stat_value">{detailGreenBeanLot.availableWeightKg} / {detailGreenBeanLot.greenBeanWeightKg} kg</span>
+                    <span className="o_stat_text">Stok Green Bean</span>
+                  </div>
+                </div>
+                <div className="o_stat_button">
+                  <DollarSign className="w-4 h-4 text-amber-700" />
+                  <div>
+                    <span className="o_stat_value">Rp {detailGreenBeanLot.pricePerKg.toLocaleString()}</span>
+                    <span className="o_stat_text">Harga Jual / kg</span>
+                  </div>
+                </div>
+                <div className="o_stat_button">
+                  <Award className="w-4 h-4 text-purple-600" />
+                  <div>
+                    <span className="o_stat_value">{detailGreenBeanLot.grade}</span>
+                    <span className="o_stat_text">Grade Mutu</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="p-6 space-y-6 text-xs">
@@ -1134,129 +1262,7 @@ export const InventoryModule: React.FC = () => {
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* MODAL: MULAI OLAH DARI STOK CERI GUDANG                  */}
-      {/* ======================================================== */}
-      {cherryToProcess && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
-            <div className="bg-gradient-to-r from-amber-900 to-stone-900 text-white p-6 relative">
-              <button
-                onClick={() => setCherryToProcess(null)}
-                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
 
-              <div className="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-semibold mb-2">
-                <Flame className="w-3.5 h-3.5" />
-                Mulai 7-Stage Processing dari Stok Gudang
-              </div>
-              <h2 className="text-xl font-black">
-                Proses Stok: {cherryToProcess.variety}
-              </h2>
-              <p className="text-xs text-stone-300 mt-1">
-                ID Stok: {cherryToProcess.id} • Petani: {cherryToProcess.farmerName} • Tersedia: {cherryToProcess.availableWeightKg} kg ({cherryToProcess.brix}° Brix)
-              </p>
-            </div>
-
-            <form onSubmit={handleConfirmStartProcess} className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Volume Ceri yang Diolah (kg) - Maks: {cherryToProcess.availableWeightKg} kg
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  max={cherryToProcess.availableWeightKg}
-                  value={processKg}
-                  onChange={(e) => setProcessKg(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm font-bold text-amber-950 focus:ring-2 focus:ring-amber-500"
-                />
-                <span className="text-[10px] text-stone-400 mt-0.5 block">
-                  Estimasi hasil Green Bean: ~{Math.round(processKg * 0.16)} kg (rendemen ~16%)
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Metode Proses Olahan
-                </label>
-                <select
-                  value={processMethod}
-                  onChange={(e) => setProcessMethod(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-semibold focus:ring-2 focus:ring-amber-500 bg-white"
-                >
-                  <option value="Natural / Dry">1. Natural (Dry) — Ceri Utuh Langsung Jemur (Sun Dried)</option>
-                  <option value="Full Washed">2. Washed (Wet) — Depulper, Tangki Fermentasi & Cuci</option>
-                  <option value="Honey (Yellow/Red)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir Lengket</option>
-                  <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek pada Moisture ~30-40%</option>
-                  <option value="Anaerobic Natural">Anaerobic Natural — Slow Sealed Ferment</option>
-                  <option value="Wine Process">Wine Process — Extended Maceration</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Metode Pengeringan
-                </label>
-                <select
-                  value={dryingMethod}
-                  onChange={(e) => setDryingMethod(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-semibold focus:ring-2 focus:ring-amber-500 bg-white"
-                >
-                  <option value="Solar Dryer Raised Bed">Solar Dryer Raised Bed (Dome UV)</option>
-                  <option value="Greenhouse Solar Dome">Greenhouse Solar Dome</option>
-                  <option value="Mechanical Controlled Dryer">Mechanical Controlled Dryer</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Operator / Penanggung Jawab Batch
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={operatorName}
-                  onChange={(e) => setOperatorName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase mb-1">
-                  Catatan Batch
-                </label>
-                <textarea
-                  rows={2}
-                  value={processNotes}
-                  onChange={(e) => setProcessNotes(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCherryToProcess(null)}
-                  className="px-4 py-2 rounded-xl border border-stone-300 font-bold"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold flex items-center gap-1.5 shadow-xs"
-                >
-                  <Flame className="w-4 h-4" />
-                  <span>Kirim ke Processing 7-Stage →</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* MODAL: EDIT ALOKASI LIMBAH SIRKULAR */}
       {editingWasteLot && (

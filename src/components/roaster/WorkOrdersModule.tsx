@@ -60,6 +60,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
   openCreateModalDirectly = false,
 }) => {
   const {
+    currentUser,
     workOrders,
     warehouseLots,
     masterProfiles,
@@ -91,7 +92,11 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
   const [formNotes, setFormNotes] = useState('Pesanan batch sangrai specialty untuk menu cafe.');
 
   // Filtering
-  const filteredWorkOrders = workOrders.filter((wo) => {
+  const myWorkOrders = workOrders.filter((w) => !w.roasterId || w.roasterId === currentUser?.id);
+  const myMasterProfiles = masterProfiles.filter((p) => !p.roasterId || p.roasterId === currentUser?.id);
+  const myRoasterMachines = roasterMachines.filter((m) => !m.roasterId || m.roasterId === currentUser?.id);
+
+  const filteredWorkOrders = myWorkOrders.filter((wo) => {
     const matchesQuery =
       wo.woNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       wo.greenBeanName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -104,14 +109,14 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
   });
 
   // KPI Calculations
-  const totalWos = workOrders.length;
-  const inProductionCount = workOrders.filter(
+  const totalWos = myWorkOrders.length;
+  const inProductionCount = myWorkOrders.filter(
     (w) => w.status === 'in_production' || w.status === 'roasting'
   ).length;
-  const qcPendingCount = workOrders.filter((w) => w.status === 'qc_pending').length;
-  const totalRoastedKgToday = workOrders.reduce((acc, curr) => acc + curr.actualRoastedKg, 0);
+  const qcPendingCount = myWorkOrders.filter((w) => w.status === 'qc_pending').length;
+  const totalRoastedKgToday = myWorkOrders.reduce((acc, curr) => acc + curr.actualRoastedKg, 0);
 
-  const completedWosWithLoss = workOrders.filter((w) => w.weightLossPercent > 0);
+  const completedWosWithLoss = myWorkOrders.filter((w) => w.weightLossPercent > 0);
   const avgRoastLoss =
     completedWosWithLoss.length > 0
       ? (
@@ -158,7 +163,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
     { label: string; bg: string; text: string; border: string; dot: string }
   > = {
     draft: { label: 'Draft', bg: 'bg-stone-100', text: 'text-stone-700', border: 'border-stone-200', dot: 'bg-stone-400' },
-    scheduled: { label: 'Scheduled', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', dot: 'bg-blue-500' },
+    scheduled: { label: 'Scheduled', bg: 'bg-stone-100', text: 'text-stone-800', border: 'border-stone-300', dot: 'bg-stone-500' },
     in_production: { label: 'In Production', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' },
     roasting: { label: 'Roasting Live', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-300', dot: 'bg-orange-500 animate-pulse' },
     qc_pending: { label: 'QC Pending', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', dot: 'bg-purple-500' },

@@ -57,7 +57,7 @@ const STATUS_BADGE: Record<string, { icon: React.ReactNode; className: string; l
   },
   approved: {
     icon: <ShieldCheck className="w-3 h-3" />,
-    className: 'bg-blue-100 text-blue-800 border-blue-300',
+    className: 'bg-amber-100 text-amber-900 border-amber-300',
     label: 'Disetujui',
   },
   received: {
@@ -110,14 +110,17 @@ export const PurchasingModule: React.FC = () => {
   const [sampleNotes, setSampleNotes] = useState('Wild strawberry jam, red apple, sweet cane sugar.');
 
   // Metrics
-  const totalSpend = purchaseOrders.reduce((acc, curr) => acc + curr.totalAmount, 0);
-  const pendingApprovalCount = purchaseOrders.filter((p) => p.status === 'pending_approval').length;
-  const approvedCount = purchaseOrders.filter((p) => p.status === 'approved').length;
-  const receivedCount = purchaseOrders.filter((p) => p.status === 'received').length;
-  const approvedSamplesCount = greenBeanSamples.filter((s) => s.status === 'approved_to_buy').length;
+  const myPOs = purchaseOrders.filter((p) => !p.roasterId || p.roasterId === currentUser?.id);
+  const mySamples = greenBeanSamples.filter((s) => !s.roasterId || s.roasterId === currentUser?.id);
+
+  const totalSpend = myPOs.reduce((acc, curr) => acc + curr.totalAmount, 0);
+  const pendingApprovalCount = myPOs.filter((p) => p.status === 'pending_approval').length;
+  const approvedCount = myPOs.filter((p) => p.status === 'approved').length;
+  const receivedCount = myPOs.filter((p) => p.status === 'received').length;
+  const approvedSamplesCount = mySamples.filter((s) => s.status === 'approved_to_buy').length;
 
   // Filtered lists
-  const filteredPOs = purchaseOrders.filter((po) => {
+  const filteredPOs = myPOs.filter((po) => {
     const matchesQuery =
       po.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       po.supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -126,7 +129,7 @@ export const PurchasingModule: React.FC = () => {
     return matchesQuery && matchesStatus;
   });
 
-  const filteredSamples = greenBeanSamples.filter((smp) => {
+  const filteredSamples = mySamples.filter((smp) => {
     return (
       smp.sampleName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       smp.supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -576,7 +579,7 @@ export const PurchasingModule: React.FC = () => {
 
               {(detailModalPO.status === 'approved' || detailModalPO.status === 'received') &&
                 detailModalPO.approvalSignedBy && (
-                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-[11px] text-blue-800">
+                  <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-[11px] text-amber-900">
                     <PenTool className="w-4 h-4 shrink-0" />
                     <span>
                       Ditanda tangani secara digital oleh <strong>{detailModalPO.approvalSignedBy}</strong>

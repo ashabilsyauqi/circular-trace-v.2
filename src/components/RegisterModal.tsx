@@ -105,6 +105,16 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       defaultOrgExample: 'e.g. Seduh Teduh Specialty Coffee',
       defaultLocExample: 'e.g. Jl. Riau, Kota Bandung',
     },
+    verifikator: {
+      title: 'Verifikator Mutu (Auditor)',
+      tier: 'Dewan Audit & Q-Grader',
+      desc: 'Audit kepatuhan EUDR, inspeksi stasiun pengolah, sertifikasi silo, uji sensori cupping SCA, dan terbitkan stempel resmi.',
+      icon: <ShieldCheck className="w-5 h-5 text-purple-600" />,
+      color: 'border-purple-500 ring-purple-500/20',
+      bgBadge: 'bg-purple-50 text-purple-700 border-purple-200',
+      defaultOrgExample: 'e.g. Dewan Sertifikasi Kopi Specialty & Q-Grader Lab',
+      defaultLocExample: 'e.g. Jakarta / Bandung',
+    },
   };
 
   const handleRegister = (e: React.FormEvent) => {

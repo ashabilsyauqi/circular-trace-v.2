@@ -42,7 +42,7 @@ export const SellingModule: React.FC = () => {
 
   // My Processed Green Bean Lots
   const myGreenLots = processedLots.filter(
-    (lot) => lot.processorId === currentUser?.id || true
+    (lot) => !lot.processorId || lot.processorId === currentUser?.id
   );
 
   // Filtered Green Bean Lots
@@ -60,8 +60,10 @@ export const SellingModule: React.FC = () => {
   // Sales Transactions where Processor is seller
   const mySalesTransactions = transactions.filter(
     (t) =>
-      t.fromRole === 'pengolah' ||
-      t.fromName === (currentUser?.organization || currentUser?.name)
+      t.fromName === currentUser?.name ||
+      t.toName === currentUser?.name ||
+      t.fromName === (currentUser?.organization || currentUser?.name) ||
+      t.toName === (currentUser?.organization || currentUser?.name)
   );
 
   // Filtered transactions
@@ -86,7 +88,7 @@ export const SellingModule: React.FC = () => {
 
   // Batch Profitability Report items (connecting batch intake to green bean sales value)
   const completedBatches = processingBatches.filter(
-    (b) => b.status === 'completed' || b.currentStage === 'packing_closure'
+    (b) => (!b.processorId || b.processorId === currentUser?.id) && (b.status === 'completed' || b.currentStage === 'packing_closure')
   );
 
   const handleOpenBarcode = (lot: ProcessedGreenBeanLot) => {

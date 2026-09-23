@@ -62,6 +62,7 @@ const PIPELINE_STAGES: PipelineStage[] = PROCESSOR_7_STAGES.map((s) => ({
 
 export const BatchesModule: React.FC = () => {
   const {
+    currentUser,
     processingBatches,
     processorCherryStock,
     farmerLots,
@@ -350,7 +351,10 @@ export const BatchesModule: React.FC = () => {
   };
 
   // Filtered Batches
-  const filteredBatches = processingBatches.filter((b) => {
+  const myBatches = processingBatches.filter((b) => !b.processorId || b.processorId === currentUser?.id);
+  const myCherryStock = processorCherryStock.filter((s) => !s.processorId || s.processorId === currentUser?.id);
+
+  const filteredBatches = myBatches.filter((b) => {
     const q = searchQuery.toLowerCase();
     const matchSearch =
       b.id.toLowerCase().includes(q) ||
@@ -370,10 +374,10 @@ export const BatchesModule: React.FC = () => {
   });
 
   // KPIs
-  const totalBatchesCount = processingBatches.length;
-  const inProgressBatches = processingBatches.filter((b) => b.status === 'in_progress' || (b.status as string) === 'draft' || !b.status);
-  const totalCherryProcessedKg = processingBatches.reduce((acc, b) => acc + (b.intakeLog?.cherryWeightKg || 0), 0);
-  const totalGreenBeanProducedKg = processingBatches.reduce(
+  const totalBatchesCount = myBatches.length;
+  const inProgressBatches = myBatches.filter((b) => b.status === 'in_progress' || (b.status as string) === 'draft' || !b.status);
+  const totalCherryProcessedKg = myBatches.reduce((acc, b) => acc + (b.intakeLog?.cherryWeightKg || 0), 0);
+  const totalGreenBeanProducedKg = myBatches.reduce(
     (acc, b) => acc + (b.packingLog?.finalGreenBeanWeightKg || b.millingLog?.outputGreenBeanWeightKg || 0),
     0
   );
@@ -482,7 +486,7 @@ export const BatchesModule: React.FC = () => {
                     : 'text-stone-600 hover:bg-stone-100'
                 }`}
               >
-                Semua Batch ({processingBatches.length})
+                Semua Batch ({myBatches.length})
               </button>
 
               <button
@@ -495,7 +499,7 @@ export const BatchesModule: React.FC = () => {
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Selesai / Terbit di Marketplace ({processingBatches.filter((b) => b.status === 'completed').length})</span>
+                <span>Selesai / Terbit di Marketplace ({myBatches.filter((b) => b.status === 'completed').length})</span>
               </button>
             </div>
 

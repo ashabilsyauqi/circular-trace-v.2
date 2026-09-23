@@ -164,9 +164,12 @@ export const WarehouseView: React.FC = () => {
     buyGreenBeanAndStoreWarehouse,
     updateWarehouseLotGrading,
     transactions,
+    warehouseActiveTab,
+    setWarehouseActiveTab,
   } = useCoffee();
 
-  const [activeTab, setActiveTab] = useState<'inventory' | 'marketplace' | 'history'>('inventory');
+  const activeTab = warehouseActiveTab || 'inventory';
+  const setActiveTab = setWarehouseActiveTab;
   const [selectedGreenBeanToBuy, setSelectedGreenBeanToBuy] = useState<ProcessedGreenBeanLot | null>(null);
 
   // Search & Filter
@@ -213,15 +216,15 @@ export const WarehouseView: React.FC = () => {
   // Data lot & transactions
   const availableGreenBeans = processedLots.filter((lot) => lot.availableWeightKg > 0);
   const myWarehouseLots = warehouseLots.filter(
-    (lot) => lot.warehouseId === currentUser?.id || true
+    (lot) => !lot.warehouseId || lot.warehouseId === currentUser?.id
   );
 
   const myWarehouseTransactions = transactions.filter(
     (t) =>
       t.fromName === currentUser?.name ||
       t.toName === currentUser?.name ||
-      t.fromRole === 'gudang' ||
-      t.toRole === 'gudang'
+      t.fromName === (currentUser?.organization || currentUser?.name) ||
+      t.toName === (currentUser?.organization || currentUser?.name)
   );
 
   const totalStoredKg = myWarehouseLots.reduce((acc, curr) => acc + curr.weightKg, 0);

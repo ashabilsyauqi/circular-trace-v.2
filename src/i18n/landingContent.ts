@@ -355,6 +355,26 @@ const idServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Scan QR Terintegrasi', value: '✓ Siap Ditampilkan ke Ponsel Pelanggan' },
     ],
   },
+  verifikator: {
+    badge: 'Pilar 6: Dewan Verifikator & Kualitas',
+    title: 'Audit Standar Mutu, Cupping Sensori & Stempel Resmi',
+    desc: 'Auditor spesialis memverifikasi kepatuhan regulasi EUDR bebas deforestasi lahan, standar eco-processing stasiun mill, hermetic storage silo, uji cicip cangkir (cupping) SCA pada biji sangrai, dan menerbitkan stempel sertifikasi ber-tanda tangan kriptografis.',
+    bullets: [
+      'Audit batas lahan GPS & verifikasi kepatuhan EUDR anti-deforestasi.',
+      'Uji cicip sensori cangkir (SCA Cupping Lab) 10 atribut untuk biji sangrai.',
+      'Penerbitan sertifikat digital resmi ber-hash tanda tangan SHA-256.',
+    ],
+    ctaOpen: 'Buka Panel Verifikator',
+    ctaRegister: 'Masuk sebagai Auditor',
+    previewTitle: 'Sertifikat Verifikasi Mutu',
+    previewRows: [
+      { label: 'Tipe Audit', value: 'SCA Cupped & Certified Specialty Roast' },
+      { label: 'Nomor Sertifikat', value: 'CERT-CQI-QGRADER-2026-8841' },
+      { label: 'Hasil Evaluasi', value: '87.50 SCA Score (Specialty Grade)' },
+      { label: 'Auditor Penanggung Jawab', value: 'Jessica Tan, CQI Q-Grader' },
+      { label: 'Tanda Tangan Digital', value: 'SHA256 Validated • Terotentikasi' },
+    ],
+  },
 };
 
 const enServicePanels: Record<UserRole, ServicePanel> = {
@@ -456,6 +476,26 @@ const enServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Farmer & Elevation', value: 'Asep Supriatna (1,550 masl)' },
       { label: 'Roasted By', value: 'Karsa Craft Roastery' },
       { label: 'Integrated QR Scan', value: "✓ Ready to Show on Customer's Phone" },
+    ],
+  },
+  verifikator: {
+    badge: 'Pillar 6: Quality Verification & Audit Board',
+    title: 'Quality Standards Audit, Sensory Cupping & Official Stamp',
+    desc: 'Specialist auditors verify deforestation-free EUDR farm compliance, zero-waste mill eco-processing standards, hermetic silo storage, SCA sensory cup tasting on roasted beans, and issue cryptographically signed digital certification stamps.',
+    bullets: [
+      'GPS farm boundary audit & anti-deforestation EUDR compliance verification.',
+      'Sensory cup tasting (SCA Cupping Lab) evaluating 10 specialty attributes.',
+      'Official digital certificate issuance with SHA-256 cryptographic signatures.',
+    ],
+    ctaOpen: 'Open Verifier Panel',
+    ctaRegister: 'Sign In as Auditor',
+    previewTitle: 'Quality Certification Certificate',
+    previewRows: [
+      { label: 'Audit Type', value: 'SCA Cupped & Certified Specialty Roast' },
+      { label: 'Certificate Number', value: 'CERT-CQI-QGRADER-2026-8841' },
+      { label: 'Evaluation Result', value: '87.50 SCA Score (Specialty Grade)' },
+      { label: 'Lead Auditor', value: 'Jessica Tan, CQI Q-Grader' },
+      { label: 'Digital Signature', value: 'SHA256 Validated • Authenticated' },
     ],
   },
 };

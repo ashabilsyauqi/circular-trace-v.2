@@ -27,17 +27,19 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
   const { currentUser, farmerLots, processedLots, processingBatches, processorCherryStock, transactions } = useCoffee();
 
   const availableFarmerLots = farmerLots.filter((lot) => lot.availableWeightKg > 0);
-  const myProcessedLots = processedLots.filter((lot) => lot.processorId === currentUser?.id || true);
-  const inProgressBatches = processingBatches.filter((b) => b.status === 'in_progress');
+  const myProcessedLots = processedLots.filter((lot) => !lot.processorId || lot.processorId === currentUser?.id);
+  const myBatches = processingBatches.filter((b) => !b.processorId || b.processorId === currentUser?.id);
+  const inProgressBatches = myBatches.filter((b) => b.status === 'in_progress');
+  const myCherryStock = processorCherryStock.filter((s) => !s.processorId || s.processorId === currentUser?.id);
   const myProcessorTransactions = transactions.filter(
     (trx) =>
       trx.fromName === currentUser?.name ||
       trx.toName === currentUser?.name ||
-      trx.fromRole === 'pengolah' ||
-      trx.toRole === 'pengolah'
+      trx.fromName === currentUser?.organization ||
+      trx.toName === currentUser?.organization
   );
 
-  const totalCherryStockKg = processorCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
+  const totalCherryStockKg = myCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
   const totalProcessedKg = myProcessedLots.reduce((acc, curr) => acc + curr.greenBeanWeightKg, 0);
   const availableGreenBeanKg = myProcessedLots.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
 

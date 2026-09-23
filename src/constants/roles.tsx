@@ -6,6 +6,7 @@ import {
   Warehouse,
   Flame,
   Coffee,
+  ShieldCheck,
 } from 'lucide-react';
 
 export const ROLE_DETAILS: Record<
@@ -41,5 +42,11 @@ export const ROLE_DETAILS: Record<
     badgeClass: 'bg-stone-200 text-stone-800 border-stone-400',
     icon: <Coffee className="w-4 h-4 text-stone-700" />,
     description: 'Beli roasted beans & sajikan dengan Farm-to-Cup Traceability',
+  },
+  verifikator: {
+    label: 'Verifikator (Auditor QA & Q-Grader)',
+    badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
+    icon: <ShieldCheck className="w-4 h-4 text-purple-700" />,
+    description: 'Audit lahan EUDR, sertifikasi olahan, uji silo, cupping sensori roast, & stempel mutu resmi',
   },
 };

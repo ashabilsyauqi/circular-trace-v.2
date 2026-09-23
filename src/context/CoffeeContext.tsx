@@ -4,6 +4,8 @@ import {
   AppUser,
   UserRole,
   MarketplaceCategory,
+  CoffeeFarm,
+  FarmWeatherData,
   FarmerHarvestLot,
   ProcessedGreenBeanLot,
   WarehouseLot,
@@ -14,6 +16,8 @@ import {
   SupplyChainTransaction,
   CoffeeWasteManagement,
   WarehouseGradeTier,
+  CuppingEvaluationData,
+  VerificationStamp,
 } from '../types/coffee';
 import {
   WorkOrder,
@@ -36,6 +40,7 @@ import {
 } from '../types/processorErp';
 import {
   MOCK_USERS,
+  INITIAL_COFFEE_FARMS,
   INITIAL_FARMER_LOTS,
   INITIAL_PROCESSED_LOTS,
   INITIAL_WAREHOUSE_LOTS,
@@ -66,6 +71,10 @@ interface CoffeeContextType {
   users: AppUser[];
   loginAsRole: (role: UserRole) => void;
   loginAsUser: (userId: string) => void;
+  login: (email: string, password: string, rememberMe?: boolean) => { success: boolean; message: string; user?: AppUser };
+  requestPasswordReset: (email: string) => { success: boolean; message: string; resetCode?: string };
+  verifyResetCode: (email: string, code: string) => { success: boolean; message: string };
+  resetPassword: (email: string, code: string, newPassword: string) => { success: boolean; message: string };
   registerUser?: (userData: {
     name: string;
     role: UserRole;
@@ -77,10 +86,37 @@ interface CoffeeContextType {
   logout: () => void;
   activeView: 'landing' | 'dashboard' | 'marketplace' | 'transactions';
   setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
-  roasterActiveTab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history';
-  setRoasterActiveTab: (tab: 'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history') => void;
-  processorActiveTab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history';
-  setProcessorActiveTab: (tab: 'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history') => void;
+  farmerActiveTab: 'farms' | 'upload' | 'catalog' | 'history';
+  setFarmerActiveTab: (tab: 'farms' | 'upload' | 'catalog' | 'history') => void;
+  roasterActiveTab: 'purchasing' | 'inventory' | 'work_orders' | 'production' | 'qc' | 'selling' | 'history' | 'dashboard';
+  setRoasterActiveTab: (tab: 'purchasing' | 'inventory' | 'work_orders' | 'production' | 'qc' | 'selling' | 'history' | 'dashboard') => void;
+  processorActiveTab: 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history' | 'dashboard';
+  setProcessorActiveTab: (tab: 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history' | 'dashboard') => void;
+  warehouseActiveTab: 'inventory' | 'marketplace' | 'history';
+  setWarehouseActiveTab: (tab: 'inventory' | 'marketplace' | 'history') => void;
+  cafeActiveTab: 'inventory' | 'calculator' | 'my_products' | 'create_product' | 'history';
+  setCafeActiveTab: (tab: 'inventory' | 'calculator' | 'my_products' | 'create_product' | 'history') => void;
+  verifierActiveTab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history';
+  setVerifierActiveTab: (tab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history') => void;
+  verificationStamps: VerificationStamp[];
+  issueVerificationStamp: (params: {
+    targetType: 'farm' | 'harvest' | 'processed' | 'warehouse' | 'roasted' | 'cafe';
+    targetId: string;
+    stampType: VerificationStamp['stampType'];
+    title: string;
+    scoreDisplay?: string;
+    notes: string;
+    cuppingEvaluation?: CuppingEvaluationData;
+  }) => { success: boolean; message: string; stamp?: VerificationStamp };
+  revokeVerificationStamp: (
+    targetType: 'farm' | 'harvest' | 'processed' | 'warehouse' | 'roasted' | 'cafe',
+    targetId: string
+  ) => void;
+  coffeeFarms: CoffeeFarm[];
+  addCoffeeFarm: (farmData: Omit<CoffeeFarm, 'id' | 'createdAt'>) => CoffeeFarm;
+  updateCoffeeFarm: (farm: CoffeeFarm) => void;
+  deleteCoffeeFarm: (farmId: string) => void;
+  seedCoffeeFarms: () => void;
   activeProcessingBatchId: string | null;
   setActiveProcessingBatchId: (id: string | null) => void;
   processorCherryStock: ProcessorCherryStockItem[];
@@ -121,6 +157,7 @@ interface CoffeeContextType {
   addFarmerHarvest: (
     lotData: Omit<FarmerHarvestLot, 'id' | 'createdAt' | 'status' | 'availableWeightKg' | 'farmerId' | 'farmerName'>
   ) => FarmerHarvestLot | null;
+  updateFarmerHarvestLot: (lot: FarmerHarvestLot) => void;
   buyCherryAndCreateProcess: (
     farmerLotId: string,
     boughtKg: number,
@@ -297,17 +334,92 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [users, setUsers] = useState<AppUser[]>(() => {
     const saved = localStorage.getItem('cct_users');
-    return saved ? JSON.parse(saved) : MOCK_USERS;
+    if (saved) {
+      try {
+        const parsed: AppUser[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const merged = [...parsed];
+          MOCK_USERS.forEach((mockUser) => {
+            const idx = merged.findIndex((u) => u.id === mockUser.id);
+            if (idx >= 0) {
+              merged[idx] = {
+                ...mockUser,
+                ...merged[idx],
+                email: merged[idx].email || mockUser.email,
+                password: merged[idx].password || mockUser.password,
+                verifierDomain: merged[idx].verifierDomain || mockUser.verifierDomain,
+              };
+            } else {
+              merged.push(mockUser);
+            }
+          });
+          return merged;
+        }
+      } catch (e) {
+        console.error('Failed to parse cct_users', e);
+      }
+    }
+    return MOCK_USERS;
   });
 
   const [activeView, setActiveView] = useState<'landing' | 'dashboard' | 'marketplace' | 'transactions'>('landing');
+  const [farmerActiveTab, setFarmerActiveTab] = useState<'farms' | 'upload' | 'catalog' | 'history'>('farms');
   const [roasterActiveTab, setRoasterActiveTab] = useState<
-    'dashboard' | 'work_orders' | 'purchasing' | 'production' | 'qc' | 'inventory' | 'selling' | 'marketplace' | 'history'
-  >('dashboard');
+    'purchasing' | 'inventory' | 'work_orders' | 'production' | 'qc' | 'selling' | 'history' | 'dashboard'
+  >('purchasing');
   const [processorActiveTab, setProcessorActiveTab] = useState<
-    'dashboard' | 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history'
-  >('dashboard');
+    'sourcing' | 'batches' | 'inventory' | 'selling' | 'history' | 'dashboard'
+  >('sourcing');
+  const [warehouseActiveTab, setWarehouseActiveTab] = useState<'inventory' | 'marketplace' | 'history'>('inventory');
+  const [cafeActiveTab, setCafeActiveTab] = useState<
+    'inventory' | 'calculator' | 'my_products' | 'create_product' | 'history'
+  >('inventory');
+  const [verifierActiveTab, setVerifierActiveTab] = useState<
+    'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history'
+  >('petani');
+
+  const [verificationStamps, setVerificationStamps] = useState<VerificationStamp[]>(() => {
+    const saved = localStorage.getItem('cct_verificationStamps');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        console.error('Failed to parse cct_verificationStamps', e);
+      }
+    }
+    const initialStamps: VerificationStamp[] = [];
+    INITIAL_COFFEE_FARMS.forEach((f) => {
+      if (f.verificationStamp) initialStamps.push(f.verificationStamp);
+    });
+    INITIAL_FARMER_LOTS.forEach((lot) => {
+      if (lot.verificationStamp) initialStamps.push(lot.verificationStamp);
+    });
+    INITIAL_ROASTED_LOTS.forEach((r) => {
+      if (r.verificationStamp) initialStamps.push(r.verificationStamp);
+    });
+    return initialStamps;
+  });
+
+  const [resetCodes, setResetCodes] = useState<Record<string, { code: string; expiresAt: number }>>({});
+
+  useEffect(() => {
+    localStorage.setItem('cct_verificationStamps', JSON.stringify(verificationStamps));
+  }, [verificationStamps]);
   const [activeProcessingBatchId, setActiveProcessingBatchId] = useState<string | null>(null);
+
+  const [coffeeFarms, setCoffeeFarms] = useState<CoffeeFarm[]>(() => {
+    const saved = localStorage.getItem('cct_coffeeFarms');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        // Fallback
+      }
+    }
+    return INITIAL_COFFEE_FARMS;
+  });
 
   const [processingBatches, setProcessingBatches] = useState<ProcessingBatch[]>(() => {
     const saved = localStorage.getItem('cct_processingBatches');
@@ -322,6 +434,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     localStorage.setItem('cct_users', JSON.stringify(users));
   }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('cct_coffeeFarms', JSON.stringify(coffeeFarms));
+  }, [coffeeFarms]);
 
   useEffect(() => {
     localStorage.setItem('cct_processingBatches', JSON.stringify(processingBatches));
@@ -491,6 +607,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (matched) {
       setCurrentUser(matched);
       setActiveView('dashboard');
+      if (matched.role === 'verifikator' && matched.verifierDomain && matched.verifierDomain !== 'all') {
+        setVerifierActiveTab(matched.verifierDomain);
+      }
     }
   };
 
@@ -499,6 +618,237 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (matched) {
       setCurrentUser(matched);
       setActiveView('dashboard');
+      if (matched.role === 'verifikator' && matched.verifierDomain && matched.verifierDomain !== 'all') {
+        setVerifierActiveTab(matched.verifierDomain);
+      }
+    }
+  };
+
+  const login = (
+    email: string,
+    password: string,
+    rememberMe: boolean = false
+  ): { success: boolean; message: string; user?: AppUser } => {
+    const cleanEmail = email.toLowerCase().trim();
+    const matched =
+      users.find((u) => (u.email && u.email.toLowerCase() === cleanEmail) || u.id === email.trim()) ||
+      MOCK_USERS.find((u) => (u.email && u.email.toLowerCase() === cleanEmail) || u.id === email.trim());
+
+    if (!matched) {
+      return { success: false, message: 'Akun dengan email tersebut tidak ditemukan dalam sistem.' };
+    }
+
+    if (matched.password && matched.password !== password) {
+      return { success: false, message: 'Kata sandi salah. Silakan coba kembali atau gunakan Lupa Password.' };
+    }
+
+    setCurrentUser(matched);
+    setActiveView('dashboard');
+    if (matched.role === 'verifikator' && matched.verifierDomain && matched.verifierDomain !== 'all') {
+      setVerifierActiveTab(matched.verifierDomain);
+    }
+    if (rememberMe) {
+      localStorage.setItem('cct_rememberedEmail', cleanEmail);
+    } else {
+      localStorage.removeItem('cct_rememberedEmail');
+    }
+
+    return {
+      success: true,
+      message: `Selamat datang kembali, ${matched.name}!`,
+      user: matched,
+    };
+  };
+
+  const requestPasswordReset = (email: string): { success: boolean; message: string; resetCode?: string } => {
+    const cleanEmail = email.toLowerCase().trim();
+    const matched = users.find((u) => u.email?.toLowerCase() === cleanEmail);
+    if (!matched) {
+      return {
+        success: false,
+        message: `Email "${email}" tidak terdaftar pada direktori Circular Coffee Trace.`,
+      };
+    }
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 menit
+
+    setResetCodes((prev) => ({
+      ...prev,
+      [cleanEmail]: { code: resetCode, expiresAt },
+    }));
+
+    return {
+      success: true,
+      message: `Kode pemulihan keamanan 6-digit berhasil dikirim ke ${cleanEmail}.`,
+      resetCode,
+    };
+  };
+
+  const verifyResetCode = (email: string, code: string): { success: boolean; message: string } => {
+    const cleanEmail = email.toLowerCase().trim();
+    const record = resetCodes[cleanEmail];
+    if (!record) {
+      return { success: false, message: 'Tidak ada permintaan reset aktif untuk email ini. Silakan ajukan ulang.' };
+    }
+    if (Date.now() > record.expiresAt) {
+      return { success: false, message: 'Kode OTP telah kedaluwarsa. Silakan minta kode baru.' };
+    }
+    if (record.code !== code.trim()) {
+      return { success: false, message: 'Kode OTP tidak sesuai. Periksa 6 digit kode Anda.' };
+    }
+    return { success: true, message: 'Kode verifikasi valid.' };
+  };
+
+  const resetPassword = (
+    email: string,
+    code: string,
+    newPassword: string
+  ): { success: boolean; message: string } => {
+    const check = verifyResetCode(email, code);
+    if (!check.success) return check;
+
+    const cleanEmail = email.toLowerCase().trim();
+    setUsers((prev) =>
+      prev.map((u) => (u.email?.toLowerCase() === cleanEmail ? { ...u, password: newPassword } : u))
+    );
+
+    if (currentUser?.email?.toLowerCase() === cleanEmail) {
+      setCurrentUser((prev) => (prev ? { ...prev, password: newPassword } : null));
+    }
+
+    setResetCodes((prev) => {
+      const copy = { ...prev };
+      delete copy[cleanEmail];
+      return copy;
+    });
+
+    return {
+      success: true,
+      message: 'Kata sandi berhasil diperbarui. Silakan login dengan password baru Anda.',
+    };
+  };
+
+  const issueVerificationStamp = (params: {
+    targetType: 'farm' | 'harvest' | 'processed' | 'warehouse' | 'roasted' | 'cafe';
+    targetId: string;
+    stampType: VerificationStamp['stampType'];
+    title: string;
+    scoreDisplay?: string;
+    notes: string;
+    cuppingEvaluation?: CuppingEvaluationData;
+  }): { success: boolean; message: string; stamp?: VerificationStamp } => {
+    const stampId = `STAMP-${Date.now().toString().slice(-4)}`;
+    const prefix = params.stampType.split('_')[0].toUpperCase();
+    const certNumber = `CERT-${prefix}-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+    const randomHash = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    const digitalSignatureHash = `SHA256:${randomHash}`;
+
+    const newStamp: VerificationStamp = {
+      id: stampId,
+      stampType: params.stampType,
+      title: params.title,
+      certificateNumber: certNumber,
+      verifierId: currentUser?.id || 'user-verifikator',
+      verifierName: currentUser?.name || 'Auditor Verifikator Kopi',
+      verifierTitle: currentUser?.organization || 'Badan Sertifikasi & Kualitas Kopi',
+      verifierOrg: currentUser?.organization || 'Circular Coffee Trace Quality Board',
+      verifiedAt: new Date().toISOString().split('T')[0],
+      status: 'verified',
+      scoreDisplay: params.scoreDisplay,
+      notes: params.notes,
+      digitalSignatureHash,
+      cuppingEvaluation: params.cuppingEvaluation,
+    };
+
+    if (params.targetType === 'farm') {
+      setCoffeeFarms((prev) =>
+        prev.map((f) => (f.id === params.targetId ? { ...f, verificationStatus: 'verified', verificationStamp: newStamp } : f))
+      );
+    } else if (params.targetType === 'harvest') {
+      setFarmerLots((prev) =>
+        prev.map((l) => (l.id === params.targetId ? { ...l, verificationStatus: 'verified', verificationStamp: newStamp } : l))
+      );
+    } else if (params.targetType === 'processed') {
+      setProcessedLots((prev) =>
+        prev.map((l) => (l.id === params.targetId ? { ...l, verificationStatus: 'verified', verificationStamp: newStamp } : l))
+      );
+    } else if (params.targetType === 'warehouse') {
+      setWarehouseLots((prev) =>
+        prev.map((l) => (l.id === params.targetId ? { ...l, verificationStatus: 'verified', verificationStamp: newStamp } : l))
+      );
+    } else if (params.targetType === 'roasted') {
+      setRoastedLots((prev) =>
+        prev.map((l) => {
+          if (l.id === params.targetId) {
+            return {
+              ...l,
+              verificationStatus: 'verified',
+              verificationStamp: newStamp,
+              scaCuppingScore: params.cuppingEvaluation ? params.cuppingEvaluation.totalScore : l.scaCuppingScore,
+              tastingNotes: params.cuppingEvaluation ? params.cuppingEvaluation.tastingNotes : l.tastingNotes,
+            };
+          }
+          return l;
+        })
+      );
+    } else if (params.targetType === 'cafe') {
+      setCafeProducts((prev) =>
+        prev.map((p) => (p.id === params.targetId ? { ...p, verificationStatus: 'verified', verificationStamp: newStamp } : p))
+      );
+    }
+
+    setVerificationStamps((prev) => [newStamp, ...prev.filter((s) => s.id !== stampId)]);
+
+    const newTx: SupplyChainTransaction = {
+      id: `TX-AUDIT-${Date.now().toString().slice(-4)}`,
+      date: new Date().toISOString().split('T')[0],
+      fromRole: 'verifikator',
+      fromName: currentUser?.name || 'Tim Verifikator',
+      toRole: (params.targetType === 'harvest' ? 'petani' : params.targetType === 'processed' ? 'pengolah' : params.targetType === 'warehouse' ? 'gudang' : params.targetType === 'roasted' ? 'roaster' : 'cafe') as UserRole,
+      toName: `Verifikasi ${params.targetId}`,
+      itemName: `Stempel Audit: ${params.title} (${certNumber})`,
+      quantity: '1 Sertifikat',
+      totalAmount: 0,
+      status: 'Selesai',
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+
+    return {
+      success: true,
+      message: `Stempel sertifikasi "${params.title}" berhasil disematkan ke ${params.targetId}.`,
+      stamp: newStamp,
+    };
+  };
+
+  const revokeVerificationStamp = (
+    targetType: 'farm' | 'harvest' | 'processed' | 'warehouse' | 'roasted' | 'cafe',
+    targetId: string
+  ) => {
+    if (targetType === 'farm') {
+      setCoffeeFarms((prev) =>
+        prev.map((f) => (f.id === targetId ? { ...f, verificationStatus: 'unverified', verificationStamp: undefined } : f))
+      );
+    } else if (targetType === 'harvest') {
+      setFarmerLots((prev) =>
+        prev.map((l) => (l.id === targetId ? { ...l, verificationStatus: 'unverified', verificationStamp: undefined } : l))
+      );
+    } else if (targetType === 'processed') {
+      setProcessedLots((prev) =>
+        prev.map((l) => (l.id === targetId ? { ...l, verificationStatus: 'unverified', verificationStamp: undefined } : l))
+      );
+    } else if (targetType === 'warehouse') {
+      setWarehouseLots((prev) =>
+        prev.map((l) => (l.id === targetId ? { ...l, verificationStatus: 'unverified', verificationStamp: undefined } : l))
+      );
+    } else if (targetType === 'roasted') {
+      setRoastedLots((prev) =>
+        prev.map((l) => (l.id === targetId ? { ...l, verificationStatus: 'unverified', verificationStamp: undefined } : l))
+      );
+    } else if (targetType === 'cafe') {
+      setCafeProducts((prev) =>
+        prev.map((p) => (p.id === targetId ? { ...p, verificationStatus: 'unverified', verificationStamp: undefined } : p))
+      );
     }
   };
 
@@ -516,6 +866,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       gudang: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
       roaster: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80',
       cafe: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      verifikator: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
     };
 
     const newUser: AppUser = {
@@ -540,25 +891,130 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCurrentUser(null);
   };
 
+  // 0. Manajemen Kebun / Lahan Petani
+  const addCoffeeFarm = (farmData: Omit<CoffeeFarm, 'id' | 'createdAt'>): CoffeeFarm => {
+    const newFarmId = `FARM-${Date.now().toString().slice(-4)}`;
+    const lat = farmData.coordinates?.latitude || -7.1824;
+    const lng = farmData.coordinates?.longitude || 107.5612;
+    const alt = farmData.altitudeMeters || 1550;
+    const defaultPatoks = farmData.patokList || [
+      {
+        id: 'PTK-01',
+        name: 'Patok 1 (Sudut Utara - Batas Hutan)',
+        latitude: Number((lat + 0.00072).toFixed(6)),
+        longitude: Number((lng - 0.00035).toFixed(6)),
+        elevationMeters: alt + 25,
+        physicalType: 'Patok Beton BPN' as const,
+        condition: 'Kondisi Baik & Kokoh' as const,
+        landmarkNote: 'Sebelah pohon beringin tua, sempadan hutan',
+      },
+      {
+        id: 'PTK-02',
+        name: 'Patok 2 (Sudut Timur Laut - Jalan Tani)',
+        latitude: Number((lat + 0.00045).toFixed(6)),
+        longitude: Number((lng + 0.00085).toFixed(6)),
+        elevationMeters: alt + 15,
+        physicalType: 'Patok Beton BPN' as const,
+        condition: 'Kondisi Baik & Kokoh' as const,
+        landmarkNote: 'Di persimpangan jalan setapak blok timur',
+      },
+      {
+        id: 'PTK-03',
+        name: 'Patok 3 (Sudut Tenggara - Batas Parit)',
+        latitude: Number((lat - 0.00042).toFixed(6)),
+        longitude: Number((lng + 0.00078).toFixed(6)),
+        elevationMeters: alt - 10,
+        physicalType: 'Pipa Besi Cor' as const,
+        condition: 'Kondisi Baik & Kokoh' as const,
+        landmarkNote: 'Batas parit terasering kebun bawah',
+      },
+      {
+        id: 'PTK-04',
+        name: 'Patok 4 (Sudut Selatan - Sempadan Sungai)',
+        latitude: Number((lat - 0.00085).toFixed(6)),
+        longitude: Number((lng - 0.00022).toFixed(6)),
+        elevationMeters: alt - 30,
+        physicalType: 'Batu Alam / Terasering' as const,
+        condition: 'Kondisi Baik & Kokoh' as const,
+        landmarkNote: 'Batu andesit penanda sempadan mata air',
+      },
+      {
+        id: 'PTK-05',
+        name: 'Patok 5 (Sudut Barat Daya - Pohon Sengon)',
+        latitude: Number((lat - 0.00015).toFixed(6)),
+        longitude: Number((lng - 0.00095).toFixed(6)),
+        elevationMeters: alt + 5,
+        physicalType: 'Pohon Batas Alami' as const,
+        condition: 'Kondisi Baik & Kokoh' as const,
+        landmarkNote: 'Pohon sengon besar no. register SG-01',
+      },
+    ];
+
+    const newFarm: CoffeeFarm = {
+      ...farmData,
+      id: newFarmId,
+      farmerId: currentUser?.id || farmData.farmerId || 'user-petani-1',
+      farmerName: currentUser?.name || farmData.farmerName || 'Asep Supriatna',
+      patokList: defaultPatoks,
+      createdAt: new Date().toISOString().split('T')[0],
+      verificationStatus: 'pending',
+    };
+    setCoffeeFarms((prev) => [newFarm, ...prev]);
+    return newFarm;
+  };
+
+  const updateCoffeeFarm = (updated: CoffeeFarm) => {
+    setCoffeeFarms((prev) => prev.map((f) => (f.id === updated.id ? updated : f)));
+  };
+
+  const deleteCoffeeFarm = (farmId: string) => {
+    setCoffeeFarms((prev) => prev.filter((f) => f.id !== farmId));
+  };
+
+  const seedCoffeeFarms = () => {
+    setCoffeeFarms(INITIAL_COFFEE_FARMS);
+    localStorage.setItem('cct_coffeeFarms', JSON.stringify(INITIAL_COFFEE_FARMS));
+  };
+
+  // 1. Pendaftaran Panen Ceri Petani
   const addFarmerHarvest = (
     lotData: Omit<FarmerHarvestLot, 'id' | 'createdAt' | 'status' | 'availableWeightKg' | 'farmerId' | 'farmerName'>
   ): FarmerHarvestLot | null => {
     if (!currentUser) return null;
     const newLotId = `LOT-PTN-${Date.now().toString().slice(-4)}`;
+
+    // Auto enrich from selected coffee farm if present
+    const linkedFarm = lotData.farmId ? coffeeFarms.find((f) => f.id === lotData.farmId) : undefined;
+
     const newLot: FarmerHarvestLot = {
       ...lotData,
       id: newLotId,
       farmerId: currentUser.id,
       farmerName: currentUser.name,
+      farmId: lotData.farmId || linkedFarm?.id,
+      farmName: lotData.farmName || linkedFarm?.farmName,
+      farmLocation: lotData.farmLocation || linkedFarm?.location || currentUser.location || 'Pangalengan, Jawa Barat',
+      altitude: lotData.altitude || linkedFarm?.altitudeDisplay || '1.550 mdpl',
+      weatherSnapshot: lotData.weatherSnapshot || linkedFarm?.weatherData,
+      soilType: lotData.soilType || linkedFarm?.soilType,
+      shadeTrees: lotData.shadeTrees || linkedFarm?.shadeTrees,
       availableWeightKg: lotData.totalWeightKg,
       status: 'available',
       createdAt: new Date().toISOString().split('T')[0],
+      verificationStatus: 'pending',
       photoUrl:
         lotData.photoUrl ||
+        linkedFarm?.photoUrl ||
         'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
     };
     setFarmerLots((prev) => [newLot, ...prev]);
     return newLot;
+  };
+
+  const updateFarmerHarvestLot = (updatedLot: FarmerHarvestLot) => {
+    setFarmerLots((prev) =>
+      prev.map((lot) => (lot.id === updatedLot.id ? updatedLot : lot))
+    );
   };
 
   // 2. Pengolah konversi cherry ke Green Bean
@@ -1528,6 +1984,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           { label: 'Standar Petik', value: lot.pickingMethod.split(' ')[0] },
           { label: 'Tanggal Panen', value: lot.harvestDate },
         ],
+        verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
+        verificationStamp: lot.verificationStamp,
         canTrace: false,
         rawItem: lot,
       })),
@@ -1561,6 +2019,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           { label: 'Sortasi Defect', value: `${lot.defectCount} defect/350g` },
           { label: 'Grade Biji', value: lot.grade },
         ],
+        verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
+        verificationStamp: lot.verificationStamp,
         canTrace: true,
         rawItem: lot,
       })),
@@ -1599,6 +2059,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           { label: 'Verified SCA', value: `${lot.verifiedScaScore} Score` },
           { label: 'Kemasan & Silo', value: `${lot.packagingType.split(' ')[0]} | ${lot.storageLocation}` },
         ],
+        verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
+        verificationStamp: lot.verificationStamp,
         canTrace: true,
         rawItem: lot,
       })),
@@ -1634,6 +2096,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           { label: 'Mesin Sangrai', value: lot.roasterMachine },
           { label: 'SCA Score', value: `${lot.scaCuppingScore}` },
         ],
+        verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
+        verificationStamp: lot.verificationStamp,
         canTrace: true,
         rawItem: lot,
       })),
@@ -1886,6 +2350,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newWo: WorkOrder = {
       ...woData,
       id: newId,
+      roasterId: woData.roasterId || currentUser?.id || 'user-roaster-1',
       woNumber: newWoNumber,
       actualGreenKg: 0,
       actualRoastedKg: 0,
@@ -1954,6 +2419,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newPo: PurchaseOrder = {
       ...poData,
       id: newId,
+      roasterId: poData.roasterId || currentUser?.id || 'user-roaster-1',
       poNumber: newPoNumber,
     };
     setPurchaseOrders((prev) => [newPo, ...prev]);
@@ -2000,6 +2466,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const newPo = createPurchaseOrder({
+      roasterId: currentUser.id,
       supplierName: item.sellerOrg || item.sellerName,
       supplierRole: item.sellerRole as 'petani' | 'pengolah' | 'gudang',
       orderDate: new Date().toISOString().split('T')[0],
@@ -2188,6 +2655,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const readyMachine = roasterMachines.find((m) => m.status === 'ready') || roasterMachines[0];
 
       createWorkOrder({
+        roasterId: currentUser?.id,
         scheduledDate: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
         status: 'scheduled',
@@ -2218,6 +2686,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newSample: GreenBeanSample = {
       ...sampleData,
       id: newId,
+      roasterId: sampleData.roasterId || currentUser?.id || 'user-roaster-1',
       sampleCode: newCode,
       receivedDate: new Date().toISOString().split('T')[0],
     };
@@ -2240,6 +2709,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newProf: MasterRoastProfile = {
       ...profileData,
       id: newId,
+      roasterId: profileData.roasterId || currentUser?.id || 'user-roaster-1',
     };
     setMasterProfiles((prev) => [newProf, ...prev]);
     return newProf;
@@ -2253,6 +2723,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newQc: QCCuppingSession = {
       ...qcData,
       id: newId,
+      roasterId: qcData.roasterId || currentUser?.id || 'user-roaster-1',
       sessionCode: newCode,
       date: new Date().toISOString().split('T')[0],
     };
@@ -2271,6 +2742,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newSo: SalesOrder = {
       ...soData,
       id: newId,
+      roasterId: soData.roasterId || currentUser?.id || 'user-roaster-1',
       soNumber: newSoNumber,
       orderDate: new Date().toISOString().split('T')[0],
     };
@@ -2341,14 +2813,34 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         users,
         loginAsRole,
         loginAsUser,
+        login,
+        requestPasswordReset,
+        verifyResetCode,
+        resetPassword,
         registerUser,
         logout,
         activeView,
         setActiveView,
+        farmerActiveTab,
+        setFarmerActiveTab,
         roasterActiveTab,
         setRoasterActiveTab,
         processorActiveTab,
         setProcessorActiveTab,
+        warehouseActiveTab,
+        setWarehouseActiveTab,
+        cafeActiveTab,
+        setCafeActiveTab,
+        verifierActiveTab,
+        setVerifierActiveTab,
+        verificationStamps,
+        issueVerificationStamp,
+        revokeVerificationStamp,
+        coffeeFarms,
+        addCoffeeFarm,
+        updateCoffeeFarm,
+        deleteCoffeeFarm,
+        seedCoffeeFarms,
         activeProcessingBatchId,
         setActiveProcessingBatchId,
         processorCherryStock,
@@ -2369,6 +2861,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         transactions,
         unifiedMarketplaceItems,
         addFarmerHarvest,
+        updateFarmerHarvestLot,
         buyCherryAndCreateProcess,
         updateProcessedLotWaste,
         buyGreenBeanAndStoreWarehouse,

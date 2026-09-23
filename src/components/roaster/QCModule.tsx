@@ -39,7 +39,9 @@ const QC_PIPELINE_STAGES: PipelineStage[] = [
 ];
 
 export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
-  const { qcSessions, workOrders, createCuppingSession } = useCoffee();
+  const { currentUser, qcSessions, workOrders, createCuppingSession } = useCoffee();
+  const myQcSessions = qcSessions.filter((s) => !s.roasterId || s.roasterId === currentUser?.id);
+  const myWorkOrders = workOrders.filter((w) => !w.roasterId || w.roasterId === currentUser?.id);
 
   const [isCuppingModalOpen, setIsCuppingModalOpen] = useState(!!initialWorkOrder);
   const [selectedWorkOrderId, setSelectedWorkOrderId] = useState(initialWorkOrder?.id || '');
@@ -139,14 +141,14 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
 
   // Metrics
   const avgScaScore =
-    qcSessions.length > 0
-      ? (qcSessions.reduce((acc, q) => acc + q.totalScaScore, 0) / qcSessions.length).toFixed(2)
+    myQcSessions.length > 0
+      ? (myQcSessions.reduce((acc, q) => acc + q.totalScaScore, 0) / myQcSessions.length).toFixed(2)
       : '87.75';
-  const approvedSpecialtyCount = qcSessions.filter(
+  const approvedSpecialtyCount = myQcSessions.filter(
     (q) => q.status === 'approved_specialty'
   ).length;
 
-  const filteredQc = qcSessions.filter((qc) => {
+  const filteredQc = myQcSessions.filter((qc) => {
     const matchesQuery =
       qc.sessionCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       qc.sessionName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -164,7 +166,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Sesi QC Cupping"
-          value={`${qcSessions.length} Sesi`}
+          value={`${myQcSessions.length} Sesi`}
           subtitle="Protokol SCA 100-Point Standard"
           trend={{ value: 'Tervalidasi Q-Grader', isPositive: true }}
           icon={<Award className="w-5 h-5" />}

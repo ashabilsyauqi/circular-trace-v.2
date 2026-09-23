@@ -92,10 +92,12 @@ export const InventoryModule: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   // Computations
-  const totalCherryKg = processorCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
-  const totalCherryValue = processorCherryStock.reduce((acc, curr) => acc + (curr.availableWeightKg * curr.purchasePricePerKg), 0);
+  const myCherryStock = processorCherryStock.filter((item) => !item.processorId || item.processorId === currentUser?.id);
+  const myProcessedLots = processedLots.filter((lot) => !lot.processorId || lot.processorId === currentUser?.id);
 
-  const myProcessedLots = processedLots.filter((lot) => lot.processorId === currentUser?.id || true);
+  const totalCherryKg = myCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
+  const totalCherryValue = myCherryStock.reduce((acc, curr) => acc + (curr.availableWeightKg * curr.purchasePricePerKg), 0);
+
   const totalGreenKg = myProcessedLots.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
   const totalGreenValue = myProcessedLots.reduce((acc, curr) => acc + (curr.availableWeightKg * curr.pricePerKg), 0);
 
@@ -103,7 +105,7 @@ export const InventoryModule: React.FC = () => {
   const totalWasteKg = myProcessedLots.reduce((acc, curr) => acc + (curr.wasteManagement?.weightKgOrLiters || Math.round(curr.greenBeanWeightKg * 2.2)), 0);
 
   // Filterings
-  const filteredCherryStock = processorCherryStock.filter((item) => {
+  const filteredCherryStock = myCherryStock.filter((item) => {
     const q = searchQuery.toLowerCase();
     return (
       item.id.toLowerCase().includes(q) ||

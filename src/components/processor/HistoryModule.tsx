@@ -11,8 +11,8 @@ export const HistoryModule: React.FC = () => {
     (trx) =>
       trx.fromName === currentUser?.name ||
       trx.toName === currentUser?.name ||
-      trx.fromRole === 'pengolah' ||
-      trx.toRole === 'pengolah'
+      trx.fromName === (currentUser?.organization || currentUser?.name) ||
+      trx.toName === (currentUser?.organization || currentUser?.name)
   );
 
   const totalValue = myProcessorTransactions.reduce((acc, curr) => acc + curr.totalAmount, 0);

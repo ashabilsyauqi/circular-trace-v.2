@@ -59,9 +59,12 @@ export const CafeView: React.FC = () => {
     addCafeRetailProduct,
     transactions,
     setActiveView,
+    cafeActiveTab,
+    setCafeActiveTab,
   } = useCoffee();
 
-  const [activeTab, setActiveTab] = useState<'inventory' | 'create_product' | 'my_products' | 'calculator' | 'history'>('inventory');
+  const activeTab = cafeActiveTab || 'inventory';
+  const setActiveTab = setCafeActiveTab;
   const [searchQuery, setSearchQuery] = useState('');
   const [roastFilter, setRoastFilter] = useState<'all' | string>('all');
   const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
@@ -90,15 +93,19 @@ export const CafeView: React.FC = () => {
   const [calcExtraCost, setCalcExtraCost] = useState<number>(4500); // cup, milk, ice, sleeve
 
   const myCafeInventory = cafeInventory.filter(
-    (item) => item.cafeId === currentUser?.id || true
+    (item) => !item.cafeId || item.cafeId === currentUser?.id
   );
 
   const myCafeProducts = cafeProducts.filter(
-    (prod) => prod.cafeId === currentUser?.id || true
+    (prod) => !prod.cafeId || prod.cafeId === currentUser?.id
   );
 
   const myCafeTransactions = transactions.filter(
-    (t) => t.fromName === currentUser?.name || t.toName === currentUser?.name || t.fromRole === 'cafe' || t.toRole === 'cafe'
+    (t) =>
+      t.fromName === currentUser?.name ||
+      t.toName === currentUser?.name ||
+      t.fromName === (currentUser?.organization || currentUser?.name) ||
+      t.toName === (currentUser?.organization || currentUser?.name)
   );
 
   const totalPacksInStock = myCafeInventory.reduce((acc, curr) => acc + curr.packsInStock, 0);

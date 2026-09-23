@@ -1,4 +1,6 @@
-export type UserRole = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe';
+export type UserRole = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'verifikator';
+
+export type VerifierDomain = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'all';
 
 export type MarketplaceCategory =
   | 'cherry'               // 1. Ceri Kopi Segar / Panen Petani
@@ -9,7 +11,10 @@ export type MarketplaceCategory =
 export interface AppUser {
   id: string;
   name: string;
+  email?: string;
+  password?: string;
   role: UserRole;
+  verifierDomain?: VerifierDomain;
   organization: string;
   location: string;
   avatar: string;
@@ -18,11 +23,141 @@ export interface AppUser {
   bio?: string;
 }
 
+// Evaluasi Uji Sensori Cupping SCA oleh Verifikator / Q-Grader
+export interface CuppingEvaluationData {
+  fragranceAroma: number;   // 6.00 - 10.00
+  flavor: number;           // 6.00 - 10.00
+  aftertaste: number;       // 6.00 - 10.00
+  acidity: number;          // 6.00 - 10.00
+  body: number;             // 6.00 - 10.00
+  balance: number;          // 6.00 - 10.00
+  cleanCup: number;         // 6.00 - 10.00
+  sweetness: number;        // 6.00 - 10.00
+  uniformity: number;       // 6.00 - 10.00
+  overall: number;          // 6.00 - 10.00
+  totalScore: number;       // 60 - 100
+  tastingNotes: string[];   // e.g. ["Floral Jasmine", "Bergamot", "Peach", "Brown Sugar"]
+  defectDeduction?: number; // nilai penalti cacat
+  defectNotes?: string;
+  roastEvaluation: 'Optimal Specialty' | 'Underdeveloped' | 'Baked' | 'Overdeveloped';
+  recommendationRestDays: number;
+}
+
+// Stempel Digital Resmi yang Diterbitkan Verifikator
+export interface VerificationStamp {
+  id: string;
+  stampType: 'eudr_farm' | 'harvest_quality' | 'processing_mill' | 'warehouse_silo' | 'roast_cupping' | 'cafe_safety';
+  title: string;
+  certificateNumber: string;
+  verifierId: string;
+  verifierName: string;
+  verifierTitle: string;
+  verifierOrg: string;
+  verifiedAt: string;
+  status: 'verified' | 'rejected';
+  scoreDisplay?: string;
+  notes: string;
+  digitalSignatureHash: string;
+  cuppingEvaluation?: CuppingEvaluationData;
+}
+
+// 0. REGISTRASI & MANAJEMEN LAHAN / KEBUN KOPI PETANI
+export interface FarmWeatherData {
+  currentCondition: 'Cerah Berawan' | 'Hujan Ringan' | 'Berkabut Tebal' | 'Cerah Terik' | 'Hujan Lebat' | 'Sejuk Berangin';
+  temperatureCelsius: number; // e.g. 19.5 °C
+  humidityPercent: number; // e.g. 78% RH
+  annualRainfallMm: number; // e.g. 2200 mm/tahun
+  sunshineHoursPerDay: number; // e.g. 6.5 jam/hari
+  windSpeedKph: number; // e.g. 11 km/jam
+  microclimateNote: string; // Catatan iklim mikro pegunungan
+}
+
+export type PhysicalPatokType =
+  | 'Patok Beton BPN'
+  | 'Pipa Besi Cor'
+  | 'Pohon Batas Alami'
+  | 'Batu Alam / Terasering'
+  | 'Patok Kayu Ulin'
+  | 'Titik Virtual GPS';
+
+export type PatokCondition =
+  | 'Kondisi Baik & Kokoh'
+  | 'Perlu Perbaikan'
+  | 'Tertutup Semak'
+  | 'Titik Baru';
+
+export interface FarmPatok {
+  id: string; // e.g. "PTK-01"
+  name: string; // e.g. "Patok 1 (Sudut Utara - Batas Hutan)"
+  latitude: number;
+  longitude: number;
+  elevationMeters?: number; // e.g. 1575 (mdpl)
+  physicalType?: PhysicalPatokType;
+  condition?: PatokCondition;
+  landmarkNote?: string; // e.g. "Dekat pohon beringin tua, 10m dari aliran air"
+  verifiedDate?: string; // e.g. "2026-08-15"
+  photoUrl?: string;
+}
+
+export interface FarmPolygonPoint {
+  id: string; // e.g. "PT-01"
+  label: string; // e.g. "Titik Sudut Utara (A)"
+  latitude: number;
+  longitude: number;
+  elevationMeters?: number;
+  physicalType?: PhysicalPatokType;
+  condition?: PatokCondition;
+  landmarkNote?: string;
+}
+
+export interface FarmPlotBoundary {
+  polygonPoints?: FarmPolygonPoint[];
+  patokList?: FarmPatok[];
+  perimeterMeters: number; // e.g. 640m
+  geofenceRadiusMeters: number; // e.g. 250m
+  plotShapeName?: string; // e.g. "Blok Kontur Lereng Timur"
+  calculatedAreaHectares?: number;
+}
+
+export interface CoffeeFarm {
+  id: string; // e.g. "FARM-PGL-01"
+  farmerId: string;
+  farmerName: string;
+  farmName: string; // e.g. "Kebun Blok Pasir Kunci (Lereng Gunung Tilu)"
+  location: string; // e.g. "Desa Margamukti, Kec. Pangalengan, Kab. Bandung"
+  province: string; // e.g. "Jawa Barat"
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+  plotBoundary?: FarmPlotBoundary;
+  patokList?: FarmPatok[];
+  rangeRadiusMeters?: number;
+  altitudeMeters: number; // e.g. 1550 (mdpl)
+  altitudeDisplay: string; // e.g. "1.500 - 1.620 mdpl"
+  landAreaHectares: number; // e.g. 2.4 Ha
+  totalTreesCount: number; // e.g. 3.200 Pohon Kopi
+  primaryVarieties: string[]; // e.g. ["Sigarar Utang", "Typica", "Kartika", "Ateng Super"]
+  soilType: 'Andosol Vulkanik' | 'Latosol Humus' | 'Regosol Pegunungan' | 'Humus Aluvial';
+  shadeTrees: string[]; // e.g. ["Pohon Sengon", "Lamtoro", "Alpukat", "Jeruk Kintamani", "Kayu Manis"]
+  organicStatus: 'Organik Bersertifikat (SNI / USDA)' | 'Transisi Menuju Organik' | 'GAP (Good Agricultural Practices)';
+  eudrCompliant: boolean; // European Deforestation Regulation Geolocation Verified
+  weatherData: FarmWeatherData;
+  photoUrl: string;
+  establishedYear: number;
+  notes?: string;
+  createdAt: string;
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationStamp?: VerificationStamp;
+}
+
 // 1. LOT HASIL PANEN PETANI (Cherry Segar / Gabah Kopi)
 export interface FarmerHarvestLot {
   id: string;
   farmerId: string;
   farmerName: string;
+  farmId?: string; // Terhubung ke Lahan/Kebun terdaftar
+  farmName?: string;
   farmLocation: string;
   altitude: string; // e.g., "1.450 - 1.600 mdpl"
   variety: string; // e.g., "Sigarar Utang, Ateng Super"
@@ -36,6 +171,11 @@ export interface FarmerHarvestLot {
   status: 'available' | 'sold' | 'partial';
   createdAt: string;
   photoUrl?: string;
+  weatherSnapshot?: FarmWeatherData;
+  soilType?: string;
+  shadeTrees?: string[];
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationStamp?: VerificationStamp;
 }
 
 // 2. LOT GREEN BEAN PENGOLAH (Hasil Proses Wet/Dry Mill)
@@ -70,6 +210,8 @@ export interface ProcessedGreenBeanLot {
   sourceTotalCherryWeightKg?: number;
   // Pengelolaan & Alokasi Limbah Olahan Kopi (Eco-Processing / Circular Economy)
   wasteManagement?: CoffeeWasteManagement;
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationStamp?: VerificationStamp;
 }
 
 // Model Pengelolaan & Pemanfaatan Limbah Kopi
@@ -132,6 +274,8 @@ export interface WarehouseLot {
   purchasePricePerKg: number; // Harga beli modal dari pengolah untuk analisis margin
   targetMarket?: string; // Rekomendasi target pembeli (Roastery Specialty / Cafe / Industri)
   gradingNotes?: string;
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationStamp?: VerificationStamp;
 }
 
 // 4. LOT BIJI SANGRAI ROASTER (Roasted Coffee Ready for Brew)
@@ -162,6 +306,8 @@ export interface RoastedBeanLot {
   photoUrl?: string;
   // Referensi asal Work Order MRP (jika dipublikasikan dari modul Production/Work Orders)
   sourceWorkOrderId?: string;
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationStamp?: VerificationStamp;
 }
 
 // 5. INVENTARIS CAFE & PESANAN PEMILIK CAFE
@@ -217,6 +363,8 @@ export interface CafeRetailProduct {
   description: string;
   photoUrl: string;
   createdAt: string;
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationStamp?: VerificationStamp;
 }
 
 // 7. STANDARDIZED ITEM UNTUK 1 MARKETPLACE TERPADU
@@ -227,6 +375,8 @@ export interface UnifiedMarketplaceItem {
   categoryLabel: string;
   sellerRole: UserRole;
   sellerName: string;
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationStamp?: VerificationStamp;
   sellerOrg: string;
   origin: string;
   variety: string;

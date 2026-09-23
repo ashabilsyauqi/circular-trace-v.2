@@ -60,6 +60,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
   openCreateModalDirectly = false,
 }) => {
   const {
+    currentUser,
     workOrders,
     warehouseLots,
     masterProfiles,
@@ -91,7 +92,11 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
   const [formNotes, setFormNotes] = useState('Pesanan batch sangrai specialty untuk menu cafe.');
 
   // Filtering
-  const filteredWorkOrders = workOrders.filter((wo) => {
+  const myWorkOrders = workOrders.filter((w) => !w.roasterId || w.roasterId === currentUser?.id);
+  const myMasterProfiles = masterProfiles.filter((p) => !p.roasterId || p.roasterId === currentUser?.id);
+  const myRoasterMachines = roasterMachines.filter((m) => !m.roasterId || m.roasterId === currentUser?.id);
+
+  const filteredWorkOrders = myWorkOrders.filter((wo) => {
     const matchesQuery =
       wo.woNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       wo.greenBeanName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -104,14 +109,14 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
   });
 
   // KPI Calculations
-  const totalWos = workOrders.length;
-  const inProductionCount = workOrders.filter(
+  const totalWos = myWorkOrders.length;
+  const inProductionCount = myWorkOrders.filter(
     (w) => w.status === 'in_production' || w.status === 'roasting'
   ).length;
-  const qcPendingCount = workOrders.filter((w) => w.status === 'qc_pending').length;
-  const totalRoastedKgToday = workOrders.reduce((acc, curr) => acc + curr.actualRoastedKg, 0);
+  const qcPendingCount = myWorkOrders.filter((w) => w.status === 'qc_pending').length;
+  const totalRoastedKgToday = myWorkOrders.reduce((acc, curr) => acc + curr.actualRoastedKg, 0);
 
-  const completedWosWithLoss = workOrders.filter((w) => w.weightLossPercent > 0);
+  const completedWosWithLoss = myWorkOrders.filter((w) => w.weightLossPercent > 0);
   const avgRoastLoss =
     completedWosWithLoss.length > 0
       ? (

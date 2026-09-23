@@ -110,14 +110,17 @@ export const PurchasingModule: React.FC = () => {
   const [sampleNotes, setSampleNotes] = useState('Wild strawberry jam, red apple, sweet cane sugar.');
 
   // Metrics
-  const totalSpend = purchaseOrders.reduce((acc, curr) => acc + curr.totalAmount, 0);
-  const pendingApprovalCount = purchaseOrders.filter((p) => p.status === 'pending_approval').length;
-  const approvedCount = purchaseOrders.filter((p) => p.status === 'approved').length;
-  const receivedCount = purchaseOrders.filter((p) => p.status === 'received').length;
-  const approvedSamplesCount = greenBeanSamples.filter((s) => s.status === 'approved_to_buy').length;
+  const myPOs = purchaseOrders.filter((p) => !p.roasterId || p.roasterId === currentUser?.id);
+  const mySamples = greenBeanSamples.filter((s) => !s.roasterId || s.roasterId === currentUser?.id);
+
+  const totalSpend = myPOs.reduce((acc, curr) => acc + curr.totalAmount, 0);
+  const pendingApprovalCount = myPOs.filter((p) => p.status === 'pending_approval').length;
+  const approvedCount = myPOs.filter((p) => p.status === 'approved').length;
+  const receivedCount = myPOs.filter((p) => p.status === 'received').length;
+  const approvedSamplesCount = mySamples.filter((s) => s.status === 'approved_to_buy').length;
 
   // Filtered lists
-  const filteredPOs = purchaseOrders.filter((po) => {
+  const filteredPOs = myPOs.filter((po) => {
     const matchesQuery =
       po.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       po.supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -126,7 +129,7 @@ export const PurchasingModule: React.FC = () => {
     return matchesQuery && matchesStatus;
   });
 
-  const filteredSamples = greenBeanSamples.filter((smp) => {
+  const filteredSamples = mySamples.filter((smp) => {
     return (
       smp.sampleName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       smp.supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -59,12 +59,14 @@ export interface WorkOrder {
   batches: WorkOrderBatch[];
   salesOrderId?: string; // Optional link to made-to-order Sales Order
   customerName?: string;
+  roasterId?: string;
   notes?: string;
   createdAt: string;
 }
 
 export interface MasterRoastProfile {
   id: string;
+  roasterId?: string;
   name: string;
   targetRoastLevel: 'Light Roast' | 'Light-Medium' | 'Medium Roast' | 'Medium-Dark' | 'Dark Roast';
   agtronGourmet: number; // SCA Gourmet Scale (e.g. 75)
@@ -105,6 +107,7 @@ export interface POItem {
 
 export interface PurchaseOrder {
   id: string;
+  roasterId?: string;
   poNumber: string; // e.g. "PO-2024-001"
   supplierName: string;
   supplierRole: 'petani' | 'pengolah' | 'gudang';
@@ -124,6 +127,7 @@ export interface PurchaseOrder {
 
 export interface GreenBeanSample {
   id: string;
+  roasterId?: string;
   sampleCode: string; // e.g. "SMP-082"
   sampleName: string;
   supplierName: string;
@@ -142,6 +146,7 @@ export interface GreenBeanSample {
 
 export interface QCCuppingSession {
   id: string;
+  roasterId?: string;
   sessionCode: string; // e.g. "QC-2024-001"
   sessionName: string;
   date: string;
@@ -185,6 +190,7 @@ export type PackagingCategory =
 
 export interface RoasterPackagingItem {
   id: string;
+  roasterId?: string;
   name: string;
   category: PackagingCategory;
   stockQuantity: number;
@@ -216,6 +222,7 @@ export interface SOItem {
 
 export interface WholesaleCustomer {
   id: string;
+  roasterId?: string;
   name: string;
   businessName: string; // e.g. "Kopi Kenangan Senopati"
   contactPerson: string;
@@ -228,6 +235,7 @@ export interface WholesaleCustomer {
 
 export interface SalesOrder {
   id: string;
+  roasterId?: string;
   soNumber: string; // e.g. "SO-2024-001"
   customerId: string;
   customerName: string;
@@ -247,6 +255,7 @@ export interface SalesOrder {
 
 export interface RoasterMachine {
   id: string;
+  roasterId?: string;
   name: string; // e.g. "Giesen W6A"
   model: string;
   capacityKg: number; // e.g. 6.0

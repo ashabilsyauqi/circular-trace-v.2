@@ -12,6 +12,7 @@ import {
   Thermometer,
   Boxes,
   MapPin,
+  ShieldCheck,
 } from 'lucide-react';
 import { WarehouseLot, WarehouseGradeTier } from '../types/coffee';
 import { getNetworkHost, getPublicBaseUrl, isLoopbackHost, saveNetworkHost } from '../utils/baseUrl';
@@ -307,13 +308,28 @@ export const WarehouseBarcodeModal: React.FC<WarehouseBarcodeModalProps> = ({
                 </div>
 
                 {/* Storage Conditions & Upstream Source */}
-                <div className="text-[10px] text-stone-500 space-y-0.5 border-t border-stone-200 pt-2">
+                <div className="text-[10px] text-stone-500 space-y-1 border-t border-stone-200 pt-2">
                   <div className="flex items-center gap-1">
                     <Thermometer className="w-3 h-3 text-blue-600" />
                     <span>Iklim Silo: <strong>{lot.temperatureCelsius}°C / {lot.humidityPercent}% RH</strong> ({lot.packagingType})</span>
                   </div>
                   <div>
                     Pengolah: <strong>{lot.sourceProcessorName}</strong> • Petani: <strong>{lot.sourceFarmerName}</strong>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="flex items-center gap-1 font-semibold text-stone-600">
+                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                      Health Certificate:
+                    </span>
+                    {lot.hasHealthCertificate ? (
+                      <span className="font-mono font-bold text-emerald-900 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">
+                        {lot.healthCertificateNumber || 'HC Certified'}
+                      </span>
+                    ) : (
+                      <span className="font-medium text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded text-[10px]">
+                        No Health Certificate
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

@@ -1235,6 +1235,8 @@ export const INITIAL_WAREHOUSE_LOTS: WarehouseLot[] = [
     targetMarket: 'Specialty Coffee Shop, Kompetisi Brewer & Ekspor Pilihan',
     gradingNotes: 'Zero primary defect, densitas tinggi 720g/L, body kompleks, sweet floral jasmine.',
     notes: 'Kondisi penyimpanan sangat stabil, telah melalui inspeksi kadar air mingguan (10.9%).',
+    hasHealthCertificate: true,
+    healthCertificateNumber: 'HC-EXP-2026-08819',
   },
   {
     id: 'WH-GDG-002',
@@ -1266,6 +1268,7 @@ export const INITIAL_WAREHOUSE_LOTS: WarehouseLot[] = [
     targetMarket: 'Artisan Micro-Roastery & Cafe Specialty Menengah',
     gradingNotes: 'Sortasi sekunder defect 8/350g, aroma winey berries pekat, sweet brown sugar finish.',
     notes: 'Kadar air 11.2%, kemasan kedap udara terjaga.',
+    hasHealthCertificate: false,
   },
   {
     id: 'WH-SBY-001',
@@ -1297,6 +1300,8 @@ export const INITIAL_WAREHOUSE_LOTS: WarehouseLot[] = [
     targetMarket: 'Ekspor Pelabuhan & Roastery Specialty Surabaya-Bali',
     gradingNotes: 'Standar mutu ekspor internasional, aroma citrus floral intens.',
     notes: 'Silo siap muat kontainer berpendingin.',
+    hasHealthCertificate: true,
+    healthCertificateNumber: 'HC-EXP-2026-09142',
   },
 ];
 

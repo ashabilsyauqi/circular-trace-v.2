@@ -194,6 +194,8 @@ interface CoffeeContextType {
       purchasePricePerKg?: number;
       targetMarket?: string;
       gradingNotes?: string;
+      hasHealthCertificate?: boolean;
+      healthCertificateNumber?: string;
     }
   ) => void;
   updateWarehouseLotGrading: (
@@ -206,6 +208,8 @@ interface CoffeeContextType {
       pricePerKg: number;
       targetMarket?: string;
       notes?: string;
+      hasHealthCertificate?: boolean;
+      healthCertificateNumber?: string;
     }
   ) => void;
   buyWarehouseBeanAndRoast: (
@@ -1599,6 +1603,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       purchasePricePerKg?: number;
       targetMarket?: string;
       gradingNotes?: string;
+      hasHealthCertificate?: boolean;
+      healthCertificateNumber?: string;
     }
   ) => {
     if (!currentUser) return;
@@ -1663,6 +1669,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       purchasePricePerKg: storageData.purchasePricePerKg || sourceGB.pricePerKg,
       targetMarket: storageData.targetMarket || 'Specialty Roastery & Cafe',
       gradingNotes: storageData.gradingNotes || storageData.notes,
+      hasHealthCertificate: storageData.hasHealthCertificate ?? false,
+      healthCertificateNumber: storageData.hasHealthCertificate ? storageData.healthCertificateNumber : undefined,
     };
     setWarehouseLots((prev) => [newWarehouseLot, ...prev]);
   };
@@ -1678,6 +1686,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       pricePerKg: number;
       targetMarket?: string;
       notes?: string;
+      hasHealthCertificate?: boolean;
+      healthCertificateNumber?: string;
     }
   ) => {
     setWarehouseLots((prev) =>
@@ -1692,6 +1702,14 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               pricePerKg: gradingData.pricePerKg,
               targetMarket: gradingData.targetMarket || lot.targetMarket,
               notes: gradingData.notes !== undefined ? gradingData.notes : lot.notes,
+              hasHealthCertificate:
+                gradingData.hasHealthCertificate !== undefined
+                  ? gradingData.hasHealthCertificate
+                  : lot.hasHealthCertificate,
+              healthCertificateNumber:
+                gradingData.hasHealthCertificate !== undefined
+                  ? (gradingData.hasHealthCertificate ? gradingData.healthCertificateNumber : undefined)
+                  : lot.healthCertificateNumber,
             }
           : lot
       )

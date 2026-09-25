@@ -1081,6 +1081,18 @@ export const VerifierView: React.FC = () => {
                         <span className="text-slate-500">SCA Pre-Roast:</span>
                         <span className="font-bold text-indigo-600">{lot.verifiedScaScore} Poin</span>
                       </div>
+                      <div className="flex justify-between items-center pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
+                        <span className="text-slate-500">Health Certificate:</span>
+                        {lot.hasHealthCertificate ? (
+                          <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[11px] border border-emerald-200 dark:border-emerald-800">
+                            {lot.healthCertificateNumber || 'HC Certified'}
+                          </span>
+                        ) : (
+                          <span className="font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">
+                            No Health Certificate
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 

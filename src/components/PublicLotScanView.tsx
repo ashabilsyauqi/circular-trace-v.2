@@ -957,6 +957,56 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                 </div>
               )}
 
+              {/* Health Certificate Quarantine & Export Status */}
+              <div
+                className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
+                  currentWarehouseLot.hasHealthCertificate
+                    ? 'bg-emerald-50/80 border-emerald-300'
+                    : 'bg-stone-50 border-stone-200'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                      currentWarehouseLot.hasHealthCertificate
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-stone-200 text-stone-600'
+                    }`}
+                  >
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-stone-500 block">
+                      Dokumen Karantina Pertanian & Ekspor (Health Certificate)
+                    </span>
+                    <strong className="text-xs text-stone-900 block mt-0.5">
+                      {currentWarehouseLot.hasHealthCertificate ? (
+                        <span className="text-emerald-950 flex items-center gap-1.5 flex-wrap">
+                          <span>Nomor Sertifikat:</span>
+                          <code className="font-mono text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-300 font-bold">
+                            {currentWarehouseLot.healthCertificateNumber || 'HC-EXP-2026-DEFAULT'}
+                          </code>
+                        </span>
+                      ) : (
+                        <span className="text-stone-600 font-medium">
+                          No Health Certificate (Penjualan Domestik Non-Karantina)
+                        </span>
+                      )}
+                    </strong>
+                  </div>
+                </div>
+
+                <span
+                  className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full shrink-0 ${
+                    currentWarehouseLot.hasHealthCertificate
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-stone-200 text-stone-700'
+                  }`}
+                >
+                  {currentWarehouseLot.hasHealthCertificate ? 'Ekspor Valid' : 'Domestik'}
+                </span>
+              </div>
+
               {/* SECTION: RIWAYAT RANTAI PASOK HULU (TRACEABILITY) */}
               <div className="bg-emerald-50/70 border-2 border-emerald-300 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center justify-between border-b border-emerald-200 pb-2.5">

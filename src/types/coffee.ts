@@ -274,6 +274,9 @@ export interface WarehouseLot {
   purchasePricePerKg: number; // Harga beli modal dari pengolah untuk analisis margin
   targetMarket?: string; // Rekomendasi target pembeli (Roastery Specialty / Cafe / Industri)
   gradingNotes?: string;
+  // Health Certificate (Karantina / Ekspor Gudang)
+  hasHealthCertificate?: boolean; // Pilihan: Pakai sertifikat atau tidak
+  healthCertificateNumber?: string; // Nomor Sertifikat Kesehatan (Health Certificate) jika ada
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
 }

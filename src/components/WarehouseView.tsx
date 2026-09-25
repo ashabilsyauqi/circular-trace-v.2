@@ -201,6 +201,10 @@ export const WarehouseView: React.FC = () => {
   const [notes] = useState('Kemasan kedap udara GrainPro, kontrol suhu stabil.');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Health Certificate state (Inbound Buy: 1. Number of Health Certificate, 2. No Health Certificate)
+  const [hasHealthCertificate, setHasHealthCertificate] = useState<boolean>(true);
+  const [healthCertificateNumber, setHealthCertificateNumber] = useState<string>('HC-EXP-2026-08819');
+
   // Re-Grading Modal State
   const [editingLotForGrading, setEditingLotForGrading] = useState<WarehouseLot | null>(null);
   const [editGradeTier, setEditGradeTier] = useState<WarehouseGradeTier>('Grade 1 - Super Premium');
@@ -210,6 +214,8 @@ export const WarehouseView: React.FC = () => {
   const [editSellingPricePerKg, setEditSellingPricePerKg] = useState<number>(165000);
   const [editTargetMarket, setEditTargetMarket] = useState<string>('');
   const [editNotes, setEditNotes] = useState<string>('');
+  const [editHasHealthCert, setEditHasHealthCert] = useState<boolean>(false);
+  const [editHealthCertNumber, setEditHealthCertNumber] = useState<string>('');
   const [barcodeModalLot, setBarcodeModalLot] = useState<WarehouseLot | null>(null);
   const [detailLot, setDetailLot] = useState<WarehouseLot | null>(null);
 
@@ -263,6 +269,8 @@ export const WarehouseView: React.FC = () => {
     const initialTier: WarehouseGradeTier =
       lot.grade === 'Specialty Grade 1' ? 'Grade 1 - Super Premium' : 'Grade 2 - Premium Grade';
     handleSelectGradeTier(initialTier, lot.pricePerKg);
+    setHasHealthCertificate(true);
+    setHealthCertificateNumber(`HC-EXP-2026-${Math.floor(1000 + Math.random() * 9000)}`);
   };
 
   const handleConfirmStore = (e: React.FormEvent) => {
@@ -283,6 +291,8 @@ export const WarehouseView: React.FC = () => {
       targetMarket,
       gradingNotes,
       notes,
+      hasHealthCertificate,
+      healthCertificateNumber: hasHealthCertificate ? healthCertificateNumber : undefined,
     });
 
     setSuccessMsg(
@@ -303,6 +313,8 @@ export const WarehouseView: React.FC = () => {
     setEditSellingPricePerKg(lot.pricePerKg);
     setEditTargetMarket(lot.targetMarket || GRADE_TIERS_CONFIG[tier].targetMarket);
     setEditNotes(lot.notes || '');
+    setEditHasHealthCert(lot.hasHealthCertificate ?? false);
+    setEditHealthCertNumber(lot.healthCertificateNumber || `HC-EXP-2026-${Math.floor(1000 + Math.random() * 9000)}`);
   };
 
   const handleSelectEditGradeTier = (tier: WarehouseGradeTier, basePurchasePrice: number) => {
@@ -329,10 +341,12 @@ export const WarehouseView: React.FC = () => {
       pricePerKg: Number(editSellingPricePerKg),
       targetMarket: editTargetMarket,
       notes: editNotes,
+      hasHealthCertificate: editHasHealthCert,
+      healthCertificateNumber: editHasHealthCert ? editHealthCertNumber : undefined,
     });
 
     setSuccessMsg(
-      `Klasifikasi & Harga Jual Lot ${editingLotForGrading.id} berhasil diperbarui menjadi ${editGradeTier} (Rp ${Number(editSellingPricePerKg).toLocaleString()}/kg)!`
+      `Klasifikasi & Data Lot ${editingLotForGrading.id} berhasil diperbarui!`
     );
     setEditingLotForGrading(null);
     setTimeout(() => setSuccessMsg(''), 6000);
@@ -542,13 +556,26 @@ export const WarehouseView: React.FC = () => {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span
                             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black border ${cfg.badgeBg} ${cfg.badgeText} ${cfg.badgeBorder} shadow-2xs`}
                           >
                             <TierIcon className="w-3.5 h-3.5" />
                             {wh.gradeTier || 'Grade 1 - Super Premium'}
                           </span>
+                          {wh.hasHealthCertificate ? (
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200"
+                              title={`Nomor HC: ${wh.healthCertificateNumber || 'Tersertifikasi'}`}
+                            >
+                              <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                              HC: {wh.healthCertificateNumber ? wh.healthCertificateNumber.split('-').slice(-1)[0] : 'Aktif'}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-lg border border-stone-200">
+                              No HC
+                            </span>
+                          )}
                         </div>
 
                         <div>
@@ -683,6 +710,7 @@ export const WarehouseView: React.FC = () => {
                       <th className="py-3.5 px-4">ID Lot Silo</th>
                       <th className="py-3.5 px-4">Varietas & Daerah Asal</th>
                       <th className="py-3.5 px-4">Klasifikasi Grade</th>
+                      <th className="py-3.5 px-4">Health Certificate</th>
                       <th className="py-3.5 px-4">Skor SCA</th>
                       <th className="py-3.5 px-4">Defect / Screen</th>
                       <th className="py-3.5 px-4">Lokasi Silo</th>
@@ -713,6 +741,23 @@ export const WarehouseView: React.FC = () => {
                               <TierIcon className="w-3 h-3" />
                               {cfg.shortLabel}
                             </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            {wh.hasHealthCertificate ? (
+                              <div>
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200">
+                                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                  HC Certified
+                                </span>
+                                <div className="text-[10px] font-mono text-stone-500 mt-0.5">
+                                  {wh.healthCertificateNumber || 'HC-EXP'}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-stone-500 bg-stone-100 border border-stone-200">
+                                No HC
+                              </span>
+                            )}
                           </td>
                           <td className="py-3 px-4">
                             <span className="font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
@@ -799,7 +844,18 @@ export const WarehouseView: React.FC = () => {
                           <span className="font-black text-amber-700">SCA {wh.verifiedScaScore}</span>
                         </div>
                         <h5 className="font-bold text-sm text-stone-900 leading-tight">{wh.variety}</h5>
-                        <p className="text-[11px] text-stone-500">{wh.origin} • {wh.storageLocation}</p>
+                        <div className="flex items-center justify-between text-[11px] gap-2">
+                          <p className="text-stone-500 truncate">{wh.origin} • {wh.storageLocation}</p>
+                          {wh.hasHealthCertificate ? (
+                            <span className="shrink-0 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                              HC
+                            </span>
+                          ) : (
+                            <span className="shrink-0 text-[10px] text-stone-400 bg-stone-100 px-1.5 py-0.2 rounded">
+                              No HC
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
                           <span className="font-bold text-stone-700">{wh.availableWeightKg} kg</span>
                           <span className="font-black text-stone-900">Rp {wh.pricePerKg.toLocaleString()}/kg</span>
@@ -836,7 +892,18 @@ export const WarehouseView: React.FC = () => {
                           <span className="font-black text-purple-700">SCA {wh.verifiedScaScore}</span>
                         </div>
                         <h5 className="font-bold text-sm text-stone-900 leading-tight">{wh.variety}</h5>
-                        <p className="text-[11px] text-stone-500">{wh.origin} • {wh.storageLocation}</p>
+                        <div className="flex items-center justify-between text-[11px] gap-2">
+                          <p className="text-stone-500 truncate">{wh.origin} • {wh.storageLocation}</p>
+                          {wh.hasHealthCertificate ? (
+                            <span className="shrink-0 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                              HC
+                            </span>
+                          ) : (
+                            <span className="shrink-0 text-[10px] text-stone-400 bg-stone-100 px-1.5 py-0.2 rounded">
+                              No HC
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
                           <span className="font-bold text-stone-700">{wh.availableWeightKg} kg</span>
                           <span className="font-black text-stone-900">Rp {wh.pricePerKg.toLocaleString()}/kg</span>
@@ -873,7 +940,18 @@ export const WarehouseView: React.FC = () => {
                           <span className="font-black text-blue-700">SCA {wh.verifiedScaScore}</span>
                         </div>
                         <h5 className="font-bold text-sm text-stone-900 leading-tight">{wh.variety}</h5>
-                        <p className="text-[11px] text-stone-500">{wh.origin} • {wh.storageLocation}</p>
+                        <div className="flex items-center justify-between text-[11px] gap-2">
+                          <p className="text-stone-500 truncate">{wh.origin} • {wh.storageLocation}</p>
+                          {wh.hasHealthCertificate ? (
+                            <span className="shrink-0 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                              HC
+                            </span>
+                          ) : (
+                            <span className="shrink-0 text-[10px] text-stone-400 bg-stone-100 px-1.5 py-0.2 rounded">
+                              No HC
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
                           <span className="font-bold text-stone-700">{wh.availableWeightKg} kg</span>
                           <span className="font-black text-stone-900">Rp {wh.pricePerKg.toLocaleString()}/kg</span>
@@ -1181,6 +1259,64 @@ export const WarehouseView: React.FC = () => {
                 </div>
               </div>
 
+              {/* Health Certificate Section in Lot Detail */}
+              <div
+                className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                  detailLot.hasHealthCertificate
+                    ? 'bg-emerald-50/80 border-emerald-200'
+                    : 'bg-stone-50 border-stone-200'
+                }`}
+              >
+                <div className="flex items-start sm:items-center gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      detailLot.hasHealthCertificate
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-stone-200 text-stone-600'
+                    }`}
+                  >
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs uppercase font-bold tracking-wider text-stone-600">
+                        Dokumen Karantina / Ekspor
+                      </span>
+                      {detailLot.hasHealthCertificate ? (
+                        <span className="text-[10px] font-black uppercase bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                          Health Certificate Valid
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold uppercase bg-stone-200 text-stone-700 px-2 py-0.5 rounded-full">
+                          Tanpa Sertifikat (No HC)
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1">
+                      {detailLot.hasHealthCertificate ? (
+                        <div className="flex items-center gap-2 flex-wrap text-xs">
+                          <span className="text-stone-600">Nomor Sertifikat Kesehatan:</span>
+                          <code className="font-mono text-xs font-bold text-emerald-950 bg-white px-2 py-0.5 rounded-md border border-emerald-300">
+                            {detailLot.healthCertificateNumber || 'HC-EXP-2026-DEFAULT'}
+                          </code>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-stone-500">
+                          Lot penyimpanan ini didaftarkan dengan status <strong>No Health Certificate</strong> (Penjualan domestik reguler).
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-xs text-stone-500 sm:text-right shrink-0">
+                  <span className="block text-[10px] uppercase font-semibold text-stone-400">Kepatuhan Ekspor</span>
+                  <strong className="text-stone-800">
+                    {detailLot.hasHealthCertificate ? 'Standar Ekspor Internasional' : 'Distribusi Pasar Lokal'}
+                  </strong>
+                </div>
+              </div>
+
               {/* Dynamic Action Buttons Bar */}
               <div className="p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -1338,6 +1474,111 @@ export const WarehouseView: React.FC = () => {
                 />
               </div>
 
+              {/* 4. Sertifikat Kesehatan Karantina / Ekspor (Health Certificate) */}
+              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-stone-900 uppercase">
+                    4. Sertifikat Kesehatan Karantina / Ekspor (Health Certificate)
+                  </h3>
+                  <span className="text-[11px] font-semibold text-stone-500">
+                    Pilihan Karantina Gudang
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-600">
+                  Pilih status kelengkapan dokumen karantina / ekspor untuk lot penyimpanan ini:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Option 1: Number of Health Certificate */}
+                  <div
+                    onClick={() => setHasHealthCertificate(true)}
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                      hasHealthCertificate
+                        ? 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-200'
+                        : 'border-stone-200 hover:border-stone-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="radio"
+                        id="inbound-hc-yes"
+                        name="inbound-health-cert"
+                        checked={hasHealthCertificate}
+                        onChange={() => setHasHealthCertificate(true)}
+                        className="mt-0.5 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <label htmlFor="inbound-hc-yes" className="cursor-pointer">
+                        <div className="flex items-center gap-1.5">
+                          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                          <strong className="text-stone-900 font-bold text-xs">
+                            1. Number of Health Certificate
+                          </strong>
+                        </div>
+                        <p className="text-[11px] text-stone-600 mt-1">
+                          Pakai Sertifikat Kesehatan resmi (Karantina Pertanian & Ekspor Internasional).
+                        </p>
+                      </label>
+                    </div>
+
+                    {hasHealthCertificate && (
+                      <div className="mt-3 pt-2.5 border-t border-emerald-200">
+                        <label className="block text-[11px] font-bold text-emerald-950 mb-1">
+                          Nomor Health Certificate (Karantina):
+                        </label>
+                        <input
+                          type="text"
+                          required={hasHealthCertificate}
+                          value={healthCertificateNumber}
+                          onChange={(e) => setHealthCertificateNumber(e.target.value)}
+                          placeholder="Contoh: HC-EXP-2026-08819"
+                          className="w-full px-3 py-2 rounded-lg border border-emerald-300 text-xs font-mono font-bold bg-white text-stone-900 focus:outline-emerald-600"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Option 2: No Health Certificate */}
+                  <div
+                    onClick={() => setHasHealthCertificate(false)}
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                      !hasHealthCertificate
+                        ? 'border-stone-500 bg-stone-100 ring-2 ring-stone-300'
+                        : 'border-stone-200 hover:border-stone-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="radio"
+                        id="inbound-hc-no"
+                        name="inbound-health-cert"
+                        checked={!hasHealthCertificate}
+                        onChange={() => setHasHealthCertificate(false)}
+                        className="mt-0.5 text-stone-600 focus:ring-stone-400"
+                      />
+                      <label htmlFor="inbound-hc-no" className="cursor-pointer">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-full bg-stone-300 text-stone-700 flex items-center justify-center text-[10px] font-bold">
+                            ✕
+                          </span>
+                          <strong className="text-stone-900 font-bold text-xs">
+                            2. No Health Certificate
+                          </strong>
+                        </div>
+                        <p className="text-[11px] text-stone-600 mt-1">
+                          Tanpa Sertifikat Kesehatan (Penjualan domestik reguler / non-karantina).
+                        </p>
+                      </label>
+                    </div>
+
+                    {!hasHealthCertificate && (
+                      <div className="mt-3 pt-2 border-t border-stone-200 text-[10px] text-stone-500 italic">
+                        Lot ini akan disimpan tanpa dokumen Health Certificate.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="pt-2 flex justify-end gap-3">
                 <button
                   type="button"
@@ -1401,6 +1642,78 @@ export const WarehouseView: React.FC = () => {
                   onChange={(e) => setEditSellingPricePerKg(Number(e.target.value))}
                   className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm font-black"
                 />
+              </div>
+
+              {/* Sertifikat Kesehatan Karantina / Ekspor (Health Certificate) */}
+              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 space-y-3">
+                <label className="block font-bold text-stone-700 uppercase">
+                  Sertifikat Kesehatan Karantina / Ekspor (Health Certificate)
+                </label>
+                <div className="space-y-2">
+                  <div
+                    onClick={() => setEditHasHealthCert(true)}
+                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      editHasHealthCert
+                        ? 'border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-300'
+                        : 'border-stone-200 bg-white hover:bg-stone-50'
+                    }`}
+                  >
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="edit-health-cert"
+                        checked={editHasHealthCert}
+                        onChange={() => setEditHasHealthCert(true)}
+                        className="text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div className="flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                        <strong className="text-stone-900 text-xs">1. Number of Health Certificate</strong>
+                      </div>
+                    </label>
+
+                    {editHasHealthCert && (
+                      <div className="mt-2.5 pl-6">
+                        <label className="block text-[10px] font-bold text-stone-600 mb-1">
+                          Nomor Health Certificate:
+                        </label>
+                        <input
+                          type="text"
+                          required={editHasHealthCert}
+                          value={editHealthCertNumber}
+                          onChange={(e) => setEditHealthCertNumber(e.target.value)}
+                          placeholder="Contoh: HC-EXP-2026-08819"
+                          className="w-full px-3 py-1.5 rounded-lg border border-emerald-300 text-xs font-mono font-bold bg-white text-stone-900"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    onClick={() => setEditHasHealthCert(false)}
+                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      !editHasHealthCert
+                        ? 'border-stone-400 bg-stone-100 ring-1 ring-stone-300'
+                        : 'border-stone-200 bg-white hover:bg-stone-50'
+                    }`}
+                  >
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="edit-health-cert"
+                        checked={!editHasHealthCert}
+                        onChange={() => setEditHasHealthCert(false)}
+                        className="text-stone-600 focus:ring-stone-400"
+                      />
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3.5 h-3.5 rounded-full bg-stone-300 text-stone-700 flex items-center justify-center text-[9px] font-bold">
+                          ✕
+                        </span>
+                        <strong className="text-stone-900 text-xs">2. No Health Certificate</strong>
+                      </div>
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-2 flex justify-end gap-2">

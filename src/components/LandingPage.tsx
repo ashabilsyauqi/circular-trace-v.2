@@ -797,7 +797,7 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 5: Precision Silo & Quality Control */}
+            {/* Card 5: Precision Warehouse & Quality Control */}
             <div className="bg-white p-7 rounded-3xl border border-stone-200 shadow-xs hover:shadow-md transition-all space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-800 flex items-center justify-center font-black">
                 <Thermometer className="w-6 h-6 text-indigo-700" />

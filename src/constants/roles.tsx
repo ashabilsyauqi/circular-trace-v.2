@@ -47,6 +47,6 @@ export const ROLE_DETAILS: Record<
     label: 'Verifikator (Auditor QA & Q-Grader)',
     badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
     icon: <ShieldCheck className="w-4 h-4 text-purple-700" />,
-    description: 'Audit lahan EUDR, sertifikasi olahan, uji silo, cupping sensori roast, & stempel mutu resmi',
+    description: 'Audit lahan EUDR, sertifikasi olahan, uji gudang, cupping sensori roast, & stempel mutu resmi',
   },
 };

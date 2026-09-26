@@ -26,7 +26,7 @@ export const PROCESSOR_7_STAGES: { id: ProcessingStageId; label: string; shortLa
     id: 'conditioning',
     label: '4. Pemeraman (Resting Gabah)',
     shortLabel: 'Resting Gabah',
-    description: 'Stabilisasi kadar air dan aktivitas air (aw) di silo/kemasan hermetik selama 30-60 hari.',
+    description: 'Stabilisasi kadar air dan aktivitas air (aw) di gudang/kemasan hermetik selama 30-60 hari.',
     stepNumber: 4,
   },
   {

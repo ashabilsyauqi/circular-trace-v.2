@@ -5,7 +5,7 @@ export type VerifierDomain = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'caf
 export type MarketplaceCategory =
   | 'cherry'               // 1. Ceri Kopi Segar / Panen Petani
   | 'green_bean_processor' // 2. Green Bean Hasil Olahan (Mill)
-  | 'green_bean_warehouse' // 3. Green Bean Pergudangan & Ekspor (Silo QA)
+  | 'green_bean_warehouse' // 3. Green Bean Pergudangan & Ekspor (Gudang QA)
   | 'roasted_bean';        // 4. Biji Kopi Sangrai Artisan (Roaster)
 
 export interface AppUser {
@@ -248,7 +248,7 @@ export interface WarehouseLot {
   variety: string;
   altitude: string;
   processMethod: string;
-  storageLocation: string; // e.g., "Silo A-03 (Pallet Kayu Pine)"
+  storageLocation: string; // e.g., "Gudang A-03 (Pallet Kayu Pine)"
   temperatureCelsius: number; // e.g., 20.5
   humidityPercent: number; // e.g., 55
   packagingType: 'GrainPro + Karung Goni 60kg' | 'Vacuum Bag 30kg' | 'Ecotact Hermetic 50kg';

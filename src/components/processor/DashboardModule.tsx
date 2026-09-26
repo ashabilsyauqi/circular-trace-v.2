@@ -83,7 +83,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
     {
       tab: 'inventory',
       icon: Warehouse,
-      label: '2. Gudang & Silo Stok',
+      label: '2. Gudang & Stok Inventaris',
       hint: `${totalCherryStockKg.toLocaleString()} kg ceri, ${availableGreenBeanKg.toLocaleString()} kg GB`,
       color: 'bg-teal-500/10 text-teal-700 border-teal-200',
     },

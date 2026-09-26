@@ -34,13 +34,14 @@ import { StatusPipeline, PipelineStage } from './shared/StatusPipeline';
 import { StatButton } from './shared/StatButton';
 import { ActivityFeed } from './shared/ActivityFeed';
 import { ControlPanel } from './shared/ControlPanel';
-import { Scale, DollarSign, Percent, FileText, Check, Tag } from 'lucide-react';
+import { Scale, DollarSign, Percent, FileText, Check, Tag, Printer } from 'lucide-react';
+import { StakeholderFormsModal } from './forms/StakeholderFormsModal';
 
 const WAREHOUSE_PIPELINE_STAGES: PipelineStage[] = [
   { id: 'inbound', label: 'Penerimaan Inbound' },
   { id: 'qc_lab', label: 'Lab SCA & Defect' },
   { id: 'grading', label: 'Penetapan Grade' },
-  { id: 'silo_storage', label: 'Silo Hermetik' },
+  { id: 'gudang_storage', label: 'Gudang Hermetik' },
   { id: 'siap_jual', label: 'Siap Jual' },
   { id: 'terjual', label: 'Terjual' },
 ];
@@ -176,10 +177,11 @@ export const WarehouseView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [gradeFilter, setGradeFilter] = useState<'all' | WarehouseGradeTier>('all');
   const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
+  const [formsModalOpen, setFormsModalOpen] = useState(false);
 
   // Form state for warehouse storage, grading & dynamic pricing
   const [boughtKg, setBoughtKg] = useState<number>(100);
-  const [storageLocation, setStorageLocation] = useState('Silo A-03 (Pallet Kayu Pine #14)');
+  const [storageLocation, setStorageLocation] = useState('Gudang A-03 (Pallet Kayu Pine #14)');
   const [temperatureCelsius, setTemperatureCelsius] = useState<number>(20.4);
   const [humidityPercent, setHumidityPercent] = useState<number>(54);
   const [packagingType, setPackagingType] = useState<WarehouseLot['packagingType']>(
@@ -373,10 +375,10 @@ export const WarehouseView: React.FC = () => {
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-200 text-xs font-semibold mb-3 border border-amber-400/30 backdrop-blur-xs">
             <Warehouse className="w-4 h-4 text-amber-300" />
-            <span>Warehouse & QA Tier 3 • Silo Klimatik & Sertifikasi Mutu</span>
+            <span>Warehouse & QA Tier 3 • Gudang Klimatik & Sertifikasi Mutu</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Grading Green Bean & Manajemen Silo Ekspor
+            Grading Green Bean & Manajemen Gudang Ekspor
           </h1>
           <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
             Pusat inspeksi fisik green bean, sortir defect standar SCA & SNI, pengujian ukuran ayakan screen size, serta penyimpanan klimatik hermetik (suhu & kelembaban terjaga).
@@ -385,7 +387,7 @@ export const WarehouseView: React.FC = () => {
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-stone-300 pt-1">
             <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs flex items-center gap-1.5">
               <Thermometer className="w-3.5 h-3.5 text-amber-300" />
-              Suhu Rata-rata Silo: <strong className="text-white">20.4°C (Optimal)</strong>
+              Suhu Rata-rata Gudang: <strong className="text-white">20.4°C (Optimal)</strong>
             </span>
             <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs flex items-center gap-1.5">
               <Droplets className="w-3.5 h-3.5 text-emerald-300" />
@@ -407,7 +409,7 @@ export const WarehouseView: React.FC = () => {
           subtitle={`Dari ${totalStoredKg} kg kapasitas`}
           icon={<Box className="w-5 h-5 text-blue-600" />}
           color="blue"
-          badge="Silo Aktif"
+          badge="Gudang Aktif"
         />
 
         <MetricCard
@@ -439,50 +441,63 @@ export const WarehouseView: React.FC = () => {
       </div>
 
       {/* Cruip Styled Navigation Tabs */}
-      <div className="bg-white p-1.5 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center gap-1.5">
-        <button
-          onClick={() => setActiveTab('inventory')}
-          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-            activeTab === 'inventory'
-              ? 'bg-stone-900 text-white shadow-xs font-black'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
-        >
-          <Box className="w-4 h-4 text-blue-400" />
-          <span>Inventaris Silo & Penilaian Grade</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300">
-            {myWarehouseLots.length}
-          </span>
-        </button>
+      <div className="bg-white p-1.5 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            onClick={() => setActiveTab('inventory')}
+            className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+              activeTab === 'inventory'
+                ? 'bg-stone-900 text-white shadow-xs font-black'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+            }`}
+          >
+            <Box className="w-4 h-4 text-blue-400" />
+            <span>Inventaris Gudang & Penilaian Grade</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300">
+              {myWarehouseLots.length}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('marketplace')}
-          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-            activeTab === 'marketplace'
-              ? 'bg-stone-900 text-white shadow-xs font-black'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
-        >
-          <ShoppingCart className="w-4 h-4" />
-          <span>Beli Green Bean Pengolah</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
-            {availableGreenBeans.length} Lot
-          </span>
-        </button>
+          <button
+            onClick={() => setActiveTab('marketplace')}
+            className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+              activeTab === 'marketplace'
+                ? 'bg-stone-900 text-white shadow-xs font-black'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+            }`}
+          >
+            <ShoppingCart className="w-4 h-4" />
+            <span>Beli Green Bean Pengolah</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+              {availableGreenBeans.length} Lot
+            </span>
+          </button>
 
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+              activeTab === 'history'
+                ? 'bg-stone-900 text-white shadow-xs font-black'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            <span>Log Transaksi Gudang</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+              {myWarehouseTransactions.length}
+            </span>
+          </button>
+        </div>
+
+        {/* Blanko Cetak Fisik Gudang / Ekspor */}
         <button
-          onClick={() => setActiveTab('history')}
-          className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-            activeTab === 'history'
-              ? 'bg-stone-900 text-white shadow-xs font-black'
-              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-          }`}
+          type="button"
+          onClick={() => setFormsModalOpen(true)}
+          className="py-2.5 px-3.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
+          title="Cetak & Download Blanko Formulir Gudang & Health Certificate (A4)"
         >
-          <History className="w-4 h-4" />
-          <span>Log Transaksi Gudang</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
-            {myWarehouseTransactions.length}
-          </span>
+          <Printer className="w-3.5 h-3.5 text-amber-600" />
+          <span>Blanko Form Gudang (A4)</span>
         </button>
       </div>
 
@@ -507,7 +522,7 @@ export const WarehouseView: React.FC = () => {
         <div className="space-y-4">
           {/* Enterprise Control Panel */}
           <ControlPanel
-            breadcrumbs={[{ label: 'Inventaris Silo & Mutu Gudang' }]}
+            breadcrumbs={[{ label: 'Inventaris & Mutu Gudang' }]}
             primaryActionLabel="+ Beli Green Bean"
             onPrimaryAction={() => setActiveTab('marketplace')}
             searchQuery={searchQuery}
@@ -614,7 +629,7 @@ export const WarehouseView: React.FC = () => {
                           </div>
                           <div>
                             <span className="text-[10px] text-stone-400 block font-semibold">
-                              Lokasi Silo:
+                              Lokasi Gudang:
                             </span>
                             <strong className="text-stone-800 truncate block">{wh.storageLocation}</strong>
                           </div>
@@ -707,13 +722,13 @@ export const WarehouseView: React.FC = () => {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
                     <tr>
-                      <th className="py-3.5 px-4">ID Lot Silo</th>
+                      <th className="py-3.5 px-4">ID Lot Gudang</th>
                       <th className="py-3.5 px-4">Varietas & Daerah Asal</th>
                       <th className="py-3.5 px-4">Klasifikasi Grade</th>
                       <th className="py-3.5 px-4">Health Certificate</th>
                       <th className="py-3.5 px-4">Skor SCA</th>
                       <th className="py-3.5 px-4">Defect / Screen</th>
-                      <th className="py-3.5 px-4">Lokasi Silo</th>
+                      <th className="py-3.5 px-4">Lokasi Gudang</th>
                       <th className="py-3.5 px-4">Stok Tersedia</th>
                       <th className="py-3.5 px-4">Harga Jual / Kg</th>
                       <th className="py-3.5 px-4 text-right">Tindakan</th>
@@ -1127,7 +1142,7 @@ export const WarehouseView: React.FC = () => {
       {detailLot && (
         <div className="space-y-4 animate-in fade-in duration-200">
           <RecordBreadcrumb
-            listLabel="Inventaris Silo & Penilaian Grade"
+            listLabel="Inventaris Gudang & Penilaian Grade"
             recordLabel={detailLot.id}
             onBack={() => setDetailLot(null)}
           />
@@ -1147,7 +1162,7 @@ export const WarehouseView: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-xs text-stone-500 mt-0.5">
-                    {detailLot.origin} — <strong>{detailLot.variety}</strong> • Tanggal Simpan Silo: {detailLot.storedDate}
+                    {detailLot.origin} — <strong>{detailLot.variety}</strong> • Tanggal Simpan Gudang: {detailLot.storedDate}
                   </p>
                 </div>
               </div>
@@ -1164,7 +1179,7 @@ export const WarehouseView: React.FC = () => {
               <StatButton
                 icon={<Scale className="w-4 h-4" />}
                 value={`${detailLot.availableWeightKg} / ${detailLot.weightKg} kg`}
-                label="Stok Tersisa di Silo"
+                label="Stok Tersisa di Gudang"
                 color="blue"
               />
               <StatButton
@@ -1225,14 +1240,14 @@ export const WarehouseView: React.FC = () => {
                   </dl>
                 </div>
 
-                {/* Column 2: Parameter Silo Klimatik & Silsilah Asal */}
+                {/* Column 2: Parameter Gudang Klimatik & Silsilah Asal */}
                 <div className="bg-stone-50/70 p-5 rounded-2xl border border-stone-200/80 space-y-3">
                   <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-2">
-                    <Thermometer className="w-4 h-4 text-blue-600" /> Parameter Silo Klimatik & Asal
+                    <Thermometer className="w-4 h-4 text-blue-600" /> Parameter Gudang Klimatik & Asal
                   </h4>
                   <dl className="space-y-2">
                     <div className="flex justify-between py-1 border-b border-stone-200/60">
-                      <dt className="text-stone-500">Lokasi Silo / Pallet</dt>
+                      <dt className="text-stone-500">Lokasi Gudang / Pallet</dt>
                       <dd className="font-bold text-stone-900">{detailLot.storageLocation}</dd>
                     </div>
                     <div className="flex justify-between py-1 border-b border-stone-200/60">
@@ -1322,7 +1337,7 @@ export const WarehouseView: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Warehouse className="w-4 h-4 text-blue-700" />
                   <span className="text-xs font-bold text-blue-950">
-                    Aksi Lembar Dokumen Lot Silo #{detailLot.id}
+                    Aksi Lembar Dokumen Lot Gudang #{detailLot.id}
                   </span>
                 </div>
 
@@ -1341,7 +1356,7 @@ export const WarehouseView: React.FC = () => {
                     className="px-4 py-2 bg-white border border-stone-300 hover:bg-stone-50 text-stone-800 font-bold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1.5"
                   >
                     <QrCode className="w-4 h-4 text-stone-700" />
-                    🏷️ Cetak Barcode Karung Silo
+                    🏷️ Cetak Barcode Karung Gudang
                   </button>
                 </div>
               </div>
@@ -1349,10 +1364,10 @@ export const WarehouseView: React.FC = () => {
               {/* Activity Feed & Internal Chatter */}
               <div className="pt-2 border-t border-stone-200">
                 <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] mb-3 flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-blue-600" /> Log Aktivitas QA & Silo Gudang
+                  <FileText className="w-4 h-4 text-blue-600" /> Log Aktivitas QA & Gudang
                 </h4>
                 <ActivityFeed
-                  documentTitle={`Lot Silo #${detailLot.id}`}
+                  documentTitle={`Lot Gudang #${detailLot.id}`}
                   initialMessages={[
                     {
                       id: 'm1',
@@ -1370,7 +1385,7 @@ export const WarehouseView: React.FC = () => {
                     },
                     {
                       id: 'm3',
-                      author: 'Silo Climate Monitor',
+                      author: 'Warehouse Climate Monitor',
                       type: 'system',
                       content: `Sensor klimatik mencatat suhu stabil ${detailLot.temperatureCelsius}°C dan kelembaban ${detailLot.humidityPercent}% RH dalam kemasan ${detailLot.packagingType}. Lot siap didistribusikan ke roastery.`,
                       timestamp: detailLot.storedDate,
@@ -1383,7 +1398,7 @@ export const WarehouseView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Beli & Grading Silo */}
+      {/* Modal Beli & Grading Gudang */}
       {selectedGreenBeanToBuy && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
           <div className="relative bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
@@ -1397,7 +1412,7 @@ export const WarehouseView: React.FC = () => {
 
               <div className="inline-flex items-center gap-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-1 rounded-full text-xs font-semibold mb-2">
                 <Sliders className="w-3.5 h-3.5" />
-                Workstation QC Grading & Penyimpanan Silo
+                Workstation QC Grading & Penyimpanan Gudang
               </div>
               <h2 className="text-xl sm:text-2xl font-black">
                 Grading Lot: {selectedGreenBeanToBuy.variety} ({selectedGreenBeanToBuy.sourceOrigin})
@@ -1591,7 +1606,7 @@ export const WarehouseView: React.FC = () => {
                   type="submit"
                   className="px-6 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold"
                 >
-                  Simpan & Terbitkan ke Silo
+                  Simpan & Terbitkan ke Gudang
                 </button>
               </div>
             </form>
@@ -1742,6 +1757,13 @@ export const WarehouseView: React.FC = () => {
         onClose={() => setBarcodeModalLot(null)}
         lot={barcodeModalLot}
         isNewGrading={false}
+      />
+
+      {/* Blanko Formulir Fisik Lapangan Gudang / Ekspor */}
+      <StakeholderFormsModal
+        isOpen={formsModalOpen}
+        onClose={() => setFormsModalOpen(false)}
+        initialForm="gudang"
       />
     </div>
   );

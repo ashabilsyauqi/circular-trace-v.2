@@ -156,8 +156,8 @@ const idPipelineStages: PipelineStage[] = [
   {
     step: 3,
     role: 'gudang',
-    title: 'Silo Storage & SCA QA',
-    actor: 'PT Nusantara Green Bean Silo',
+    title: 'Warehouse Storage & SCA QA',
+    actor: 'PT Nusantara Green Bean Warehouse',
     badge: 'GrainPro Hermetik • 20°C / RH 55%',
     metric: 'SCA Score: 87.25 • Grade 1 Super',
     desc: 'Penyimpanan terstandarisasi untuk menjaga stabilitas organoleptik biji kopi specialty.',
@@ -219,8 +219,8 @@ const enPipelineStages: PipelineStage[] = [
   {
     step: 3,
     role: 'gudang',
-    title: 'Silo Storage & SCA QA',
-    actor: 'PT Nusantara Green Bean Silo',
+    title: 'Warehouse Storage & SCA QA',
+    actor: 'PT Nusantara Green Bean Warehouse',
     badge: 'GrainPro Hermetic • 20°C / 55% RH',
     metric: 'SCA Score: 87.25 • Grade 1 Specialty',
     desc: 'Standardized storage to preserve the organoleptic stability of specialty green beans.',
@@ -296,19 +296,19 @@ const idServicePanels: Record<UserRole, ServicePanel> = {
     ],
   },
   gudang: {
-    badge: 'Pilar 3: Silo Pergudangan & Quality Assurance',
-    title: 'Silo Iklim Terkendali & Sertifikasi Skor Cupping SCA',
+    badge: 'Pilar 3: Pergudangan & Quality Assurance',
+    title: 'Gudang Iklim Terkendali & Sertifikasi Skor Cupping SCA',
     desc: 'Pengelola gudang menjaga integritas green bean dengan monitoring suhu dan kelembaban (RH), kemasan hermetik GrainPro, serta verifikasi skor cupping SCA dan pembagian grade tier komoditas.',
     bullets: [
-      'Manajemen stok silo dengan perlindungan kemasan hermetik GrainPro.',
+      'Manajemen stok gudang dengan perlindungan kemasan hermetik GrainPro.',
       'Audit dan verifikasi skor cupping SCA terakreditasi (85+ Specialty).',
       'Penyaluran green bean tersertifikasi langsung ke roastery di seluruh Indonesia.',
     ],
     ctaOpen: 'Buka Panel Gudang',
-    ctaRegister: 'Daftar Fasilitas Silo',
-    previewTitle: 'Status Inventaris Silo Gudang',
+    ctaRegister: 'Daftar Fasilitas Gudang',
+    previewTitle: 'Status Inventaris Gudang',
     previewRows: [
-      { label: 'Kondisi Ruang Silo', value: '20°C Suhu • 55% Kelembaban RH' },
+      { label: 'Kondisi Ruang Gudang', value: '20°C Suhu • 55% Kelembaban RH' },
       { label: 'Tipe Kemasan', value: 'GrainPro Hermetic Sealed' },
       { label: 'Skor Cupping SCA Terverifikasi', value: '87.25 (Specialty Grade 1)' },
       { label: 'Tasting Notes Karakteristik', value: 'Bergamot, Peach, Honeycomb' },
@@ -358,7 +358,7 @@ const idServicePanels: Record<UserRole, ServicePanel> = {
   verifikator: {
     badge: 'Pilar 6: Dewan Verifikator & Kualitas',
     title: 'Audit Standar Mutu, Cupping Sensori & Stempel Resmi',
-    desc: 'Auditor spesialis memverifikasi kepatuhan regulasi EUDR bebas deforestasi lahan, standar eco-processing stasiun mill, hermetic storage silo, uji cicip cangkir (cupping) SCA pada biji sangrai, dan menerbitkan stempel sertifikasi ber-tanda tangan kriptografis.',
+    desc: 'Auditor spesialis memverifikasi kepatuhan regulasi EUDR bebas deforestasi lahan, standar eco-processing stasiun mill, penyimpanan gudang hermetik, uji cicip cangkir (cupping) SCA pada biji sangrai, dan menerbitkan stempel sertifikasi ber-tanda tangan kriptografis.',
     bullets: [
       'Audit batas lahan GPS & verifikasi kepatuhan EUDR anti-deforestasi.',
       'Uji cicip sensori cangkir (SCA Cupping Lab) 10 atribut untuk biji sangrai.',
@@ -419,19 +419,19 @@ const enServicePanels: Record<UserRole, ServicePanel> = {
     ],
   },
   gudang: {
-    badge: 'Pillar 3: Silo Warehousing & Quality Assurance',
-    title: 'Climate-Controlled Silos & SCA Cupping Score Certification',
+    badge: 'Pillar 3: Warehousing & Quality Assurance',
+    title: 'Climate-Controlled Warehouses & SCA Cupping Score Certification',
     desc: 'Warehouse managers preserve green bean integrity through temperature and humidity (RH) monitoring, GrainPro hermetic packaging, and verified SCA cupping scores with commodity grade tiering.',
     bullets: [
-      'Silo stock management protected by GrainPro hermetic packaging.',
+      'Warehouse stock management protected by GrainPro hermetic packaging.',
       'Audit and verification of accredited SCA cupping scores (85+ Specialty).',
       'Distribution of certified green beans directly to roasteries across Indonesia.',
     ],
     ctaOpen: 'Open Warehouse Panel',
-    ctaRegister: 'Register Silo Facility',
-    previewTitle: 'Silo Warehouse Inventory Status',
+    ctaRegister: 'Register Warehouse Facility',
+    previewTitle: 'Warehouse Inventory Status',
     previewRows: [
-      { label: 'Silo Room Conditions', value: '20°C Temperature • 55% RH Humidity' },
+      { label: 'Warehouse Room Conditions', value: '20°C Temperature • 55% RH Humidity' },
       { label: 'Packaging Type', value: 'GrainPro Hermetic Sealed' },
       { label: 'Verified SCA Cupping Score', value: '87.25 (Specialty Grade 1)' },
       { label: 'Characteristic Tasting Notes', value: 'Bergamot, Peach, Honeycomb' },
@@ -481,7 +481,7 @@ const enServicePanels: Record<UserRole, ServicePanel> = {
   verifikator: {
     badge: 'Pillar 6: Quality Verification & Audit Board',
     title: 'Quality Standards Audit, Sensory Cupping & Official Stamp',
-    desc: 'Specialist auditors verify deforestation-free EUDR farm compliance, zero-waste mill eco-processing standards, hermetic silo storage, SCA sensory cup tasting on roasted beans, and issue cryptographically signed digital certification stamps.',
+    desc: 'Specialist auditors verify deforestation-free EUDR farm compliance, zero-waste mill eco-processing standards, hermetic warehouse storage, SCA sensory cup tasting on roasted beans, and issue cryptographically signed digital certification stamps.',
     bullets: [
       'GPS farm boundary audit & anti-deforestation EUDR compliance verification.',
       'Sensory cup tasting (SCA Cupping Lab) evaluating 10 specialty attributes.',
@@ -518,7 +518,7 @@ const idAdvantageCards: AdvantageCard[] = [
   },
   {
     title: '4. Multi-Role B2B Marketplace Terpadu',
-    desc: 'Katalog pasar terintegrasi untuk 4 komoditas (Ceri Kopi, Green Bean Mill, Silo Pergudangan, & Roasted Bean Sangrai) dengan auto-ledger transaksi instan.',
+    desc: 'Katalog pasar terintegrasi untuk 4 komoditas (Ceri Kopi, Green Bean Mill, Pergudangan Green Bean, & Roasted Bean Sangrai) dengan auto-ledger transaksi instan.',
     footer: 'Perdagangan langsung tanpa perantara gelap',
   },
   {
@@ -551,7 +551,7 @@ const enAdvantageCards: AdvantageCard[] = [
   },
   {
     title: '4. Unified Multi-Role B2B Marketplace',
-    desc: 'An integrated market catalog for 4 commodities (Coffee Cherry, Mill Green Bean, Silo Warehousing, & Roasted Bean) with instant auto-ledger transactions.',
+    desc: 'An integrated market catalog for 4 commodities (Coffee Cherry, Mill Green Bean, Warehouse Green Bean, & Roasted Bean) with instant auto-ledger transactions.',
     footer: 'Direct trade with no hidden middlemen',
   },
   {
@@ -569,7 +569,7 @@ const enAdvantageCards: AdvantageCard[] = [
 const idCtaRoleCards: CtaRoleCard[] = [
   { role: 'petani', name: 'Petani Kopi', desc: 'Upload panen ceri & jual langsung ke mill', registerLabel: 'Daftar Petani' },
   { role: 'pengolah', name: 'Pengolah Mill', desc: 'Fermentasi, uji mutu & kelola limbah sirkular', registerLabel: 'Daftar Pengolah' },
-  { role: 'gudang', name: 'Gudang & Silo QA', desc: 'Kelola stok silo GrainPro & sertifikasi SCA', registerLabel: 'Daftar Gudang' },
+  { role: 'gudang', name: 'Gudang & QA', desc: 'Kelola stok gudang GrainPro & sertifikasi SCA', registerLabel: 'Daftar Gudang' },
   { role: 'roaster', name: 'Artisan Roastery', desc: 'Work order, kurva Agtron & sangrAI', registerLabel: 'Daftar Artisan' },
   { role: 'cafe', name: 'Pemilik Cafe', desc: 'Beli roasted beans & cetak QR cup seduh', registerLabel: 'Daftar Pemilik' },
 ];
@@ -577,7 +577,7 @@ const idCtaRoleCards: CtaRoleCard[] = [
 const enCtaRoleCards: CtaRoleCard[] = [
   { role: 'petani', name: 'Coffee Farmer', desc: 'Upload cherry harvests & sell directly to the mill', registerLabel: 'Register as Farmer' },
   { role: 'pengolah', name: 'Mill Processor', desc: 'Fermentation, quality testing & circular waste management', registerLabel: 'Register as Processor' },
-  { role: 'gudang', name: 'Warehouse & Silo QA', desc: 'Manage GrainPro silo stock & SCA certification', registerLabel: 'Register Warehouse' },
+  { role: 'gudang', name: 'Warehouse & QA', desc: 'Manage GrainPro warehouse stock & SCA certification', registerLabel: 'Register Warehouse' },
   { role: 'roaster', name: 'Artisan Roastery', desc: 'Work orders, Agtron curves & sangrAI', registerLabel: 'Register as Roastery' },
   { role: 'cafe', name: 'Cafe Owner', desc: 'Buy roasted beans & print QR brew cups', registerLabel: 'Register as Owner' },
 ];
@@ -637,7 +637,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       titleHighlight: 'Dari Kebun Petani',
       titlePart2: 'Hingga Secangkir Kopi di Cafe Anda.',
       subtitlePre: 'Ekosistem digital terpadu untuk ',
-      subtitleStrong1: 'Petani, Pengolah Mill, Silo Gudang, Artisan Roastery',
+      subtitleStrong1: 'Petani, Pengolah Mill, Gudang, Artisan Roastery',
       subtitleMid: ', dan ',
       subtitleStrong2: 'Pemilik Cafe',
       subtitleEnd:
@@ -676,7 +676,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
     roleTabs: [
       { id: 'petani', label: '1. Petani Kopi' },
       { id: 'pengolah', label: '2. Pengolah Mill' },
-      { id: 'gudang', label: '3. Gudang & Silo QA' },
+      { id: 'gudang', label: '3. Gudang & QA' },
       { id: 'roaster', label: '4. Artisan Roastery' },
       { id: 'cafe', label: '5. Pemilik Cafe' },
     ],
@@ -721,7 +721,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       badge: 'Mulai Transformasi Digital Sekarang',
       title: 'Siap Mengembangkan Usaha Kopi Anda Bersama sangrAI?',
       subtitle:
-        'Bergabunglah dengan ribuan petani, pengolah mill, pengelola silo gudang, artisan roastery, dan barista cafe di seluruh Indonesia. Gratis tanpa biaya aktivasi awal.',
+        'Bergabunglah dengan ribuan petani, pengolah mill, pengelola gudang, artisan roastery, dan barista cafe di seluruh Indonesia. Gratis tanpa biaya aktivasi awal.',
       roleCards: idCtaRoleCards,
       bannerTitle: 'Coba Seluruh Fitur Tanpa Komitmen',
       bannerDesc:
@@ -739,7 +739,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       titleHighlight: "From the Farmer's Field",
       titlePart2: 'All the Way to Your Cafe Cup.',
       subtitlePre: 'A unified digital ecosystem for ',
-      subtitleStrong1: 'Farmers, Mill Processors, Silo Warehouses, Artisan Roasteries',
+      subtitleStrong1: 'Farmers, Mill Processors, Warehouses, Artisan Roasteries',
       subtitleMid: ', and ',
       subtitleStrong2: 'Cafe Owners',
       subtitleEnd:
@@ -778,7 +778,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
     roleTabs: [
       { id: 'petani', label: '1. Coffee Farmer' },
       { id: 'pengolah', label: '2. Mill Processor' },
-      { id: 'gudang', label: '3. Warehouse & Silo QA' },
+      { id: 'gudang', label: '3. Warehouse & QA' },
       { id: 'roaster', label: '4. Artisan Roastery' },
       { id: 'cafe', label: '5. Cafe Owner' },
     ],
@@ -823,7 +823,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       badge: 'Start Your Digital Transformation Now',
       title: 'Ready to Grow Your Coffee Business with sangrAI?',
       subtitle:
-        'Join thousands of farmers, mill processors, silo warehouse managers, artisan roasteries, and cafe baristas across Indonesia. Free, with no activation fee.',
+        'Join thousands of farmers, mill processors, warehouse managers, artisan roasteries, and cafe baristas across Indonesia. Free, with no activation fee.',
       roleCards: enCtaRoleCards,
       bannerTitle: 'Try Every Feature, No Commitment',
       bannerDesc:

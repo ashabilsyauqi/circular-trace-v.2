@@ -172,11 +172,11 @@ export const LoginPage: React.FC = () => {
     },
     gudang: {
       title: 'Gudang (Warehouse & QA)',
-      tier: 'Tahap 3: Silo Hermetik',
+      tier: 'Tahap 3: Gudang Hermetik',
       color: 'hover:border-indigo-500 hover:shadow-indigo-50',
       badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950 dark:text-indigo-300',
       icon: <Warehouse className="w-5 h-5 text-indigo-600" />,
-      duty: 'Kelola inventaris silo, kontrol suhu & RH, verifikasi mutu ekspor pre-roast.',
+      duty: 'Kelola inventaris gudang, kontrol suhu & RH, verifikasi mutu ekspor pre-roast.',
       marketplaceAction: 'Menjual Green Bean bergradasi ke Roaster',
     },
     roaster: {
@@ -203,7 +203,7 @@ export const LoginPage: React.FC = () => {
       color: 'hover:border-purple-500 hover:shadow-purple-50',
       badgeColor: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300',
       icon: <ShieldCheck className="w-5 h-5 text-purple-600" />,
-      duty: 'Audit sertifikasi EUDR, zero-waste mill, silo hermetik, uji cicip cangkir (cupping) SCA, dan terbitkan stempel digital.',
+      duty: 'Audit sertifikasi EUDR, zero-waste mill, gudang hermetik, uji cicip cangkir (cupping) SCA, dan terbitkan stempel digital.',
       marketplaceAction: 'Memberi Stempel Mutu Terverifikasi pada Rantai Pasok',
     },
   };

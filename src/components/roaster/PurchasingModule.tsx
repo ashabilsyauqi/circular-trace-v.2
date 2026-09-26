@@ -235,7 +235,7 @@ export const PurchasingModule: React.FC = () => {
           title="Total Pembelian (PO)"
           value={`Rp ${totalSpend.toLocaleString()}`}
           subtitle={`${purchaseOrders.length} PO Terbit`}
-          trend={{ value: `${receivedCount} Selesai di Silo`, isPositive: true }}
+          trend={{ value: `${receivedCount} Selesai di Gudang`, isPositive: true }}
           icon={<DollarSign className="w-5 h-5" />}
           color="amber"
         />
@@ -251,7 +251,7 @@ export const PurchasingModule: React.FC = () => {
           title="Disetujui, Belum Diterima"
           value={`${approvedCount} PO`}
           subtitle="Menunggu kedatangan fisik"
-          trend={{ value: 'Siap Diterima di Silo', isPositive: true }}
+          trend={{ value: 'Siap Diterima di Gudang', isPositive: true }}
           icon={<Truck className="w-5 h-5" />}
           color="emerald"
         />
@@ -622,7 +622,7 @@ export const PurchasingModule: React.FC = () => {
                       id: 'po-msg-1',
                       author: detailModalPO.supplierName,
                       type: 'message',
-                      content: `PO telah dikonfirmasi dan disiapkan untuk pengiriman ke gudang silo. Instruksi: ${detailModalPO.notes}`,
+                      content: `PO telah dikonfirmasi dan disiapkan untuk pengiriman ke gudang. Instruksi: ${detailModalPO.notes}`,
                       timestamp: detailModalPO.orderDate,
                     },
                   ]}

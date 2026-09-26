@@ -76,13 +76,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       defaultLocExample: 'e.g. Pangalengan, Jawa Barat',
     },
     gudang: {
-      title: 'Gudang & Silo QA (Warehouse)',
+      title: 'Gudang & QA (Warehouse)',
       tier: 'Pergudangan & Grading SCA',
-      desc: 'Manajemen silo GrainPro, kontrol suhu/kelembaban, sertifikasi skor SCA, dan supply ke roaster.',
+      desc: 'Manajemen gudang GrainPro, kontrol suhu/kelembaban, sertifikasi skor SCA, dan supply ke roaster.',
       icon: <Warehouse className="w-5 h-5 text-blue-600" />,
       color: 'border-blue-500 ring-blue-500/20',
       bgBadge: 'bg-blue-50 text-blue-700 border-blue-200',
-      defaultOrgExample: 'e.g. PT Nusantara Coffee Silo & QA',
+      defaultOrgExample: 'e.g. PT Nusantara Coffee Warehouse & QA',
       defaultLocExample: 'e.g. Gedebage, Kota Bandung',
     },
     roaster: {
@@ -108,7 +108,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     verifikator: {
       title: 'Verifikator Mutu (Auditor)',
       tier: 'Dewan Audit & Q-Grader',
-      desc: 'Audit kepatuhan EUDR, inspeksi stasiun pengolah, sertifikasi silo, uji sensori cupping SCA, dan terbitkan stempel resmi.',
+      desc: 'Audit kepatuhan EUDR, inspeksi stasiun pengolah, sertifikasi gudang, uji sensori cupping SCA, dan terbitkan stempel resmi.',
       icon: <ShieldCheck className="w-5 h-5 text-purple-600" />,
       color: 'border-purple-500 ring-purple-500/20',
       bgBadge: 'bg-purple-50 text-purple-700 border-purple-200',

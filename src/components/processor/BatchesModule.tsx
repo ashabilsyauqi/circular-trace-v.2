@@ -527,7 +527,7 @@ export const BatchesModule: React.FC = () => {
               { id: 'intake_sorting', label: '1. Intake' },
               { id: 'fermentation', label: '2. Fermentasi' },
               { id: 'drying', label: '3. Penjemuran' },
-              { id: 'conditioning', label: '4. Resting Silo' },
+              { id: 'conditioning', label: '4. Resting Gudang' },
               { id: 'milling', label: '5. Hulling Mill' },
               { id: 'grading_qc', label: '6. Grading QC' },
               { id: 'packing_closure', label: '7. Kemas & Rilis' },
@@ -1472,7 +1472,7 @@ export const BatchesModule: React.FC = () => {
                 )}
 
                 {/* ------------------------------------------------------------------------- */}
-                {/* TAB 4: PEMERAMAN / RESTING SILO (STAGE 4)                                */}
+                {/* TAB 4: PEMERAMAN / RESTING GUDANG (STAGE 4)                               */}
                 {/* ------------------------------------------------------------------------- */}
                 {activeStageId === 'conditioning' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1488,7 +1488,7 @@ export const BatchesModule: React.FC = () => {
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block font-bold text-stone-700 uppercase mb-1">ID Silo / Bin</label>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">ID Gudang / Bin</label>
                           <input
                             type="text"
                             value={editedBatch.conditioningLog.siloBinId}
@@ -1600,7 +1600,7 @@ export const BatchesModule: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="block font-bold text-stone-700 uppercase mb-1">Suhu Silo (°C)</label>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Suhu Gudang (°C)</label>
                           <input
                             type="number"
                             step="0.1"
@@ -1619,7 +1619,7 @@ export const BatchesModule: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="block font-bold text-stone-700 uppercase mb-1">Kelembaban Silo (RH%)</label>
+                          <label className="block font-bold text-stone-700 uppercase mb-1">Kelembaban Gudang (RH%)</label>
                           <input
                             type="number"
                             value={editedBatch.conditioningLog.ambientRhPercent}

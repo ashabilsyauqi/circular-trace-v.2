@@ -108,7 +108,7 @@ export const VerificationStampBadge: React.FC<VerificationStampBadgeProps> = ({
           bg: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700/60',
           gradient: 'from-indigo-600 to-purple-700',
           icon: FileCheck2,
-          label: 'Silo QA Certified',
+          label: 'Gudang QA Certified',
         };
       case 'cafe_safety':
         return {

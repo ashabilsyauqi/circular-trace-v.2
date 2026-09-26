@@ -53,6 +53,7 @@ import { ActivityFeed } from './shared/ActivityFeed';
 import { RecordBreadcrumb } from './shared/RecordBreadcrumb';
 import { FarmLocationMap, INDONESIAN_COFFEE_ORIGINS } from './shared/FarmLocationMap';
 import { VerificationStampBadge } from './shared/VerificationStampBadge';
+import { StakeholderFormsModal } from './forms/StakeholderFormsModal';
 
 // 6-Stage Pipeline for Farmer Harvest Lot
 export const FARMER_LOT_STAGES: PipelineStage[] = [
@@ -111,6 +112,7 @@ export const FarmerView: React.FC = () => {
   const [editedFarm, setEditedFarm] = useState<CoffeeFarm | null>(null);
   const [activeFarmStageId, setActiveFarmStageId] = useState<string>('farm_profile');
   const [isRegisterFarmModalOpen, setIsRegisterFarmModalOpen] = useState(false);
+  const [formsModalOpen, setFormsModalOpen] = useState(false);
 
   // New Farm Registration Form State
   const [newFarmName, setNewFarmName] = useState('');
@@ -559,62 +561,75 @@ export const FarmerView: React.FC = () => {
           )}
 
           {/* Navigation Tabs (ERP Workstation Style) */}
-          <div className="bg-white p-1.5 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center gap-1.5">
-            <button
-              onClick={() => setActiveTab('farms')}
-              className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                activeTab === 'farms'
-                  ? 'bg-stone-900 text-white shadow-xs font-black'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-              }`}
-            >
-              <TreePine className="w-4 h-4 text-emerald-400" />
-              <span>1. Registrasi &amp; Lahan Kebun</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300">
-                {myFarms.length}
-              </span>
-            </button>
+          <div className="bg-white p-1.5 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                onClick={() => setActiveTab('farms')}
+                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'farms'
+                    ? 'bg-stone-900 text-white shadow-xs font-black'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                }`}
+              >
+                <TreePine className="w-4 h-4 text-emerald-400" />
+                <span>1. Registrasi &amp; Lahan Kebun</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300">
+                  {myFarms.length}
+                </span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('upload')}
-              className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                activeTab === 'upload'
-                  ? 'bg-stone-900 text-white shadow-xs font-black'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-              }`}
-            >
-              <PlusCircle className="w-4 h-4 text-emerald-400" />
-              <span>2. Form Panen Baru</span>
-            </button>
+              <button
+                onClick={() => setActiveTab('upload')}
+                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'upload'
+                    ? 'bg-stone-900 text-white shadow-xs font-black'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                }`}
+              >
+                <PlusCircle className="w-4 h-4 text-emerald-400" />
+                <span>2. Form Panen Baru</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('catalog')}
-              className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                activeTab === 'catalog'
-                  ? 'bg-stone-900 text-white shadow-xs font-black'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-              }`}
-            >
-              <Package className="w-4 h-4" />
-              <span>3. Katalog Panen Ceri</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300">
-                {myLots.length}
-              </span>
-            </button>
+              <button
+                onClick={() => setActiveTab('catalog')}
+                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'catalog'
+                    ? 'bg-stone-900 text-white shadow-xs font-black'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                }`}
+              >
+                <Package className="w-4 h-4" />
+                <span>3. Katalog Panen Ceri</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300">
+                  {myLots.length}
+                </span>
+              </button>
 
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'history'
+                    ? 'bg-stone-900 text-white shadow-xs font-black'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                }`}
+              >
+                <History className="w-4 h-4" />
+                <span>4. Buku Kas &amp; Ledger</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+                  {myTransactions.length}
+                </span>
+              </button>
+            </div>
+
+            {/* Blanko Cetak Fisik Petani */}
             <button
-              onClick={() => setActiveTab('history')}
-              className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                activeTab === 'history'
-                  ? 'bg-stone-900 text-white shadow-xs font-black'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-              }`}
+              type="button"
+              onClick={() => setFormsModalOpen(true)}
+              className="py-2.5 px-3.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
+              title="Cetak & Download Blanko Formulir Petani (A4)"
             >
-              <History className="w-4 h-4" />
-              <span>4. Buku Kas &amp; Ledger</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
-                {myTransactions.length}
-              </span>
+              <Printer className="w-3.5 h-3.5 text-amber-600" />
+              <span>Blanko Form Petani (A4)</span>
             </button>
           </div>
 
@@ -3024,6 +3039,13 @@ export const FarmerView: React.FC = () => {
         onClose={() => setSelectedBarcodeLot(null)}
         lot={selectedBarcodeLot}
         isNewUpload={isNewUpload}
+      />
+
+      {/* Blanko Formulir Fisik Lapangan Petani */}
+      <StakeholderFormsModal
+        isOpen={formsModalOpen}
+        onClose={() => setFormsModalOpen(false)}
+        initialForm="petani"
       />
     </div>
   );

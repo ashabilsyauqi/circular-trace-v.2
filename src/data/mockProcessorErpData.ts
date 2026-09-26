@@ -96,7 +96,7 @@ export const INITIAL_PROCESSING_BATCHES: ProcessingBatch[] = [
       notes: 'Penjemuran di solar dome terlindung hujan. Lanjutkan penjemuran hingga kadar air stabil di 11.2%.',
     },
     conditioningLog: {
-      siloBinId: 'SILO-GABAH-01',
+      siloBinId: 'BIN-GABAH-01',
       packagingType: 'GrainPro Hermetic 50kg',
       startDate: '2026-09-23',
       targetRestingDays: 45,
@@ -225,7 +225,7 @@ export const INITIAL_PROCESSING_BATCHES: ProcessingBatch[] = [
       notes: 'Kadar air stabil 10.8%, lolos quality gate pengeringan.',
     },
     conditioningLog: {
-      siloBinId: 'SILO-GABAH-04',
+      siloBinId: 'BIN-GABAH-04',
       packagingType: 'GrainPro Hermetic 50kg',
       startDate: '2026-08-28',
       targetRestingDays: 45,
@@ -281,7 +281,7 @@ export const INITIAL_PROCESSING_BATCHES: ProcessingBatch[] = [
       eudrComplianceVerified: true,
       closedBy: 'Budi Santoso',
       finalStatus: 'siap_gudang',
-      notes: 'Kemasan hermetik GrainPro siap kirim ke silo QA gudang.',
+      notes: 'Kemasan hermetik GrainPro siap kirim ke Gudang QA.',
     },
     wasteManagement: {
       wasteType: 'Air Limbah Fermentasi & Kulit Tanduk (Husk)',
@@ -355,7 +355,7 @@ export const INITIAL_PROCESSING_BATCHES: ProcessingBatch[] = [
       notes: 'Pengeringan 16 hari dengan kadar air akhir 11.2%.',
     },
     conditioningLog: {
-      siloBinId: 'SILO-GABAH-02',
+      siloBinId: 'BIN-GABAH-02',
       packagingType: 'GrainPro Hermetic 50kg',
       startDate: '2026-08-20',
       targetRestingDays: 30,
@@ -482,7 +482,7 @@ export const INITIAL_PROCESSING_BATCHES: ProcessingBatch[] = [
       notes: 'Penjemuran solar dome sempurna.',
     },
     conditioningLog: {
-      siloBinId: 'SILO-BALI-01',
+      siloBinId: 'BIN-BALI-01',
       packagingType: 'GrainPro Hermetic 50kg',
       startDate: '2026-09-20',
       targetRestingDays: 14,
@@ -492,7 +492,7 @@ export const INITIAL_PROCESSING_BATCHES: ProcessingBatch[] = [
       moistureStabilizedPercent: 11.0,
       waterActivityAw: 0.56,
       operatorName: 'Made Sukra',
-      notes: 'Resting gabah kering di silo hermetik sebelum dry milling.',
+      notes: 'Resting gabah kering di gudang hermetik sebelum dry milling.',
     },
     millingLog: {
       millingDate: '2026-09-21',
@@ -608,7 +608,7 @@ export const INITIAL_PROCESSING_BATCHES: ProcessingBatch[] = [
       notes: 'Persiapan proses labu giling basah.',
     },
     conditioningLog: {
-      siloBinId: 'SILO-GYO-01',
+      siloBinId: 'BIN-GYO-01',
       packagingType: 'GrainPro Hermetic 50kg',
       startDate: '2026-09-16',
       targetRestingDays: 30,

@@ -277,7 +277,7 @@ export const VerifierView: React.FC = () => {
         'Stasiun pengolahan basah dan kering menerapkan daur ulang limbah pulp organik dan kolam filtrasi anaerobik berstandar lingkungan.'
       );
     } else if (type === 'warehouse') {
-      setGenericTitle('Silo QA & Hermetic Storage Certified');
+      setGenericTitle('Warehouse QA & Hermetic Storage Certified');
       setGenericScoreDisplay('Grade 1 Super Premium • Hermetic Seal Validated');
       setGenericNotes(
         'Fasilitas gudang menjaga kelembaban optimal 60-65% RH dan suhu 18-20°C dengan kemasan hermetik bebas kutu dan jamur.'
@@ -324,7 +324,7 @@ export const VerifierView: React.FC = () => {
     const verifiedFarms = coffeeFarms.filter((f) => f.verificationStatus === 'verified').length;
     const verifiedHarvests = farmerLots.filter((h) => h.verificationStatus === 'verified').length;
     const verifiedMills = processedLots.filter((p) => p.verificationStatus === 'verified').length;
-    const verifiedSilos = warehouseLots.filter((w) => w.verificationStatus === 'verified').length;
+    const verifiedWarehouses = warehouseLots.filter((w) => w.verificationStatus === 'verified').length;
     const verifiedRoasts = roastedLots.filter((r) => r.verificationStatus === 'verified').length;
     const verifiedCafes = cafeProducts.filter((c) => c.verificationStatus === 'verified').length;
 
@@ -339,7 +339,7 @@ export const VerifierView: React.FC = () => {
       roastScores.length > 0 ? (roastScores.reduce((a, b) => a + b, 0) / roastScores.length).toFixed(1) : '87.5';
 
     return {
-      totalVerified: verifiedFarms + verifiedHarvests + verifiedMills + verifiedSilos + verifiedRoasts + verifiedCafes,
+      totalVerified: verifiedFarms + verifiedHarvests + verifiedMills + verifiedWarehouses + verifiedRoasts + verifiedCafes,
       pendingTotal: pendingRoasts + pendingFarms + pendingHarvests,
       avgCuppingScore,
       totalStamps: verificationStamps.length,
@@ -364,7 +364,7 @@ export const VerifierView: React.FC = () => {
       color: 'from-cyan-600 to-blue-700',
     },
     gudang: {
-      title: 'Verifikasi Silo & Pergudangan Ekspor',
+      title: 'Verifikasi Gudang & Pergudangan Ekspor',
       subtitle: 'Audit Suhu, RH, Kemasan Hermetik, Green Bean Grading & Standard SCA',
       icon: FileCheck2,
       color: 'from-indigo-600 to-purple-700',
@@ -467,7 +467,7 @@ export const VerifierView: React.FC = () => {
         {[
           { id: 'petani', label: '1. Petani & Lahan EUDR', icon: MapPin },
           { id: 'pengolah', label: '2. Stasiun Pengolah (Mill)', icon: Award },
-          { id: 'gudang', label: '3. Pergudangan & Silo', icon: FileCheck2 },
+          { id: 'gudang', label: '3. Pergudangan & Ekspor', icon: FileCheck2 },
           { id: 'roaster', label: '4. Roastery & Cupping Lab (Cicip Kopi)', icon: Coffee, highlight: true },
           { id: 'cafe', label: '5. Kafe & Barista Bar', icon: CheckCircle2 },
           { id: 'history', label: 'Riwayat Seluruh Stempel', icon: Layers },
@@ -1039,7 +1039,7 @@ export const VerifierView: React.FC = () => {
         </div>
       )}
 
-      {/* TAB CONTENT: GUDANG (SILO QA) */}
+      {/* TAB CONTENT: GUDANG (WAREHOUSE QA) */}
       {activeDomain === 'gudang' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1098,11 +1098,11 @@ export const VerifierView: React.FC = () => {
 
                   <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
                     <button
-                      onClick={() => openGenericModal('warehouse', lot.id, `Silo Lot ${lot.variety}`, lot.warehouseName)}
+                      onClick={() => openGenericModal('warehouse', lot.id, `Lot Gudang ${lot.variety}`, lot.warehouseName)}
                       className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-700 text-white shadow-md"
                     >
                       <FileCheck2 className="w-4 h-4" />
-                      <span>{isVerified ? 'Perbarui Stempel Silo' : 'Beri Stempel Silo QA'}</span>
+                      <span>{isVerified ? 'Perbarui Stempel Gudang' : 'Beri Stempel Gudang QA'}</span>
                     </button>
                     {isVerified && (
                       <button

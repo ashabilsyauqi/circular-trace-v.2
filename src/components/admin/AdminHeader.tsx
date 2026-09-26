@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { AppLauncherModal } from '../shared/AppLauncherModal';
 import { ProfileMenu } from '../shared/ProfileMenu';
+import { StakeholderFormsModal } from '../forms/StakeholderFormsModal';
 
 interface AdminHeaderProps {
   title?: string;
@@ -82,6 +83,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [appSwitcherOpen, setAppSwitcherOpen] = useState(false);
   const [moduleDropdownOpen, setModuleDropdownOpen] = useState(false);
+  const [formsModalOpen, setFormsModalOpen] = useState(false);
 
   if (!currentUser) return null;
 
@@ -321,11 +323,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'inventory',
       stepNumber: 1,
-      label: 'Penerimaan & Stok Silo',
-      subtitle: 'Penyimpanan Hermetik, Suhu & RH Silo',
+      label: 'Penerimaan & Stok Gudang',
+      subtitle: 'Penyimpanan Hermetik, Suhu & RH Gudang',
       icon: Warehouse,
       badge: myWarehouseLotsCount,
-      badgeLabel: `${myWarehouseLotsCount} Silo Lot`,
+      badgeLabel: `${myWarehouseLotsCount} Lot Gudang`,
     },
     {
       id: 'marketplace',
@@ -415,7 +417,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'gudang',
       stepNumber: 3,
-      label: 'Audit Silo Gudang & Ekspor',
+      label: 'Audit Gudang & Ekspor',
       subtitle: 'Suhu, RH, Kemasan Hermetik & Grading',
       icon: Warehouse,
       badge: warehouseLots.filter((w) => w.verificationStatus === 'verified').length,
@@ -693,6 +695,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
             <span className="hidden sm:inline">Toko Publik</span>
           </button>
 
+          {/* Printable Physical Blank Forms Button */}
+          <button
+            type="button"
+            onClick={() => setFormsModalOpen(true)}
+            className="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-bold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer shrink-0"
+            title="Cetak & Download Blanko Formulir Fisik Lapangan (Petani, Pengolah, Gudang, Roastery)"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Blanko Form</span>
+          </button>
+
           {/* Notification Bell */}
           <div className="relative">
             <button
@@ -888,6 +901,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
             }
           }
         }}
+      />
+
+      {/* Stakeholder Physical Blank Forms Modal */}
+      <StakeholderFormsModal
+        isOpen={formsModalOpen}
+        onClose={() => setFormsModalOpen(false)}
       />
     </>
   );

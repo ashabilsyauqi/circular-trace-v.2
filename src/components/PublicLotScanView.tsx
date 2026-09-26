@@ -101,7 +101,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
       processorName: 'CV Malabar Wet & Dry Mill Station',
       fermentationTime: '36 Jam Full Washed with Spring Water',
       moisturePercent: 10.8,
-      warehouseName: 'PT Nusantara Green Bean Warehouse (Silo A-03)',
+      warehouseName: 'PT Nusantara Green Bean Warehouse (Gudang A-03)',
       storageConditions: 'Suhu 20.4°C, RH 54%, GrainPro hermetic',
       warehouseScaScore: 86.75,
       roasterName: 'Karsa Craft Roastery (Giesen W6A Artisan)',
@@ -132,7 +132,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
     availableWeightKg: 300,
     purchasePricePerKg: 125000,
     pricePerKg: 165000,
-    storageLocation: 'Silo Cold Room A-02',
+    storageLocation: 'Gudang Cold Room A-02',
     temperatureCelsius: 18.5,
     humidityPercent: 55,
     packagingType: 'GrainPro + Karung Goni 60kg',
@@ -911,7 +911,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   </div>
 
                   <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                    <span className="text-[11px] text-stone-400 block">Kondisi Ruang Silo:</span>
+                    <span className="text-[11px] text-stone-400 block">Kondisi Ruang Gudang:</span>
                     <strong className="text-blue-900 font-black text-sm block mt-0.5">
                       {currentWarehouseLot.temperatureCelsius}°C / {currentWarehouseLot.humidityPercent}% RH
                     </strong>

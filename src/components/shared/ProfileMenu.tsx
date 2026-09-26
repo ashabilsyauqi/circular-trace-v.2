@@ -184,7 +184,7 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
                 [
                   { role: 'petani' as UserRole, label: 'Petani (Kebun & Ceri)', icon: '👨‍🌾' },
                   { role: 'pengolah' as UserRole, label: 'Pengolah (Mill Station)', icon: '⚙️' },
-                  { role: 'gudang' as UserRole, label: 'Gudang (Silo Hub & QA)', icon: '🏢' },
+                  { role: 'gudang' as UserRole, label: 'Gudang (Pergudangan & QA)', icon: '🏢' },
                   { role: 'roaster' as UserRole, label: 'Roaster (Artisan Roastery)', icon: '🔥' },
                   { role: 'cafe' as UserRole, label: 'Cafe (Retail & Brew Bar)', icon: '☕' },
                   { role: 'verifikator' as UserRole, label: 'Verifikator (Dewan Audit Mutu)', icon: '🛡️' },

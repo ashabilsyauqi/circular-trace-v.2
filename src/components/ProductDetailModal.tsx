@@ -528,7 +528,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
             )}
 
-            {/* C. Warehouse Silo Specs */}
+            {/* C. Warehouse Gudang Specs */}
             {isWarehouse && raw && (
               <div className="space-y-3">
                 {/* Grade Classification Banner */}
@@ -588,7 +588,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     <span className="font-bold text-sm text-stone-900">{raw.packagingType}</span>
                   </div>
                   <div className="bg-stone-50 p-3.5 rounded-2xl border border-stone-200">
-                    <span className="text-[11px] text-stone-400 block">Lokasi Rak Silo:</span>
+                    <span className="text-[11px] text-stone-400 block">Lokasi Rak Gudang:</span>
                     <span className="font-bold text-sm text-stone-900">{raw.storageLocation}</span>
                   </div>
                   <div className="bg-stone-50 p-3.5 rounded-2xl border border-stone-200">

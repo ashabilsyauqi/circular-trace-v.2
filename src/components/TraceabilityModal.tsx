@@ -56,7 +56,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
         processorName: 'CV Malabar Wet & Dry Mill Station',
         fermentationTime: '36 - 72 Jam Fermentasi Terkontrol',
         moisturePercent: 11.0,
-        warehouseName: 'PT Nusantara Green Bean Warehouse (Silo A-03)',
+        warehouseName: 'PT Nusantara Green Bean Warehouse (Gudang A-03)',
         storageConditions: 'Suhu 20.4°C, RH 54%, Kemasan GrainPro Hermetik',
         warehouseScaScore: 86.5,
         roasterName: `${roasterName} (${(data as any).roasterMachine || 'Giesen W6A'})`,

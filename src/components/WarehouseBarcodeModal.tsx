@@ -311,7 +311,7 @@ export const WarehouseBarcodeModal: React.FC<WarehouseBarcodeModalProps> = ({
                 <div className="text-[10px] text-stone-500 space-y-1 border-t border-stone-200 pt-2">
                   <div className="flex items-center gap-1">
                     <Thermometer className="w-3 h-3 text-blue-600" />
-                    <span>Iklim Silo: <strong>{lot.temperatureCelsius}°C / {lot.humidityPercent}% RH</strong> ({lot.packagingType})</span>
+                    <span>Iklim Gudang: <strong>{lot.temperatureCelsius}°C / {lot.humidityPercent}% RH</strong> ({lot.packagingType})</span>
                   </div>
                   <div>
                     Pengolah: <strong>{lot.sourceProcessorName}</strong> • Petani: <strong>{lot.sourceFarmerName}</strong>

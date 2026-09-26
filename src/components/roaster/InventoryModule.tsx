@@ -111,7 +111,7 @@ export const InventoryModule: React.FC = () => {
           color="amber"
         />
         <MetricCard
-          title="Stok Green Coffee Silo"
+          title="Stok Green Coffee Gudang"
           value={`${totalGreenKg} kg`}
           subtitle={`Nilai Rp ${totalGreenValue.toLocaleString()}`}
           trend={{ value: `${warehouseLots.length} Lot Siap Sangrai`, isPositive: true }}
@@ -166,7 +166,7 @@ export const InventoryModule: React.FC = () => {
           }`}
         >
           <Warehouse className="w-4 h-4" />
-          <span>Green Coffee Silo ({warehouseLots.length} Lot)</span>
+          <span>Green Coffee Gudang ({warehouseLots.length} Lot)</span>
         </button>
 
         <button
@@ -201,7 +201,7 @@ export const InventoryModule: React.FC = () => {
           {
             label:
               activeCategory === 'green'
-                ? 'Green Coffee Silo'
+                ? 'Green Coffee Gudang'
                 : activeCategory === 'roasted'
                 ? 'Roasted Beans Ready'
                 : 'Packaging & Valves',
@@ -228,7 +228,7 @@ export const InventoryModule: React.FC = () => {
                   <th className="py-4 px-5">Lot ID</th>
                   <th className="py-4 px-5">Origin & Varietas</th>
                   <th className="py-4 px-5">Proses & Mutu</th>
-                  <th className="py-4 px-5">Lokasi Silo / Bay</th>
+                  <th className="py-4 px-5">Lokasi Gudang / Bay</th>
                   <th className="py-4 px-5">Stok Tersedia (Kg)</th>
                   <th className="py-4 px-5">HPP Modal (Rp/Kg)</th>
                   <th className="py-4 px-5">Total Nilai Aset</th>
@@ -453,7 +453,7 @@ export const InventoryModule: React.FC = () => {
       {detailGreenLot && (
         <div>
           <RecordBreadcrumb
-            listLabel="Green Coffee Silo"
+            listLabel="Green Coffee Gudang"
             recordLabel={detailGreenLot.id}
             onBack={() => setDetailGreenLot(null)}
           />
@@ -495,7 +495,7 @@ export const InventoryModule: React.FC = () => {
               <StatButton
                 icon={<MapPin className="w-4 h-4" />}
                 value={detailGreenLot.storageLocation}
-                label="Lokasi Silo / Bay"
+                label="Lokasi Gudang / Bay"
                 color="blue"
               />
             </div>

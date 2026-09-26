@@ -100,7 +100,7 @@ export interface DryingLog {
 
 // 4. Stage 4: Resting / Conditioning Log (Pemeraman Gabah Kering)
 export interface ConditioningLog {
-  siloBinId: string; // e.g. GABAH-SILO-04
+  siloBinId: string; // e.g. GABAH-BIN-04
   packagingType: 'GrainPro Hermetic 50kg' | 'Ecotact 50kg' | 'Wooden Bin (Pine)';
   startDate: string;
   targetRestingDays: number; // Standard 30 to 60 days

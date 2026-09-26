@@ -141,9 +141,9 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
     },
     {
       id: 'warehouse_hub',
-      name: 'Gudang Logistik & Silo Hub',
+      name: 'Gudang Logistik & QA Hub',
       category: 'Supply Chain QA',
-      subtitle: 'Inspeksi Masuk, FIFO Silo & Kontrol Kelembaban',
+      subtitle: 'Inspeksi Masuk, FIFO Gudang & Kontrol Kelembaban',
       icon: Warehouse,
       gradient: 'from-slate-700 to-slate-900',
       role: 'gudang' as UserRole,

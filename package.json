@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "deploy": "npm run build && python3 deploy_cpanel.py"
+    "deploy": "npm run build && python3 deploy_cpanel.py",
+    "deploy:git": "npm run build && (cd dist && rm -rf .git && git init -b cpanel-dist && git add -A && git commit -m 'deploy' && git remote add origin https://github.com/ashabilsyauqi/circular-trace-v.2.git && git push origin cpanel-dist --force && rm -rf .git)"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Printer,
-  FileText,
   Sprout,
   Cog,
   Warehouse,
@@ -10,7 +9,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 
-export type StakeholderFormType = 'all' | 'petani' | 'pengolah' | 'gudang' | 'roastery';
+export type StakeholderFormType = 'petani' | 'pengolah' | 'gudang' | 'roastery';
 
 interface StakeholderFormsModalProps {
   isOpen: boolean;
@@ -21,9 +20,15 @@ interface StakeholderFormsModalProps {
 export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
   isOpen,
   onClose,
-  initialForm = 'all',
+  initialForm = 'petani',
 }) => {
   const [activeForm, setActiveForm] = useState<StakeholderFormType>(initialForm);
+
+  useEffect(() => {
+    if (isOpen && initialForm) {
+      setActiveForm(initialForm);
+    }
+  }, [isOpen, initialForm]);
 
   if (!isOpen) return null;
 
@@ -52,7 +57,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-stone-400">
-                Lembar isian fisik untuk dicetak &amp; ditulis tangan oleh pekerja kebun/gudang sebelum diinput ke sistem.
+                Pilih lembar formulir stakeholder di bawah untuk dicetak satuan per 1 lembar A4.
               </p>
             </div>
           </div>
@@ -82,17 +87,6 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
           <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider mr-1 shrink-0">
             Pilih Lembar Form:
           </span>
-          <button
-            onClick={() => setActiveForm('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-              activeForm === 'all'
-                ? 'bg-stone-900 text-white shadow-xs'
-                : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Semua Form (4 Stakeholder)</span>
-          </button>
           <button
             onClick={() => setActiveForm('petani')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
@@ -145,8 +139,8 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
           {/* ========================================================================= */}
           {/* FORM 1: FORMULIR PETANI (KEBUN & PANEN CERI) */}
           {/* ========================================================================= */}
-          {(activeForm === 'all' || activeForm === 'petani') && (
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none page-break-after">
+          {activeForm === 'petani' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none">
               {/* Header Surat Resmi */}
               <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between">
                 <div>
@@ -310,8 +304,8 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
           {/* ========================================================================= */}
           {/* FORM 2: FORMULIR PENGOLAH (WET & DRY MILL STATION) */}
           {/* ========================================================================= */}
-          {(activeForm === 'all' || activeForm === 'pengolah') && (
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none page-break-after">
+          {activeForm === 'pengolah' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none">
               {/* Header */}
               <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between">
                 <div>
@@ -513,8 +507,8 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
           {/* ========================================================================= */}
           {/* FORM 3: FORMULIR GUDANG / EKSPORTIR (GUDANG & DOKUMEN EKSPOR) */}
           {/* ========================================================================= */}
-          {(activeForm === 'all' || activeForm === 'gudang') && (
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none page-break-after">
+          {activeForm === 'gudang' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none">
               {/* Header */}
               <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between">
                 <div>
@@ -692,7 +686,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
           {/* ========================================================================= */}
           {/* FORM 4: FORMULIR ROASTERY (PROFIL SANGRAI & SCA CUPPING) */}
           {/* ========================================================================= */}
-          {(activeForm === 'all' || activeForm === 'roastery') && (
+          {activeForm === 'roastery' && (
             <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none">
               {/* Header */}
               <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between">

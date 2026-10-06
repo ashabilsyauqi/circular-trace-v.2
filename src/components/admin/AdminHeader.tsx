@@ -907,6 +907,15 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
       <StakeholderFormsModal
         isOpen={formsModalOpen}
         onClose={() => setFormsModalOpen(false)}
+        initialForm={
+          currentUser?.role === 'pengolah'
+            ? 'pengolah'
+            : currentUser?.role === 'gudang'
+            ? 'gudang'
+            : currentUser?.role === 'roaster'
+            ? 'roastery'
+            : 'petani'
+        }
       />
     </>
   );

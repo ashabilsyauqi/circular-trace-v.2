@@ -35,6 +35,7 @@ export type ProcessingMethod =
   | 'Honey (Yellow/Red)'
   | 'Honey (Yellow/Red/Black)'
   | 'Anaerobic Natural'
+  | 'Anaerobic Honey'
   | 'Anaerobic Washed'
   | 'Wet Hulled (Giling Basah)'
   | 'Wine Process';

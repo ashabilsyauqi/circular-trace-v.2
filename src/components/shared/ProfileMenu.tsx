@@ -98,11 +98,13 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
         onClick={() => setOpen((v) => !v)}
         className={`flex items-center gap-2 rounded-xl transition-all cursor-pointer ${
           compact
-            ? 'p-1 hover:bg-white/10'
+            ? isDark
+              ? 'p-1 hover:bg-white/10 text-white'
+              : 'p-1 hover:bg-stone-100 text-stone-700'
             : `pl-1.5 pr-2.5 py-1 border shadow-2xs ${
                 isDark
-                  ? 'bg-stone-900/80 border-stone-700/80 hover:bg-stone-800 text-white'
-                  : 'bg-white/10 hover:bg-white/20 border-white/20 text-white'
+                  ? 'bg-white/10 hover:bg-white/15 active:bg-white/20 border-white/15 text-white'
+                  : 'bg-stone-100 hover:bg-stone-200/80 active:bg-stone-200 border-stone-200 text-stone-900'
               }`
         }`}
         title="Menu Profil & Ganti Stasiun"
@@ -111,23 +113,31 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
           src={currentUser.avatar}
           alt={currentUser.name}
           className={`rounded-full object-cover border shrink-0 ${
-            isDark ? 'border-amber-400/60' : 'border-amber-400'
+            isDark ? 'border-amber-400/80' : 'border-amber-500'
           } ${compact ? 'w-8 h-8' : 'w-6 h-6'}`}
         />
         {!compact && (
           <div className="text-left min-w-0 hidden md:block">
-            <span className="text-xs font-extrabold block leading-none truncate max-w-[110px] text-white">
+            <span
+              className={`text-xs font-extrabold block leading-none truncate max-w-[110px] ${
+                isDark ? 'text-white' : 'text-stone-900'
+              }`}
+            >
               {currentUser.name}
             </span>
-            <span className="text-[9.5px] block truncate max-w-[110px] text-amber-200/80 mt-0.5 font-medium">
+            <span
+              className={`text-[9.5px] block truncate max-w-[110px] mt-0.5 font-bold ${
+                isDark ? 'text-amber-300' : 'text-amber-800'
+              }`}
+            >
               {currentRoleMeta.label.split(' ')[0]}
             </span>
           </div>
         )}
         <ChevronDown
-          className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 text-white/70 ${
-            open ? 'rotate-180' : ''
-          }`}
+          className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+            isDark ? 'text-white/70' : 'text-stone-500'
+          } ${open ? 'rotate-180' : ''}`}
         />
       </button>
 

@@ -770,7 +770,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
           </div>
 
           {/* All-in-One Profile Menu (Avatar, Identity, Station Switcher, Language, Live Clock, Logout) */}
-          <ProfileMenu variant="light" onOpenLedger={() => setActiveView('transactions')} />
+          <ProfileMenu variant="dark" onOpenLedger={() => setActiveView('transactions')} />
         </div>
       </nav>
 

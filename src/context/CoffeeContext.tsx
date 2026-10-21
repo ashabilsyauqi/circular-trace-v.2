@@ -65,6 +65,7 @@ import {
 } from '../data/mockProcessorErpData';
 import { calculateProcessorEcoRating } from '../utils/ecoRating';
 import { validateStageQualityGate } from '../utils/coffeeQualityGates';
+import { cctApi } from '../services/api';
 
 interface CoffeeContextType {
   currentUser: AppUser | null;
@@ -606,6 +607,70 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem('cct_roasterMachines', JSON.stringify(roasterMachines));
   }, [roasterMachines]);
 
+  // Sinkronisasi otomatis dengan Database SQL Terpusat (MySQL Backend API)
+  useEffect(() => {
+    let isMounted = true;
+
+    async function syncFromDatabase() {
+      try {
+        const [
+          farmsRes,
+          harvestsRes,
+          batchesRes,
+          whRes,
+          roastedRes,
+          cafeProdRes,
+          cafeInvRes,
+          txRes,
+        ] = await Promise.allSettled([
+          cctApi.farms.getAll(),
+          cctApi.harvests.getAll(),
+          cctApi.batches.getAll(),
+          cctApi.warehouse.getAll(),
+          cctApi.roastery.getLots(),
+          cctApi.cafe.getProducts(),
+          cctApi.cafe.getInventory(),
+          cctApi.transactions.getAll(),
+        ]);
+
+        if (!isMounted) return;
+
+        if (farmsRes.status === 'fulfilled' && farmsRes.value.success && farmsRes.value.data && farmsRes.value.data.length > 0) {
+          setCoffeeFarms(farmsRes.value.data);
+        }
+        if (harvestsRes.status === 'fulfilled' && harvestsRes.value.success && harvestsRes.value.data && harvestsRes.value.data.length > 0) {
+          setFarmerLots(harvestsRes.value.data);
+        }
+        if (batchesRes.status === 'fulfilled' && batchesRes.value.success && batchesRes.value.data && batchesRes.value.data.length > 0) {
+          setProcessingBatches(batchesRes.value.data);
+        }
+        if (whRes.status === 'fulfilled' && whRes.value.success && whRes.value.data && whRes.value.data.length > 0) {
+          setWarehouseLots(whRes.value.data);
+        }
+        if (roastedRes.status === 'fulfilled' && roastedRes.value.success && roastedRes.value.data && roastedRes.value.data.length > 0) {
+          setRoastedLots(roastedRes.value.data);
+        }
+        if (cafeProdRes.status === 'fulfilled' && cafeProdRes.value.success && cafeProdRes.value.data && cafeProdRes.value.data.length > 0) {
+          setCafeProducts(cafeProdRes.value.data);
+        }
+        if (cafeInvRes.status === 'fulfilled' && cafeInvRes.value.success && cafeInvRes.value.data && cafeInvRes.value.data.length > 0) {
+          setCafeInventory(cafeInvRes.value.data);
+        }
+        if (txRes.status === 'fulfilled' && txRes.value.success && txRes.value.data && txRes.value.data.length > 0) {
+          setTransactions(txRes.value.data);
+        }
+      } catch (err) {
+        console.warn('Database SQL sync offline/fallback mode:', err);
+      }
+    }
+
+    syncFromDatabase();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const loginAsRole = (role: UserRole) => {
     const matched = users.find((u) => u.role === role) || MOCK_USERS.find((u) => u.role === role);
     if (matched) {
@@ -964,11 +1029,13 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       verificationStatus: 'pending',
     };
     setCoffeeFarms((prev) => [newFarm, ...prev]);
+    cctApi.farms.save(newFarm).catch(() => {});
     return newFarm;
   };
 
   const updateCoffeeFarm = (updated: CoffeeFarm) => {
     setCoffeeFarms((prev) => prev.map((f) => (f.id === updated.id ? updated : f)));
+    cctApi.farms.save(updated).catch(() => {});
   };
 
   const deleteCoffeeFarm = (farmId: string) => {
@@ -1012,6 +1079,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
     };
     setFarmerLots((prev) => [newLot, ...prev]);
+    cctApi.harvests.save(newLot).catch(() => {});
     return newLot;
   };
 

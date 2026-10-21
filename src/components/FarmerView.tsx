@@ -1021,7 +1021,7 @@ export const FarmerView: React.FC = () => {
                       required
                       value={variety}
                       onChange={(e) => setVariety(e.target.value)}
-                      placeholder="Contoh: Typica, Sigarar Utang, Ateng Super"
+                      placeholder="Contoh: Typica, Sigarar Utang, Ateng Super, Campuran"
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
@@ -2889,6 +2889,22 @@ export const FarmerView: React.FC = () => {
                       value={newFarmTreesCount}
                       onChange={(e) => setNewFarmTreesCount(Number(e.target.value))}
                       placeholder="Contoh: 3200"
+                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                      Tahun Tanam *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1970}
+                      max={2030}
+                      value={newFarmEstYear}
+                      onChange={(e) => setNewFarmEstYear(Number(e.target.value))}
+                      placeholder="Contoh: 2018"
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>

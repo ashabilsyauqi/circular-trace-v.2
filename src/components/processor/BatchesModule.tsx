@@ -1107,6 +1107,7 @@ export const BatchesModule: React.FC = () => {
                           <option value="Honey (Yellow/Red/Black)">3. Honey (Pulped Natural) — Depulper, Sisakan Lendir Lengket</option>
                           <option value="Wet Hulled (Giling Basah)">4. Wet Hulled (Giling Basah) — Hulling Lembek pada Moisture ~30-40%</option>
                           <option value="Anaerobic Natural">Anaerobic Natural — Fermentasi Ragi Kedap Udara</option>
+                          <option value="Anaerobic Honey">Anaerobic Honey — Fermentasi Ragi Kedap Udara Honey</option>
                           <option value="Wine Process">Wine Process — Extended Fermentation</option>
                         </select>
                       </div>

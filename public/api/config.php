@@ -2,6 +2,7 @@
 /**
  * Circular Coffee Trace (sangrAI)
  * Database Connection & Global API Utilities
+ * Supports Auto-Configured SQLite (Default, Zero-Setup) & Optional MySQL
  */
 
 // Global CORS & JSON Headers
@@ -10,41 +11,62 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// cPanel Database Credentials
-// Ganti nilai default ini jika menggunakan kredensial custom di cPanel
-$db_host = getenv('DB_HOST') ?: 'localhost';
-$db_name = getenv('DB_NAME') ?: 'cirp8652_cct_coffee';
-$db_user = getenv('DB_USER') ?: 'cirp8652_cct_user';
-$db_pass = getenv('DB_PASS') ?: 'sangrAI_2026_Secure!';
-
 function getDbConnection() {
-    global $db_host, $db_name, $db_user, $db_pass;
     static $pdo = null;
-
     if ($pdo !== null) {
         return $pdo;
     }
 
+    $sqlitePath = dirname(__DIR__) . '/data/cct_database.sqlite';
+    $sqliteDir = dirname($sqlitePath);
+
+    // Ensure data directory exists and is protected from web access
+    if (!file_exists($sqliteDir)) {
+        mkdir($sqliteDir, 0755, true);
+        file_put_contents($sqliteDir . '/.htaccess', "<IfModule mod_authz_core.c>\n  Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n  Deny from all\n</IfModule>\n");
+    }
+
+    // Check if MySQL is explicitly configured via environment variable
+    $useMysql = getenv('USE_MYSQL') === 'true' || getenv('DB_HOST') !== false;
+
+    if ($useMysql) {
+        $db_host = getenv('DB_HOST') ?: 'localhost';
+        $db_name = getenv('DB_NAME') ?: 'cirp8652_cct_coffee';
+        $db_user = getenv('DB_USER') ?: 'cirp8652_cct_user';
+        $db_pass = getenv('DB_PASS') ?: 'sangrAI_2026_Secure!';
+
+        try {
+            $dsn = "mysql:host={$db_host};dbname={$db_name};charset=utf8mb4";
+            $options = [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+            ];
+            $pdo = new PDO($dsn, $db_user, $db_pass, $options);
+            return $pdo;
+        } catch (PDOException $e) {
+            // Fallback to SQLite if MySQL is unreachable
+        }
+    }
+
+    // Default: Native File-Based SQL (SQLite) - Zero setup required!
     try {
-        $dsn = "mysql:host={$db_host};dbname={$db_name};charset=utf8mb4";
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
         ];
-        $pdo = new PDO($dsn, $db_user, $db_pass, $options);
+        $pdo = new PDO('sqlite:' . $sqlitePath, null, null, $options);
         return $pdo;
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'message' => 'Database connection failed: ' . $e->getMessage(),
-            'hint'    => 'Pastikan database dan user cPanel sudah dibuat serta kredensial di api/config.php sudah sesuai.'
+            'message' => 'Database connection failed: ' . $e->getMessage()
         ]);
         exit;
     }

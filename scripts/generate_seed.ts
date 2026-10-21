@@ -86,13 +86,14 @@ lines.push('');
 // 4. Processing Batches
 lines.push('-- 4. PROCESSING BATCHES');
 for (const b of INITIAL_PROCESSING_BATCHES) {
+  const method = b.fermentationLog?.method || 'Anaerobic Natural';
   lines.push(`INSERT INTO \`processing_batches\` (\`id\`, \`processor_id\`, \`processor_name\`, \`batch_code\`, \`source_cherry_lots\`, \`process_method\`, \`current_stage\`, \`intake_log\`, \`fermentation_log\`, \`drying_log\`, \`conditioning_log\`, \`milling_log\`, \`grading_qc_log\`, \`closure_log\`, \`total_cherry_input_kg\`, \`estimated_green_bean_yield_kg\`, \`actual_green_bean_yield_kg\`, \`yield_percentage\`, \`waste_management\`, \`status\`) VALUES (` +
     [
-      esc(b.id), esc(b.processorId), esc(b.processorName), esc(b.batchCode), esc(b.sourceCherryLots),
-      esc(b.processMethod), esc(b.currentStage), esc(b.intakeLog), esc(b.fermentationLog),
+      esc(b.id), esc(b.processorId), esc(b.processorName), esc(b.batchCode), esc(b.sourceFarmerLotId ? [b.sourceFarmerLotId] : []),
+      esc(method), esc(b.currentStage), esc(b.intakeLog), esc(b.fermentationLog),
       esc(b.dryingLog), esc(b.conditioningLog), esc(b.millingLog), esc(b.gradingQcLog), esc(b.closureLog),
-      esc(b.totalCherryInputKg), esc(b.estimatedGreenBeanYieldKg), esc(b.actualGreenBeanYieldKg),
-      esc(b.yieldPercentage), esc(b.wasteManagement), esc(b.status)
+      esc(b.intakeLog?.cherryWeightKg || 850), esc(150), esc(b.millingLog?.greenBeanWeightKg || null),
+      esc(b.millingLog?.actualRecoveryPercent || null), esc(b.wasteManagement || null), esc(b.status)
     ].join(', ') +
     `);`
   );
@@ -139,11 +140,13 @@ lines.push('');
 // 7. Roast Profiles
 lines.push('-- 7. ROAST PROFILES');
 for (const rp of INITIAL_MASTER_PROFILES) {
+  const firstCrack = rp.firstCrackTimeSeconds ? `${Math.floor(rp.firstCrackTimeSeconds / 60)}:${String(rp.firstCrackTimeSeconds % 60).padStart(2, '0')}` : '08:30';
+  const drop = rp.totalTimeSeconds ? `${Math.floor(rp.totalTimeSeconds / 60)}:${String(rp.totalTimeSeconds % 60).padStart(2, '0')}` : '10:00';
   lines.push(`INSERT INTO \`roast_profiles\` (\`id\`, \`roaster_id\`, \`profile_name\`, \`roast_level\`, \`charge_temp\`, \`turning_point_temp\`, \`first_crack_time\`, \`first_crack_temp\`, \`drop_time\`, \`drop_temp\`, \`development_time_ratio\`, \`notes\`) VALUES (` +
     [
-      esc(rp.id), esc(rp.roasterId), esc(rp.profileName), esc(rp.roastLevel), esc(rp.chargeTemp),
-      esc(rp.turningPointTemp), esc(rp.firstCrackTime), esc(rp.firstCrackTemp), esc(rp.dropTime),
-      esc(rp.dropTemp), esc(rp.developmentTimeRatio), esc(rp.notes || '')
+      esc(rp.id), esc(rp.roasterId), esc(rp.name), esc(rp.targetRoastLevel || 'Medium Roast'), esc(rp.chargeTemp),
+      esc(rp.turningPointTemp), esc(firstCrack), esc(rp.firstCrackTemp), esc(drop),
+      esc(rp.dropTemp), esc(rp.targetDtr || 14.5), esc(rp.description || '')
     ].join(', ') +
     `);`
   );
@@ -173,10 +176,10 @@ lines.push('-- 9. QC CUPPING SESSIONS');
 for (const q of INITIAL_QC_SESSIONS) {
   lines.push(`INSERT INTO \`qc_cupping_sessions\` (\`id\`, \`sample_id\`, \`session_date\`, \`evaluator_name\`, \`fragrance_aroma\`, \`flavor\`, \`aftertaste\`, \`acidity\`, \`body\`, \`balance\`, \`uniformity\`, \`clean_cup\`, \`sweetness\`, \`overall\`, \`total_score\`, \`tasting_notes\`, \`defect_deduction\`, \`notes\`) VALUES (` +
     [
-      esc(q.id), esc(q.sampleId || null), esc(q.sessionDate), esc(q.evaluatorName), esc(q.fragranceAroma),
-      esc(q.flavor), esc(q.aftertaste), esc(q.acidity), esc(q.body), esc(q.balance), esc(q.uniformity),
-      esc(q.cleanCup), esc(q.sweetness), esc(q.overall), esc(q.totalScore), esc(q.tastingNotes),
-      esc(q.defectDeduction || 0), esc(q.notes || '')
+      esc(q.id), esc(q.workOrderId || null), esc(q.date || '2026-09-20'), esc(q.cupperName || 'Evaluator'), esc(q.fragranceScore || 8.5),
+      esc(q.flavorScore || 8.5), esc(q.aftertasteScore || 8.5), esc(q.acidityScore || 8.5), esc(q.bodyScore || 8.5), esc(q.balanceScore || 8.5),
+      esc(q.uniformityScore || 10.0), esc(q.cleanCupScore || 10.0), esc(q.sweetnessScore || 10.0), esc(q.overallScore || 8.5),
+      esc(q.totalScaScore || 87.0), esc(q.tastingNotes), esc(q.defectsPenalty || 0), esc(q.notes || '')
     ].join(', ') +
     `);`
   );

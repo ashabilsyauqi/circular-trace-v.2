@@ -16,6 +16,7 @@ import {
 import { ProcessedGreenBeanLot } from '../types/coffee';
 import { calculateProcessorEcoRating } from '../utils/ecoRating';
 import { getNetworkHost, getPublicBaseUrl, isLoopbackHost, saveNetworkHost } from '../utils/baseUrl';
+import { BarcodeSocialShare } from './shared/BarcodeSocialShare';
 
 interface ProcessorBarcodeModalProps {
   isOpen: boolean;
@@ -372,6 +373,16 @@ export const ProcessorBarcodeModal: React.FC<ProcessorBarcodeModalProps> = ({
 
           {/* Action & Configuration Section (Hidden on Print) */}
           <div className="space-y-4 print:hidden">
+            {/* Social Media Share Section */}
+            <BarcodeSocialShare
+              url={realtimeScanUrl}
+              title={`Green Bean Olahan #${lot.id} (${lot.processMethod})`}
+              lotId={lot.id}
+              variety={lot.variety}
+              origin={lot.sourceOrigin}
+              actorRole="pengolah"
+            />
+
             {/* Live Scan Testing Bar */}
             <div className="bg-stone-900 text-white p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
               <div className="flex items-center gap-3">

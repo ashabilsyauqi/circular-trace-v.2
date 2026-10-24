@@ -113,7 +113,7 @@ export const SellingModule: React.FC = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs whitespace-nowrap min-w-[850px]">
                   <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                     <tr>
                       <th className="py-3 px-4">Lot</th>
@@ -183,7 +183,7 @@ export const SellingModule: React.FC = () => {
               <p className="text-xs text-stone-400 py-10 text-center">Belum ada penjualan tercatat.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs whitespace-nowrap min-w-[700px]">
                   <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                     <tr>
                       <th className="py-3 px-4">Tanggal</th>
@@ -349,7 +349,7 @@ export const SellingModule: React.FC = () => {
               <p className="text-xs text-stone-400 py-10 text-center">Belum ada penjualan untuk produk ini.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs whitespace-nowrap min-w-[700px]">
                   <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                     <tr>
                       <th className="py-3 px-4">Tanggal</th>

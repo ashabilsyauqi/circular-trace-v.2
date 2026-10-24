@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { WarehouseLot, WarehouseGradeTier } from '../types/coffee';
 import { getNetworkHost, getPublicBaseUrl, isLoopbackHost, saveNetworkHost } from '../utils/baseUrl';
+import { BarcodeSocialShare } from './shared/BarcodeSocialShare';
 
 interface WarehouseBarcodeModalProps {
   isOpen: boolean;
@@ -344,6 +345,16 @@ export const WarehouseBarcodeModal: React.FC<WarehouseBarcodeModalProps> = ({
 
           {/* Realtime URL Link & Actions */}
           <div className="space-y-3 print:hidden">
+            {/* Social Media Share Section */}
+            <BarcodeSocialShare
+              url={realtimeScanUrl}
+              title={`Green Bean Gudang #${lot.id} (${lot.gradeTier})`}
+              lotId={lot.id}
+              variety={lot.variety}
+              origin={lot.origin}
+              actorRole="gudang"
+            />
+
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-stone-50 border border-stone-200">
               <span className="text-[11px] font-mono text-stone-600 truncate flex-1 pl-1">
                 {realtimeScanUrl}

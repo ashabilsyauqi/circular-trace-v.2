@@ -997,7 +997,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                   C. Tabel Pencatatan Panen Ceri Harian (Harvest Log)
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border border-stone-300">
+                  <table className="w-full text-left text-xs border border-stone-300 whitespace-nowrap min-w-[750px]">
                     <thead className="bg-stone-100 text-stone-700 font-bold text-[11px] uppercase border-b border-stone-300">
                       <tr>
                         <th className="p-2 border-r border-stone-300 w-8 text-center">No</th>

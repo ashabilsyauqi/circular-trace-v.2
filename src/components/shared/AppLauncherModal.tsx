@@ -10,10 +10,13 @@ import {
   Cpu,
   Receipt,
   Search,
-  CheckCircle2,
   Sliders,
-  Layers,
   Sparkles,
+  Package,
+  PlusCircle,
+  History,
+  CheckCircle2,
+  Home,
 } from 'lucide-react';
 import { UserRole } from '../../types/coffee';
 import { useCoffee } from '../../context/CoffeeContext';
@@ -22,14 +25,13 @@ interface AppLauncherModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectRole: (role: UserRole) => void;
-  onNavigateView: (view: 'dashboard' | 'marketplace' | 'transactions') => void;
+  onNavigateView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
   onSelectModuleTab?: (role: UserRole, moduleTab?: string) => void;
 }
 
 export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
   isOpen,
   onClose,
-  onSelectRole,
   onNavigateView,
   onSelectModuleTab,
 }) => {
@@ -49,24 +51,49 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
 
   if (!isOpen) return null;
 
-  const inProgressBatchesCount = processingBatches.filter((b) => b.status === 'in_progress').length;
-  const pendingPOCount = purchaseOrders.filter((p) => p.status === 'pending_approval').length;
+  const inProgressBatchesCount = processingBatches.filter(
+    (b) => (!b.processorId || b.processorId === currentUser?.id) && b.status === 'in_progress'
+  ).length;
+  const pendingPOCount = purchaseOrders.filter(
+    (p) => (!p.roasterId || p.roasterId === currentUser?.id) && p.status === 'pending_approval'
+  ).length;
   const pendingWarehouseQCCount = warehouseLots.filter((l) => l.qcStatus === 'pending_qc').length;
   const availableFarmerLotsCount = farmerLots.filter((l) => l.availableWeightKg > 0).length;
   const availableGreenBeanCount = processedLots.filter((l) => l.availableWeightKg > 0).length;
 
   const ALL_APPS = [
+    // Petani Modules
     {
-      id: 'processor_batches',
-      name: '2. Lembar Kerja Batch (7-Stage)',
-      category: 'Processing & Mill',
-      subtitle: 'Worksheet 7-Stage Intake, Fermentasi, Penjemuran & Olah',
-      icon: Cpu,
-      gradient: 'from-blue-600 to-indigo-800',
-      role: 'pengolah' as UserRole,
-      moduleTab: 'batches',
-      badge: inProgressBatchesCount > 0 ? `${inProgressBatchesCount} Aktif` : undefined,
+      id: 'farmer_farms',
+      name: '1. Lahan & Kebun Kopi',
+      category: 'Hulu (Farm & Harvest)',
+      subtitle: 'Profil Lahan, Elevasi, Cuaca & Patok BPN',
+      icon: Sprout,
+      gradient: 'from-lime-600 to-emerald-700',
+      role: 'petani' as UserRole,
+      moduleTab: 'farms',
     },
+    {
+      id: 'farmer_upload',
+      name: '2. Registrasi Panen Baru',
+      category: 'Hulu (Farm & Harvest)',
+      subtitle: 'Pencatatan Ceri Merah, Brix & Sortasi',
+      icon: PlusCircle,
+      gradient: 'from-emerald-600 to-teal-700',
+      role: 'petani' as UserRole,
+      moduleTab: 'upload',
+    },
+    {
+      id: 'farmer_catalog',
+      name: '3. Katalog Panen Ceri',
+      category: 'Hulu (Farm & Harvest)',
+      subtitle: 'Daftar Lot Ceri Segar Siap Jual ke Mill',
+      icon: Package,
+      gradient: 'from-amber-600 to-orange-700',
+      role: 'petani' as UserRole,
+      moduleTab: 'catalog',
+    },
+    // Pengolah Modules
     {
       id: 'processor_sourcing',
       name: '1. Sourcing Ceri Petani',
@@ -79,15 +106,15 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
       badge: availableFarmerLotsCount > 0 ? `${availableFarmerLotsCount} Lot` : undefined,
     },
     {
-      id: 'processor_selling',
-      name: '4. Panel Marketplace Pengolah',
+      id: 'processor_batches',
+      name: '2. Lembar Kerja Batch (7-Stage)',
       category: 'Processing & Mill',
-      subtitle: 'Katalog Green Bean, Pesanan & Laporan Margin',
-      icon: Store,
-      gradient: 'from-emerald-600 to-teal-800',
+      subtitle: 'Worksheet 7-Stage Intake, Fermentasi, Penjemuran & Olah',
+      icon: Cpu,
+      gradient: 'from-blue-600 to-indigo-800',
       role: 'pengolah' as UserRole,
-      moduleTab: 'selling',
-      badge: availableGreenBeanCount > 0 ? `${availableGreenBeanCount} Siap Jual` : undefined,
+      moduleTab: 'batches',
+      badge: inProgressBatchesCount > 0 ? `${inProgressBatchesCount} Aktif` : undefined,
     },
     {
       id: 'processor_inventory',
@@ -100,28 +127,42 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
       moduleTab: 'inventory',
     },
     {
-      id: 'roaster_work_orders',
-      name: 'Roastery MRP (Sangrai)',
-      category: 'Roasting & Manufaktur',
-      subtitle: 'Work Orders Sangrai, Roast Profil & Batch Schedule',
-      icon: Flame,
-      gradient: 'from-amber-500 to-orange-600',
-      role: 'roaster' as UserRole,
-      moduleTab: 'work_orders',
+      id: 'processor_selling',
+      name: '4. Panel Marketplace Pengolah',
+      category: 'Processing & Mill',
+      subtitle: 'Katalog Green Bean, Pesanan & Laporan Margin',
+      icon: Store,
+      gradient: 'from-emerald-600 to-teal-800',
+      role: 'pengolah' as UserRole,
+      moduleTab: 'selling',
+      badge: availableGreenBeanCount > 0 ? `${availableGreenBeanCount} Siap Jual` : undefined,
+    },
+    // Gudang Modules
+    {
+      id: 'warehouse_inventory',
+      name: '1. Penerimaan & Stok Gudang',
+      category: 'Supply Chain QA',
+      subtitle: 'Penyimpanan Hermetik, Suhu & RH Gudang',
+      icon: Warehouse,
+      gradient: 'from-slate-700 to-slate-900',
+      role: 'gudang' as UserRole,
+      moduleTab: 'inventory',
+      badge: pendingWarehouseQCCount > 0 ? `${pendingWarehouseQCCount} QC` : undefined,
     },
     {
-      id: 'roaster_qc',
-      name: 'Quality Control (Cupping Lab)',
-      category: 'Roasting & Manufaktur',
-      subtitle: 'SCA 100-pt Cupping Evaluation & Fragrance Radar',
-      icon: Award,
-      gradient: 'from-purple-600 to-pink-700',
-      role: 'roaster' as UserRole,
-      moduleTab: 'qc',
+      id: 'warehouse_marketplace',
+      name: '2. Beli Green Bean Pengolah',
+      category: 'Supply Chain QA',
+      subtitle: 'Sourcing Biji Hijau dari Mill untuk Grading',
+      icon: Store,
+      gradient: 'from-amber-600 to-orange-700',
+      role: 'gudang' as UserRole,
+      moduleTab: 'marketplace',
     },
+    // Roaster Modules
     {
       id: 'roaster_purchasing',
-      name: 'Pengadaan PO Roastery',
+      name: '1. Pengadaan PO Roastery',
       category: 'Roasting & Manufaktur',
       subtitle: 'Purchase Orders & Pembelian Green Bean',
       icon: ShoppingCart,
@@ -131,33 +172,98 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
       badge: pendingPOCount > 0 ? `${pendingPOCount} Pending` : undefined,
     },
     {
-      id: 'farmer_hub',
-      name: 'Kebun & Pertanian (Farmer)',
-      category: 'Hulu (Farm & Harvest)',
-      subtitle: 'Pencatatan Panen Ceri, HPP Kebun & QR Traceability',
-      icon: Sprout,
-      gradient: 'from-lime-600 to-emerald-700',
-      role: 'petani' as UserRole,
+      id: 'roaster_work_orders',
+      name: '2. Roastery MRP (Sangrai)',
+      category: 'Roasting & Manufaktur',
+      subtitle: 'Work Orders Sangrai, Roast Profil & Batch Schedule',
+      icon: Flame,
+      gradient: 'from-amber-500 to-orange-600',
+      role: 'roaster' as UserRole,
+      moduleTab: 'work_orders',
     },
     {
-      id: 'warehouse_hub',
-      name: 'Gudang Logistik & QA Hub',
-      category: 'Supply Chain QA',
-      subtitle: 'Inspeksi Masuk, FIFO Gudang & Kontrol Kelembaban',
-      icon: Warehouse,
-      gradient: 'from-slate-700 to-slate-900',
-      role: 'gudang' as UserRole,
-      badge: pendingWarehouseQCCount > 0 ? `${pendingWarehouseQCCount} QC` : undefined,
+      id: 'roaster_production',
+      name: '3. Master Profil Sangrai',
+      category: 'Roasting & Manufaktur',
+      subtitle: 'Kurva Roasting, Agtron SCA & DTR Ratio',
+      icon: Sliders,
+      gradient: 'from-orange-600 to-red-700',
+      role: 'roaster' as UserRole,
+      moduleTab: 'production',
     },
     {
-      id: 'cafe_pos',
-      name: 'Point of Sale & Cafe Barista',
-      category: 'Hilir (Retail & Cafe)',
-      subtitle: 'Terminal Kasir POS, Barista Brew Log & Penjualan Retail',
+      id: 'roaster_qc',
+      name: '4. Quality Control (Cupping Lab)',
+      category: 'Roasting & Manufaktur',
+      subtitle: 'SCA 100-pt Cupping Evaluation & Fragrance Radar',
+      icon: Award,
+      gradient: 'from-purple-600 to-pink-700',
+      role: 'roaster' as UserRole,
+      moduleTab: 'qc',
+    },
+    {
+      id: 'roaster_selling',
+      name: '5. Penjualan B2B & Cafe',
+      category: 'Roasting & Manufaktur',
+      subtitle: 'Distribusi Biji Sangrai ke Coffee Shop',
       icon: Store,
+      gradient: 'from-emerald-600 to-teal-700',
+      role: 'roaster' as UserRole,
+      moduleTab: 'selling',
+    },
+    // Cafe Modules
+    {
+      id: 'cafe_inventory',
+      name: '1. Inventaris Roasted Bean',
+      category: 'Hilir (Retail & Cafe)',
+      subtitle: 'Biji Kopi Siap Seduh & Rest Period',
+      icon: Package,
       gradient: 'from-rose-600 to-red-700',
       role: 'cafe' as UserRole,
+      moduleTab: 'inventory',
     },
+    {
+      id: 'cafe_calculator',
+      name: '2. Kalkulator HPP & Resep Seduh',
+      category: 'Hilir (Retail & Cafe)',
+      subtitle: 'Hitung Dosis, Rasio Espresso & Margin Cangkir',
+      icon: Sliders,
+      gradient: 'from-amber-600 to-orange-700',
+      role: 'cafe' as UserRole,
+      moduleTab: 'calculator',
+    },
+    {
+      id: 'cafe_products',
+      name: '3. Katalog Produk & Retail Pack',
+      category: 'Hilir (Retail & Cafe)',
+      subtitle: 'House Blend, Drip Bag & Cold Brew',
+      icon: Store,
+      gradient: 'from-emerald-600 to-teal-700',
+      role: 'cafe' as UserRole,
+      moduleTab: 'my_products',
+    },
+    // Verifikator Modules
+    {
+      id: 'verifier_audit',
+      name: '1. Panel Audit & Sertifikasi',
+      category: 'Quality & EUDR Board',
+      subtitle: 'Inspeksi Lahan, Mill, Gudang, Cupping & Kafe',
+      icon: CheckCircle2,
+      gradient: 'from-purple-600 to-indigo-800',
+      role: 'verifikator' as UserRole,
+      moduleTab: currentUser?.verifierDomain && currentUser.verifierDomain !== 'all' ? currentUser.verifierDomain : 'petani',
+    },
+    {
+      id: 'verifier_history',
+      name: '2. Buku Sertifikasi & Stempel',
+      category: 'Quality & EUDR Board',
+      subtitle: 'Daftar Kriptografis Seluruh Stempel Sah',
+      icon: History,
+      gradient: 'from-amber-600 to-orange-700',
+      role: 'verifikator' as UserRole,
+      moduleTab: 'history',
+    },
+    // Shared Public / Cross-Chain Apps
     {
       id: 'marketplace_public',
       name: 'Marketplace Bersama',
@@ -176,9 +282,21 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
       gradient: 'from-indigo-700 to-purple-900',
       action: 'transactions' as const,
     },
+    {
+      id: 'landing_home',
+      name: 'Beranda Utama',
+      category: 'Portal Publik',
+      subtitle: 'Halaman Utama Informasi Ekosistem Circular Trace',
+      icon: Home,
+      gradient: 'from-stone-600 to-stone-800',
+      action: 'landing' as const,
+    },
   ];
 
-  const filteredApps = ALL_APPS.filter((app) => {
+  // Only show apps belonging to the logged-in user's role + shared cross-chain apps
+  const scopedApps = ALL_APPS.filter((app) => !app.role || app.role === currentUser?.role || currentUser?.role === 'superadmin');
+
+  const filteredApps = scopedApps.filter((app) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -191,8 +309,7 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
   const handleAppClick = (app: (typeof ALL_APPS)[0]) => {
     if (app.action) {
       onNavigateView(app.action);
-    } else if (app.role) {
-      onSelectRole(app.role);
+    } else if (app.role && (app.role === currentUser?.role || currentUser?.role === 'superadmin')) {
       onNavigateView('dashboard');
       if (app.moduleTab) {
         onSelectModuleTab?.(app.role, app.moduleTab);
@@ -226,7 +343,7 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
           <span className="text-amber-400">Circular</span>Trace ERP
         </h2>
         <p className="text-amber-200/80 text-xs sm:text-sm mt-1 font-medium">
-          Sistem Terintegrasi Rantai Pasok Kopi &amp; Lembar Kerja Pengolahan Sirkular
+          Modul Operasional Stasiun Kerja <strong>{currentUser?.organization}</strong>
         </p>
       </div>
 
@@ -238,7 +355,7 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
           autoFocus
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search Apps... (Ketik nama modul, e.g. Lembar Kerja, Roasting, Sourcing)"
+          placeholder="Cari modul di stasiun kerja Anda..."
           className="w-full pl-12 pr-4 py-3 bg-white/10 border border-amber-500/20 rounded-2xl text-white text-sm placeholder-amber-100/40 focus:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-amber-400 transition-all shadow-xl"
         />
         {searchQuery && (
@@ -292,9 +409,8 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
 
       {/* Footer Info */}
       <div className="mt-auto py-3 text-center text-xs text-amber-200/60 font-mono">
-        Tekan <kbd className="bg-white/20 px-1.5 py-0.5 rounded text-white text-[10px]">ESC</kbd> untuk kembali ke aplikasi &bull; Logged as <strong>{currentUser?.name}</strong> ({currentUser?.role})
+        Tekan <kbd className="bg-white/20 px-1.5 py-0.5 rounded text-white text-[10px]">ESC</kbd> untuk kembali &bull; Sesi Aktif: <strong>{currentUser?.name}</strong> ({currentUser?.role})
       </div>
     </div>
   );
 };
-

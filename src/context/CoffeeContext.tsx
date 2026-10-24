@@ -1,8 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Language, translations } from '../i18n/translations';
 import {
+  getViewFromUrl,
+  syncUrlWithView,
+  AppView,
+  RouteState,
+  NavigationTarget,
+  parseRouteFromLocation,
+  navigateTo,
+} from '../utils/routes';
+import {
   AppUser,
   UserRole,
+  UserStatus,
   MarketplaceCategory,
   CoffeeFarm,
   FarmWeatherData,
@@ -18,6 +28,7 @@ import {
   WarehouseGradeTier,
   CuppingEvaluationData,
   VerificationStamp,
+  VerificationChecklistItem,
 } from '../types/coffee';
 import {
   WorkOrder,
@@ -71,21 +82,32 @@ interface CoffeeContextType {
   users: AppUser[];
   loginAsRole: (role: UserRole) => void;
   loginAsUser: (userId: string) => void;
+  impersonatingFromUser: AppUser | null;
+  returnToSuperAdmin: () => void;
   login: (email: string, password: string, rememberMe?: boolean) => { success: boolean; message: string; user?: AppUser };
   requestPasswordReset: (email: string) => { success: boolean; message: string; resetCode?: string };
   verifyResetCode: (email: string, code: string) => { success: boolean; message: string };
   resetPassword: (email: string, code: string, newPassword: string) => { success: boolean; message: string };
   registerUser?: (userData: {
     name: string;
+    email?: string;
+    username?: string;
+    password?: string;
     role: UserRole;
     organization: string;
     location: string;
     phone: string;
     bio?: string;
-  }) => AppUser;
+  }) => { success: boolean; message: string; user: AppUser };
+  approveUser: (userId: string) => { success: boolean; message: string };
+  rejectUser: (userId: string, reason?: string) => { success: boolean; message: string };
+  deleteUser: (userId: string) => { success: boolean; message: string };
+  suspendUser: (userId: string) => { success: boolean; message: string };
   logout: () => void;
-  activeView: 'landing' | 'dashboard' | 'marketplace' | 'transactions';
-  setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
+  route: RouteState;
+  navigate: (target: NavigationTarget) => RouteState;
+  activeView: 'landing' | 'dashboard' | 'marketplace' | 'transactions' | 'scan';
+  setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions' | 'scan') => void;
   farmerActiveTab: 'farms' | 'upload' | 'catalog' | 'history';
   setFarmerActiveTab: (tab: 'farms' | 'upload' | 'catalog' | 'history') => void;
   roasterActiveTab: 'purchasing' | 'inventory' | 'work_orders' | 'production' | 'qc' | 'selling' | 'history' | 'dashboard';
@@ -98,6 +120,10 @@ interface CoffeeContextType {
   setCafeActiveTab: (tab: 'inventory' | 'calculator' | 'my_products' | 'create_product' | 'history') => void;
   verifierActiveTab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history';
   setVerifierActiveTab: (tab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history') => void;
+  superAdminActiveTab: 'dashboard' | 'approvals' | 'directory' | 'logs';
+  setSuperAdminActiveTab: (tab: 'dashboard' | 'approvals' | 'directory' | 'logs') => void;
+  superAdminRoleFilter: string;
+  setSuperAdminRoleFilter: (role: string) => void;
   verificationStamps: VerificationStamp[];
   issueVerificationStamp: (params: {
     targetType: 'farm' | 'harvest' | 'processed' | 'warehouse' | 'roasted' | 'cafe';
@@ -107,6 +133,7 @@ interface CoffeeContextType {
     scoreDisplay?: string;
     notes: string;
     cuppingEvaluation?: CuppingEvaluationData;
+    checklist?: VerificationChecklistItem[];
   }) => { success: boolean; message: string; stamp?: VerificationStamp };
   revokeVerificationStamp: (
     targetType: 'farm' | 'harvest' | 'processed' | 'warehouse' | 'roasted' | 'cafe',
@@ -239,6 +266,7 @@ interface CoffeeContextType {
       pricePerPack: number;
       restingRecommendationDays: number;
       recommendedBrew: string[];
+      photoUrl?: string;
     }
   ) => RoastedBeanLot | null;
   buyRoastedBeansForCafe: (roastedLotId: string, packCount: number) => void;
@@ -249,6 +277,20 @@ interface CoffeeContextType {
     item: UnifiedMarketplaceItem,
     quantity: number
   ) => { success: boolean; message: string };
+  launchMarketplaceProduct: (data: {
+    category: MarketplaceCategory;
+    title: string;
+    variety: string;
+    origin: string;
+    altitude?: string;
+    processMethod?: string;
+    roastLevel?: string;
+    stock: number;
+    price: number;
+    tastingNotes?: string[];
+    photoUrl?: string;
+    notes?: string;
+  }) => { success: boolean; message: string };
   resetToDefaultData: () => void;
   seedFarmerLots: () => void;
   getTraceabilityForRoastedLot: (roastedLotId: string) => {
@@ -301,15 +343,15 @@ const CoffeeContext = createContext<CoffeeContextType | undefined>(undefined);
 
 export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(() => {
-    const saved = localStorage.getItem('cct_currentUser');
+    const saved = localStorage.getItem('cct_live_auth_user');
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch {
-        return MOCK_USERS[0];
+        return null;
       }
     }
-    return MOCK_USERS[0];
+    return null;
   });
 
   const [language, setLanguageState] = useState<Language>(() => {
@@ -326,31 +368,31 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return translations[language]?.[key] ?? translations.id[key] ?? key;
   };
 
-  const [demoModeEnabled, setDemoModeEnabledState] = useState<boolean>(() => {
-    const saved = localStorage.getItem('cct_demoMode');
-    return saved === null ? true : saved === 'true';
-  });
+  const [demoModeEnabled, setDemoModeEnabledState] = useState<boolean>(false);
 
   const setDemoModeEnabled = (enabled: boolean) => {
     setDemoModeEnabledState(enabled);
-    localStorage.setItem('cct_demoMode', String(enabled));
   };
 
   const [users, setUsers] = useState<AppUser[]>(() => {
-    const saved = localStorage.getItem('cct_users');
+    const saved = localStorage.getItem('cct_v3_users');
     if (saved) {
       try {
         const parsed: AppUser[] = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           const merged = [...parsed];
           MOCK_USERS.forEach((mockUser) => {
-            const idx = merged.findIndex((u) => u.id === mockUser.id);
+            const idx = merged.findIndex((u) => u.id === mockUser.id || (mockUser.username && u.username === mockUser.username));
             if (idx >= 0) {
               merged[idx] = {
                 ...mockUser,
                 ...merged[idx],
+                username: mockUser.username || merged[idx].username,
                 email: merged[idx].email || mockUser.email,
-                password: merged[idx].password || mockUser.password,
+                password: mockUser.password || merged[idx].password,
+                role: mockUser.role || merged[idx].role,
+                isSuperAdmin: mockUser.isSuperAdmin !== undefined ? mockUser.isSuperAdmin : merged[idx].isSuperAdmin,
+                status: merged[idx].status || mockUser.status || 'active',
                 verifierDomain: merged[idx].verifierDomain || mockUser.verifierDomain,
               };
             } else {
@@ -360,36 +402,349 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return merged;
         }
       } catch (e) {
-        console.error('Failed to parse cct_users', e);
+        console.error('Failed to parse cct_v3_users', e);
       }
     }
     return MOCK_USERS;
   });
 
-  const [activeView, setActiveView] = useState<'landing' | 'dashboard' | 'marketplace' | 'transactions'>('landing');
-  const [farmerActiveTab, setFarmerActiveTab] = useState<'farms' | 'upload' | 'catalog' | 'history'>('farms');
-  const [roasterActiveTab, setRoasterActiveTab] = useState<
+  // Professional Unified Routing System (Single Source of Truth)
+  const [currentRoute, setCurrentRoute] = useState<RouteState>(() => parseRouteFromLocation());
+  const [activeView, setActiveViewState] = useState<AppView>(() => currentRoute.view);
+
+  const navigate = (target: NavigationTarget): RouteState => {
+    const updated = navigateTo(target);
+    setCurrentRoute(updated);
+    setActiveViewState(updated.view);
+    return updated;
+  };
+
+  const setActiveView = (view: AppView) => {
+    navigate({ view });
+  };
+
+  useEffect(() => {
+    const handleRouteChange = () => {
+      const parsed = parseRouteFromLocation();
+      setCurrentRoute(parsed);
+      setActiveViewState(parsed.view);
+
+      // Automatic synchronization for SuperAdmin tab & service filter from URL
+      if (parsed.view === 'dashboard') {
+        if (parsed.subRoute && ['dashboard', 'approvals', 'directory', 'logs'].includes(parsed.subRoute)) {
+          setSuperAdminActiveTabState(parsed.subRoute as any);
+        }
+        if (parsed.service) {
+          setSuperAdminRoleFilterState(parsed.service);
+        } else if (parsed.subRoute === 'directory' && !parsed.service) {
+          setSuperAdminRoleFilterState('all');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    window.addEventListener('cct_route_change', handleRouteChange as EventListener);
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+      window.removeEventListener('cct_route_change', handleRouteChange as EventListener);
+    };
+  }, []);
+
+  // Multi-Device Realtime & Cross-Tab Synchronization for users list
+  useEffect(() => {
+    let isMounted = true;
+
+    // 1. Initial Fetch from Server Backend
+    const fetchLatestUsers = async () => {
+      try {
+        const res = await fetch('/api/users');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.users) && data.users.length > 0 && isMounted) {
+            setUsers(data.users);
+            localStorage.setItem('cct_v3_users', JSON.stringify(data.users));
+          }
+        }
+      } catch (err) {
+        console.warn('[Sync] Server API sync fallback to local storage:', err);
+      }
+    };
+    fetchLatestUsers();
+
+    // 2. Server-Sent Events (SSE) Realtime Stream
+    let sse: EventSource | null = null;
+    try {
+      sse = new EventSource('/api/realtime/stream');
+
+      sse.addEventListener('init', (e: MessageEvent) => {
+        try {
+          const payload = JSON.parse(e.data);
+          if (Array.isArray(payload.users) && payload.users.length > 0 && isMounted) {
+            setUsers(payload.users);
+            localStorage.setItem('cct_v3_users', JSON.stringify(payload.users));
+          }
+        } catch {}
+      });
+
+      sse.addEventListener('users_updated', (e: MessageEvent) => {
+        try {
+          const payload = JSON.parse(e.data);
+          if (Array.isArray(payload.users) && payload.users.length > 0 && isMounted) {
+            setUsers(payload.users);
+            localStorage.setItem('cct_v3_users', JSON.stringify(payload.users));
+          }
+        } catch {}
+      });
+
+      sse.addEventListener('user_registered', (e: MessageEvent) => {
+        try {
+          const payload = JSON.parse(e.data);
+          if (payload.newUser && isMounted) {
+            setUsers((prev) => {
+              const filtered = prev.filter(
+                (u) => u.id !== payload.newUser.id && u.email?.toLowerCase() !== payload.newUser.email?.toLowerCase()
+              );
+              const updated = [payload.newUser, ...filtered];
+              localStorage.setItem('cct_v3_users', JSON.stringify(updated));
+              return updated;
+            });
+          }
+        } catch {}
+      });
+
+      sse.addEventListener('user_approved', (e: MessageEvent) => {
+        try {
+          const payload = JSON.parse(e.data);
+          if (payload.user && isMounted) {
+            setUsers((prev) => {
+              const updated = prev.map((u) =>
+                u.id === payload.user.id ? { ...u, status: 'active' as UserStatus, rejectionReason: undefined } : u
+              );
+              localStorage.setItem('cct_v3_users', JSON.stringify(updated));
+              return updated;
+            });
+            // Auto update currentUser if currentUser was approved
+            setCurrentUser((curr) => {
+              if (curr && curr.id === payload.user.id) {
+                const updated = { ...curr, status: 'active' as UserStatus, rejectionReason: undefined };
+                localStorage.setItem('cct_live_auth_user', JSON.stringify(updated));
+                return updated;
+              }
+              return curr;
+            });
+          }
+        } catch {}
+      });
+
+      sse.onerror = () => {
+        // SSE error, will auto-reconnect; fallback poll handles gaps
+      };
+    } catch (sseErr) {
+      console.warn('[Sync] SSE not supported or blocked:', sseErr);
+    }
+
+    // 3. Fallback High-Frequency Poller (every 2.5 seconds)
+    const pollInterval = setInterval(() => {
+      if (!isMounted) return;
+      fetch('/api/users')
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.users) && data.users.length > 0 && isMounted) {
+            setUsers((prev) => {
+              // Only trigger state update if contents differ
+              if (JSON.stringify(prev) !== JSON.stringify(data.users)) {
+                localStorage.setItem('cct_v3_users', JSON.stringify(data.users));
+                return data.users;
+              }
+              return prev;
+            });
+          }
+        })
+        .catch(() => {});
+    }, 2500);
+
+    // 4. Same-browser cross-tab storage sync
+    const handleStorageSync = (e: StorageEvent) => {
+      if (e.key === 'cct_v3_users' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed) && parsed.length > 0 && isMounted) {
+            setUsers(parsed);
+          }
+        } catch (err) {
+          console.error('Cross-tab sync error for users', err);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageSync);
+
+    return () => {
+      isMounted = false;
+      if (sse) sse.close();
+      clearInterval(pollInterval);
+      window.removeEventListener('storage', handleStorageSync);
+    };
+  }, []);
+
+  // Persistent Role Tabs
+  // Impersonation state: stores the original super admin user when "Masuk" is used
+  const [impersonatingFromUser, setImpersonatingFromUser] = useState<AppUser | null>(() => {
+    const saved = localStorage.getItem('cct_impersonating_superadmin');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (impersonatingFromUser) {
+      localStorage.setItem('cct_impersonating_superadmin', JSON.stringify(impersonatingFromUser));
+    } else {
+      localStorage.removeItem('cct_impersonating_superadmin');
+    }
+  }, [impersonatingFromUser]);
+
+  const [farmerActiveTab, setFarmerActiveTabState] = useState<'farms' | 'upload' | 'catalog' | 'history'>(() => {
+    return (localStorage.getItem('cct_tab_farmer') as 'farms' | 'upload' | 'catalog' | 'history') || 'farms';
+  });
+  const setFarmerActiveTab = (tab: 'farms' | 'upload' | 'catalog' | 'history') => {
+    setFarmerActiveTabState(tab);
+    localStorage.setItem('cct_tab_farmer', tab);
+  };
+
+  const [roasterActiveTab, setRoasterActiveTabState] = useState<
     'purchasing' | 'inventory' | 'work_orders' | 'production' | 'qc' | 'selling' | 'history' | 'dashboard'
-  >('purchasing');
-  const [processorActiveTab, setProcessorActiveTab] = useState<
+  >(() => {
+    return (
+      (localStorage.getItem('cct_tab_roaster') as
+        | 'purchasing'
+        | 'inventory'
+        | 'work_orders'
+        | 'production'
+        | 'qc'
+        | 'selling'
+        | 'history'
+        | 'dashboard') || 'purchasing'
+    );
+  });
+  const setRoasterActiveTab = (
+    tab: 'purchasing' | 'inventory' | 'work_orders' | 'production' | 'qc' | 'selling' | 'history' | 'dashboard'
+  ) => {
+    setRoasterActiveTabState(tab);
+    localStorage.setItem('cct_tab_roaster', tab);
+  };
+
+  const [processorActiveTab, setProcessorActiveTabState] = useState<
     'sourcing' | 'batches' | 'inventory' | 'selling' | 'history' | 'dashboard'
-  >('sourcing');
-  const [warehouseActiveTab, setWarehouseActiveTab] = useState<'inventory' | 'marketplace' | 'history'>('inventory');
-  const [cafeActiveTab, setCafeActiveTab] = useState<
+  >(() => {
+    return (
+      (localStorage.getItem('cct_tab_processor') as
+        | 'sourcing'
+        | 'batches'
+        | 'inventory'
+        | 'selling'
+        | 'history'
+        | 'dashboard') || 'sourcing'
+    );
+  });
+  const setProcessorActiveTab = (
+    tab: 'sourcing' | 'batches' | 'inventory' | 'selling' | 'history' | 'dashboard'
+  ) => {
+    setProcessorActiveTabState(tab);
+    localStorage.setItem('cct_tab_processor', tab);
+  };
+
+  const [warehouseActiveTab, setWarehouseActiveTabState] = useState<'inventory' | 'marketplace' | 'history'>(() => {
+    return (localStorage.getItem('cct_tab_warehouse') as 'inventory' | 'marketplace' | 'history') || 'inventory';
+  });
+  const setWarehouseActiveTab = (tab: 'inventory' | 'marketplace' | 'history') => {
+    setWarehouseActiveTabState(tab);
+    localStorage.setItem('cct_tab_warehouse', tab);
+  };
+
+  const [cafeActiveTab, setCafeActiveTabState] = useState<
     'inventory' | 'calculator' | 'my_products' | 'create_product' | 'history'
-  >('inventory');
-  const [verifierActiveTab, setVerifierActiveTab] = useState<
+  >(() => {
+    return (
+      (localStorage.getItem('cct_tab_cafe') as
+        | 'inventory'
+        | 'calculator'
+        | 'my_products'
+        | 'create_product'
+        | 'history') || 'inventory'
+    );
+  });
+  const setCafeActiveTab = (
+    tab: 'inventory' | 'calculator' | 'my_products' | 'create_product' | 'history'
+  ) => {
+    setCafeActiveTabState(tab);
+    localStorage.setItem('cct_tab_cafe', tab);
+  };
+
+  const [verifierActiveTab, setVerifierActiveTabState] = useState<
     'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history'
-  >('petani');
+  >(() => {
+    return (
+      (localStorage.getItem('cct_tab_verifier') as
+        | 'petani'
+        | 'pengolah'
+        | 'gudang'
+        | 'roaster'
+        | 'cafe'
+        | 'history') || 'petani'
+    );
+  });
+  const setVerifierActiveTab = (tab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history') => {
+    setVerifierActiveTabState(tab);
+    localStorage.setItem('cct_tab_verifier', tab);
+  };
+
+  const [superAdminActiveTab, setSuperAdminActiveTabState] = useState<'dashboard' | 'approvals' | 'directory' | 'logs'>(() => {
+    const fromUrl = parseRouteFromLocation();
+    if (fromUrl.subRoute && ['dashboard', 'approvals', 'directory', 'logs'].includes(fromUrl.subRoute)) {
+      return fromUrl.subRoute as any;
+    }
+    return (localStorage.getItem('cct_tab_superadmin') as 'dashboard' | 'approvals' | 'directory' | 'logs') || 'dashboard';
+  });
+
+  const setSuperAdminActiveTab = (tab: 'dashboard' | 'approvals' | 'directory' | 'logs') => {
+    setSuperAdminActiveTabState(tab);
+    localStorage.setItem('cct_tab_superadmin', tab);
+    navigate({
+      view: 'dashboard',
+      subRoute: tab,
+      userId: null,
+      service: tab === 'directory' ? superAdminRoleFilter : undefined,
+    });
+  };
+
+  const [superAdminRoleFilter, setSuperAdminRoleFilterState] = useState<string>(() => {
+    const fromUrl = parseRouteFromLocation();
+    return fromUrl.service || 'all';
+  });
+
+  const setSuperAdminRoleFilter = (role: string) => {
+    setSuperAdminRoleFilterState(role);
+    navigate({
+      view: 'dashboard',
+      subRoute: 'directory',
+      service: role,
+      userId: null,
+    });
+  };
 
   const [verificationStamps, setVerificationStamps] = useState<VerificationStamp[]>(() => {
-    const saved = localStorage.getItem('cct_verificationStamps');
+    const saved = localStorage.getItem('cct_v3_verificationStamps');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {
-        console.error('Failed to parse cct_verificationStamps', e);
+        console.error('Failed to parse cct_v3_verificationStamps', e);
       }
     }
     const initialStamps: VerificationStamp[] = [];
@@ -399,8 +754,17 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     INITIAL_FARMER_LOTS.forEach((lot) => {
       if (lot.verificationStamp) initialStamps.push(lot.verificationStamp);
     });
+    INITIAL_PROCESSED_LOTS.forEach((p) => {
+      if (p.verificationStamp) initialStamps.push(p.verificationStamp);
+    });
+    INITIAL_WAREHOUSE_LOTS.forEach((w) => {
+      if (w.verificationStamp) initialStamps.push(w.verificationStamp);
+    });
     INITIAL_ROASTED_LOTS.forEach((r) => {
       if (r.verificationStamp) initialStamps.push(r.verificationStamp);
+    });
+    INITIAL_CAFE_PRODUCTS.forEach((c) => {
+      if (c.verificationStamp) initialStamps.push(c.verificationStamp);
     });
     return initialStamps;
   });
@@ -408,12 +772,12 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [resetCodes, setResetCodes] = useState<Record<string, { code: string; expiresAt: number }>>({});
 
   useEffect(() => {
-    localStorage.setItem('cct_verificationStamps', JSON.stringify(verificationStamps));
+    localStorage.setItem('cct_v3_verificationStamps', JSON.stringify(verificationStamps));
   }, [verificationStamps]);
   const [activeProcessingBatchId, setActiveProcessingBatchId] = useState<string | null>(null);
 
   const [coffeeFarms, setCoffeeFarms] = useState<CoffeeFarm[]>(() => {
-    const saved = localStorage.getItem('cct_coffeeFarms');
+    const saved = localStorage.getItem('cct_v3_coffeeFarms');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -426,38 +790,62 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   });
 
   const [processingBatches, setProcessingBatches] = useState<ProcessingBatch[]>(() => {
-    const saved = localStorage.getItem('cct_processingBatches');
+    const saved = localStorage.getItem('cct_v3_processingBatches');
     return saved ? JSON.parse(saved) : INITIAL_PROCESSING_BATCHES;
   });
 
   const [processorCherryStock, setProcessorCherryStock] = useState<ProcessorCherryStockItem[]>(() => {
-    const saved = localStorage.getItem('cct_processorCherryStock');
-    return saved ? JSON.parse(saved) : INITIAL_PROCESSOR_CHERRY_STOCK;
+    const saved = localStorage.getItem('cct_v3_processorCherryStock');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item: ProcessorCherryStockItem) => {
+            if (item.photoUrl && item.photoUrl.includes('photo-1596704017254-9b121068fb31')) {
+              return {
+                ...item,
+                photoUrl: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
+              };
+            }
+            return item;
+          });
+        }
+      } catch (e) {}
+    }
+    return INITIAL_PROCESSOR_CHERRY_STOCK;
   });
 
   useEffect(() => {
-    localStorage.setItem('cct_users', JSON.stringify(users));
+    localStorage.setItem('cct_v3_users', JSON.stringify(users));
   }, [users]);
 
   useEffect(() => {
-    localStorage.setItem('cct_coffeeFarms', JSON.stringify(coffeeFarms));
+    localStorage.setItem('cct_v3_coffeeFarms', JSON.stringify(coffeeFarms));
   }, [coffeeFarms]);
 
   useEffect(() => {
-    localStorage.setItem('cct_processingBatches', JSON.stringify(processingBatches));
+    localStorage.setItem('cct_v3_processingBatches', JSON.stringify(processingBatches));
   }, [processingBatches]);
 
   useEffect(() => {
-    localStorage.setItem('cct_processorCherryStock', JSON.stringify(processorCherryStock));
+    localStorage.setItem('cct_v3_processorCherryStock', JSON.stringify(processorCherryStock));
   }, [processorCherryStock]);
 
   const [farmerLots, setFarmerLots] = useState<FarmerHarvestLot[]>(() => {
-    const saved = localStorage.getItem('cct_farmerLots');
+    const saved = localStorage.getItem('cct_v3_farmerLots');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0 && parsed.some((l: FarmerHarvestLot) => l.availableWeightKg > 0)) {
-          return parsed;
+          return parsed.map((lot: FarmerHarvestLot) => {
+            if (lot.id === 'LOT-PTN-003' || (lot.photoUrl && lot.photoUrl.includes('photo-1596704017254-9b121068fb31'))) {
+              return {
+                ...lot,
+                photoUrl: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
+              };
+            }
+            return lot;
+          });
         }
       } catch (e) {
         // Fallback to fresh seed lots
@@ -467,143 +855,143 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   });
 
   const [processedLots, setProcessedLots] = useState<ProcessedGreenBeanLot[]>(() => {
-    const saved = localStorage.getItem('cct_processedLots');
+    const saved = localStorage.getItem('cct_v3_processedLots');
     return saved ? JSON.parse(saved) : INITIAL_PROCESSED_LOTS;
   });
 
   const [warehouseLots, setWarehouseLots] = useState<WarehouseLot[]>(() => {
-    const saved = localStorage.getItem('cct_warehouseLots');
+    const saved = localStorage.getItem('cct_v3_warehouseLots');
     return saved ? JSON.parse(saved) : INITIAL_WAREHOUSE_LOTS;
   });
 
   const [roastedLots, setRoastedLots] = useState<RoastedBeanLot[]>(() => {
-    const saved = localStorage.getItem('cct_roastedLots');
+    const saved = localStorage.getItem('cct_v3_roastedLots');
     return saved ? JSON.parse(saved) : INITIAL_ROASTED_LOTS;
   });
 
   const [cafeInventory, setCafeInventory] = useState<CafeInventoryItem[]>(() => {
-    const saved = localStorage.getItem('cct_cafeInventory');
+    const saved = localStorage.getItem('cct_v3_cafeInventory');
     return saved ? JSON.parse(saved) : INITIAL_CAFE_ITEMS;
   });
 
   const [cafeProducts, setCafeProducts] = useState<CafeRetailProduct[]>(() => {
-    const saved = localStorage.getItem('cct_cafeProducts');
+    const saved = localStorage.getItem('cct_v3_cafeProducts');
     return saved ? JSON.parse(saved) : INITIAL_CAFE_PRODUCTS;
   });
 
   const [transactions, setTransactions] = useState<SupplyChainTransaction[]>(() => {
-    const saved = localStorage.getItem('cct_transactions');
+    const saved = localStorage.getItem('cct_v3_transactions');
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
   });
 
   // --- QREMA ROASTERY ERP STATE ---
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(() => {
-    const saved = localStorage.getItem('cct_workOrders');
+    const saved = localStorage.getItem('cct_v3_workOrders');
     return saved ? JSON.parse(saved) : INITIAL_WORK_ORDERS;
   });
 
   const [masterProfiles, setMasterProfiles] = useState<MasterRoastProfile[]>(() => {
-    const saved = localStorage.getItem('cct_masterProfiles');
+    const saved = localStorage.getItem('cct_v3_masterProfiles');
     return saved ? JSON.parse(saved) : INITIAL_MASTER_PROFILES;
   });
 
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => {
-    const saved = localStorage.getItem('cct_purchaseOrders');
+    const saved = localStorage.getItem('cct_v3_purchaseOrders');
     return saved ? JSON.parse(saved) : INITIAL_PURCHASE_ORDERS;
   });
 
   const [greenBeanSamples, setGreenBeanSamples] = useState<GreenBeanSample[]>(() => {
-    const saved = localStorage.getItem('cct_greenBeanSamples');
+    const saved = localStorage.getItem('cct_v3_greenBeanSamples');
     return saved ? JSON.parse(saved) : INITIAL_GREEN_SAMPLES;
   });
 
   const [qcSessions, setQcSessions] = useState<QCCuppingSession[]>(() => {
-    const saved = localStorage.getItem('cct_qcSessions');
+    const saved = localStorage.getItem('cct_v3_qcSessions');
     return saved ? JSON.parse(saved) : INITIAL_QC_SESSIONS;
   });
 
   const [packagingInventory, setPackagingInventory] = useState<RoasterPackagingItem[]>(() => {
-    const saved = localStorage.getItem('cct_packagingInventory');
+    const saved = localStorage.getItem('cct_v3_packagingInventory');
     return saved ? JSON.parse(saved) : INITIAL_PACKAGING_ITEMS;
   });
 
   const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(() => {
-    const saved = localStorage.getItem('cct_salesOrders');
+    const saved = localStorage.getItem('cct_v3_salesOrders');
     return saved ? JSON.parse(saved) : INITIAL_SALES_ORDERS;
   });
 
   const [roasterMachines, setRoasterMachines] = useState<RoasterMachine[]>(() => {
-    const saved = localStorage.getItem('cct_roasterMachines');
+    const saved = localStorage.getItem('cct_v3_roasterMachines');
     return saved ? JSON.parse(saved) : INITIAL_ROASTER_MACHINES;
   });
 
   // Sync state to local storage
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem('cct_currentUser', JSON.stringify(currentUser));
+      localStorage.setItem('cct_live_auth_user', JSON.stringify(currentUser));
     } else {
-      localStorage.removeItem('cct_currentUser');
+      localStorage.removeItem('cct_live_auth_user');
     }
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem('cct_farmerLots', JSON.stringify(farmerLots));
+    localStorage.setItem('cct_v3_farmerLots', JSON.stringify(farmerLots));
   }, [farmerLots]);
 
   useEffect(() => {
-    localStorage.setItem('cct_processedLots', JSON.stringify(processedLots));
+    localStorage.setItem('cct_v3_processedLots', JSON.stringify(processedLots));
   }, [processedLots]);
 
   useEffect(() => {
-    localStorage.setItem('cct_warehouseLots', JSON.stringify(warehouseLots));
+    localStorage.setItem('cct_v3_warehouseLots', JSON.stringify(warehouseLots));
   }, [warehouseLots]);
 
   useEffect(() => {
-    localStorage.setItem('cct_roastedLots', JSON.stringify(roastedLots));
+    localStorage.setItem('cct_v3_roastedLots', JSON.stringify(roastedLots));
   }, [roastedLots]);
 
   useEffect(() => {
-    localStorage.setItem('cct_cafeInventory', JSON.stringify(cafeInventory));
+    localStorage.setItem('cct_v3_cafeInventory', JSON.stringify(cafeInventory));
   }, [cafeInventory]);
 
   useEffect(() => {
-    localStorage.setItem('cct_cafeProducts', JSON.stringify(cafeProducts));
+    localStorage.setItem('cct_v3_cafeProducts', JSON.stringify(cafeProducts));
   }, [cafeProducts]);
 
   useEffect(() => {
-    localStorage.setItem('cct_transactions', JSON.stringify(transactions));
+    localStorage.setItem('cct_v3_transactions', JSON.stringify(transactions));
   }, [transactions]);
 
   useEffect(() => {
-    localStorage.setItem('cct_workOrders', JSON.stringify(workOrders));
+    localStorage.setItem('cct_v3_workOrders', JSON.stringify(workOrders));
   }, [workOrders]);
 
   useEffect(() => {
-    localStorage.setItem('cct_masterProfiles', JSON.stringify(masterProfiles));
+    localStorage.setItem('cct_v3_masterProfiles', JSON.stringify(masterProfiles));
   }, [masterProfiles]);
 
   useEffect(() => {
-    localStorage.setItem('cct_purchaseOrders', JSON.stringify(purchaseOrders));
+    localStorage.setItem('cct_v3_purchaseOrders', JSON.stringify(purchaseOrders));
   }, [purchaseOrders]);
 
   useEffect(() => {
-    localStorage.setItem('cct_greenBeanSamples', JSON.stringify(greenBeanSamples));
+    localStorage.setItem('cct_v3_greenBeanSamples', JSON.stringify(greenBeanSamples));
   }, [greenBeanSamples]);
 
   useEffect(() => {
-    localStorage.setItem('cct_qcSessions', JSON.stringify(qcSessions));
+    localStorage.setItem('cct_v3_qcSessions', JSON.stringify(qcSessions));
   }, [qcSessions]);
 
   useEffect(() => {
-    localStorage.setItem('cct_packagingInventory', JSON.stringify(packagingInventory));
+    localStorage.setItem('cct_v3_packagingInventory', JSON.stringify(packagingInventory));
   }, [packagingInventory]);
 
   useEffect(() => {
-    localStorage.setItem('cct_salesOrders', JSON.stringify(salesOrders));
+    localStorage.setItem('cct_v3_salesOrders', JSON.stringify(salesOrders));
   }, [salesOrders]);
 
   useEffect(() => {
-    localStorage.setItem('cct_roasterMachines', JSON.stringify(roasterMachines));
+    localStorage.setItem('cct_v3_roasterMachines', JSON.stringify(roasterMachines));
   }, [roasterMachines]);
 
   const loginAsRole = (role: UserRole) => {
@@ -620,6 +1008,22 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const loginAsUser = (userId: string) => {
     const matched = users.find((u) => u.id === userId) || MOCK_USERS.find((u) => u.id === userId);
     if (matched) {
+      // If we are currently superadmin or not already impersonating, record the superadmin
+      let adminToSave = impersonatingFromUser;
+      if (!adminToSave && currentUser && (currentUser.role === 'superadmin' || currentUser.isSuperAdmin)) {
+        adminToSave = currentUser;
+      }
+      if (!adminToSave) {
+        // Fallback: look up novizar
+        adminToSave =
+          users.find((u) => u.role === 'superadmin' || u.username === 'novizar') ||
+          MOCK_USERS.find((u) => u.role === 'superadmin' || u.username === 'novizar') ||
+          null;
+      }
+      if (adminToSave) {
+        setImpersonatingFromUser(adminToSave);
+        localStorage.setItem('cct_impersonating_superadmin', JSON.stringify(adminToSave));
+      }
       setCurrentUser(matched);
       setActiveView('dashboard');
       if (matched.role === 'verifikator' && matched.verifierDomain && matched.verifierDomain !== 'all') {
@@ -628,22 +1032,79 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const returnToSuperAdmin = () => {
+    let superAdmin = impersonatingFromUser;
+    if (!superAdmin) {
+      const saved = localStorage.getItem('cct_impersonating_superadmin');
+      if (saved) {
+        try {
+          superAdmin = JSON.parse(saved);
+        } catch {
+          superAdmin = null;
+        }
+      }
+    }
+    if (!superAdmin) {
+      superAdmin =
+        users.find((u) => u.role === 'superadmin' || u.username === 'novizar') ||
+        MOCK_USERS.find((u) => u.role === 'superadmin' || u.username === 'novizar') ||
+        null;
+    }
+    if (superAdmin) {
+      setCurrentUser(superAdmin);
+      setImpersonatingFromUser(null);
+      localStorage.removeItem('cct_impersonating_superadmin');
+      setSuperAdminActiveTab('directory');
+      setActiveView('dashboard');
+    }
+  };
+
   const login = (
     email: string,
     password: string,
     rememberMe: boolean = false
   ): { success: boolean; message: string; user?: AppUser } => {
-    const cleanEmail = email.toLowerCase().trim();
+    const cleanInput = email.toLowerCase().trim();
     const matched =
-      users.find((u) => (u.email && u.email.toLowerCase() === cleanEmail) || u.id === email.trim()) ||
-      MOCK_USERS.find((u) => (u.email && u.email.toLowerCase() === cleanEmail) || u.id === email.trim());
+      users.find((u) => 
+        (u.email && u.email.toLowerCase() === cleanInput) ||
+        (u.username && u.username.toLowerCase() === cleanInput) ||
+        u.id === email.trim()
+      ) ||
+      MOCK_USERS.find((u) => 
+        (u.email && u.email.toLowerCase() === cleanInput) ||
+        (u.username && u.username.toLowerCase() === cleanInput) ||
+        u.id === email.trim()
+      );
 
     if (!matched) {
-      return { success: false, message: 'Akun dengan email tersebut tidak ditemukan dalam sistem.' };
+      return { success: false, message: 'Akun dengan username atau email tersebut tidak ditemukan dalam sistem.' };
     }
 
     if (matched.password && matched.password !== password) {
       return { success: false, message: 'Kata sandi salah. Silakan coba kembali atau gunakan Lupa Password.' };
+    }
+
+    // Check account approval status
+    if (matched.status === 'pending_approval') {
+      return {
+        success: false,
+        message: 'Pendaftaran akun Anda sedang menunggu persetujuan (approval) dari Super Admin (Novizar - Owner sangrAI). Akses login akan aktif setelah akun Anda disetujui.',
+      };
+    }
+
+    if (matched.status === 'rejected') {
+      return {
+        success: false,
+        message: `Pendaftaran akun Anda ditolak oleh Super Admin. Alasan: ${matched.rejectionReason || 'Data pendaftaran belum memenuhi kualifikasi mitra sangrAI.'}`,
+      };
+    }
+
+    if (matched.status === 'suspended') {
+      return {
+        success: false,
+        message: 'Akun Anda telah dinonaktifkan sementara oleh Super Admin sangrAI.',
+      };
     }
 
     setCurrentUser(matched);
@@ -652,7 +1113,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setVerifierActiveTab(matched.verifierDomain);
     }
     if (rememberMe) {
-      localStorage.setItem('cct_rememberedEmail', cleanEmail);
+      localStorage.setItem('cct_rememberedEmail', cleanInput);
     } else {
       localStorage.removeItem('cct_rememberedEmail');
     }
@@ -741,6 +1202,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     scoreDisplay?: string;
     notes: string;
     cuppingEvaluation?: CuppingEvaluationData;
+    checklist?: VerificationChecklistItem[];
   }): { success: boolean; message: string; stamp?: VerificationStamp } => {
     const stampId = `STAMP-${Date.now().toString().slice(-4)}`;
     const prefix = params.stampType.split('_')[0].toUpperCase();
@@ -763,6 +1225,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       notes: params.notes,
       digitalSignatureHash,
       cuppingEvaluation: params.cuppingEvaluation,
+      checklist: params.checklist,
     };
 
     if (params.targetType === 'farm') {
@@ -858,12 +1321,15 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const registerUser = (userData: {
     name: string;
+    email?: string;
+    username?: string;
+    password?: string;
     role: UserRole;
     organization: string;
     location: string;
     phone: string;
     bio?: string;
-  }): AppUser => {
+  }): { success: boolean; message: string; user: AppUser } => {
     const defaultAvatars: Record<UserRole, string> = {
       petani: 'https://images.unsplash.com/photo-1595273670150-bd0c3c392e46?w=150&auto=format&fit=crop&q=80',
       pengolah: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
@@ -871,28 +1337,261 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       roaster: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80',
       cafe: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       verifikator: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+      superadmin: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     };
+
+    const cleanEmail = (userData.email || '').trim().toLowerCase();
+    let cleanUsername = userData.username?.trim().toLowerCase();
+    if (!cleanUsername) {
+      cleanUsername = cleanEmail
+        ? cleanEmail.split('@')[0].replace(/[^a-z0-9]/g, '')
+        : userData.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+    if (!cleanUsername) {
+      cleanUsername = `mitra${Math.floor(100 + Math.random() * 900)}`;
+    }
+
+    // Read latest users list from localStorage or state
+    let currentUsers = users;
+    try {
+      const saved = localStorage.getItem('cct_v3_users');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          currentUsers = parsed;
+        }
+      }
+    } catch (e) {}
+
+    // Check duplicate email
+    if (cleanEmail) {
+      const existingByEmail = currentUsers.find(
+        (u) => u.email && u.email.toLowerCase() === cleanEmail
+      );
+      if (existingByEmail) {
+        return {
+          success: false,
+          message: `Email "${cleanEmail}" sudah terdaftar dalam sistem (atas nama ${existingByEmail.name}). Mohon gunakan email lain.`,
+          user: existingByEmail,
+        };
+      }
+    }
+
+    // If username duplicate, make it unique
+    let finalUsername = cleanUsername;
+    if (currentUsers.some((u) => u.username && u.username.toLowerCase() === finalUsername)) {
+      finalUsername = `${cleanUsername}${Math.floor(100 + Math.random() * 900)}`;
+    }
+
+    const uniqueId = `user-${userData.role}-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newUser: AppUser = {
-      id: `user-${userData.role}-${Date.now().toString().slice(-4)}`,
-      name: userData.name,
+      id: uniqueId,
+      name: userData.name.trim(),
+      username: finalUsername,
+      email: cleanEmail || `${finalUsername}@${userData.role}.id`,
+      password: userData.password || 'password123',
       role: userData.role,
-      organization: userData.organization,
-      location: userData.location,
-      phone: userData.phone,
+      status: 'pending_approval', // Pending ACC by Super Admin Novizar
+      registeredAt: new Date().toLocaleString('id-ID'),
+      organization: userData.organization.trim(),
+      location: userData.location.trim(),
+      phone: userData.phone.trim() || '0812-0000-0000',
       avatar: defaultAvatars[userData.role] || defaultAvatars.roaster,
       balance: 50000000,
-      bio: userData.bio || `Pengguna terdaftar baru sebagai ${userData.role}`,
+      bio: userData.bio || `Pendaftar mitra baru sebagai ${userData.role}`,
     };
 
-    setUsers((prev) => [newUser, ...prev]);
-    setCurrentUser(newUser);
-    setActiveView('dashboard');
-    return newUser;
+    setUsers((prev) => {
+      let baseList = prev;
+      try {
+        const saved = localStorage.getItem('cct_v3_users');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            baseList = parsed;
+          }
+        }
+      } catch (e) {}
+
+      const filtered = baseList.filter((u) => u.id !== newUser.id && u.email?.toLowerCase() !== cleanEmail);
+      const updated = [newUser, ...filtered];
+      localStorage.setItem('cct_v3_users', JSON.stringify(updated));
+      return updated;
+    });
+
+    // Send immediately to Server Backend for real-time cross-device sync
+    fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: newUser.name,
+        email: newUser.email,
+        username: newUser.username,
+        password: newUser.password,
+        role: newUser.role,
+        organization: newUser.organization,
+        location: newUser.location,
+        phone: newUser.phone,
+        bio: newUser.bio,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.user) {
+          setUsers((prev) => {
+            const hasServerUser = prev.some((u) => u.id === data.user.id);
+            if (!hasServerUser) {
+              const replaced = prev.map((u) => (u.id === newUser.id ? data.user : u));
+              localStorage.setItem('cct_v3_users', JSON.stringify(replaced));
+              return replaced;
+            }
+            return prev;
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('[Register] Backend push failed, user stored locally:', err);
+      });
+
+    return {
+      success: true,
+      message: 'Pendaftaran Anda berhasil dikirim! Akun Anda sedang menunggu verifikasi & persetujuan (ACC) dari Super Admin (Novizar - Owner sangrAI). Akses login akan aktif setelah disetujui.',
+      user: newUser,
+    };
+  };
+
+  const approveUser = (userId: string): { success: boolean; message: string } => {
+    let approvedUser: AppUser | undefined;
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === userId) {
+          approvedUser = { ...u, status: 'active' as UserStatus, rejectionReason: undefined };
+          return approvedUser;
+        }
+        return u;
+      });
+      localStorage.setItem('cct_v3_users', JSON.stringify(updated));
+      return updated;
+    });
+
+    // Backend push for cross-device real-time sync
+    fetch('/api/users/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    }).catch((err) => console.warn('[ACC] Backend push error:', err));
+
+    const targetName = approvedUser?.name || 'Mitra';
+    const newTx: SupplyChainTransaction = {
+      id: `TX-ACC-${Date.now().toString().slice(-4)}`,
+      date: new Date().toISOString().split('T')[0],
+      fromRole: 'superadmin',
+      fromName: 'Novizar (Super Admin)',
+      toRole: approvedUser?.role || 'petani',
+      toName: targetName,
+      itemName: `Persetujuan Akun Mitra: ${targetName} (${approvedUser?.organization || ''})`,
+      quantity: 'Status: Aktif',
+      totalAmount: 0,
+      status: 'Selesai',
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+
+    return {
+      success: true,
+      message: `Akun "${targetName}" berhasil di-ACC dan diaktifkan oleh Super Admin Novizar.`,
+    };
+  };
+
+  const rejectUser = (userId: string, reason?: string): { success: boolean; message: string } => {
+    let targetName = 'Mitra';
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === userId) {
+          targetName = u.name;
+          return {
+            ...u,
+            status: 'rejected' as UserStatus,
+            rejectionReason: reason || 'Data registrasi belum memenuhi kualifikasi mitra sangrAI.',
+          };
+        }
+        return u;
+      });
+      localStorage.setItem('cct_v3_users', JSON.stringify(updated));
+      return updated;
+    });
+
+    // Backend push for cross-device real-time sync
+    fetch('/api/users/reject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, reason }),
+    }).catch((err) => console.warn('[Reject] Backend push error:', err));
+
+    return {
+      success: true,
+      message: `Pendaftaran "${targetName}" ditolak oleh Super Admin.`,
+    };
+  };
+
+  const deleteUser = (userId: string): { success: boolean; message: string } => {
+    let targetName = 'Mitra';
+    setUsers((prev) => {
+      const found = prev.find((u) => u.id === userId);
+      if (found) targetName = found.name;
+      const updated = prev.filter((u) => u.id !== userId);
+      localStorage.setItem('cct_v3_users', JSON.stringify(updated));
+      return updated;
+    });
+
+    // Backend push for cross-device real-time sync
+    fetch('/api/users/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    }).catch((err) => console.warn('[Delete] Backend push error:', err));
+
+    return {
+      success: true,
+      message: `Data pengguna "${targetName}" berhasil dihapus.`,
+    };
+  };
+
+  const suspendUser = (userId: string): { success: boolean; message: string } => {
+    let nextStatus: UserStatus = 'active';
+    let targetName = 'Mitra';
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === userId) {
+          targetName = u.name;
+          nextStatus = u.status === 'suspended' ? 'active' : 'suspended';
+          return { ...u, status: nextStatus };
+        }
+        return u;
+      });
+      localStorage.setItem('cct_v3_users', JSON.stringify(updated));
+      return updated;
+    });
+
+    // Backend push for cross-device real-time sync
+    fetch('/api/users/suspend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    }).catch((err) => console.warn('[Suspend] Backend push error:', err));
+
+    return {
+      success: true,
+      message: `Status akun "${targetName}" kini: ${nextStatus === 'active' ? 'Aktif' : 'Ditangguhkan'}.`,
+    };
   };
 
   const logout = () => {
     setCurrentUser(null);
+    setImpersonatingFromUser(null);
+    localStorage.removeItem('cct_live_auth_user');
+    localStorage.removeItem('cct_impersonating_superadmin');
+    setActiveView('landing');
   };
 
   // 0. Manajemen Kebun / Lahan Petani
@@ -960,6 +1659,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       farmerId: currentUser?.id || farmData.farmerId || 'user-petani-1',
       farmerName: currentUser?.name || farmData.farmerName || 'Asep Supriatna',
       patokList: defaultPatoks,
+      photoUrl:
+        farmData.photoUrl ||
+        'https://images.unsplash.com/photo-1524350876685-274059332603?w=800&auto=format&fit=crop&q=80',
       createdAt: new Date().toISOString().split('T')[0],
       verificationStatus: 'pending',
     };
@@ -1808,6 +2510,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       pricePerPack: number;
       restingRecommendationDays: number;
       recommendedBrew: string[];
+      photoUrl?: string;
     }
   ): RoastedBeanLot | null => {
     if (!currentUser) return null;
@@ -1872,7 +2575,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       restingRecommendationDays: listingData.restingRecommendationDays,
       recommendedBrew: listingData.recommendedBrew,
       status: 'available',
-      photoUrl: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&auto=format&fit=crop&q=80',
+      photoUrl:
+        listingData.photoUrl ||
+        'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=600&auto=format&fit=crop&q=80',
       sourceWorkOrderId: wo.id,
     };
     setRoastedLots((prev) => [newRoastedBean, ...prev]);
@@ -2070,6 +2775,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         availableStock: lot.availableWeightKg,
         stockUnit: 'kg',
         photoUrl:
+          lot.photoUrl ||
           'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80',
         specsSummary: [
           { label: 'Standar Grade', value: lot.gradeTier || 'Grade 1 - Super Premium' },
@@ -2120,6 +2826,170 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         rawItem: lot,
       })),
   ];
+
+  // 7b. Universal Launch ke Marketplace (dengan foto kustom/upload)
+  const launchMarketplaceProduct = (data: {
+    category: MarketplaceCategory;
+    title: string;
+    variety: string;
+    origin: string;
+    altitude?: string;
+    processMethod?: string;
+    roastLevel?: string;
+    stock: number;
+    price: number;
+    tastingNotes?: string[];
+    photoUrl?: string;
+    notes?: string;
+  }): { success: boolean; message: string } => {
+    if (!currentUser) {
+      return { success: false, message: 'Silakan login terlebih dahulu untuk menerbitkan produk.' };
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const notesArray = data.tastingNotes && data.tastingNotes.length > 0
+      ? data.tastingNotes
+      : ['Specialty Coffee', 'Aroma Bersih'];
+
+    if (data.category === 'cherry') {
+      const newLotId = `LOT-PTN-${Date.now().toString().slice(-4)}`;
+      const newLot: FarmerHarvestLot = {
+        id: newLotId,
+        farmerId: currentUser.id,
+        farmerName: currentUser.name,
+        farmLocation: data.origin || currentUser.location || 'Pangalengan, Jawa Barat',
+        altitude: data.altitude || '1.550 mdpl',
+        variety: data.variety || 'Typica Super',
+        harvestDate: today,
+        pickingMethod: 'Petik Merah Optimal (95%+)',
+        brix: 21.5,
+        totalWeightKg: data.stock,
+        availableWeightKg: data.stock,
+        pricePerKg: data.price,
+        notes: data.notes || `Panen ceri berkualitas dari kebun ${currentUser.name}`,
+        status: 'available',
+        createdAt: today,
+        photoUrl: data.photoUrl || 'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
+        verificationStatus: 'pending',
+      };
+      setFarmerLots((prev) => [newLot, ...prev]);
+      return {
+        success: true,
+        message: `Berhasil menerbitkan Lot Ceri Kopi #${newLotId} (${data.stock} kg) ke Marketplace!`,
+      };
+    }
+
+    if (data.category === 'green_bean_processor') {
+      const newLotId = `PRC-LOT-${Date.now().toString().slice(-4)}`;
+      const newLot: ProcessedGreenBeanLot = {
+        id: newLotId,
+        processorId: currentUser.id,
+        processorName: currentUser.organization || currentUser.name,
+        sourceFarmerLotId: `LOT-REF-${Date.now().toString().slice(-3)}`,
+        sourceFarmerName: 'Mitra Petani Terpilih',
+        sourceOrigin: data.origin || 'Pangalengan, Jawa Barat',
+        variety: data.variety || 'Arabika Specialty',
+        altitude: data.altitude || '1.500 mdpl',
+        processMethod: (data.processMethod as any) || 'Full Washed',
+        fermentationTimeHours: 36,
+        dryingMethod: 'Solar Dryer Raised Bed',
+        moistureContentPercent: 11.5,
+        waterActivityAw: 0.56,
+        grade: 'Specialty Grade 1',
+        defectCount: 2,
+        screenSize: 'Size 16-18 (Large Screen)',
+        greenBeanWeightKg: data.stock,
+        availableWeightKg: data.stock,
+        pricePerKg: data.price,
+        cuppingNotes: notesArray,
+        processedDate: today,
+        status: 'available',
+        photoUrl: data.photoUrl || 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&auto=format&fit=crop&q=80',
+        verificationStatus: 'pending',
+      };
+      setProcessedLots((prev) => [newLot, ...prev]);
+      return {
+        success: true,
+        message: `Berhasil menerbitkan Green Bean Olahan #${newLotId} (${data.stock} kg) ke Marketplace!`,
+      };
+    }
+
+    if (data.category === 'green_bean_warehouse') {
+      const newLotId = `WH-STK-${Date.now().toString().slice(-4)}`;
+      const newLot: WarehouseLot = {
+        id: newLotId,
+        warehouseId: currentUser.id,
+        warehouseName: currentUser.organization || currentUser.name,
+        sourceGreenBeanId: `PRC-REF-${Date.now().toString().slice(-3)}`,
+        sourceProcessorName: 'Stasiun Pengolahan Mitra',
+        sourceFarmerName: 'Kelompok Tani Binaan',
+        origin: data.origin || 'Pangalengan, Jawa Barat',
+        variety: data.variety || 'Arabika Specialty',
+        altitude: data.altitude || '1.550 mdpl',
+        processMethod: data.processMethod || 'Full Washed',
+        storageLocation: 'Gudang Utama - Pallet QA',
+        temperatureCelsius: 20.0,
+        humidityPercent: 55,
+        packagingType: 'GrainPro + Karung Goni 60kg',
+        verifiedScaScore: 86.5,
+        weightKg: data.stock,
+        availableWeightKg: data.stock,
+        pricePerKg: data.price,
+        storedDate: today,
+        status: 'available',
+        gradeTier: 'Grade 1 - Super Premium',
+        defectCount: 2,
+        screenSize: 'Screen 17-18',
+        moistureContentPercent: 11.2,
+        waterActivityAw: 0.55,
+        purchasePricePerKg: Math.round(data.price * 0.8),
+        targetMarket: 'Roastery Specialty & Ekspor',
+        gradingNotes: data.notes || 'Biji kopi pilihan standar SCA dengan kemasan hermetis.',
+        photoUrl: data.photoUrl || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80',
+        verificationStatus: 'pending',
+      };
+      setWarehouseLots((prev) => [newLot, ...prev]);
+      return {
+        success: true,
+        message: `Berhasil menerbitkan Green Bean Gudang #${newLotId} (${data.stock} kg) ke Marketplace!`,
+      };
+    }
+
+    // Default: 'roasted_bean'
+    const newLotId = `RST-LOT-${Date.now().toString().slice(-4)}`;
+    const newLot: RoastedBeanLot = {
+      id: newLotId,
+      roasterId: currentUser.id,
+      roasterName: currentUser.organization || currentUser.name,
+      sourceWarehouseLotId: `WH-REF-${Date.now().toString().slice(-3)}`,
+      origin: data.origin || 'Pangalengan, Jawa Barat',
+      variety: data.variety || 'Arabika Specialty',
+      altitude: data.altitude || '1.550 mdpl',
+      processMethod: data.processMethod || 'Full Washed',
+      farmerName: 'Mitra Petani Kebun',
+      roasterMachine: 'Probat Probatone 5kg',
+      roastLevel: (data.roastLevel as any) || 'Medium Roast',
+      agtronNumber: 58,
+      roastDate: today,
+      developmentTimeRatio: 15.5,
+      tastingNotes: notesArray,
+      scaCuppingScore: 86.5,
+      packageWeightGrams: 250,
+      totalPacks: data.stock,
+      availablePacks: data.stock,
+      pricePerPack: data.price,
+      restingRecommendationDays: 7,
+      recommendedBrew: ['V60', 'Espresso', 'Filter'],
+      status: 'available',
+      photoUrl: data.photoUrl || 'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=600&auto=format&fit=crop&q=80',
+      verificationStatus: 'pending',
+    };
+    setRoastedLots((prev) => [newLot, ...prev]);
+    return {
+      success: true,
+      message: `Berhasil menerbitkan Biji Sangrai #${newLotId} (${data.stock} pack) ke Marketplace!`,
+    };
+  };
 
   // 8. Universal Buy Action from Unified Marketplace
   const buyFromUnifiedMarketplace = (
@@ -2831,12 +3701,20 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         users,
         loginAsRole,
         loginAsUser,
+        impersonatingFromUser,
+        returnToSuperAdmin,
         login,
         requestPasswordReset,
         verifyResetCode,
         resetPassword,
         registerUser,
+        approveUser,
+        rejectUser,
+        deleteUser,
+        suspendUser,
         logout,
+        route: currentRoute,
+        navigate,
         activeView,
         setActiveView,
         farmerActiveTab,
@@ -2851,6 +3729,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setCafeActiveTab,
         verifierActiveTab,
         setVerifierActiveTab,
+        superAdminActiveTab,
+        setSuperAdminActiveTab,
+        superAdminRoleFilter,
+        setSuperAdminRoleFilter,
         verificationStamps,
         issueVerificationStamp,
         revokeVerificationStamp,
@@ -2889,6 +3771,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         buyRoastedBeansForCafe,
         addCafeRetailProduct,
         buyFromUnifiedMarketplace,
+        launchMarketplaceProduct,
         resetToDefaultData,
         seedFarmerLots,
         getTraceabilityForRoastedLot,

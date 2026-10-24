@@ -1,369 +1,367 @@
 import React, { useState } from 'react';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
-import { ROLE_DETAILS } from '../constants/roles';
+import { ROLE_DETAILS, REGISTRABLE_ROLES } from '../constants/roles';
 import {
   X,
+  UserPlus,
   Sprout,
   Cog,
   Warehouse,
   Flame,
   Coffee,
+  Award,
+  Check,
   CheckCircle2,
-  Sparkles,
+  Clock,
+  ShieldAlert,
   ArrowRight,
   ShieldCheck,
-  Building2,
-  MapPin,
-  Phone,
-  User,
-  Check,
+  Crown,
 } from 'lucide-react';
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultRole?: UserRole;
   initialRole?: UserRole;
 }
+
+const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
+  petani: <Sprout className="w-4 h-4" />,
+  pengolah: <Cog className="w-4 h-4" />,
+  gudang: <Warehouse className="w-4 h-4" />,
+  roaster: <Flame className="w-4 h-4" />,
+  cafe: <Coffee className="w-4 h-4" />,
+  verifikator: <Award className="w-4 h-4" />,
+  superadmin: <Crown className="w-4 h-4" />,
+};
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
   isOpen,
   onClose,
-  initialRole = 'roaster',
+  defaultRole = 'petani',
+  initialRole,
 }) => {
-  const { registerUser, loginAsRole } = useCoffee();
-  const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole);
+  const { registerUser } = useCoffee();
+  const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole || defaultRole);
   const [name, setName] = useState('');
-  const [org, setOrg] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [organization, setOrganization] = useState('');
   const [location, setLocation] = useState('');
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   if (!isOpen) return null;
 
-  const roleConfigs: Record<
-    UserRole,
-    {
-      title: string;
-      tier: string;
-      desc: string;
-      icon: React.ReactNode;
-      color: string;
-      bgBadge: string;
-      defaultOrgExample: string;
-      defaultLocExample: string;
-    }
-  > = {
-    petani: {
-      title: 'Petani Kopi (Farmer)',
-      tier: 'Hulu: Kebun Kopi',
-      desc: 'Catat hasil panen, varietas, brix ceri, ketinggian mdpl, dan jual langsung ke stasiun pengolah.',
-      icon: <Sprout className="w-5 h-5 text-emerald-600" />,
-      color: 'border-emerald-500 ring-emerald-500/20',
-      bgBadge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      defaultOrgExample: 'e.g. Kelompok Tani Kopi Tilu Jaya',
-      defaultLocExample: 'e.g. Pangalengan, Bandung (1.550 mdpl)',
-    },
-    pengolah: {
-      title: 'Pengolah (Wet/Dry Mill)',
-      tier: 'Pengolahan & Fermentasi',
-      desc: 'Beli ceri petani, catat fermentasi (Washed, Natural, Anaerobic), uji defect & kelola limbah sirkular.',
-      icon: <Cog className="w-5 h-5 text-amber-600" />,
-      color: 'border-amber-500 ring-amber-500/20',
-      bgBadge: 'bg-amber-50 text-amber-700 border-amber-200',
-      defaultOrgExample: 'e.g. CV Malabar Mill & Solar Dome',
-      defaultLocExample: 'e.g. Pangalengan, Jawa Barat',
-    },
-    gudang: {
-      title: 'Gudang & QA (Warehouse)',
-      tier: 'Pergudangan & Grading SCA',
-      desc: 'Manajemen gudang GrainPro, kontrol suhu/kelembaban, sertifikasi skor SCA, dan supply ke roaster.',
-      icon: <Warehouse className="w-5 h-5 text-blue-600" />,
-      color: 'border-blue-500 ring-blue-500/20',
-      bgBadge: 'bg-blue-50 text-blue-700 border-blue-200',
-      defaultOrgExample: 'e.g. PT Nusantara Coffee Warehouse & QA',
-      defaultLocExample: 'e.g. Gedebage, Kota Bandung',
-    },
-    roaster: {
-      title: 'Artisan Roastery',
-      tier: 'Penyangraian & Profiling',
-      desc: 'Kelola kurva sangrai Agtron, sensoris spider radar, Work Orders, kemasan retail, dan formulasi AI.',
-      icon: <Flame className="w-5 h-5 text-orange-600" />,
-      color: 'border-orange-500 ring-orange-500/20',
-      bgBadge: 'bg-orange-50 text-orange-700 border-orange-200',
-      defaultOrgExample: 'e.g. Karsa Craft Roastery & Lab',
-      defaultLocExample: 'e.g. Dago Atas, Bandung',
-    },
-    cafe: {
-      title: 'Pemilik Cafe & Barista',
-      tier: 'Hilir: Kedai & Konsumen',
-      desc: 'Beli roasted bean berkualitas, cetak label barcode/QR jejak asal-usul untuk setiap cangkir konsumen.',
-      icon: <Coffee className="w-5 h-5 text-amber-700" />,
-      color: 'border-stone-700 ring-stone-700/20',
-      bgBadge: 'bg-stone-100 text-stone-800 border-stone-300',
-      defaultOrgExample: 'e.g. Seduh Teduh Specialty Coffee',
-      defaultLocExample: 'e.g. Jl. Riau, Kota Bandung',
-    },
-    verifikator: {
-      title: 'Verifikator Mutu (Auditor)',
-      tier: 'Dewan Audit & Q-Grader',
-      desc: 'Audit kepatuhan EUDR, inspeksi stasiun pengolah, sertifikasi gudang, uji sensori cupping SCA, dan terbitkan stempel resmi.',
-      icon: <ShieldCheck className="w-5 h-5 text-purple-600" />,
-      color: 'border-purple-500 ring-purple-500/20',
-      bgBadge: 'bg-purple-50 text-purple-700 border-purple-200',
-      defaultOrgExample: 'e.g. Dewan Sertifikasi Kopi Specialty & Q-Grader Lab',
-      defaultLocExample: 'e.g. Jakarta / Bandung',
-    },
+  const handleModalClose = () => {
+    setIsSubmitted(false);
+    setErrorMsg('');
+    setName('');
+    setEmail('');
+    setPassword('');
+    setOrganization('');
+    setLocation('');
+    setPhone('');
+    setBio('');
+    onClose();
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !org.trim()) {
-      alert('Mohon isi nama lengkap dan nama usaha/organisasi Anda.');
+    setErrorMsg('');
+
+    if (!name.trim() || !email.trim() || !password.trim() || !organization.trim() || !location.trim()) {
+      setErrorMsg('Mohon lengkapi nama, email, kata sandi, nama usaha/koperasi, dan lokasi.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMsg('Kata sandi minimal harus terdiri dari 6 karakter.');
       return;
     }
 
     if (registerUser) {
-      registerUser({
+      const res = registerUser({
         name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password: password,
         role: selectedRole,
-        organization: org.trim(),
-        location: location.trim() || roleConfigs[selectedRole].defaultLocExample.replace('e.g. ', ''),
-        phone: phone.trim() || '0812-3456-7890',
-        bio: bio.trim() || `Akun ${ROLE_DETAILS[selectedRole].label} baru terdaftar di platform sangrAI.`,
+        organization: organization.trim(),
+        location: location.trim(),
+        phone: phone.trim() || '0812-0000-0000',
+        bio: bio.trim() || `Mitra rantai pasok resmi sebagai ${ROLE_DETAILS[selectedRole].label}`,
       });
-    } else {
-      loginAsRole(selectedRole);
+      if (res && !res.success) {
+        setErrorMsg(res.message);
+        return;
+      }
+      setIsSubmitted(true);
     }
-
-    setIsSuccess(true);
-    setTimeout(() => {
-      onClose();
-      setIsSuccess(false);
-    }, 1000);
-  };
-
-  const handleQuickDemo = (role: UserRole) => {
-    loginAsRole(role);
-    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden my-8">
-        {/* Top Header Background */}
-        <div className="bg-[#1C120C] text-stone-200 p-6 sm:p-8 relative overflow-hidden">
-          <div className="absolute -right-12 -top-12 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
-          <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-stone-400 hover:text-white bg-stone-800/80 hover:bg-stone-700 rounded-full transition-colors"
-            title="Tutup"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-bold mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            Aktivasi Instan Ekosistem sangrAI
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-xs">
+      <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-stone-200 overflow-hidden max-h-[92vh] flex flex-col">
+        {/* Modal Header */}
+        <div className="px-6 py-5 border-b border-stone-100 flex items-center justify-between bg-[#FAF7F2]">
+          <div>
+            <h3 className="font-serif text-xl font-bold text-stone-900 flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-amber-600" />
+              <span>{isSubmitted ? 'Pendaftaran Berhasil Dikirim' : 'Pendaftaran Mitra Baru'}</span>
+            </h3>
+            <p className="text-xs text-stone-500 mt-0.5">
+              {isSubmitted
+                ? 'Menunggu verifikasi & persetujuan Super Admin sangrAI'
+                : 'Bergabung ke dalam ekosistem ketertelusuran kopi sirkular sangrAI.'}
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Registrasi & Akses Platform
-          </h2>
-          <p className="mt-1 text-sm text-stone-300">
-            Bergabunglah dengan ekosistem rantai pasok kopi sirkular digital. Pilih peran bisnis Anda untuk membuka panel operasional terdedikasi.
-          </p>
+          <button
+            onClick={handleModalClose}
+            className="w-8 h-8 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-200/60 flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-6 sm:p-8">
-          {isSuccess ? (
-            <div className="py-12 text-center space-y-4">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto ring-8 ring-emerald-50 animate-bounce">
-                <Check className="w-8 h-8 stroke-[3]" />
+        {/* Modal Body: Submitted Confirmation View */}
+        {isSubmitted ? (
+          <div className="p-6 sm:p-8 space-y-5 overflow-y-auto">
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 rounded-full bg-amber-100 border-2 border-amber-300 text-amber-800 flex items-center justify-center mx-auto shadow-inner">
+                <Clock className="w-8 h-8 animate-pulse text-amber-600" />
               </div>
-              <h3 className="text-xl font-black text-stone-900">Registrasi Berhasil!</h3>
-              <p className="text-sm text-stone-600 max-w-sm mx-auto">
-                Akun bisnis Anda siap digunakan. Mengalihkan Anda langsung ke Panel Admin Operasional...
+              <h4 className="text-lg font-black text-stone-900 tracking-tight">
+                Pendaftaran Sedang Menunggu ACC Super Admin
+              </h4>
+              <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
+                Terima kasih, <strong>{name}</strong>! Berkas pendaftaran akun Anda telah tercatat ke dalam sistem dan saat ini sedang menunggu persetujuan resmi dari <strong>Super Admin (Novizar - Owner sangrAI)</strong>.
               </p>
             </div>
-          ) : (
-            <form onSubmit={handleRegister} className="space-y-6">
-              {/* Role Selection */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-2.5">
-                  1. Pilih Peran Bisnis Anda dalam Rantai Pasok:
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {(Object.keys(roleConfigs) as UserRole[]).map((roleKey) => {
-                    const cfg = roleConfigs[roleKey];
-                    const isSelected = selectedRole === roleKey;
-                    return (
-                      <button
-                        type="button"
-                        key={roleKey}
-                        onClick={() => setSelectedRole(roleKey)}
-                        className={`p-3 rounded-2xl text-left border-2 transition-all flex flex-col justify-between relative ${
-                          isSelected
-                            ? `${cfg.color} bg-amber-50/40 shadow-sm ring-2`
-                            : 'border-stone-200 bg-stone-50/50 hover:bg-stone-100/80 hover:border-stone-300'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div className="w-8 h-8 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-2xs">
-                            {cfg.icon}
-                          </div>
-                          {isSelected && (
-                            <span className="w-5 h-5 rounded-full bg-amber-500 text-stone-950 flex items-center justify-center text-xs font-black shadow-xs">
-                              ✓
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          <span className="text-xs font-black text-stone-900 block leading-tight">
-                            {cfg.title}
-                          </span>
-                          <span className="text-[10px] text-stone-500 font-medium block mt-0.5 leading-snug">
-                            {cfg.tier}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
 
-                {/* Selected Role Description Banner */}
-                <div className="mt-3 p-3 bg-stone-50 border border-stone-200 rounded-xl flex items-start gap-2.5 text-xs text-stone-600">
-                  <div className="mt-0.5">{roleConfigs[selectedRole].icon}</div>
-                  <p className="leading-relaxed">{roleConfigs[selectedRole].desc}</p>
-                </div>
-              </div>
-
-              {/* Form Input Fields */}
-              <div className="space-y-3.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-stone-600">
-                  2. Informasi Profil & Usaha Kopi:
-                </label>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Nama Lengkap / Penanggung Jawab *
-                    </label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
-                      <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="e.g. Raditya Pratama"
-                        className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Nama Usaha / Kelompok / Entitas *
-                    </label>
-                    <div className="relative">
-                      <Building2 className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
-                      <input
-                        type="text"
-                        required
-                        value={org}
-                        onChange={(e) => setOrg(e.target.value)}
-                        placeholder={roleConfigs[selectedRole].defaultOrgExample}
-                        className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Lokasi / Domisili Operasional
-                    </label>
-                    <div className="relative">
-                      <MapPin className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
-                      <input
-                        type="text"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        placeholder={roleConfigs[selectedRole].defaultLocExample}
-                        className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Nomor WhatsApp / Kontak
-                    </label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
-                      <input
-                        type="text"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="e.g. 0812-8899-0011"
-                        className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                    Bio / Catatan Usaha (Opsional)
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="Ceritakan fokus varietas kopi, kapasitas sangrai/panen, atau metode seduh spesifik usaha Anda..."
-                    className="w-full p-3 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo(selectedRole)}
-                  className="w-full sm:w-auto text-xs font-bold text-stone-600 hover:text-stone-900 py-2.5 px-4 rounded-xl border border-stone-300 hover:bg-stone-100 transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  Masuk Mode Demo Cepat
-                </button>
-
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>Daftar & Buka Panel Admin</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Trust Badge */}
-              <div className="pt-2 border-t border-stone-200 flex flex-wrap items-center justify-center gap-4 text-[11px] text-stone-500">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  Keamanan Data Terenkripsi
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
-                  100% Akses Simulator Komprehensif
+            {/* Summary Ticket */}
+            <div className="bg-[#FAF7F2] p-5 rounded-2xl border border-stone-200 space-y-2.5 text-xs text-stone-700">
+              <div className="flex items-center justify-between border-b border-stone-200/70 pb-2">
+                <span className="text-stone-500">Status Akun:</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300">
+                  <Clock className="w-3 h-3 text-amber-600" />
+                  <span>Menunggu Persetujuan (Pending ACC)</span>
                 </span>
               </div>
-            </form>
-          )}
-        </div>
+              <div className="flex justify-between py-1 border-b border-stone-200/70">
+                <span className="text-stone-500">Peran Diajukan:</span>
+                <span className="font-bold text-stone-900">{ROLE_DETAILS[selectedRole].label}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-stone-200/70">
+                <span className="text-stone-500">Email Login:</span>
+                <span className="font-mono font-bold text-stone-900">{email}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-stone-200/70">
+                <span className="text-stone-500">Organisasi / Usaha:</span>
+                <span className="font-bold text-stone-900">{organization}</span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-stone-500">Pemberi Persetujuan:</span>
+                <span className="font-bold text-amber-800">Novizar (Owner & Super Admin sangrAI)</span>
+              </div>
+            </div>
+
+            <div className="bg-amber-50/80 p-4 rounded-xl border border-amber-200/90 text-xs text-amber-900 flex items-start gap-3">
+              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                Untuk menjaga keaslian sertifikasi dan mencegah manipulasi data rantai pasok kopi, setiap akun mitra harus di-ACC secara manual oleh Super Admin. Setelah disetujui, Anda dapat langsung login menggunakan email dan password Anda.
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-center">
+              <button
+                onClick={handleModalClose}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Tutup & Kembali ke Halaman Login</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Modal Form */
+          <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
+            {errorMsg && (
+              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-medium">
+                {errorMsg}
+              </div>
+            )}
+
+            {/* Role Selection */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-stone-700">
+                Pilih Peran Stasiun Rantai Pasok Anda:
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {REGISTRABLE_ROLES.map((role) => {
+                  const detail = ROLE_DETAILS[role];
+                  const isSelected = selectedRole === role;
+                  return (
+                    <button
+                      type="button"
+                      key={role}
+                      onClick={() => setSelectedRole(role)}
+                      className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                        isSelected
+                          ? 'border-amber-600 bg-amber-50/70 text-stone-950 shadow-xs ring-1 ring-amber-500'
+                          : 'border-stone-200/80 bg-white hover:bg-stone-50 text-stone-600'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                            isSelected ? 'bg-amber-500 text-stone-950' : 'bg-stone-100 text-stone-600'
+                          }`}
+                        >
+                          {ROLE_ICONS[role]}
+                        </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-700 font-black" />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold leading-tight text-stone-900">
+                          {detail.label}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Input Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-stone-700">
+                  Nama Lengkap Penanggung Jawab
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Contoh: Budi Santoso"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl bg-stone-50 border border-stone-200 text-stone-900 focus:outline-hidden focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-stone-700">
+                  Alamat Email Akun
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nama@organisasi.id"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl bg-stone-50 border border-stone-200 text-stone-900 focus:outline-hidden focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-stone-700">
+                  Kata Sandi Login
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Minimal 6 karakter"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl bg-stone-50 border border-stone-200 text-stone-900 focus:outline-hidden focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-stone-700">
+                  Nama Usaha / Kebun / Roastery / Kafe
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={organization}
+                  onChange={(e) => setOrganization(e.target.value)}
+                  placeholder="Contoh: Koperasi Tani Pangalengan"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl bg-stone-50 border border-stone-200 text-stone-900 focus:outline-hidden focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-stone-700">
+                  Lokasi / Daerah Asal Stasiun
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Contoh: Takengon, Aceh Tengah"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl bg-stone-50 border border-stone-200 text-stone-900 focus:outline-hidden focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-stone-700">
+                  Nomor WhatsApp / Telepon
+                </label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Contoh: 0812-3456-7890"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl bg-stone-50 border border-stone-200 text-stone-900 focus:outline-hidden focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-stone-700">
+                Deskripsi Singkat Fasilitas & Komoditas Kopi
+              </label>
+              <textarea
+                rows={2}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Ceritakan varietas kebun, kapasitas olah harian, atau profil mesin roasting..."
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl bg-stone-50 border border-stone-200 text-stone-900 focus:outline-hidden focus:border-amber-500"
+              />
+            </div>
+
+            {/* Info Notice about Super Admin Approval */}
+            <div className="p-3.5 rounded-xl bg-stone-100 border border-stone-200 text-xs text-stone-600 flex items-start gap-2.5">
+              <Crown className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <p>
+                <strong>Catatan Otoritas:</strong> Pendaftaran Anda akan diteruskan ke <strong>Super Admin Novizar (Owner sangrAI)</strong> untuk diverifikasi sebelum akun diaktifkan.
+              </p>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="pt-3 border-t border-stone-100 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleModalClose}
+                className="px-4 py-2.5 rounded-xl border border-stone-200 text-stone-600 hover:text-stone-900 hover:bg-stone-50 text-xs font-bold cursor-pointer transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shadow-md hover:shadow-lg"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Kirim Pendaftaran Mitra</span>
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

@@ -490,14 +490,14 @@ export const InventoryModule: React.FC = () => {
                   {viewMode === 'table' && (
                     <div className="o_form_sheet overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="o_list_table">
+                        <table className="o_list_table w-full text-left text-xs whitespace-nowrap min-w-[850px]">
                           <thead>
                             <tr>
                               <th className="!pl-5">ID Stok</th>
                               <th>Varietas & Petani</th>
                               <th>Origin & Elevasi</th>
-                              <th>Brix Kemanisan</th>
-                              <th>Stok Tersedia (kg)</th>
+                              <th>Brix</th>
+                              <th>Stok (kg)</th>
                               <th>HPP Modal (Rp/kg)</th>
                               <th>Total Nilai Aset</th>
                               <th className="!pr-5 text-right">Aksi</th>
@@ -727,7 +727,7 @@ export const InventoryModule: React.FC = () => {
                   {viewMode === 'table' && (
                     <div className="o_form_sheet overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="o_list_table">
+                        <table className="o_list_table w-full text-left text-xs whitespace-nowrap min-w-[900px]">
                           <thead>
                             <tr>
                               <th className="!pl-5">ID Green Bean</th>
@@ -737,7 +737,7 @@ export const InventoryModule: React.FC = () => {
                               <th>Stok Tersedia</th>
                               <th>Grade & Eco</th>
                               <th>Harga / kg</th>
-                              <th className="!pr-5 text-right">Tindakan</th>
+                              <th className="!pr-5 text-right">Aksi</th>
                             </tr>
                           </thead>
                           <tbody>

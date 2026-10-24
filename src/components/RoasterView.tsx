@@ -134,33 +134,33 @@ export const RoasterView: React.FC = () => {
             <p className="text-xs text-stone-500 py-16 text-center">Belum ada riwayat transaksi.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
+              <table className="w-full text-left text-xs whitespace-nowrap min-w-[850px]">
+                <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider text-[10px]">
                   <tr>
-                    <th className="py-4 px-5">No. TRX</th>
-                    <th className="py-4 px-5">Tanggal</th>
-                    <th className="py-4 px-5">Pengirim / Penjual</th>
-                    <th className="py-4 px-5">Penerima / Pembeli</th>
-                    <th className="py-4 px-5">Komoditas</th>
-                    <th className="py-4 px-5">Volume</th>
-                    <th className="py-4 px-5">Total Biaya</th>
-                    <th className="py-4 px-5">Status</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">No. TRX</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Tanggal</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Pengirim</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Penerima</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Komoditas</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Volume</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Total Biaya</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {myRoasterTransactions.map((trx) => (
                     <tr key={trx.id} className="hover:bg-stone-50/80 transition-colors">
-                      <td className="py-4 px-5 font-mono font-bold text-sm text-stone-700">{trx.id}</td>
-                      <td className="py-4 px-5 text-stone-600">{trx.date}</td>
-                      <td className="py-4 px-5 font-semibold text-stone-900">{trx.fromName}</td>
-                      <td className="py-4 px-5 font-semibold text-stone-900">{trx.toName}</td>
-                      <td className="py-4 px-5 text-stone-700">{trx.itemName}</td>
-                      <td className="py-4 px-5 font-bold text-stone-800">{trx.quantity}</td>
-                      <td className="py-4 px-5 font-black text-sm text-stone-900">
+                      <td className="py-3.5 px-4 font-mono font-bold text-stone-700 whitespace-nowrap">{trx.id}</td>
+                      <td className="py-3.5 px-4 text-stone-600 whitespace-nowrap">{trx.date}</td>
+                      <td className="py-3.5 px-4 font-semibold text-stone-900 whitespace-nowrap">{trx.fromName}</td>
+                      <td className="py-3.5 px-4 font-semibold text-stone-900 whitespace-nowrap">{trx.toName}</td>
+                      <td className="py-3.5 px-4 text-stone-700 whitespace-nowrap">{trx.itemName}</td>
+                      <td className="py-3.5 px-4 font-bold text-stone-800 whitespace-nowrap">{trx.quantity}</td>
+                      <td className="py-3.5 px-4 font-black text-stone-900 whitespace-nowrap">
                         Rp {trx.totalAmount.toLocaleString()}
                       </td>
-                      <td className="py-4 px-5">
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold whitespace-nowrap">
                           {trx.status}
                         </span>
                       </td>

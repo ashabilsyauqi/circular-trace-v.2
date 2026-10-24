@@ -151,28 +151,84 @@ export const BatchesModule: React.FC = () => {
     setTimeout(() => setAlertMessage(null), 4000);
   };
 
-  // Advance stage with Quality Gate check
+  // Advance stage with Quality Gate check & Auto-Save
   const handleAdvanceStage = () => {
     if (!editedBatch) return;
 
-    const currentIdx = PROCESSOR_7_STAGES.findIndex((s) => s.id === editedBatch.currentStage);
+    let batchToAdvance: ProcessingBatch = { ...editedBatch };
+
+    // Auto-sync moisture if on drying stage and moisture is <= 12.5%
+    if (batchToAdvance.currentStage === 'drying') {
+      const parsedLogMoisture = typeof newLogMoisture === 'string'
+        ? parseFloat(String(newLogMoisture).replace(',', '.'))
+        : Number(newLogMoisture);
+
+      const parsedFinalMoisture = typeof batchToAdvance.dryingLog.finalMoisturePercent === 'string'
+        ? parseFloat(String(batchToAdvance.dryingLog.finalMoisturePercent).replace(',', '.'))
+        : Number(batchToAdvance.dryingLog.finalMoisturePercent);
+
+      // Determine qualifying moisture (<= 12.5%)
+      let effectiveMoisture = parsedFinalMoisture;
+      if (effectiveMoisture > 12.5 && !isNaN(parsedLogMoisture) && parsedLogMoisture <= 12.5) {
+        effectiveMoisture = parsedLogMoisture;
+      } else if (!isNaN(parsedFinalMoisture) && parsedFinalMoisture <= 12.5) {
+        effectiveMoisture = parsedFinalMoisture;
+      } else if (!isNaN(parsedLogMoisture) && parsedLogMoisture <= 12.5) {
+        effectiveMoisture = parsedLogMoisture;
+      }
+
+      // Auto record log entry into dailyLogs if valid <= 12.5%
+      let dailyLogs = [...(batchToAdvance.dryingLog.dailyLogs || [])];
+      if (!isNaN(effectiveMoisture) && effectiveMoisture <= 12.5) {
+        const hasPassedLog = dailyLogs.some((l) => l.moisturePercent <= 12.5);
+        if (!hasPassedLog) {
+          dailyLogs.push({
+            dayNumber: dailyLogs.length + 1,
+            date: new Date().toISOString().split('T')[0],
+            moisturePercent: effectiveMoisture,
+            ambientTempCelsius: Number(newLogTemp) || 29.5,
+            rhPercent: Number(newLogRh) || 55,
+            turningFrequency: newLogFreq || 'Tiap 2 Jam',
+            notes: newLogNotes || 'Pembalikan rata di solar dome (Auto-recorded).',
+          });
+        }
+      }
+
+      batchToAdvance = {
+        ...batchToAdvance,
+        dryingLog: {
+          ...batchToAdvance.dryingLog,
+          dailyLogs,
+          finalMoisturePercent: effectiveMoisture,
+          targetMoisturePassed: effectiveMoisture <= 12.5,
+        },
+      };
+    }
+
+    // Always auto-save batch state to storage first so changes are never lost!
+    updateBatchFull(batchToAdvance);
+    setEditedBatch(batchToAdvance);
+    setDetailBatch(batchToAdvance);
+
+    const currentIdx = PROCESSOR_7_STAGES.findIndex((s) => s.id === batchToAdvance.currentStage);
     if (currentIdx === -1 || currentIdx >= PROCESSOR_7_STAGES.length - 1) {
       setAlertMessage({ type: 'warning', text: 'Batch sudah mencapai tahap akhir (Packing & Rilis Pasar).' });
       return;
     }
 
     const nextStage = PROCESSOR_7_STAGES[currentIdx + 1].id;
-    const validation = validateStageQualityGate(editedBatch, nextStage);
+    const nextStageLabel = PROCESSOR_7_STAGES[currentIdx + 1].shortLabel;
+    const validation = validateStageQualityGate(batchToAdvance, nextStage);
 
     if (!validation.canAdvance) {
       setAlertMessage({ type: 'error', text: `Quality Gate Menolak: ${validation.blockingErrors.join(' ')}` });
       return;
     }
 
-    const result = advanceBatchStage(editedBatch.id, nextStage);
+    const result = advanceBatchStage(batchToAdvance.id, nextStage);
     if (result.success) {
       const updated: ProcessingBatch = {
-        ...editedBatch,
+        ...batchToAdvance,
         currentStage: nextStage,
       };
       updateBatchFull(updated);
@@ -180,7 +236,12 @@ export const BatchesModule: React.FC = () => {
       setEditedBatch(updated);
       setActiveStageId(nextStage);
 
-      setAlertMessage({ type: 'success', text: `Berhasil! Batch melaju ke tahap "${nextStage}". Silakan isi lembar kerja tahap ini.` });
+      setAlertMessage({
+        type: 'success',
+        text: `Berhasil! Data otomatis disimpan dan batch melaju ke tahap "${nextStageLabel}"${
+          batchToAdvance.currentStage === 'drying' ? ` (Kadar air: ${batchToAdvance.dryingLog.finalMoisturePercent}% ≤ 12.5%)` : ''
+        }.`,
+      });
       setTimeout(() => setAlertMessage(null), 5000);
     } else {
       setAlertMessage({ type: 'error', text: result.message });
@@ -557,18 +618,18 @@ export const BatchesModule: React.FC = () => {
             /* DEFAULT VIEW: ODOO ERP LIST TABLE */
             <div className="o_form_sheet p-0 overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-2xs">
               <div className="overflow-x-auto">
-                <table className="o_list_table w-full text-left text-xs text-slate-700">
+                <table className="o_list_table w-full text-left text-xs text-slate-700 whitespace-nowrap min-w-[950px]">
                   <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
                     <tr>
-                      <th className="px-5 py-3.5">Batch Code &amp; Varietas</th>
-                      <th className="px-4 py-3.5">Petani Asal &amp; Lokasi</th>
-                      <th className="px-4 py-3.5">Metode Olah</th>
-                      <th className="px-4 py-3.5">Tahap Berjalan</th>
-                      <th className="px-4 py-3.5 text-right">Ceri Intake</th>
-                      <th className="px-4 py-3.5 text-right">Kadar Air</th>
-                      <th className="px-4 py-3.5 text-right">Rendemen</th>
-                      <th className="px-4 py-3.5">Target Grade</th>
-                      <th className="px-5 py-3.5 text-right">Aksi Lembar Kerja</th>
+                      <th className="px-5 py-3.5 whitespace-nowrap">Batch &amp; Varietas</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Petani &amp; Asal</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Metode Olah</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Tahap</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Ceri Intake</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Kadar Air</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Rendemen</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Target Grade</th>
+                      <th className="px-5 py-3.5 text-right whitespace-nowrap">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -912,7 +973,15 @@ export const BatchesModule: React.FC = () => {
                             {next && (
                               <button
                                 type="button"
-                                onClick={() => setActiveStageId(next.id)}
+                                onClick={() => {
+                                  const currentBatchIdx = PROCESSOR_7_STAGES.findIndex((s) => s.id === editedBatch.currentStage);
+                                  const isImmediateNext = currentBatchIdx !== -1 && PROCESSOR_7_STAGES[currentBatchIdx + 1]?.id === next.id;
+                                  if (activeStageId === editedBatch.currentStage && isImmediateNext) {
+                                    handleAdvanceStage();
+                                  } else {
+                                    setActiveStageId(next.id);
+                                  }
+                                }}
                                 className="px-3 py-1.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
                               >
                                 {next.shortLabel} →
@@ -1313,19 +1382,26 @@ export const BatchesModule: React.FC = () => {
                           </label>
                           <div className="flex items-center gap-2">
                             <input
-                              type="number"
-                              step="0.1"
+                              type="text"
                               value={editedBatch.dryingLog.finalMoisturePercent}
-                              onChange={(e) =>
-                                setEditedBatch({
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(',', '.');
+                                const val = parseFloat(raw);
+                                const num = isNaN(val) ? 0 : val;
+                                const updated = {
                                   ...editedBatch,
                                   dryingLog: {
                                     ...editedBatch.dryingLog,
-                                    finalMoisturePercent: Number(e.target.value),
-                                    targetMoisturePassed: Number(e.target.value) <= 12.5,
+                                    finalMoisturePercent: num,
+                                    targetMoisturePassed: num <= 12.5,
                                   },
-                                })
-                              }
+                                };
+                                setEditedBatch(updated);
+                                updateBatchFull(updated);
+                                if (num <= 12.5) {
+                                  setNewLogMoisture(num);
+                                }
+                              }}
                               className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-black text-amber-900 text-sm"
                             />
                             <span
@@ -1335,7 +1411,7 @@ export const BatchesModule: React.FC = () => {
                                   : 'bg-amber-100 text-amber-900 border border-amber-300'
                               }`}
                             >
-                              {editedBatch.dryingLog.finalMoisturePercent <= 12.5 ? '✓ Lulus Gate' : 'Belum Lulus (>12.5%)'}
+                              {editedBatch.dryingLog.finalMoisturePercent <= 12.5 ? '✓ Lulus Gate (≤12.5%)' : 'Belum Lulus (>12.5%)'}
                             </span>
                           </div>
                         </div>
@@ -1357,10 +1433,26 @@ export const BatchesModule: React.FC = () => {
                         <div>
                           <label className="block font-bold text-stone-700 mb-1">Kadar Air (%)</label>
                           <input
-                            type="number"
-                            step="0.1"
+                            type="text"
                             value={newLogMoisture}
-                            onChange={(e) => setNewLogMoisture(Number(e.target.value))}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(',', '.');
+                              const val = parseFloat(raw);
+                              const num = isNaN(val) ? 0 : val;
+                              setNewLogMoisture(num);
+                              if (num > 0) {
+                                const updated = {
+                                  ...editedBatch,
+                                  dryingLog: {
+                                    ...editedBatch.dryingLog,
+                                    finalMoisturePercent: num,
+                                    targetMoisturePassed: num <= 12.5,
+                                  },
+                                };
+                                setEditedBatch(updated);
+                                updateBatchFull(updated);
+                              }
+                            }}
                             className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-bold text-amber-950"
                           />
                         </div>
@@ -1428,7 +1520,7 @@ export const BatchesModule: React.FC = () => {
                       </div>
 
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                        <table className="w-full text-left text-xs whitespace-nowrap min-w-[750px]">
                           <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase text-[10px]">
                             <tr>
                               <th className="py-3 px-4">Hari Ke</th>

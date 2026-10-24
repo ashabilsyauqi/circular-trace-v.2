@@ -90,7 +90,7 @@ export const GRADE_TIERS_CONFIG: Record<
     defaultSca: 87.25,
     defectRange: '0 - 5 defect / 350g (Zero Primary)',
     defaultDefect: 2,
-    defaultScreen: 'Screen 18+ (Super Screen)',
+    defaultScreen: 'Screen 18+',
     markupPercent: 32,
     targetMarket: 'Specialty Coffee Shop, Kompetisi Brewer & Ekspor Pilihan',
     characteristics: 'Kualitas tertinggi tanpa cacat primer, densitas tinggi, notes cita rasa kompleks dan bersih.',
@@ -110,7 +110,7 @@ export const GRADE_TIERS_CONFIG: Record<
     defaultSca: 84.5,
     defectRange: '6 - 12 defect / 350g',
     defaultDefect: 8,
-    defaultScreen: 'Screen 16-17 (Medium Large)',
+    defaultScreen: 'Screen 16-17',
     markupPercent: 24,
     targetMarket: 'Artisan Micro-Roastery & Cafe Specialty Menengah',
     characteristics: 'Biji pilihan seragam dengan sedikit cacat sekunder ringan, body stabil, rasa manis seimbang.',
@@ -130,7 +130,7 @@ export const GRADE_TIERS_CONFIG: Record<
     defaultSca: 81.0,
     defectRange: '13 - 25 defect / 350g',
     defaultDefect: 18,
-    defaultScreen: 'Screen 15-16 (Medium)',
+    defaultScreen: 'Screen 15-16',
     markupPercent: 15,
     targetMarket: 'Commercial Roaster, Daily House Blend & Cafe Chain',
     characteristics: 'Standar komersial untuk konsumsi volume besar harian, ideal untuk blend espresso susu.',
@@ -150,7 +150,7 @@ export const GRADE_TIERS_CONFIG: Record<
     defaultSca: 76.5,
     defectRange: '26 - 45 defect / 350g',
     defaultDefect: 35,
-    defaultScreen: 'Screen 14-15 (Small / Mixed)',
+    defaultScreen: 'Screen 14-15',
     markupPercent: 6,
     targetMarket: 'Industri Kopi Instan, Es Kopi Susu Massal & Pabrik Bubuk',
     characteristics: 'Tingkat dasar ekonomis dengan toleransi cacat lebih longgar, harga murah untuk efisiensi margin.',
@@ -181,7 +181,7 @@ export const WarehouseView: React.FC = () => {
 
   // Form state for warehouse storage, grading & dynamic pricing
   const [boughtKg, setBoughtKg] = useState<number>(100);
-  const [storageLocation, setStorageLocation] = useState('Gudang A-03 (Pallet Kayu Pine #14)');
+  const [storageLocation, setStorageLocation] = useState('Gudang A-03 (Pallet Pine #14)');
   const [temperatureCelsius, setTemperatureCelsius] = useState<number>(20.4);
   const [humidityPercent, setHumidityPercent] = useState<number>(54);
   const [packagingType, setPackagingType] = useState<WarehouseLot['packagingType']>(
@@ -661,7 +661,7 @@ export const WarehouseView: React.FC = () => {
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] text-stone-400 block">Harga Jual ke Roaster:</span>
+                          <span className="text-[10px] text-stone-400 block">Harga Jual / Kg:</span>
                           <span className="text-sm font-black text-stone-900">
                             Rp {wh.pricePerKg.toLocaleString()}
                             <span className="text-xs font-normal text-stone-500"> / kg</span>
@@ -719,19 +719,19 @@ export const WarehouseView: React.FC = () => {
           {viewMode === 'table' && (
             <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs whitespace-nowrap min-w-[1050px]">
                   <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
                     <tr>
-                      <th className="py-3.5 px-4">ID Lot Gudang</th>
-                      <th className="py-3.5 px-4">Varietas & Daerah Asal</th>
-                      <th className="py-3.5 px-4">Klasifikasi Grade</th>
-                      <th className="py-3.5 px-4">Health Certificate</th>
-                      <th className="py-3.5 px-4">Skor SCA</th>
-                      <th className="py-3.5 px-4">Defect / Screen</th>
-                      <th className="py-3.5 px-4">Lokasi Gudang</th>
-                      <th className="py-3.5 px-4">Stok Tersedia</th>
-                      <th className="py-3.5 px-4">Harga Jual / Kg</th>
-                      <th className="py-3.5 px-4 text-right">Tindakan</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">ID Lot</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Varietas & Asal</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Grade</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Health Cert</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Skor SCA</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Defect / Screen</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Lokasi & Suhu</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Stok Tersedia</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Harga / Kg</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
@@ -744,65 +744,65 @@ export const WarehouseView: React.FC = () => {
                           onClick={() => setDetailLot(wh)}
                           className="hover:bg-blue-50/40 cursor-pointer transition-colors"
                         >
-                          <td className="py-3 px-4 font-mono font-bold text-stone-900">
+                          <td className="py-3 px-4 font-mono font-bold text-stone-900 whitespace-nowrap">
                             {wh.id}
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="font-bold text-stone-900">{wh.variety}</div>
-                            <div className="text-[11px] text-stone-500">{wh.origin} • {wh.processMethod}</div>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <div className="font-bold text-stone-900 whitespace-nowrap">{wh.variety}</div>
+                            <div className="text-[11px] text-stone-500 whitespace-nowrap">{wh.origin} • {wh.processMethod}</div>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${cfg.badgeBg} ${cfg.badgeText} ${cfg.badgeBorder}`}>
-                              <TierIcon className="w-3 h-3" />
-                              {cfg.shortLabel}
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border whitespace-nowrap ${cfg.badgeBg} ${cfg.badgeText} ${cfg.badgeBorder}`}>
+                              <TierIcon className="w-3 h-3 shrink-0" />
+                              <span className="whitespace-nowrap">{cfg.shortLabel}</span>
                             </span>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 whitespace-nowrap">
                             {wh.hasHealthCertificate ? (
-                              <div>
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200">
-                                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                                  HC Certified
+                              <div className="whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 whitespace-nowrap">
+                                  <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <span className="whitespace-nowrap">HC Certified</span>
                                 </span>
-                                <div className="text-[10px] font-mono text-stone-500 mt-0.5">
+                                <div className="text-[10px] font-mono text-stone-500 mt-0.5 whitespace-nowrap">
                                   {wh.healthCertificateNumber || 'HC-EXP'}
                                 </div>
                               </div>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-stone-500 bg-stone-100 border border-stone-200">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-stone-500 bg-stone-100 border border-stone-200 whitespace-nowrap">
                                 No HC
                               </span>
                             )}
                           </td>
-                          <td className="py-3 px-4">
-                            <span className="font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className="font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">
                               {wh.verifiedScaScore}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-stone-700 font-medium">
-                            <div>{wh.defectCount ?? cfg.defaultDefect} defect</div>
-                            <div className="text-[10px] text-stone-400">{wh.screenSize || cfg.defaultScreen}</div>
+                          <td className="py-3 px-4 text-stone-700 font-medium whitespace-nowrap">
+                            <div className="whitespace-nowrap">{wh.defectCount ?? cfg.defaultDefect} defect</div>
+                            <div className="text-[10px] text-stone-400 whitespace-nowrap">{wh.screenSize || cfg.defaultScreen}</div>
                           </td>
-                          <td className="py-3 px-4 text-stone-700">
-                            <div className="font-semibold">{wh.storageLocation}</div>
-                            <div className="text-[10px] text-blue-600 font-mono">{wh.temperatureCelsius}°C • {wh.humidityPercent}% RH</div>
+                          <td className="py-3 px-4 text-stone-700 whitespace-nowrap">
+                            <div className="font-semibold whitespace-nowrap">{wh.storageLocation}</div>
+                            <div className="text-[10px] text-blue-600 font-mono whitespace-nowrap">{wh.temperatureCelsius}°C • {wh.humidityPercent}% RH</div>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className="font-bold text-stone-900">{wh.availableWeightKg}</span>
-                            <span className="text-stone-400 text-[11px]"> / {wh.weightKg} kg</span>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className="font-bold text-stone-900 whitespace-nowrap">{wh.availableWeightKg}</span>
+                            <span className="text-stone-400 text-[11px] whitespace-nowrap"> / {wh.weightKg} kg</span>
                           </td>
-                          <td className="py-3 px-4 font-bold text-stone-900">
+                          <td className="py-3 px-4 font-bold text-stone-900 whitespace-nowrap">
                             Rp {wh.pricePerKg.toLocaleString()}
                           </td>
-                          <td className="py-3 px-4 text-right">
-                            <div className="inline-flex items-center gap-1">
+                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setBarcodeModalLot(wh);
                                 }}
-                                className="px-2 py-1 rounded-lg bg-stone-100 hover:bg-blue-100 text-stone-700 hover:text-blue-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1"
+                                className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-blue-100 text-stone-700 hover:text-blue-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1 whitespace-nowrap"
                               >
                                 <QrCode className="w-3 h-3" />
                                 Barcode
@@ -813,7 +813,7 @@ export const WarehouseView: React.FC = () => {
                                   e.stopPropagation();
                                   handleOpenEditGrading(wh);
                                 }}
-                                className="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold transition-colors inline-flex items-center gap-1"
+                                className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold transition-colors inline-flex items-center gap-1 whitespace-nowrap"
                               >
                                 <Edit3 className="w-3 h-3" />
                                 Re-Grade
@@ -1142,7 +1142,7 @@ export const WarehouseView: React.FC = () => {
       {detailLot && (
         <div className="space-y-4 animate-in fade-in duration-200">
           <RecordBreadcrumb
-            listLabel="Inventaris Gudang & Penilaian Grade"
+            listLabel="Inventaris Gudang"
             recordLabel={detailLot.id}
             onBack={() => setDetailLot(null)}
           />

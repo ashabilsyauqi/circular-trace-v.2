@@ -24,9 +24,13 @@ import {
   PlusCircle,
   FileSpreadsheet,
   Coffee,
+  Clock,
+  Users,
+  Crown,
 } from 'lucide-react';
 import { AppLauncherModal } from '../shared/AppLauncherModal';
 import { ProfileMenu } from '../shared/ProfileMenu';
+import { LanguageSwitch } from '../shared/LanguageSwitch';
 import { StakeholderFormsModal } from '../forms/StakeholderFormsModal';
 
 interface AdminHeaderProps {
@@ -47,6 +51,7 @@ interface PipelineStageItem {
 export const AdminHeader: React.FC<AdminHeaderProps> = () => {
   const {
     currentUser,
+    users,
     setActiveView,
     loginAsRole,
     transactions,
@@ -76,6 +81,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     verifierActiveTab,
     setVerifierActiveTab,
     verificationStamps,
+    impersonatingFromUser,
+    returnToSuperAdmin,
   } = useCoffee();
 
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -171,7 +178,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'farms',
       stepNumber: 1,
-      label: 'Lahan & Kebun Kopi',
+      label: 'Lahan & Kebun',
       subtitle: 'Profil Lahan, Elevasi, Cuaca & Patok BPN',
       icon: Sprout,
       badge: myFarmerFarmsCount,
@@ -180,7 +187,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'upload',
       stepNumber: 2,
-      label: 'Registrasi Panen Baru',
+      label: 'Panen Baru',
       subtitle: 'Pencatatan Ceri Merah, Brix & Sortasi',
       icon: PlusCircle,
       badge: 0,
@@ -188,7 +195,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'catalog',
       stepNumber: 3,
-      label: 'Katalog Panen Ceri',
+      label: 'Katalog Ceri',
       subtitle: 'Daftar Lot Ceri Segar Siap Jual ke Mill',
       icon: Package,
       badge: myFarmerLotsCount,
@@ -209,7 +216,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'sourcing',
       stepNumber: 1,
-      label: 'Sourcing Ceri Petani',
+      label: 'Sourcing Ceri',
       subtitle: 'Pembelian Ceri Kopi dari Petani Lokal',
       icon: ShoppingCart,
       badge: availableFarmerCherryLots,
@@ -218,7 +225,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'batches',
       stepNumber: 2,
-      label: 'Lembar Kerja Batch Olahan',
+      label: 'Batch Olahan',
       subtitle: 'Proses Washed, Natural, Honey & Dry Mill',
       icon: Flame,
       badge: activeProcessingBatchesCount,
@@ -227,7 +234,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'inventory',
       stepNumber: 3,
-      label: 'Gudang Green Bean & Limbah',
+      label: 'Green Bean & Limbah',
       subtitle: 'Inventaris Green Bean & Sirkular Kompos/Cascara',
       icon: Recycle,
       badge: myProcessedLotsCount,
@@ -236,7 +243,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'selling',
       stepNumber: 4,
-      label: 'Panel Marketplace Mill',
+      label: 'Marketplace Mill',
       subtitle: 'Publikasi Lot Green Bean ke Gudang / Roaster',
       icon: Store,
       badge: readyToSellProcessedLotsCount,
@@ -257,7 +264,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'purchasing',
       stepNumber: 1,
-      label: 'Pengadaan PO Green Bean',
+      label: 'Pengadaan PO',
       subtitle: 'Purchase Order Biji Hijau dari Gudang / Mill',
       icon: ShoppingCart,
       badge: pendingApprovalPOCount,
@@ -266,7 +273,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'inventory',
       stepNumber: 2,
-      label: 'Gudang Biji Hijau & QC Inbound',
+      label: 'Gudang Biji & QC',
       subtitle: 'Verifikasi Fisik & Mutu Green Bean Masuk',
       icon: Warehouse,
       badge: pendingIncomingQcCount,
@@ -275,7 +282,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'work_orders',
       stepNumber: 3,
-      label: 'Roasting MRP & Work Orders',
+      label: 'Roasting & SPK',
       subtitle: 'Perencanaan Jadwal Sangrai & Eksekusi Batch',
       icon: Flame,
       badge: activeWorkOrdersCount,
@@ -284,7 +291,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'production',
       stepNumber: 4,
-      label: 'Master Profil Sangrai',
+      label: 'Profil Sangrai',
       subtitle: 'Kurva Roasting, Agtron SCA & DTR Ratio',
       icon: Sliders,
       badge: masterProfiles.length,
@@ -293,7 +300,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'qc',
       stepNumber: 5,
-      label: 'Cupping Lab & Sensory QC',
+      label: 'Cupping Lab',
       subtitle: 'Uji Cita Rasa Sensori, Skor SCA & Tasting Notes',
       icon: Award,
       badge: qcSessions.length,
@@ -302,7 +309,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'selling',
       stepNumber: 6,
-      label: 'Penjualan B2B & Cafe',
+      label: 'Penjualan B2B',
       subtitle: 'Distribusi Biji Sangrai ke Coffee Shop',
       icon: Store,
       badge: activeSalesOrdersCount,
@@ -311,7 +318,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'history',
       stepNumber: 7,
-      label: 'Audit & Buku Kas Ledger',
+      label: 'Buku Kas & Ledger',
       subtitle: 'Pembukuan Finansial, HPP & Laba Rugi',
       icon: History,
       badge: myRoasterTransactionsCount,
@@ -323,7 +330,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'inventory',
       stepNumber: 1,
-      label: 'Penerimaan & Stok Gudang',
+      label: 'Penerimaan & Stok',
       subtitle: 'Penyimpanan Hermetik, Suhu & RH Gudang',
       icon: Warehouse,
       badge: myWarehouseLotsCount,
@@ -332,7 +339,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'marketplace',
       stepNumber: 2,
-      label: 'Beli Green Bean Pengolah',
+      label: 'Beli Green Bean',
       subtitle: 'Sourcing Biji Hijau dari Mill untuk Grading',
       icon: Store,
       badge: readyToSellProcessedLotsCount,
@@ -341,7 +348,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'history',
       stepNumber: 3,
-      label: 'Buku Kas & Ledger Gudang',
+      label: 'Buku Kas & Ledger',
       subtitle: 'Catatan Pembelian & Penjualan Gudang',
       icon: History,
       badge: myWarehouseTransactionsCount,
@@ -353,7 +360,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'inventory',
       stepNumber: 1,
-      label: 'Inventaris Roasted Bean',
+      label: 'Inventaris Biji',
       subtitle: 'Biji Kopi Siap Seduh & Rest Period',
       icon: Package,
       badge: myCafeInventoryCount,
@@ -362,7 +369,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'calculator',
       stepNumber: 2,
-      label: 'Kalkulator HPP & Resep Seduh',
+      label: 'Kalkulator HPP',
       subtitle: 'Hitung Dosis, Rasio Espresso & Margin Cangkir',
       icon: Sliders,
       badge: 0,
@@ -370,7 +377,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'my_products',
       stepNumber: 3,
-      label: 'Katalog Produk & Retail Pack',
+      label: 'Katalog Produk',
       subtitle: 'House Blend, Drip Bag & Cold Brew',
       icon: Store,
       badge: myCafeProductsCount,
@@ -379,7 +386,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'create_product',
       stepNumber: 4,
-      label: 'Tambah Menu Retail Baru',
+      label: 'Tambah Menu',
       subtitle: 'Formulir Rilis Produk Retail & Kemasan Baru',
       icon: PlusCircle,
       badge: 0,
@@ -387,7 +394,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'history',
       stepNumber: 5,
-      label: 'Buku Kas Kasir & Ledger',
+      label: 'Buku Kas & Ledger',
       subtitle: 'Riwayat Belanja Bahan & Omzet Kasir',
       icon: History,
       badge: myCafeTransactionsCount,
@@ -399,7 +406,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'petani',
       stepNumber: 1,
-      label: 'Audit Petani & Lahan EUDR',
+      label: 'Audit Petani EUDR',
       subtitle: 'Geolokasi Patok BPN & Uji Bebas Deforestasi',
       icon: Sprout,
       badge: coffeeFarms.filter((f) => f.verificationStatus === 'verified').length,
@@ -408,7 +415,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'pengolah',
       stepNumber: 2,
-      label: 'Audit Stasiun Pengolah (Mill)',
+      label: 'Audit Pengolah (Mill)',
       subtitle: 'Zero Waste, Mutu Fermentasi & Sortasi',
       icon: Award,
       badge: processedLots.filter((p) => p.verificationStatus === 'verified').length,
@@ -426,7 +433,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'roaster',
       stepNumber: 4,
-      label: 'Lab Uji Cicip Sensori SCA (Cupping)',
+      label: 'Lab Cupping SCA',
       subtitle: 'Cicip Kopi Sangrai, Skor SCA & Stempel Emas',
       icon: Coffee,
       badge: roastedLots.filter((r) => r.verificationStatus === 'pending').length,
@@ -435,7 +442,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'cafe',
       stepNumber: 5,
-      label: 'Audit Higienitas Bar & Kafe',
+      label: 'Audit Bar & Kafe',
       subtitle: 'Standar Ekstraksi, FIFO & Food Safety',
       icon: CheckCircle2,
       badge: cafeProducts.filter((c) => c.verificationStatus === 'verified').length,
@@ -444,11 +451,42 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'history',
       stepNumber: 6,
-      label: 'Buku Sertifikasi & Riwayat Stempel',
+      label: 'Riwayat Stempel',
       subtitle: 'Daftar Kriptografis Seluruh Stempel Sah',
       icon: History,
       badge: verificationStamps.length,
       badgeLabel: `${verificationStamps.length} Stempel`,
+    },
+  ];
+
+  const pendingRegistrationsCount = users.filter((u) => u.status === 'pending_approval').length;
+  const superAdminStages: PipelineStageItem[] = [
+    {
+      id: 'approvals',
+      stepNumber: 1,
+      label: 'Antrean Persetujuan Registrasi Mitra',
+      subtitle: 'Tinjau & ACC Pendaftar Stasiun Rantai Pasok',
+      icon: Clock,
+      badge: pendingRegistrationsCount,
+      badgeLabel: pendingRegistrationsCount > 0 ? `${pendingRegistrationsCount} Menunggu ACC` : undefined,
+    },
+    {
+      id: 'directory',
+      stepNumber: 2,
+      label: 'Direktori Semua Mitra',
+      subtitle: 'Kelola Seluruh Pengguna & Hak Akses',
+      icon: Users,
+      badge: users.length,
+      badgeLabel: `${users.length} Akun`,
+    },
+    {
+      id: 'logs',
+      stepNumber: 3,
+      label: 'Audit Log & Transaksi',
+      subtitle: 'Riwayat Persetujuan & Ledger Rantai Pasok',
+      icon: ShieldCheck,
+      badge: transactions.length,
+      badgeLabel: `${transactions.length} Tx`,
     },
   ];
 
@@ -474,6 +512,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
   } else if (currentUser.role === 'verifikator') {
     roleStages = verifierStages;
     currentActiveTabId = verifierActiveTab || 'petani';
+  } else if (currentUser.role === 'superadmin') {
+    roleStages = superAdminStages;
+    currentActiveTabId = 'approvals';
   }
 
   const currentActiveStage =
@@ -685,6 +726,22 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
             </kbd>
           </button>
 
+          {/* Impersonation Return Button for Super Admin Novizar */}
+          {Boolean(
+            impersonatingFromUser ||
+              (typeof window !== 'undefined' && localStorage.getItem('cct_impersonating_superadmin'))
+          ) && (
+            <button
+              type="button"
+              onClick={() => returnToSuperAdmin()}
+              className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0 border border-amber-500 animate-pulse"
+              title="Kembali ke Panel Kendali Super Admin Novizar"
+            >
+              <Crown className="w-4 h-4 text-stone-950" />
+              <span>Kembali ke Novizar</span>
+            </button>
+          )}
+
           {/* Marketplace Storefront Link */}
           <button
             onClick={() => setActiveView('marketplace')}
@@ -695,16 +752,18 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
             <span className="hidden sm:inline">Toko Publik</span>
           </button>
 
-          {/* Printable Physical Blank Forms Button */}
-          <button
-            type="button"
-            onClick={() => setFormsModalOpen(true)}
-            className="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-bold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer shrink-0"
-            title="Cetak & Download Blanko Formulir Fisik Lapangan (Petani, Pengolah, Gudang, Roastery)"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Blanko Form</span>
-          </button>
+          {/* Printable Physical Blank Forms Button (Khusus stasiun operasional lapangan, disembunyikan untuk Super Admin) */}
+          {currentUser.role !== 'superadmin' && (
+            <button
+              type="button"
+              onClick={() => setFormsModalOpen(true)}
+              className="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-bold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer shrink-0"
+              title="Cetak & Download Blanko Formulir Fisik Lapangan (Petani, Pengolah, Gudang, Roastery)"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Blanko Form</span>
+            </button>
+          )}
 
           {/* Notification Bell */}
           <div className="relative">
@@ -769,7 +828,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
             )}
           </div>
 
-          {/* All-in-One Profile Menu (Avatar, Identity, Station Switcher, Language, Live Clock, Logout) */}
+          {/* Language Switcher beside Profile Menu */}
+          <LanguageSwitch variant="dark" />
           <ProfileMenu variant="dark" onOpenLedger={() => setActiveView('transactions')} />
         </div>
       </nav>

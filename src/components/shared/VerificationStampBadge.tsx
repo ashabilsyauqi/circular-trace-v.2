@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { VerificationStamp } from '../../types/coffee';
+import { VERIFICATION_CHECKLIST_TEMPLATES } from '../../constants/verificationChecklists';
 import {
   ShieldCheck,
   Award,
@@ -14,6 +15,7 @@ import {
   Building,
   UserCheck,
   Sprout,
+  ListChecks,
 } from 'lucide-react';
 
 interface VerificationStampBadgeProps {
@@ -130,6 +132,25 @@ export const VerificationStampBadge: React.FC<VerificationStampBadgeProps> = ({
   const theme = getStampTheme();
   const IconComponent = theme.icon;
 
+  const getEffectiveChecklist = () => {
+    if (stamp?.checklist && stamp.checklist.length > 0) {
+      return stamp.checklist;
+    }
+    if (!stamp?.stampType) return [];
+    const mapping: Record<string, keyof typeof VERIFICATION_CHECKLIST_TEMPLATES> = {
+      eudr_farm: 'farm',
+      harvest_quality: 'harvest',
+      processing_mill: 'processed',
+      warehouse_silo: 'warehouse',
+      roast_cupping: 'roasted',
+      cafe_safety: 'cafe',
+    };
+    const domainKey = mapping[stamp.stampType];
+    return domainKey ? VERIFICATION_CHECKLIST_TEMPLATES[domainKey]?.items || [] : [];
+  };
+
+  const checklistItems = getEffectiveChecklist();
+
   const handleCopyHash = () => {
     if (stamp?.digitalSignatureHash) {
       navigator.clipboard.writeText(stamp.digitalSignatureHash);
@@ -166,8 +187,9 @@ export const VerificationStampBadge: React.FC<VerificationStampBadgeProps> = ({
         <IconComponent
           className={`${size === 'sm' ? 'w-3 h-3' : size === 'lg' ? 'w-4 h-4' : 'w-3.5 h-3.5'} text-current`}
         />
-        <span>{stamp?.title ? stamp.title.split(' ')[0] + ' ' + (stamp.title.split(' ')[1] || '') : theme.label}</span>
-        {stamp && <CheckCircle2 className="w-3 h-3 text-emerald-500 fill-emerald-100 dark:fill-emerald-950" />}
+        <span className="font-bold">
+          {size === 'sm' ? `✓ ${theme.label}` : `✓ Verified • ${theme.label}`}
+        </span>
       </button>
 
       {/* Certificate / Cupping Details Modal */}
@@ -303,6 +325,60 @@ export const VerificationStampBadge: React.FC<VerificationStampBadgeProps> = ({
                     <div className="text-xs text-slate-600 dark:text-slate-400">
                       Evaluasi: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{stamp.cuppingEvaluation.roastEvaluation}</span> • Rest: <span className="font-semibold">{stamp.cuppingEvaluation.recommendationRestDays} Hari</span>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Data Checked List Verifikasi Mutu & Standar */}
+              {checklistItems && checklistItems.length > 0 && (
+                <div className="rounded-2xl border border-emerald-300/80 dark:border-emerald-700/60 p-4 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                      <ListChecks className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      Data Checked List "Verified"
+                    </h4>
+                    <span className="text-xs font-bold px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 rounded-full border border-emerald-300">
+                      {checklistItems.filter((c) => c.checked).length} / {checklistItems.length} Kriteria Lolos Audit
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {checklistItems.map((item, idx) => (
+                      <div
+                        key={item.id || idx}
+                        className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 transition ${
+                          item.checked
+                            ? 'bg-white dark:bg-slate-800/80 border-emerald-200 dark:border-emerald-800/60 shadow-2xs'
+                            : 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 text-rose-800'
+                        }`}
+                      >
+                        <div
+                          className={`mt-0.5 rounded-full p-1 shrink-0 ${
+                            item.checked ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+                          }`}
+                        >
+                          {item.checked ? <Check className="w-3 h-3 stroke-[3]" /> : <X className="w-3 h-3" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1">
+                            <span className="font-bold text-slate-900 dark:text-white">{item.label}</span>
+                            <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 px-1.5 py-0.2 rounded">
+                              {item.category}
+                            </span>
+                          </div>
+                          {item.description && (
+                            <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                              {item.description}
+                            </p>
+                          )}
+                          {item.notes && (
+                            <p className="text-[11px] text-emerald-800 dark:text-emerald-300 mt-1.5 italic font-medium bg-emerald-50 dark:bg-emerald-900/30 p-1.5 rounded-lg border border-emerald-200/50">
+                              Catatan Verifikator: "{item.notes}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

@@ -127,29 +127,29 @@ export const ProductionModule: React.FC = () => {
       </div>
 
       {/* Subtab Toggle Buttons */}
-      <div className="flex items-center gap-2 border-b border-stone-200 pb-2">
+      <div className="flex items-center gap-2 border-b border-stone-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('profiles')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'profiles'
               ? 'bg-[#EA580C] text-white shadow-xs'
               : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
-          <Sliders className="w-4 h-4" />
-          <span>Master Roast Profiles ({masterProfiles.length})</span>
+          <Sliders className="w-4 h-4 shrink-0" />
+          <span className="whitespace-nowrap">Master Roast Profiles ({masterProfiles.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('machines')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'machines'
               ? 'bg-[#EA580C] text-white shadow-xs'
               : 'text-stone-600 hover:bg-stone-100'
           }`}
         >
-          <Flame className="w-4 h-4" />
-          <span>Armada Mesin Sangrai ({roasterMachines.length})</span>
+          <Flame className="w-4 h-4 shrink-0" />
+          <span className="whitespace-nowrap">Armada Mesin Sangrai ({roasterMachines.length})</span>
         </button>
       </div>
 

@@ -11,41 +11,24 @@ import { WarehouseView } from './components/WarehouseView';
 import { RoasterView } from './components/RoasterView';
 import { CafeView } from './components/CafeView';
 import { VerifierView } from './components/verifier/VerifierView';
+import { SuperAdminView } from './components/SuperAdminView';
 import { PublicLotScanView } from './components/PublicLotScanView';
 import { LandingPage } from './components/LandingPage';
+import { ImpersonationBanner } from './components/shared/ImpersonationBanner';
 
 const MainLayout: React.FC = () => {
-  const { currentUser, activeView } = useCoffee();
-  const [scannedLotId, setScannedLotId] = React.useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('cupId') || params.get('lotId') || params.get('scan');
-    }
-    return null;
-  });
+  const { currentUser, activeView, route, navigate } = useCoffee();
 
-  // Listen to popstate for browser navigation
-  React.useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      setScannedLotId(params.get('cupId') || params.get('lotId') || params.get('scan'));
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  // 1. Realtime QR code scan view (?lotId=... or ?cupId=...)
+  const isScanRoute = route.view === 'scan' || Boolean(route.lotId || route.cupId);
+  const scannedLotId = route.cupId || route.lotId || null;
 
-  // 1. When visiting via realtime QR code scan (?cupId=... or ?lotId=...)
-  if (scannedLotId) {
+  if (isScanRoute && scannedLotId) {
     return (
       <PublicLotScanView
         lotId={scannedLotId}
         onContinue={() => {
-          const url = new URL(window.location.href);
-          url.searchParams.delete('lotId');
-          url.searchParams.delete('cupId');
-          url.searchParams.delete('scan');
-          window.history.pushState({}, '', url.pathname + (url.search ? url.search : ''));
-          setScannedLotId(null);
+          navigate({ view: 'marketplace', lotId: null, cupId: null, replace: true });
         }}
       />
     );
@@ -57,7 +40,10 @@ const MainLayout: React.FC = () => {
       return <LoginPage />;
     }
     return (
-      <AdminLayout>
+      <>
+        <ImpersonationBanner />
+        <AdminLayout>
+        {currentUser.role === 'superadmin' && <SuperAdminView />}
         {currentUser.role === 'petani' && <FarmerView />}
         {currentUser.role === 'pengolah' && <ProcessorView />}
         {currentUser.role === 'gudang' && <WarehouseView />}
@@ -65,6 +51,7 @@ const MainLayout: React.FC = () => {
         {currentUser.role === 'cafe' && <CafeView />}
         {currentUser.role === 'verifikator' && <VerifierView />}
       </AdminLayout>
+      </>
     );
   }
 
@@ -72,6 +59,7 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-between text-stone-900">
       <div>
+        <ImpersonationBanner />
         <Navbar />
         {/* Landing Page (Base URL Marketing) */}
         {activeView === 'landing' && <LandingPage />}

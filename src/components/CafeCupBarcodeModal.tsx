@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { CafeInventoryItem } from '../types/coffee';
 import { getNetworkHost, getPublicBaseUrl, isLoopbackHost, saveNetworkHost } from '../utils/baseUrl';
+import { BarcodeSocialShare } from './shared/BarcodeSocialShare';
 
 interface CafeCupBarcodeModalProps {
   isOpen: boolean;
@@ -332,6 +333,16 @@ export const CafeCupBarcodeModal: React.FC<CafeCupBarcodeModalProps> = ({
 
           {/* Realtime URL Link & Action Toolbar (Print: Hidden) */}
           <div className="space-y-3 pt-2 print:hidden">
+            {/* Social Media Share Section */}
+            <BarcodeSocialShare
+              url={realtimeScanUrl}
+              title={`Seduhan Kopi Gelas #${item.id} (${item.beanName})`}
+              lotId={item.id}
+              variety={item.variety}
+              origin={item.origin}
+              actorRole="cafe"
+            />
+
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-stone-50 border border-stone-200">
               <span className="text-[11px] font-mono text-stone-600 truncate flex-1 pl-1">
                 {realtimeScanUrl}

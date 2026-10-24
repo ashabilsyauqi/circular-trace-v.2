@@ -269,7 +269,7 @@ export const SellingModule: React.FC = () => {
                 /* DEFAULT VIEW: RICH ERP DATA TABLE / LIST */
                 <div className="o_form_sheet overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="o_list_table">
+                    <table className="o_list_table w-full text-left text-xs whitespace-nowrap min-w-[950px]">
                       <thead>
                         <tr>
                           <th className="!pl-5">ID Lot &amp; Varietas</th>
@@ -488,7 +488,7 @@ export const SellingModule: React.FC = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="o_list_table">
+                  <table className="o_list_table w-full text-left text-xs whitespace-nowrap min-w-[850px]">
                     <thead>
                       <tr>
                         <th className="!pl-5">No Transaksi</th>
@@ -565,7 +565,7 @@ export const SellingModule: React.FC = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="o_list_table">
+                  <table className="o_list_table w-full text-left text-xs whitespace-nowrap min-w-[950px]">
                     <thead>
                       <tr>
                         <th className="!pl-5">Batch Code</th>

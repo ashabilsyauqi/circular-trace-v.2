@@ -320,16 +320,16 @@ export const SourcingModule: React.FC = () => {
               {viewMode === 'table' && (
                 <div className="o_form_sheet p-0 overflow-hidden bg-white border border-stone-200 rounded-2xl shadow-2xs">
                   <div className="overflow-x-auto">
-                    <table className="o_list_table w-full text-left text-xs text-stone-700">
+                    <table className="o_list_table w-full text-left text-xs text-stone-700 whitespace-nowrap min-w-[850px]">
                       <thead className="bg-[#FAF7F2] border-b border-stone-200 text-stone-700 font-bold uppercase tracking-wider text-[11px]">
                         <tr>
                           <th className="py-3.5 px-4">ID Lot Ceri</th>
                           <th className="py-3.5 px-4">Petani &amp; Varietas</th>
                           <th className="py-3.5 px-4">Lokasi &amp; Elevasi</th>
-                          <th className="py-3.5 px-4">Kemanisan Brix</th>
+                          <th className="py-3.5 px-4">Brix</th>
                           <th className="py-3.5 px-4">Stok Ceri</th>
                           <th className="py-3.5 px-4">Harga / kg</th>
-                          <th className="py-3.5 px-4 text-right">Tindakan Cepat</th>
+                          <th className="py-3.5 px-4 text-right">Aksi</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-stone-100">

@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { RoastedBeanLot, CafeInventoryItem } from '../types/coffee';
 import { CoffeeSensorySpiderChart } from './CoffeeSensorySpiderChart';
+import { getNetworkHost, getPublicBaseUrl } from '../utils/baseUrl';
+import { BarcodeSocialShare } from './shared/BarcodeSocialShare';
 
 interface TraceabilityModalProps {
   isOpen: boolean;
@@ -36,6 +38,8 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
   const isCafeItem = 'lineage' in data;
   const beanName = isCafeItem ? data.beanName : `${data.origin} - ${data.variety}`;
   const variety = data.variety;
+  const resolvedBaseUrl = getPublicBaseUrl(getNetworkHost());
+  const traceUrl = data ? `${resolvedBaseUrl}/?lotId=${data.id}` : '';
   const processMethod = data.processMethod;
   const roastLevel = data.roastLevel;
   const tastingNotes = data.tastingNotes;
@@ -309,6 +313,19 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
             </div>
           </div>
         </div>
+        )}
+
+        {/* Social Media Share for Traceability & Barcode */}
+        {traceUrl && (
+          <div className="px-6 pb-4">
+            <BarcodeSocialShare
+              url={traceUrl}
+              title={`Silsilah & Traceability: ${beanName}`}
+              lotId={data.id}
+              variety={variety}
+              origin={(data as any).origin}
+            />
+          </div>
         )}
 
         {/* Modal Footer */}

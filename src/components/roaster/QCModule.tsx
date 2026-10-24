@@ -317,7 +317,7 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
       {viewMode === 'table' && (
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs whitespace-nowrap min-w-[850px]">
               <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
                   <th className="py-4 px-5">No. Sesi</th>

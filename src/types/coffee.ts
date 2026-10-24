@@ -1,4 +1,6 @@
-export type UserRole = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'verifikator';
+export type UserRole = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'verifikator' | 'superadmin';
+
+export type UserStatus = 'active' | 'pending_approval' | 'rejected' | 'suspended';
 
 export type VerifierDomain = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'all';
 
@@ -13,7 +15,12 @@ export interface AppUser {
   name: string;
   email?: string;
   password?: string;
+  username?: string;
   role: UserRole;
+  isSuperAdmin?: boolean;
+  status?: UserStatus;
+  registeredAt?: string;
+  rejectionReason?: string;
   verifierDomain?: VerifierDomain;
   organization: string;
   location: string;
@@ -59,6 +66,17 @@ export interface VerificationStamp {
   notes: string;
   digitalSignatureHash: string;
   cuppingEvaluation?: CuppingEvaluationData;
+  checklist?: VerificationChecklistItem[];
+}
+
+// Butir Checklist Audit Verifikasi
+export interface VerificationChecklistItem {
+  id: string;
+  category: string;
+  label: string;
+  description?: string;
+  checked: boolean;
+  notes?: string;
 }
 
 // 0. REGISTRASI & MANAJEMEN LAHAN / KEBUN KOPI PETANI
@@ -259,6 +277,7 @@ export interface WarehouseLot {
   storedDate: string;
   status: 'available' | 'sold' | 'partial';
   notes?: string;
+  photoUrl?: string;
   // Incoming QC gate: goods received from an approved Purchase Order start as 'pending_qc' and
   // are only selectable by the roaster (Work Orders) once QC marks them 'passed'.
   qcStatus?: 'pending_qc' | 'passed' | 'rejected';

@@ -1,7 +1,5 @@
-// Lightweight in-app translation dictionary. Scope for now: sidebar, top navbar, module
-// headers/titles and the new Profile menu — the surfaces a user sees constantly while
-// navigating. Table/form content inside each module stays Indonesian; extend this file with
-// more keys (and use t()) to widen coverage later without changing how it's wired up.
+// Lightweight in-app translation dictionary. Scope: sidebar, top navbar, marketplace,
+// module headers/titles, and the Profile menu.
 export type Language = 'id' | 'en';
 
 export const translations: Record<Language, Record<string, string>> = {
@@ -22,16 +20,87 @@ export const translations: Record<Language, Record<string, string>> = {
     'navbar.register': 'Daftar Akun',
     'navbar.adminPanel': 'Panel Admin',
     'navbar.admin': 'Admin',
-    'navbar.login': 'Masuk Panel Admin',
+    'navbar.login': 'Masuk Akun',
+    'nav.home': 'Beranda',
+    'nav.marketplace': 'Marketplace',
+    'nav.subtitle': 'Ekosistem Kopi Specialty • Dari Hulu ke Cangkir',
+    'nav.stationPanel': 'Panel Stasiun',
+    'nav.ledger': 'Buku Besar',
 
-    // Profile menu (new)
-    'profile.menu': 'Profile',
+    // Profile menu
+    'profile.menu': 'Profil',
     'profile.activeRole': 'Hak Akses Panel Aktif',
     'profile.language': 'Bahasa',
+    'profile.myPanel': 'Panel Saya',
+    'profile.ledger': 'Ledger',
+    'profile.stationOrg': 'Stasiun / Organisasi',
+    'profile.sessionActive': 'Sesi Terautentikasi Aktif',
+    'profile.sessionHint': 'Untuk beralih ke akun atau stasiun lain, silakan keluar (Logout) terlebih dahulu dan login menggunakan kredensial akun tujuan.',
+    'profile.returnSuperAdmin': 'Kembali ke Super Admin Novizar',
+    'profile.systemTime': 'Waktu Sistem',
     'profile.demoMode': 'Mode Demo',
     'profile.demoModeHint': 'Tampilkan tombol pindah peran cepat',
     'profile.logout': 'Keluar Akun',
-    'profile.navigation': 'Navigation',
+    'profile.navigation': 'Navigasi',
+
+    // Unified Marketplace Hero & Filters
+    'market.hero.tag': 'Pasar Bersama Lintas Rantai Pasok Kopi (Unified Coffee Market)',
+    'market.hero.title': '1 Marketplace untuk Semua Aktor Kopi',
+    'market.hero.desc': 'Petani, Pengolah, Gudang/Eksportir, Roaster, dan Coffee Shop Owner berkumpul dalam satu pasar bersama. Anda dapat membeli langsung dari sumber hulu, mengamankan stok green bean, maupun memesan roasted bean dan retail pack dengan transparansi penuh.',
+    'market.hero.total': 'Total Komoditas:',
+    'market.hero.activeUser': 'Pengguna Aktif:',
+    'market.hero.launchBtn': '+ Launch Produk ke Marketplace',
+    'market.hero.launchBtnShort': 'Launch Produk',
+    
+    // Categories
+    'market.cat.all': 'Semua Kategori',
+    'market.cat.cherry': 'Ceri Kopi Segar (Panen)',
+    'market.cat.green_bean_processor': 'Green Bean Olahan (Mill)',
+    'market.cat.green_bean_warehouse': 'Green Bean Gudang & Ekspor',
+    'market.cat.roasted_bean': 'Biji Sangrai Artisan (Roaster)',
+
+    // Search & Secondary Filters
+    'market.search.placeholder': 'Cari varietas (Typica, Gayo), asal kebun, tasting notes (Peach, Floral), atau penjual...',
+    'market.filter.seller': 'Penjual:',
+    'market.filter.allSellers': 'Semua Penjual',
+    'market.filter.farmer': 'Petani Kopi',
+    'market.filter.processor': 'Stasiun Pengolah',
+    'market.filter.warehouse': 'Gudang / Eksportir',
+    'market.filter.roaster': 'Artisan Roastery',
+    'market.sort.label': 'Urutan:',
+    'market.sort.default': 'Rekomendasi Rantai Pasok',
+    'market.sort.priceAsc': 'Harga Terendah',
+    'market.sort.priceDesc': 'Harga Tertinggi',
+    'market.sort.scaDesc': 'Skor SCA Tertinggi',
+    'market.sort.stockDesc': 'Stok Tersedia Terbanyak',
+    'market.filter.verifiedOnly': 'Filter: Hanya Terverifikasi',
+    'market.filter.verifiedActive': '✓ Hanya Terverifikasi (Aktif)',
+
+    // Cards
+    'market.card.offerPrice': 'Harga Penawaran',
+    'market.card.stock': 'Stok:',
+    'market.card.orderWa': 'Pesan via WA',
+    'market.card.buyDirect': 'Beli Langsung',
+    'market.card.details': 'Detail',
+    'market.card.trace': 'Silsilah Trace',
+    'market.card.notes': 'Notes:',
+    'market.card.barcodeCherry': 'Barcode Ceri & Panen',
+    'market.card.barcodeProcessor': 'Barcode Mutu Green Bean',
+    'market.card.barcodeWarehouse': 'Barcode Grading & Ekspor',
+    'market.card.roastedBadge': 'Fresh Artisan Roasted',
+    'market.card.verifiedBadge': '✓ Terverifikasi',
+    'market.empty.title': 'Tidak ada komoditas yang cocok dengan kriteria pencarian',
+    'market.empty.desc': 'Coba ganti filter kategori, kosongkan kata kunci pencarian, atau tambahkan produk baru dari dashboard masing-masing akun.',
+
+    // Purchasing Modal
+    'market.orderModal.badge': 'Formulir Pemesanan Marketplace Bersama',
+    'market.orderModal.qtyLabel': 'Jumlah yang Dipesan',
+    'market.orderModal.available': 'Tersedia:',
+    'market.orderModal.notesLabel': 'Catatan Pengiriman / Permintaan Khusus',
+    'market.orderModal.notesPlaceholder': 'Contoh: Kemasan GrainPro 30kg, mohon sertakan salinan sertifikat origin...',
+    'market.orderModal.cancel': 'Batal',
+    'market.orderModal.submitDirect': 'Konfirmasi Pembelian Langsung',
+    'market.orderModal.submitPo': 'Terbitkan Purchase Order (PO)',
 
     // Sidebar — roaster flow
     'sidebar.roastery': 'Roastery',
@@ -86,11 +155,13 @@ export const translations: Record<Language, Record<string, string>> = {
     'module.history.subtitle': 'Riwayat transaksi roastery',
   },
   en: {
+    // Brand / shell
     'brand.name': 'sangrAI',
     'brand.tagline': 'Specialty Coffee Ecosystem • Farm to Cup & Traceability',
     'brand.badge': 'Circular Trace',
     'brand.enterprise': 'Enterprise Coffee ERP',
 
+    // Top navbar (marketing / marketplace shell)
     'navbar.demoSwitcher': 'Demo Account Switcher:',
     'navbar.demoSwitcherHint': 'Pick a role to open the admin panel:',
     'navbar.reset': 'Reset',
@@ -100,16 +171,89 @@ export const translations: Record<Language, Record<string, string>> = {
     'navbar.register': 'Sign Up',
     'navbar.adminPanel': 'Admin Panel',
     'navbar.admin': 'Admin',
-    'navbar.login': 'Enter Admin Panel',
+    'navbar.login': 'Sign In',
+    'nav.home': 'Home',
+    'nav.marketplace': 'Marketplace',
+    'nav.subtitle': 'Specialty Coffee Ecosystem • Farm to Cup',
+    'nav.stationPanel': 'Station Panel',
+    'nav.ledger': 'Ledger',
 
+    // Profile menu
     'profile.menu': 'Profile',
     'profile.activeRole': 'Active Panel Access',
     'profile.language': 'Language',
+    'profile.myPanel': 'My Panel',
+    'profile.ledger': 'Ledger',
+    'profile.stationOrg': 'Station / Organization',
+    'profile.sessionActive': 'Active Authenticated Session',
+    'profile.sessionHint': 'To switch to another account or station, please log out first and sign in with the target credentials.',
+    'profile.returnSuperAdmin': 'Return to Super Admin Novizar',
+    'profile.systemTime': 'System Time',
     'profile.demoMode': 'Demo Mode',
     'profile.demoModeHint': 'Show quick role-switch buttons',
     'profile.logout': 'Log Out',
     'profile.navigation': 'Navigation',
 
+    // Unified Marketplace Hero & Filters
+    'market.hero.tag': 'Unified Coffee Supply Chain Marketplace',
+    'market.hero.title': '1 Marketplace for All Coffee Actors',
+    'market.hero.desc': 'Farmers, Processors, Warehouse/Exporters, Roasters, and Coffee Shop Owners unified in one open marketplace. Buy directly from source, secure green bean stock, or order fresh roasted beans and retail packs with complete transparency.',
+    'market.hero.total': 'Total Commodities:',
+    'market.hero.activeUser': 'Active User:',
+    'market.hero.launchBtn': '+ Launch Product to Marketplace',
+    'market.hero.launchBtnShort': 'Launch Product',
+
+    // Categories
+    'market.cat.all': 'All Categories',
+    'market.cat.cherry': 'Fresh Coffee Cherry (Harvest)',
+    'market.cat.green_bean_processor': 'Processed Green Bean (Mill)',
+    'market.cat.green_bean_warehouse': 'Warehouse & Export Green Bean',
+    'market.cat.roasted_bean': 'Artisan Roasted Bean (Roaster)',
+
+    // Search & Secondary Filters
+    'market.search.placeholder': 'Search variety (Typica, Gayo), origin, tasting notes (Peach, Floral), or seller...',
+    'market.filter.seller': 'Seller:',
+    'market.filter.allSellers': 'All Sellers',
+    'market.filter.farmer': 'Coffee Farmer',
+    'market.filter.processor': 'Processing Mill',
+    'market.filter.warehouse': 'Warehouse / Exporter',
+    'market.filter.roaster': 'Artisan Roastery',
+    'market.sort.label': 'Sort by:',
+    'market.sort.default': 'Supply Chain Recommendation',
+    'market.sort.priceAsc': 'Lowest Price',
+    'market.sort.priceDesc': 'Highest Price',
+    'market.sort.scaDesc': 'Highest SCA Score',
+    'market.sort.stockDesc': 'Highest Available Stock',
+    'market.filter.verifiedOnly': 'Filter: Verified Only',
+    'market.filter.verifiedActive': '✓ Verified Only (Active)',
+
+    // Cards
+    'market.card.offerPrice': 'Offer Price',
+    'market.card.stock': 'Stock:',
+    'market.card.orderWa': 'Order via WA',
+    'market.card.buyDirect': 'Buy Directly',
+    'market.card.details': 'Details',
+    'market.card.trace': 'Trace Pedigree',
+    'market.card.notes': 'Notes:',
+    'market.card.barcodeCherry': 'Cherry & Harvest Barcode',
+    'market.card.barcodeProcessor': 'Green Bean Quality Barcode',
+    'market.card.barcodeWarehouse': 'Grading & Export Barcode',
+    'market.card.roastedBadge': 'Fresh Artisan Roasted',
+    'market.card.verifiedBadge': '✓ Verified',
+    'market.empty.title': 'No commodities match your search criteria',
+    'market.empty.desc': 'Try changing your category filter, clearing your search keywords, or adding new listings from your station dashboard.',
+
+    // Purchasing Modal
+    'market.orderModal.badge': 'Unified Marketplace Order Form',
+    'market.orderModal.qtyLabel': 'Order Quantity',
+    'market.orderModal.available': 'Available:',
+    'market.orderModal.notesLabel': 'Delivery Notes / Special Requests',
+    'market.orderModal.notesPlaceholder': 'E.g.: GrainPro 30kg packaging, please attach certificate of origin...',
+    'market.orderModal.cancel': 'Cancel',
+    'market.orderModal.submitDirect': 'Confirm Direct Purchase',
+    'market.orderModal.submitPo': 'Issue Purchase Order (PO)',
+
+    // Sidebar — roaster flow
     'sidebar.roastery': 'Roastery',
     'sidebar.reporting': 'Reporting',
     'sidebar.storeCta': 'Go to Storefront',
@@ -129,6 +273,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'sidebar.selling.subtitle': 'Publish to Marketplace',
     'sidebar.history.title': 'Transaction History',
 
+    // Sidebar — other roles
     'sidebar.mainMenu': 'Main Menu',
     'sidebar.dashboardOps': 'Dashboard & Operations',
     'sidebar.active': 'Active',
@@ -142,6 +287,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'sidebar.processorInventory': '3. Warehouse & Waste',
     'sidebar.processorSelling': '4. Marketplace & Sales',
 
+    // Module headers (RoasterView)
     'module.dashboard.title': 'Dashboard',
     'module.dashboard.subtitle': 'Your roastery business overview',
     'module.workOrders.title': 'Work Orders',

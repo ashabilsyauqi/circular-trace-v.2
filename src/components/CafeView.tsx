@@ -36,6 +36,7 @@ import { StatusPipeline, PipelineStage } from './shared/StatusPipeline';
 import { StatButton } from './shared/StatButton';
 import { ActivityFeed } from './shared/ActivityFeed';
 import { RecordBreadcrumb } from './shared/RecordBreadcrumb';
+import { ProductImageField } from './shared/ProductImageField';
 import { Scale, Percent, FileText, Check, MapPin, ShieldCheck } from 'lucide-react';
 
 const CAFE_PIPELINE_STAGES: PipelineStage[] = [
@@ -84,6 +85,9 @@ export const CafeView: React.FC = () => {
   const [prodDesc, setProdDesc] = useState('Signature blend cafe untuk seduhan espresso, cappuccino, dan cold drip.');
   const [noteInput, setNoteInput] = useState('');
   const [prodNotes, setProdNotes] = useState<string[]>(['Milk Chocolate', 'Caramel', 'Sweet Toffee']);
+  const [prodPhotoUrl, setProdPhotoUrl] = useState(
+    'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe?w=600&auto=format&fit=crop&q=80'
+  );
   const [successMsg, setSuccessMsg] = useState('');
 
   // Barista Recipe & Cup Margin Calculator State
@@ -165,7 +169,9 @@ export const CafeView: React.FC = () => {
       packageUnit: prodUnit,
       totalStock: Number(prodStock),
       description: prodDesc,
-      photoUrl: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&auto=format&fit=crop&q=80',
+      photoUrl:
+        prodPhotoUrl ||
+        'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe?w=600&auto=format&fit=crop&q=80',
     });
 
     setSuccessMsg(`Sukses menambahkan ${prodName} ke Katalog Menu & Toko Kedai Anda!`);
@@ -492,17 +498,17 @@ export const CafeView: React.FC = () => {
           {viewMode === 'table' && (
             <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs whitespace-nowrap min-w-[950px]">
                   <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
                     <tr>
-                      <th className="py-3.5 px-4">Nama Biji Kopi</th>
-                      <th className="py-3.5 px-4">Penyangrai (Roaster)</th>
-                      <th className="py-3.5 px-4">Profil Sangrai</th>
-                      <th className="py-3.5 px-4">Skor SCA</th>
-                      <th className="py-3.5 px-4">Tasting Notes</th>
-                      <th className="py-3.5 px-4">Stok di Bar</th>
-                      <th className="py-3.5 px-4">HPP / Pack</th>
-                      <th className="py-3.5 px-4 text-right">Tindakan</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Biji Kopi</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Roaster</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Profil Sangrai</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Skor SCA</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Tasting Notes</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Stok Bar</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">HPP / Pack</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
@@ -512,48 +518,48 @@ export const CafeView: React.FC = () => {
                         onClick={() => setSelectedItemDetail(item)}
                         className="hover:bg-amber-50/40 cursor-pointer transition-colors"
                       >
-                        <td className="py-3 px-4">
-                          <div className="font-bold text-stone-900">{item.beanName}</div>
-                          <div className="text-[11px] text-stone-500 font-mono">{item.id} • {item.variety}</div>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="font-bold text-stone-900 whitespace-nowrap">{item.beanName}</div>
+                          <div className="text-[11px] text-stone-500 font-mono whitespace-nowrap">{item.id} • {item.variety}</div>
                         </td>
-                        <td className="py-3 px-4 font-medium text-stone-700">
+                        <td className="py-3 px-4 font-medium text-stone-700 whitespace-nowrap">
                           {item.roasterName}
                         </td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200 whitespace-nowrap">
                             {item.roastLevel}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
-                          <span className="font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">
                             {item.scaScore}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="flex flex-wrap gap-1 max-w-xs">
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1">
                             {item.tastingNotes.slice(0, 3).map((note, i) => (
-                              <span key={i} className="text-[10px] bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded">
+                              <span key={i} className="text-[10px] bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded whitespace-nowrap">
                                 {note}
                               </span>
                             ))}
                           </div>
                         </td>
-                        <td className="py-3 px-4">
-                          <span className="font-bold text-stone-900">{item.packsInStock} pack</span>
-                          <span className="text-stone-400 text-[11px]"> ({((item.packsInStock * item.packWeightGrams) / 1000).toFixed(1)} kg)</span>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="font-bold text-stone-900 whitespace-nowrap">{item.packsInStock} pack</span>
+                          <span className="text-stone-400 text-[11px] whitespace-nowrap"> ({((item.packsInStock * item.packWeightGrams) / 1000).toFixed(1)} kg)</span>
                         </td>
-                        <td className="py-3 px-4 font-bold text-stone-900">
+                        <td className="py-3 px-4 font-bold text-stone-900 whitespace-nowrap">
                           Rp {item.costPerPack.toLocaleString()}
                         </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="inline-flex items-center gap-1">
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setCupBarcodeItem(item);
                               }}
-                              className="px-2 py-1 rounded-lg bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 text-[11px] font-bold transition-colors inline-flex items-center gap-1"
+                              className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 text-[11px] font-bold transition-colors inline-flex items-center gap-1 whitespace-nowrap"
                             >
                               <QrCode className="w-3 h-3" />
                               QR Gelas
@@ -1065,6 +1071,16 @@ export const CafeView: React.FC = () => {
                   className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-amber-500 font-semibold"
                 />
               </div>
+            </div>
+
+            {/* Dedicated Image Upload & Preview Field */}
+            <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-200/80">
+              <ProductImageField
+                value={prodPhotoUrl}
+                onChange={setProdPhotoUrl}
+                label="Foto / Gambar Kemasan Produk Cafe"
+                categoryHint="cafe"
+              />
             </div>
 
             <div>

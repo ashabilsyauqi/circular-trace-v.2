@@ -50,7 +50,7 @@ export const HistoryModule: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="o_list_table">
+            <table className="o_list_table w-full text-left text-xs whitespace-nowrap min-w-[850px]">
               <thead>
                 <tr>
                   <th className="!pl-5">ID Transaksi</th>

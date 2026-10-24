@@ -19,6 +19,8 @@ import {
   Recycle,
   Crown,
   Star,
+  ListChecks,
+  Check,
 } from 'lucide-react';
 import {
   UnifiedMarketplaceItem,
@@ -29,6 +31,11 @@ import {
 import { calculateProcessorEcoRating } from '../utils/ecoRating';
 import { CoffeeSensorySpiderChart } from './CoffeeSensorySpiderChart';
 import { getNetworkHost, getPublicBaseUrl, isLoopbackHost } from '../utils/baseUrl';
+import { BarcodeSocialShare } from './shared/BarcodeSocialShare';
+import { VerificationStampBadge } from './shared/VerificationStampBadge';
+import { VERIFICATION_CHECKLIST_TEMPLATES } from '../constants/verificationChecklists';
+import { useCoffee } from '../context/CoffeeContext';
+import { WhatsAppIcon, openOrderWhatsApp } from '../utils/whatsapp';
 
 interface ProductDetailModalProps {
   isOpen: boolean;
@@ -51,6 +58,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onOpenWarehouseBarcode,
   onOpenTraceability,
 }) => {
+  const { currentUser } = useCoffee();
   const [miniQrUrl, setMiniQrUrl] = useState<string>('');
 
   // Base URL for the QR link: VITE_PUBLIC_BASE_URL when set, otherwise the browser's own
@@ -87,6 +95,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const isProcessed = item.category === 'green_bean_processor';
   const isWarehouse = item.category === 'green_bean_warehouse';
   const isRoasted = item.category === 'roasted_bean';
+
+  const getProductChecklist = () => {
+    if (item.verificationStamp?.checklist && item.verificationStamp.checklist.length > 0) {
+      return item.verificationStamp.checklist;
+    }
+    const mapping: Record<string, keyof typeof VERIFICATION_CHECKLIST_TEMPLATES> = {
+      cherry: 'harvest',
+      green_bean_processor: 'processed',
+      green_bean_warehouse: 'warehouse',
+      roasted_bean: 'roasted',
+    };
+    const key = mapping[item.category] || 'harvest';
+    return VERIFICATION_CHECKLIST_TEMPLATES[key]?.items || [];
+  };
+
+  const productChecklist = getProductChecklist();
+  const isItemVerified = item.verificationStatus === 'verified' || !!item.verificationStamp;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/80 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
@@ -199,11 +224,88 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Terverifikasi Rantai sangrAI</span>
-            </div>
+            {isItemVerified && (
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Terverifikasi Rantai sangrAI</span>
+              </div>
+            )}
           </div>
+
+          {/* Verification Status & Checked List Card (Hanya muncul jika sudah verified) */}
+          {isItemVerified && (
+            <div className="rounded-3xl border border-emerald-300 bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/40 p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-emerald-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black shadow-sm">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-emerald-950">
+                      Status Verifikasi Produk
+                    </span>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 border border-emerald-300">
+                      ✓ Verified QA
+                    </span>
+                  </div>
+                  <h3 className="text-base font-black text-stone-900 mt-0.5">
+                    {item.verificationStamp?.title || 'Standar Mutu & Silsilah Terverifikasi'}
+                  </h3>
+                </div>
+              </div>
+
+              {item.verificationStamp ? (
+                <VerificationStampBadge stamp={item.verificationStamp} size="md" />
+              ) : isItemVerified ? (
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white flex items-center gap-1.5 shadow-xs">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Lulus Audit Verifikator
+                </span>
+              ) : null}
+            </div>
+
+            {/* Checked List View */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                  <ListChecks className="w-4 h-4 text-emerald-600" />
+                  Data Checked List "Verified"
+                </span>
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  {productChecklist.filter((c) => c.checked).length} / {productChecklist.length} Kriteria Terpenuhi
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                {productChecklist.map((chk, idx) => (
+                  <div
+                    key={chk.id || idx}
+                    className="p-3 rounded-2xl border border-emerald-200/80 bg-white/90 text-xs flex items-start gap-2.5 shadow-2xs"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <div>
+                      <div className="font-black text-stone-900">{chk.label}</div>
+                      <div className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">{chk.description}</div>
+                      <span className="inline-block text-[9px] uppercase font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded mt-1">
+                        {chk.category}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {item.verificationStamp && (
+              <div className="pt-2 border-t border-emerald-100 flex flex-wrap items-center justify-between text-[11px] text-stone-500">
+                <span>Diverifikasi oleh: <strong>{item.verificationStamp.verifierName}</strong> ({item.verificationStamp.verifierTitle})</span>
+                <span className="font-mono text-[10px] text-stone-400">Cert: #{item.verificationStamp.certificateNumber}</span>
+              </div>
+            )}
+          </div>
+          )}
 
           {/* Section: Khusus Petani - Barcode & Stiker Karung */}
           {isCherry && (
@@ -384,6 +486,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Universal Social Media Share for this Listing's Barcode / Spek */}
+          {realtimeScanUrl && (
+            <BarcodeSocialShare
+              url={realtimeScanUrl}
+              title={`${item.title} (ID: ${item.id})`}
+              lotId={item.id}
+              variety={item.variety}
+              origin={item.origin}
+            />
           )}
 
           {/* Detailed Specifications Grid */}
@@ -706,22 +819,42 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-3 rounded-xl border border-stone-300 text-stone-700 text-xs font-bold hover:bg-stone-100 transition-colors"
+              className="px-5 py-3 rounded-xl border border-stone-300 text-stone-700 text-xs font-bold hover:bg-stone-100 transition-colors cursor-pointer"
             >
               Tutup
             </button>
+
+            {item && (
+              <button
+                type="button"
+                onClick={() =>
+                  openOrderWhatsApp({
+                    item,
+                    quantity: 1,
+                    buyerName: currentUser?.name,
+                    buyerOrg: currentUser?.organization,
+                    buyerRole: currentUser?.role,
+                  })
+                }
+                className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 whitespace-nowrap cursor-pointer hover:shadow-emerald-600/30"
+                title="Hubungi penjual langsung via WhatsApp dengan rincian komoditas ini"
+              >
+                <WhatsAppIcon className="w-4 h-4 text-white" />
+                Pesan Lewat WhatsApp
+              </button>
+            )}
 
             <button
               type="button"
               onClick={() => {
                 onClose();
-                onBuy(item);
+                onBuy(item!);
               }}
-              className="px-6 py-3 rounded-xl bg-stone-900 hover:bg-amber-800 text-white text-xs font-bold transition-colors shadow-md flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-stone-900 hover:bg-amber-800 text-white text-xs font-bold transition-colors shadow-md flex items-center gap-2 whitespace-nowrap cursor-pointer"
             >
               <ShoppingCart className="w-4 h-4 text-amber-400" />
               Beli Komoditas Ini

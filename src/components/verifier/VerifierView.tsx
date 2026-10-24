@@ -27,6 +27,7 @@ import {
   Sprout,
   Droplets,
   Scale,
+  ListChecks,
 } from 'lucide-react';
 import {
   CoffeeFarm,
@@ -37,7 +38,9 @@ import {
   CafeRetailProduct,
   CuppingEvaluationData,
   VerifierDomain,
+  VerificationChecklistItem,
 } from '../../types/coffee';
+import { VERIFICATION_CHECKLIST_TEMPLATES } from '../../constants/verificationChecklists';
 
 export const VerifierView: React.FC = () => {
   const {
@@ -112,6 +115,21 @@ export const VerifierView: React.FC = () => {
   const [genericScoreDisplay, setGenericScoreDisplay] = useState('');
   const [genericNotes, setGenericNotes] = useState('');
 
+  // Interactive Verification Checklist state for all auditing flows
+  const [auditChecklist, setAuditChecklist] = useState<VerificationChecklistItem[]>([]);
+
+  const handleToggleChecklistItem = (id: string) => {
+    setAuditChecklist((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
+    );
+  };
+
+  const handleItemNoteChange = (id: string, notes: string) => {
+    setAuditChecklist((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, notes } : item))
+    );
+  };
+
   // Calculate total cupping score reactively
   const calculateTotalScore = (form: CuppingEvaluationData) => {
     const raw =
@@ -166,6 +184,11 @@ export const VerifierView: React.FC = () => {
         `Hasil uji cicip sensori independen oleh ${currentUser?.name || 'Q-Grader'}. Profil sangrai merata, ekstraksi optimal dengan body halus dan keasaman seimbang.`
       );
     }
+    if (lot.verificationStamp?.checklist && lot.verificationStamp.checklist.length > 0) {
+      setAuditChecklist(lot.verificationStamp.checklist.map((c) => ({ ...c })));
+    } else {
+      setAuditChecklist(VERIFICATION_CHECKLIST_TEMPLATES.roasted.items.map((c) => ({ ...c, checked: true })));
+    }
     setCuppingModalOpen(true);
   };
 
@@ -199,6 +222,7 @@ export const VerifierView: React.FC = () => {
       })`,
       notes: auditorNotes,
       cuppingEvaluation: cuppingForm,
+      checklist: auditChecklist,
     });
 
     if (res.success) {
@@ -222,6 +246,11 @@ export const VerifierView: React.FC = () => {
         `Hasil inspeksi lapangan oleh ${currentUser?.name || 'Verifikator Mutu Petani'}. Tingkat kemanisan ceri teruji refraktometer ${lot.brix}° Brix. Rasio petik merah 98%, zero floaters, memenuhi standar specialty coffee.`
       );
     }
+    if (lot.verificationStamp?.checklist && lot.verificationStamp.checklist.length > 0) {
+      setAuditChecklist(lot.verificationStamp.checklist.map((c) => ({ ...c })));
+    } else {
+      setAuditChecklist(VERIFICATION_CHECKLIST_TEMPLATES.harvest.items.map((c) => ({ ...c, checked: true })));
+    }
     setHarvestModalOpen(true);
   };
 
@@ -242,6 +271,7 @@ export const VerifierView: React.FC = () => {
       title: harvestStampTitle,
       scoreDisplay: `Brix ${harvestBrix.toFixed(1)}° • ${harvestRipePercent}% Petik Merah (${gradeText})`,
       notes: harvestNotes,
+      checklist: auditChecklist,
     });
 
     if (res.success) {
@@ -289,6 +319,7 @@ export const VerifierView: React.FC = () => {
         'Peralatan seduh, air filter mineralisasi terkalibrasi, serta rotasi FIFO biji sangrai terverifikasi sesuai protokol specialty.'
       );
     }
+    setAuditChecklist(VERIFICATION_CHECKLIST_TEMPLATES[type]?.items.map((c) => ({ ...c, checked: true })) || []);
     setGenericModalOpen(true);
   };
 
@@ -310,6 +341,7 @@ export const VerifierView: React.FC = () => {
       title: genericTitle,
       scoreDisplay: genericScoreDisplay,
       notes: genericNotes,
+      checklist: auditChecklist,
     });
 
     if (res.success) {
@@ -465,12 +497,12 @@ export const VerifierView: React.FC = () => {
       {/* Domain Navigation Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
         {[
-          { id: 'petani', label: '1. Petani & Lahan EUDR', icon: MapPin },
-          { id: 'pengolah', label: '2. Stasiun Pengolah (Mill)', icon: Award },
-          { id: 'gudang', label: '3. Pergudangan & Ekspor', icon: FileCheck2 },
-          { id: 'roaster', label: '4. Roastery & Cupping Lab (Cicip Kopi)', icon: Coffee, highlight: true },
-          { id: 'cafe', label: '5. Kafe & Barista Bar', icon: CheckCircle2 },
-          { id: 'history', label: 'Riwayat Seluruh Stempel', icon: Layers },
+          { id: 'petani', label: '1. Petani & Kebun', icon: MapPin },
+          { id: 'pengolah', label: '2. Pengolah (Mill)', icon: Award },
+          { id: 'gudang', label: '3. Gudang & Ekspor', icon: FileCheck2 },
+          { id: 'roaster', label: '4. Roastery & Lab Cupping', icon: Coffee, highlight: true },
+          { id: 'cafe', label: '5. Kafe & Bar', icon: CheckCircle2 },
+          { id: 'history', label: 'Riwayat Stempel', icon: Layers },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeDomain === tab.id;
@@ -478,16 +510,16 @@ export const VerifierView: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setVerifierActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-xs sm:text-sm transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
                 isActive
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20 font-semibold'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
               } ${tab.highlight && !isActive ? 'ring-1 ring-amber-400/60 dark:ring-amber-500/50' : ''}`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : tab.highlight ? 'text-amber-500' : 'text-slate-500'}`} />
-              <span>{tab.label}</span>
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : tab.highlight ? 'text-amber-500' : 'text-slate-500'}`} />
+              <span className="whitespace-nowrap">{tab.label}</span>
               {tab.highlight && (
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-400 text-slate-900 uppercase">
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-400 text-slate-900 uppercase whitespace-nowrap shrink-0">
                   Wajib Cicip
                 </span>
               )}
@@ -1422,6 +1454,47 @@ export const VerifierView: React.FC = () => {
                 </div>
               </div>
 
+              {/* Interactive Data Checked List */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+                    <ListChecks className="w-4 h-4 text-indigo-600" />
+                    Data Checked List "Verified"
+                  </label>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
+                    {auditChecklist.filter((c) => c.checked).length} / {auditChecklist.length} Terpenuhi
+                  </span>
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {auditChecklist.map((item) => (
+                    <label
+                      key={item.id}
+                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-850 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={item.checked}
+                        onChange={() => handleToggleChecklistItem(item.id)}
+                        className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                      <div className="flex-1 text-[11px]">
+                        <div className="flex items-center justify-between">
+                          <span className={`font-bold ${item.checked ? 'text-slate-900 dark:text-white' : 'text-slate-400 line-through'}`}>
+                            {item.label}
+                          </span>
+                          <span className="text-[9px] uppercase font-bold text-slate-400">{item.category}</span>
+                        </div>
+                        {item.description && (
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               {/* Auditor Notes */}
               <div>
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
@@ -1576,6 +1649,47 @@ export const VerifierView: React.FC = () => {
                 />
               </div>
 
+              {/* Interactive Data Checked List */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+                    <ListChecks className="w-4 h-4 text-emerald-600" />
+                    Data Checked List "Verified"
+                  </label>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                    {auditChecklist.filter((c) => c.checked).length} / {auditChecklist.length} Terpenuhi
+                  </span>
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {auditChecklist.map((item) => (
+                    <label
+                      key={item.id}
+                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-850 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={item.checked}
+                        onChange={() => handleToggleChecklistItem(item.id)}
+                        className="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      />
+                      <div className="flex-1 text-[11px]">
+                        <div className="flex items-center justify-between">
+                          <span className={`font-bold ${item.checked ? 'text-slate-900 dark:text-white' : 'text-slate-400 line-through'}`}>
+                            {item.label}
+                          </span>
+                          <span className="text-[9px] uppercase font-bold text-slate-400">{item.category}</span>
+                        </div>
+                        {item.description && (
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="font-semibold text-slate-700 dark:text-slate-300">
                   Catatan Resmi Verifikator Mutu Petani (Akan tertera di sertifikat & barcode)
@@ -1671,6 +1785,47 @@ export const VerifierView: React.FC = () => {
                   onChange={(e) => setGenericScoreDisplay(e.target.value)}
                   className="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
                 />
+              </div>
+
+              {/* Interactive Data Checked List */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+                    <ListChecks className="w-4 h-4 text-indigo-600" />
+                    Data Checked List "Verified"
+                  </label>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
+                    {auditChecklist.filter((c) => c.checked).length} / {auditChecklist.length} Terpenuhi
+                  </span>
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {auditChecklist.map((item) => (
+                    <label
+                      key={item.id}
+                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-850 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={item.checked}
+                        onChange={() => handleToggleChecklistItem(item.id)}
+                        className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                      <div className="flex-1 text-[11px]">
+                        <div className="flex items-center justify-between">
+                          <span className={`font-bold ${item.checked ? 'text-slate-900 dark:text-white' : 'text-slate-400 line-through'}`}>
+                            {item.label}
+                          </span>
+                          <span className="text-[9px] uppercase font-bold text-slate-400">{item.category}</span>
+                        </div>
+                        {item.description && (
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div>

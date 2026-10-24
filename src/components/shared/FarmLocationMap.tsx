@@ -1134,7 +1134,7 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-stone-200 bg-stone-50/50">
-            <table className="w-full text-left text-[11px]">
+            <table className="w-full text-left text-[11px] whitespace-nowrap min-w-[750px]">
               <thead className="bg-stone-100/80 text-stone-600 font-bold uppercase tracking-wider text-[9px] border-b border-stone-200">
                 <tr>
                   <th className="py-2.5 px-3">No &amp; Kode Patok</th>

@@ -375,6 +375,26 @@ const idServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Tanda Tangan Digital', value: 'SHA256 Validated • Terotentikasi' },
     ],
   },
+  superadmin: {
+    badge: 'Owner & Root Ekosistem',
+    title: 'Pusat Kendali & Persetujuan Mitra sangrAI',
+    desc: 'Super Administrator memiliki kendali penuh untuk meninjau, menyetujui (ACC), menolak, dan mengaudit seluruh stasiun rantai pasok kopi.',
+    bullets: [
+      'Persetujuan satu pintu pendaftaran mitra baru.',
+      'Pengawasan integritas sertifikasi dan stempel mutu.',
+      'Akses direktori seluruh aktor rantai pasok terdaftar.',
+    ],
+    ctaOpen: 'Buka Panel Super Admin',
+    ctaRegister: 'Owner Portal',
+    previewTitle: 'Super Admin Overview',
+    previewRows: [
+      { label: 'Super Admin', value: 'Novizar' },
+      { label: 'Hak Akses', value: 'Owner Level 0' },
+      { label: 'Status Sistem', value: 'Live & Terenkripsi' },
+      { label: 'Otoritas ACC', value: 'Tunggal (Root)' },
+      { label: 'Platform', value: 'sangrAI Circular Trace' },
+    ],
+  },
 };
 
 const enServicePanels: Record<UserRole, ServicePanel> = {
@@ -496,6 +516,26 @@ const enServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Evaluation Result', value: '87.50 SCA Score (Specialty Grade)' },
       { label: 'Lead Auditor', value: 'Jessica Tan, CQI Q-Grader' },
       { label: 'Digital Signature', value: 'SHA256 Validated • Authenticated' },
+    ],
+  },
+  superadmin: {
+    badge: 'Owner & Root Ecosystem',
+    title: 'sangrAI Partner Approval & Control Center',
+    desc: 'The Super Administrator has root authority to review, approve (ACC), reject, and audit all coffee supply chain stations.',
+    bullets: [
+      'Single-gate approval for new partner registrations.',
+      'Supervision of certification integrity and quality stamps.',
+      'Full directory access to all registered supply chain actors.',
+    ],
+    ctaOpen: 'Open Super Admin Panel',
+    ctaRegister: 'Owner Portal',
+    previewTitle: 'Super Admin Overview',
+    previewRows: [
+      { label: 'Super Admin', value: 'Novizar' },
+      { label: 'Access Level', value: 'Owner Level 0' },
+      { label: 'System Status', value: 'Live & Encrypted' },
+      { label: 'Approval Authority', value: 'Exclusive (Root)' },
+      { label: 'Platform', value: 'sangrAI Circular Trace' },
     ],
   },
 };
@@ -642,7 +682,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       subtitleStrong2: 'Pemilik Cafe',
       subtitleEnd:
         '. Dilengkapi pelacakan 100% QR Traceability, standar cupping SCA, dan integrasi sirkular ramah lingkungan.',
-      ctaRegister: 'Daftar Akun / Mulai Demo',
+      ctaRegister: 'Daftar Akun Mitra Baru',
       ctaMarketplace: 'Jelajahi B2B Marketplace',
       ctaLedger: 'Log Transaksi',
       trust1: 'Standar Penilaian SCA 100 Poin',

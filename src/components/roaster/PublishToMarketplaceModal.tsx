@@ -3,6 +3,7 @@ import { X, Store, PackagePlus } from 'lucide-react';
 import { WorkOrder } from '../../types/roasterErp';
 import { RoastedBeanLot } from '../../types/coffee';
 import { useCoffee } from '../../context/CoffeeContext';
+import { ProductImageField } from '../shared/ProductImageField';
 
 interface PublishToMarketplaceModalProps {
   isOpen: boolean;
@@ -29,6 +30,9 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
   const [restingDays, setRestingDays] = useState(10);
   const [tastingNotesInput, setTastingNotesInput] = useState('Caramel, Citrus, Brown Sugar');
   const [recommendedBrewInput, setRecommendedBrewInput] = useState('V60, Espresso');
+  const [photoUrl, setPhotoUrl] = useState(
+    'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=600&auto=format&fit=crop&q=80'
+  );
 
   if (!isOpen || !workOrder) return null;
 
@@ -42,6 +46,7 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
       pricePerPack: Number(pricePerPack),
       restingRecommendationDays: Number(restingDays),
       recommendedBrew: recommendedBrewInput.split(',').map((s) => s.trim()).filter(Boolean),
+      photoUrl: photoUrl || undefined,
     });
     if (newLot) onPublished(newLot);
   };
@@ -68,11 +73,19 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
           <p className="text-xs text-stone-500">
             Lengkapi kemasan &amp; harga jual. Setelah diterbitkan, produk ini otomatis muncul di Unified Marketplace
             dan sebuah barcode/QR silsilah akan dibuat untuk lot ini.
           </p>
+
+          {/* Dedicated Image Upload & Preview Field */}
+          <ProductImageField
+            value={photoUrl}
+            onChange={setPhotoUrl}
+            label="Foto / Gambar Biji Sangrai"
+            categoryHint="roasted_bean"
+          />
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -81,7 +94,7 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
                 type="number"
                 value={packageWeightGrams}
                 onChange={(e) => setPackageWeightGrams(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 required
               />
             </div>
@@ -91,7 +104,7 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
                 type="number"
                 value={totalPacks}
                 onChange={(e) => setTotalPacks(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 required
               />
             </div>
@@ -101,7 +114,7 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
                 type="number"
                 value={pricePerPack}
                 onChange={(e) => setPricePerPack(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 required
               />
             </div>
@@ -112,17 +125,17 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
                 step="0.1"
                 value={scaCuppingScore}
                 onChange={(e) => setScaCuppingScore(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 required
               />
             </div>
-            <div>
+            <div className="col-span-2 sm:col-span-1">
               <label className="block text-xs font-bold text-stone-700 mb-1">Resting (hari)</label>
               <input
                 type="number"
                 value={restingDays}
                 onChange={(e) => setRestingDays(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 required
               />
             </div>
@@ -134,7 +147,7 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
               type="text"
               value={tastingNotesInput}
               onChange={(e) => setTastingNotesInput(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
           </div>
 
@@ -144,11 +157,11 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
               type="text"
               value={recommendedBrewInput}
               onChange={(e) => setRecommendedBrewInput(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-100">
             <button
               type="button"
               onClick={onClose}
@@ -158,7 +171,7 @@ export const PublishToMarketplaceModal: React.FC<PublishToMarketplaceModalProps>
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-orange-500 text-white font-bold text-xs hover:bg-orange-600 flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-orange-500 text-white font-bold text-xs hover:bg-orange-600 flex items-center gap-2 shadow"
             >
               <PackagePlus className="w-4 h-4" /> Terbitkan ke Marketplace
             </button>

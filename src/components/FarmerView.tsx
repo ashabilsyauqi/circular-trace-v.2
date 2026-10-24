@@ -54,6 +54,7 @@ import { RecordBreadcrumb } from './shared/RecordBreadcrumb';
 import { FarmLocationMap, INDONESIAN_COFFEE_ORIGINS } from './shared/FarmLocationMap';
 import { VerificationStampBadge } from './shared/VerificationStampBadge';
 import { StakeholderFormsModal } from './forms/StakeholderFormsModal';
+import { ProductImageField } from './shared/ProductImageField';
 
 // 6-Stage Pipeline for Farmer Harvest Lot
 export const FARMER_LOT_STAGES: PipelineStage[] = [
@@ -176,6 +177,9 @@ export const FarmerView: React.FC = () => {
   const [pricePerKg, setPricePerKg] = useState<number>(15000);
   const [pickingCostPerKg, setPickingCostPerKg] = useState<number>(3000); // HPP upah petik
   const [notes, setNotes] = useState('');
+  const [harvestPhotoUrl, setHarvestPhotoUrl] = useState(
+    'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80'
+  );
   const [successMessage, setSuccessMessage] = useState('');
 
   // Barcode Modal State
@@ -400,6 +404,7 @@ export const FarmerView: React.FC = () => {
       pricePerKg: Number(pricePerKg),
       notes: notes || `Hasil panen ceri merah matang pohon dari ${selectedFarm?.farmName || farmLocation}.`,
       photoUrl:
+        harvestPhotoUrl ||
         selectedFarm?.photoUrl ||
         'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
     });
@@ -821,17 +826,17 @@ export const FarmerView: React.FC = () => {
                   {farmViewMode === 'table' && (
                     <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                        <table className="w-full text-left text-xs whitespace-nowrap min-w-[950px]">
                           <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
                             <tr>
-                              <th className="py-3.5 px-4">ID Kebun</th>
-                              <th className="py-3.5 px-4">Nama Lahan &amp; Lokasi</th>
-                              <th className="py-3.5 px-4">Elevasi mdpl</th>
-                              <th className="py-3.5 px-4">Kondisi Cuaca Mikro</th>
-                              <th className="py-3.5 px-4">Varietas &amp; Jenis Tanah</th>
-                              <th className="py-3.5 px-4">Luas &amp; Populasi</th>
-                              <th className="py-3.5 px-4">EUDR Maps</th>
-                              <th className="py-3.5 px-4 text-right">Aksi</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">ID Kebun</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Nama Lahan & Lokasi</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Elevasi</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Cuaca Mikro</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Varietas & Tanah</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Luas & Populasi</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">EUDR Maps</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap text-right">Aksi</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-stone-100">
@@ -841,50 +846,50 @@ export const FarmerView: React.FC = () => {
                                 onClick={() => handleOpenFarmWorksheet(farm)}
                                 className="hover:bg-emerald-50/40 cursor-pointer transition-colors"
                               >
-                                <td className="py-3 px-4 font-mono font-bold text-stone-900">
+                                <td className="py-3 px-4 font-mono font-bold text-stone-900 whitespace-nowrap">
                                   {farm.id}
                                 </td>
-                                <td className="py-3 px-4">
-                                  <div className="font-bold text-stone-900">{farm.farmName}</div>
-                                  <div className="text-[11px] text-stone-500">{farm.location} • {farm.province}</div>
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <div className="font-bold text-stone-900 whitespace-nowrap">{farm.farmName}</div>
+                                  <div className="text-[11px] text-stone-500 whitespace-nowrap">{farm.location} • {farm.province}</div>
                                 </td>
-                                <td className="py-3 px-4">
-                                  <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 whitespace-nowrap">
                                     {farm.altitudeDisplay}
                                   </span>
                                 </td>
-                                <td className="py-3 px-4">
-                                  <div className="flex items-center gap-1.5 font-semibold text-stone-800">
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <div className="flex items-center gap-1.5 font-semibold text-stone-800 whitespace-nowrap">
                                     {renderWeatherIcon(farm.weatherData.currentCondition, 'w-3.5 h-3.5')}
                                     <span>{farm.weatherData.currentCondition}</span>
                                   </div>
-                                  <div className="text-[11px] text-stone-500 font-mono">
+                                  <div className="text-[11px] text-stone-500 font-mono whitespace-nowrap">
                                     {farm.weatherData.temperatureCelsius}°C • {farm.weatherData.humidityPercent}% RH
                                   </div>
                                 </td>
-                                <td className="py-3 px-4">
-                                  <div className="font-medium text-stone-900 truncate max-w-[160px]">
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <div className="font-medium text-stone-900 whitespace-nowrap">
                                     {farm.primaryVarieties.join(', ')}
                                   </div>
-                                  <div className="text-[11px] text-stone-500">{farm.soilType}</div>
+                                  <div className="text-[11px] text-stone-500 whitespace-nowrap">{farm.soilType}</div>
                                 </td>
-                                <td className="py-3 px-4">
-                                  <span className="font-bold text-stone-900">{farm.landAreaHectares} Ha</span>
-                                  <span className="text-stone-400 text-[11px]"> (~{farm.totalTreesCount.toLocaleString()} phn)</span>
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <span className="font-bold text-stone-900 whitespace-nowrap">{farm.landAreaHectares} Ha</span>
+                                  <span className="text-stone-400 text-[11px] whitespace-nowrap"> (~{farm.totalTreesCount.toLocaleString()} phn)</span>
                                 </td>
-                                <td className="py-3 px-4">
-                                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold inline-flex items-center gap-1">
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold inline-flex items-center gap-1 whitespace-nowrap">
                                     <ShieldCheck className="w-3 h-3" /> Maps OK
                                   </span>
                                 </td>
-                                <td className="py-3 px-4 text-right">
+                                <td className="py-3 px-4 text-right whitespace-nowrap">
                                   <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleOpenFarmWorksheet(farm);
                                     }}
-                                    className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                   >
                                     <span>Lembar Kerja</span>
                                     <ChevronRight className="w-3 h-3" />
@@ -1182,6 +1187,16 @@ export const FarmerView: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Dedicated Photo Upload & Preview for Harvest Cherry */}
+                <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-200/80">
+                  <ProductImageField
+                    value={harvestPhotoUrl}
+                    onChange={setHarvestPhotoUrl}
+                    label="Foto / Gambar Hasil Panen Ceri (Kamera HP / Upload / Preset)"
+                    categoryHint="cherry"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
                     Catatan Karakter Kebun, Pohon &amp; Cuaca Saat Petik
@@ -1261,19 +1276,19 @@ export const FarmerView: React.FC = () => {
                   {viewMode === 'table' && (
                     <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                        <table className="w-full text-left text-xs whitespace-nowrap min-w-[1050px]">
                           <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
                             <tr>
-                              <th className="py-3.5 px-4">ID Lot Panen</th>
-                              <th className="py-3.5 px-4">Varietas &amp; Kebun Asal</th>
-                              <th className="py-3.5 px-4">Tgl Panen</th>
-                              <th className="py-3.5 px-4">Ketinggian &amp; Cuaca</th>
-                              <th className="py-3.5 px-4">Kemanisan Brix</th>
-                              <th className="py-3.5 px-4">Stok Tersedia</th>
-                              <th className="py-3.5 px-4">Harga Penawaran</th>
-                              <th className="py-3.5 px-4">Tahap Kerja</th>
-                              <th className="py-3.5 px-4">Audit Mutu</th>
-                              <th className="py-3.5 px-4 text-right">Aksi Lembar Kerja</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">ID Lot Panen</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Varietas & Kebun</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Tgl Panen</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Ketinggian & Cuaca</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Kemanisan Brix</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Stok Tersedia</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Harga / Kg</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Audit Mutu</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap text-right">Aksi</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-stone-100">
@@ -1285,66 +1300,66 @@ export const FarmerView: React.FC = () => {
                                   onClick={() => handleOpenLotWorksheet(lot)}
                                   className="hover:bg-emerald-50/40 cursor-pointer transition-colors group"
                                 >
-                                  <td className="py-3 px-4 font-mono font-bold text-stone-900 group-hover:text-emerald-700">
+                                  <td className="py-3 px-4 font-mono font-bold text-stone-900 group-hover:text-emerald-700 whitespace-nowrap">
                                     {lot.id}
                                   </td>
-                                  <td className="py-3 px-4">
-                                    <div className="font-bold text-stone-900">{lot.variety}</div>
-                                    <div className="text-[11px] text-stone-500">
+                                  <td className="py-3 px-4 whitespace-nowrap">
+                                    <div className="font-bold text-stone-900 whitespace-nowrap">{lot.variety}</div>
+                                    <div className="text-[11px] text-stone-500 whitespace-nowrap">
                                       {lot.farmName ? `${lot.farmName} • ` : ''}{lot.farmLocation}
                                     </div>
                                   </td>
-                                  <td className="py-3 px-4 text-stone-700 font-medium">
+                                  <td className="py-3 px-4 text-stone-700 font-medium whitespace-nowrap">
                                     {lot.harvestDate}
                                   </td>
-                                  <td className="py-3 px-4">
-                                    <div className="font-bold text-stone-800">{lot.altitude}</div>
+                                  <td className="py-3 px-4 whitespace-nowrap">
+                                    <div className="font-bold text-stone-800 whitespace-nowrap">{lot.altitude}</div>
                                     {lot.weatherSnapshot ? (
-                                      <div className="text-[11px] text-stone-500 flex items-center gap-1">
+                                      <div className="text-[11px] text-stone-500 flex items-center gap-1 whitespace-nowrap">
                                         {renderWeatherIcon(lot.weatherSnapshot.currentCondition, 'w-3 h-3')}
                                         <span>{lot.weatherSnapshot.temperatureCelsius}°C</span>
                                       </div>
                                     ) : (
-                                      <span className="text-[11px] text-stone-400">EUDR GPS OK</span>
+                                      <span className="text-[11px] text-stone-400 whitespace-nowrap">EUDR GPS OK</span>
                                     )}
                                   </td>
-                                  <td className="py-3 px-4">
-                                    <span className="font-black text-emerald-700">{lot.brix}° Brix</span>
+                                  <td className="py-3 px-4 whitespace-nowrap">
+                                    <span className="font-black text-emerald-700 whitespace-nowrap">{lot.brix}° Brix</span>
                                   </td>
-                                  <td className="py-3 px-4">
-                                    <span className="font-bold text-stone-900">{lot.availableWeightKg}</span>
-                                    <span className="text-stone-400 text-[11px]"> / {lot.totalWeightKg} kg</span>
+                                  <td className="py-3 px-4 whitespace-nowrap">
+                                    <span className="font-bold text-stone-900 whitespace-nowrap">{lot.availableWeightKg}</span>
+                                    <span className="text-stone-400 text-[11px] whitespace-nowrap"> / {lot.totalWeightKg} kg</span>
                                   </td>
-                                  <td className="py-3 px-4 font-bold text-stone-900">
-                                    Rp {lot.pricePerKg.toLocaleString()} / kg
+                                  <td className="py-3 px-4 font-bold text-stone-900 whitespace-nowrap">
+                                    Rp {lot.pricePerKg.toLocaleString()}
                                   </td>
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     {isAvailable ? (
-                                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold whitespace-nowrap">
                                         Siap Jual
                                       </span>
                                     ) : (
-                                      <span className="px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-bold">
+                                      <span className="px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-bold whitespace-nowrap">
                                         Terjual
                                       </span>
                                     )}
                                   </td>
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     <VerificationStampBadge
                                       stamp={lot.verificationStamp}
                                       status={lot.verificationStatus}
                                       size="sm"
                                     />
                                   </td>
-                                  <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex items-center justify-end gap-1.5">
+                                  <td className="py-3 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                                       <button
                                         type="button"
                                         onClick={() => {
                                           setSelectedBarcodeLot(lot);
                                           setIsNewUpload(false);
                                         }}
-                                        className="px-2 py-1 rounded-lg bg-stone-100 hover:bg-emerald-100 text-stone-700 hover:text-emerald-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                        className="px-2 py-1 rounded-lg bg-stone-100 hover:bg-emerald-100 text-stone-700 hover:text-emerald-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                       >
                                         <QrCode className="w-3 h-3" />
                                         Barcode
@@ -1352,7 +1367,7 @@ export const FarmerView: React.FC = () => {
                                       <button
                                         type="button"
                                         onClick={() => handleOpenLotWorksheet(lot)}
-                                        className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                        className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                       >
                                         <span>Lembar Kerja</span>
                                         <ChevronRight className="w-3 h-3" />

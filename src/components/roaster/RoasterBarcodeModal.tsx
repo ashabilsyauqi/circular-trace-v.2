@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import { X, Printer, Copy, Check, ExternalLink, Flame, MapPin, ShieldCheck } from 'lucide-react';
 import { RoastedBeanLot } from '../../types/coffee';
 import { getNetworkHost, getPublicBaseUrl } from '../../utils/baseUrl';
+import { BarcodeSocialShare } from '../shared/BarcodeSocialShare';
 
 interface RoasterBarcodeModalProps {
   isOpen: boolean;
@@ -108,6 +109,16 @@ export const RoasterBarcodeModal: React.FC<RoasterBarcodeModalProps> = ({ isOpen
               </p>
             </div>
           </div>
+
+          {/* Social Media Share Section */}
+          <BarcodeSocialShare
+            url={realtimeScanUrl}
+            title={`Biji Sangrai Artisan #${lot.id} (${lot.origin} - ${lot.variety})`}
+            lotId={lot.id}
+            variety={lot.variety}
+            origin={lot.origin}
+            actorRole="roaster"
+          />
 
           <div className="flex items-center gap-2 p-2.5 rounded-xl bg-stone-50 border border-stone-200 print:hidden">
             <span className="text-[11px] font-mono text-stone-600 truncate flex-1 pl-1">{realtimeScanUrl}</span>

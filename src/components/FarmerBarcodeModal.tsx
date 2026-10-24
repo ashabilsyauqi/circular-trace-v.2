@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { FarmerHarvestLot } from '../types/coffee';
 import { getNetworkHost, getPublicBaseUrl, isLoopbackHost, saveNetworkHost } from '../utils/baseUrl';
+import { BarcodeSocialShare } from './shared/BarcodeSocialShare';
 
 interface FarmerBarcodeModalProps {
   isOpen: boolean;
@@ -212,6 +213,16 @@ export const FarmerBarcodeModal: React.FC<FarmerBarcodeModalProps> = ({
               </span>
             </div>
           </div>
+
+          {/* Social Media Share Section */}
+          <BarcodeSocialShare
+            url={realtimeScanUrl}
+            title={`Lot Ceri Kopi #${lot.id} - ${lot.variety}`}
+            lotId={lot.id}
+            variety={lot.variety}
+            origin={lot.farmLocation}
+            actorRole="petani"
+          />
 
           {/* Realtime URL & Wi-Fi IP Info Box */}
           <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-950 space-y-2 print:hidden">

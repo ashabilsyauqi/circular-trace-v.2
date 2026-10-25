@@ -494,67 +494,209 @@ export const VerifierView: React.FC = () => {
         </div>
       </div>
 
-      {/* Domain Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-stone-200/80 pb-3">
-        {[
-          { id: 'petani', label: '1. Petani & Kebun', icon: MapPin },
-          { id: 'pengolah', label: '2. Pengolah (Mill)', icon: Award },
-          { id: 'gudang', label: '3. Gudang & Ekspor', icon: FileCheck2 },
-          { id: 'roaster', label: '4. Roastery & Lab Cupping', icon: Coffee, highlight: true },
-          { id: 'cafe', label: '5. Kafe & Bar', icon: CheckCircle2 },
-          { id: 'history', label: 'Riwayat Stempel', icon: Layers },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeDomain === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setVerifierActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-                isActive
-                  ? 'bg-[#23140D] text-amber-300 border border-amber-500/50 shadow-xs'
-                  : 'bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 border border-stone-200/90'
-              } ${tab.highlight && !isActive ? 'ring-1 ring-amber-400/70' : ''}`}
-            >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-amber-400' : tab.highlight ? 'text-amber-600' : 'text-stone-500'}`} />
-              <span className="whitespace-nowrap">{tab.label}</span>
-              {tab.highlight && (
-                <span className={`px-1.5 py-0.2 rounded text-[10px] font-black uppercase whitespace-nowrap shrink-0 ${
-                  isActive ? 'bg-amber-400 text-stone-950' : 'bg-amber-100 text-amber-900 border border-amber-300'
-                }`}>
-                  Wajib Cicip
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Search and Filters Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-stone-200/90 shadow-2xs">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-          <input
-            type="text"
-            placeholder="Cari ID lot, nama kebun, varietas..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-          />
+      {/* Domain Navigation Grid (Responsive Big Cards Container) */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs font-black uppercase tracking-wider text-stone-600 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-600" />
+            Pilih Stasiun Layanan Rantai Pasok Kopi untuk Diaudit:
+          </span>
+          <span className="text-xs text-stone-400 font-medium hidden sm:inline">
+            6 Stasiun &amp; Layanan Terintegrasi
+          </span>
         </div>
 
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+          {[
+            {
+              id: 'petani',
+              step: 'TAHAP 1',
+              label: 'Petani & Kebun',
+              subtitle: 'Uji Brix & Lahan EUDR',
+              icon: MapPin,
+              count: `${farmerLots.length + coffeeFarms.length} Item`,
+              pending: farmerLots.filter((l) => l.verificationStatus === 'pending').length + coffeeFarms.filter((f) => f.verificationStatus === 'pending').length,
+            },
+            {
+              id: 'pengolah',
+              step: 'TAHAP 2',
+              label: 'Pengolah (Mill)',
+              subtitle: 'Kadar Air & Sortasi Biji',
+              icon: Award,
+              count: `${processedLots.length} Lot GB`,
+              pending: processedLots.filter((p) => p.verificationStatus === 'pending').length,
+            },
+            {
+              id: 'gudang',
+              step: 'TAHAP 3',
+              label: 'Gudang & Ekspor',
+              subtitle: 'Suhu, RH & Hermetik',
+              icon: FileCheck2,
+              count: `${warehouseLots.length} Lot Gudang`,
+              pending: warehouseLots.filter((w) => w.verificationStatus === 'pending').length,
+            },
+            {
+              id: 'roaster',
+              step: 'TAHAP 4',
+              label: 'Roastery Lab',
+              subtitle: 'Sensori 10 Atribut SCA',
+              icon: Coffee,
+              highlight: true,
+              highlightText: 'Wajib Cicip',
+              count: `${roastedLots.length} Lot Sangrai`,
+              pending: roastedLots.filter((r) => r.verificationStatus === 'pending').length,
+            },
+            {
+              id: 'cafe',
+              step: 'TAHAP 5',
+              label: 'Kafe & Bar',
+              subtitle: 'Standar Barista & FIFO',
+              icon: CheckCircle2,
+              count: `${cafeProducts.length} Menu Bar`,
+              pending: cafeProducts.filter((c) => c.verificationStatus === 'pending').length,
+            },
+            {
+              id: 'history',
+              step: 'LEDGER',
+              label: 'Riwayat Stempel',
+              subtitle: 'Audit Kriptografis Sah',
+              icon: Layers,
+              count: `${verificationStamps.length} Stempel`,
+              pending: 0,
+            },
+          ].map((card) => {
+            const Icon = card.icon;
+            const isActive = activeDomain === card.id;
+            return (
+              <button
+                key={card.id}
+                type="button"
+                onClick={() => setVerifierActiveTab(card.id as any)}
+                className={`text-left p-3.5 sm:p-4 rounded-2xl transition-all duration-200 cursor-pointer flex flex-col justify-between relative group ${
+                  isActive
+                    ? 'bg-[#1C120C] text-white border-2 border-amber-500 shadow-lg ring-2 ring-amber-500/25 scale-[1.02]'
+                    : 'bg-white hover:bg-stone-50 text-stone-800 border border-stone-200/90 hover:border-amber-400 hover:shadow-xs'
+                }`}
+              >
+                {/* Top header inside card: Step + Highlight / Pending Badge */}
+                <div className="flex items-center justify-between gap-1 w-full mb-3">
+                  <span
+                    className={`text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      isActive
+                        ? 'bg-amber-400 text-stone-950 shadow-2xs'
+                        : 'bg-stone-100 text-stone-600 border border-stone-200'
+                    }`}
+                  >
+                    {card.step}
+                  </span>
+
+                  {card.highlight && (
+                    <span
+                      className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-2xs whitespace-nowrap animate-pulse ${
+                        isActive
+                          ? 'bg-amber-500 text-stone-950 font-black'
+                          : 'bg-amber-100 text-amber-900 border border-amber-300'
+                      }`}
+                    >
+                      {card.highlightText}
+                    </span>
+                  )}
+
+                  {!card.highlight && card.pending > 0 && (
+                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-500 text-white whitespace-nowrap">
+                      {card.pending} Pending
+                    </span>
+                  )}
+                </div>
+
+                {/* Card Icon & Title */}
+                <div className="space-y-1.5 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                        isActive
+                          ? 'bg-amber-400 text-stone-950 shadow-xs'
+                          : 'bg-stone-100 text-stone-700 group-hover:bg-amber-100 group-hover:text-amber-900'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <h3
+                      className={`font-black text-xs sm:text-sm leading-tight transition-colors line-clamp-1 ${
+                        isActive ? 'text-white' : 'text-stone-900 group-hover:text-amber-900'
+                      }`}
+                    >
+                      {card.label}
+                    </h3>
+                  </div>
+
+                  <p
+                    className={`text-[11px] leading-tight line-clamp-1 ${
+                      isActive ? 'text-stone-300' : 'text-stone-500'
+                    }`}
+                  >
+                    {card.subtitle}
+                  </p>
+                </div>
+
+                {/* Bottom Status / Count */}
+                <div
+                  className={`pt-2 border-t flex items-center justify-between text-[11px] font-bold ${
+                    isActive
+                      ? 'border-white/15 text-amber-300'
+                      : 'border-stone-100 text-stone-600 group-hover:text-stone-900'
+                  }`}
+                >
+                  <span className="text-[10.5px] truncate font-medium">{card.count}</span>
+                  {isActive ? (
+                    <span className="flex items-center gap-1 text-[10px] uppercase font-black tracking-wide text-amber-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                      Aktif
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-stone-400 group-hover:text-amber-700 transition-colors">
+                      Pilih &rarr;
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Search and Filters Bar with Active Scope Indicator */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:p-4 bg-white rounded-2xl border border-stone-200/90 shadow-2xs">
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-stone-400" />
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 cursor-pointer"
-          >
-            <option value="all">Semua Status Audit</option>
-            <option value="pending">Menunggu Audit</option>
-            <option value="verified">Sudah Terverifikasi</option>
-            <option value="unverified">Belum Diverifikasi</option>
-          </select>
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+            <input
+              type="text"
+              placeholder="Cari ID lot, nama kebun, varietas..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex items-center gap-1.5 text-xs text-stone-500 font-semibold hidden md:flex">
+            <span>Filter:</span>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Filter className="w-4 h-4 text-stone-400 shrink-0" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as any)}
+              className="w-full sm:w-auto px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 cursor-pointer"
+            >
+              <option value="all">Semua Status Audit</option>
+              <option value="pending">Menunggu Audit</option>
+              <option value="verified">Sudah Terverifikasi</option>
+              <option value="unverified">Belum Diverifikasi</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -716,47 +858,79 @@ export const VerifierView: React.FC = () => {
       {/* TAB CONTENT: PETANI (HASIL PANEN CERI & LAHAN EUDR) */}
       {activeDomain === 'petani' && (
         <div className="space-y-6">
-          {/* Sub-tab Switcher: Panen Ceri vs Lahan Kebun */}
-          <div className="flex items-center gap-2 p-1.5 bg-stone-100 rounded-2xl max-w-md border border-stone-200/80">
+          {/* Sub-section Switcher (Responsive Grid Cards) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
             <button
+              type="button"
               onClick={() => setFarmerSubSection('harvest')}
-              className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${
                 farmerSubSection === 'harvest'
-                  ? 'bg-emerald-700 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-emerald-800 text-white border-emerald-600 shadow-md ring-2 ring-emerald-500/25'
+                  : 'bg-white hover:bg-stone-50 text-stone-800 border-stone-200 hover:border-emerald-300 shadow-2xs'
               }`}
             >
-              <Sprout className="w-4 h-4" />
-              <span>Hasil Panen Ceri</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    farmerSubSection === 'harvest'
+                      ? 'bg-white text-emerald-800 font-bold'
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  }`}
+                >
+                  <Sprout className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="font-bold text-xs sm:text-sm truncate">1. Hasil Panen Ceri</h4>
+                  <p className={`text-[11px] truncate ${farmerSubSection === 'harvest' ? 'text-emerald-200' : 'text-stone-500'}`}>
+                    Uji Brix Refraktometer &amp; Petik Merah
+                  </p>
+                </div>
+              </div>
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                className={`px-2 py-1 rounded-full text-xs font-black shrink-0 ${
                   farmerSubSection === 'harvest'
-                    ? 'bg-emerald-800 text-white'
-                    : 'bg-stone-200 text-stone-700'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
                 }`}
               >
-                {farmerLots.length}
+                {farmerLots.length} Lot
               </span>
             </button>
 
             <button
+              type="button"
               onClick={() => setFarmerSubSection('farms')}
-              className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${
                 farmerSubSection === 'farms'
-                  ? 'bg-emerald-700 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-emerald-800 text-white border-emerald-600 shadow-md ring-2 ring-emerald-500/25'
+                  : 'bg-white hover:bg-stone-50 text-stone-800 border-stone-200 hover:border-emerald-300 shadow-2xs'
               }`}
             >
-              <MapPin className="w-4 h-4" />
-              <span>Lahan &amp; Kebun EUDR</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    farmerSubSection === 'farms'
+                      ? 'bg-white text-emerald-800 font-bold'
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  }`}
+                >
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="font-bold text-xs sm:text-sm truncate">2. Lahan &amp; Kebun EUDR</h4>
+                  <p className={`text-[11px] truncate ${farmerSubSection === 'farms' ? 'text-emerald-200' : 'text-stone-500'}`}>
+                    Patok BPN &amp; Bebas Deforestasi
+                  </p>
+                </div>
+              </div>
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                className={`px-2 py-1 rounded-full text-xs font-black shrink-0 ${
                   farmerSubSection === 'farms'
-                    ? 'bg-emerald-800 text-white'
-                    : 'bg-stone-200 text-stone-700'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
                 }`}
               >
-                {coffeeFarms.length}
+                {coffeeFarms.length} Kebun
               </span>
             </button>
           </div>

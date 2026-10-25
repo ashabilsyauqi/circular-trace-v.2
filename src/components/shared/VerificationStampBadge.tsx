@@ -121,10 +121,10 @@ export const VerificationStampBadge: React.FC<VerificationStampBadgeProps> = ({
         };
       default:
         return {
-          bg: 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700/60',
-          gradient: 'from-purple-600 to-indigo-700',
+          bg: 'bg-amber-500/10 text-amber-900 border-amber-300',
+          gradient: 'from-[#1C120C] via-[#2F1A11] to-[#1C120C]',
           icon: ShieldCheck,
-          label: 'Verified',
+          label: 'Sah Terverifikasi',
         };
     }
   };

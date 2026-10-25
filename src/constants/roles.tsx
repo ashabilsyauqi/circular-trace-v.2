@@ -63,8 +63,8 @@ export const ROLE_DETAILS: Record<
   },
   verifikator: {
     label: 'Verifikator QA',
-    badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
-    icon: <ShieldCheck className="w-4 h-4 text-purple-700" />,
+    badgeClass: 'bg-amber-100 text-amber-950 border-amber-300 font-bold',
+    icon: <ShieldCheck className="w-4 h-4 text-amber-600" />,
     description: 'Audit lahan EUDR, sertifikasi olahan, uji gudang, cupping sensori roast, & stempel mutu resmi',
   },
   superadmin: {

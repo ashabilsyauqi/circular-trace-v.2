@@ -323,6 +323,124 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
+          {/* Quick Demo Credentials Bar for Testing */}
+          <div className="pt-3 border-t border-stone-200/80">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+                ⚡ Akun Uji Coba (Klik untuk Isi Cepat):
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailInput('verifikator@circulartrace.com');
+                  setPasswordInput('password123');
+                }}
+                className="p-2 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-950 font-semibold text-left transition-all cursor-pointer flex items-center justify-between group"
+                title="Login sebagai Auditor / Verifikator"
+              >
+                <div>
+                  <span className="block text-[11px] font-black text-amber-950">🛡️ Verifikator (Audit)</span>
+                  <span className="block text-[10px] text-amber-800 font-mono">verifikator</span>
+                </div>
+                <span className="text-[10px] text-amber-600 font-bold group-hover:translate-x-0.5 transition-transform">→</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailInput('petani@circulartrace.com');
+                  setPasswordInput('password123');
+                }}
+                className="p-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 font-semibold text-left transition-all cursor-pointer flex items-center justify-between group"
+                title="Login sebagai Petani Kopi"
+              >
+                <div>
+                  <span className="block text-[11px] font-black text-emerald-900">🌱 Petani (Kebun)</span>
+                  <span className="block text-[10px] text-emerald-700 font-mono">petani</span>
+                </div>
+                <span className="text-[10px] text-emerald-500 font-bold group-hover:translate-x-0.5 transition-transform">→</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailInput('pengolah@circulartrace.com');
+                  setPasswordInput('password123');
+                }}
+                className="p-2 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-950 font-semibold text-left transition-all cursor-pointer flex items-center justify-between group"
+                title="Login sebagai Stasiun Pengolah (Mill)"
+              >
+                <div>
+                  <span className="block text-[11px] font-black text-amber-900">⚙️ Pengolah (Mill)</span>
+                  <span className="block text-[10px] text-amber-700 font-mono">pengolah</span>
+                </div>
+                <span className="text-[10px] text-amber-500 font-bold group-hover:translate-x-0.5 transition-transform">→</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailInput('gudang@circulartrace.com');
+                  setPasswordInput('password123');
+                }}
+                className="p-2 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-950 font-semibold text-left transition-all cursor-pointer flex items-center justify-between group"
+                title="Login sebagai Gudang & Logistik"
+              >
+                <div>
+                  <span className="block text-[11px] font-black text-blue-900">🏢 Gudang (Logistik)</span>
+                  <span className="block text-[10px] text-blue-700 font-mono">gudang</span>
+                </div>
+                <span className="text-[10px] text-blue-500 font-bold group-hover:translate-x-0.5 transition-transform">→</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailInput('roaster@circulartrace.com');
+                  setPasswordInput('password123');
+                }}
+                className="p-2 rounded-xl border border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-950 font-semibold text-left transition-all cursor-pointer flex items-center justify-between group"
+                title="Login sebagai Roaster"
+              >
+                <div>
+                  <span className="block text-[11px] font-black text-orange-900">🔥 Roaster (Sangrai)</span>
+                  <span className="block text-[10px] text-orange-700 font-mono">roaster</span>
+                </div>
+                <span className="text-[10px] text-orange-500 font-bold group-hover:translate-x-0.5 transition-transform">→</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailInput('cafe@circulartrace.com');
+                  setPasswordInput('password123');
+                }}
+                className="p-2 rounded-xl border border-stone-200 bg-stone-100 hover:bg-stone-200 text-stone-900 font-semibold text-left transition-all cursor-pointer flex items-center justify-between group"
+                title="Login sebagai Kafe & Barista"
+              >
+                <div>
+                  <span className="block text-[11px] font-black text-stone-900">☕ Kafe (Seduh)</span>
+                  <span className="block text-[10px] text-stone-600 font-mono">cafe</span>
+                </div>
+                <span className="text-[10px] text-stone-500 font-bold group-hover:translate-x-0.5 transition-transform">→</span>
+              </button>
+            </div>
+            <div className="mt-2 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailInput('novizar@circulartrace.com');
+                  setPasswordInput('@Circulartrace2026#');
+                }}
+                className="text-[11px] text-stone-500 hover:text-amber-800 underline underline-offset-2 cursor-pointer font-medium"
+              >
+                👑 Isi Kredensial Super Admin (Novizar)
+              </button>
+            </div>
+          </div>
+
           {/* Minimalist Footer Links */}
           <div className="pt-4 border-t border-stone-200/70 flex flex-col items-center gap-3 text-xs text-stone-500">
             <p>

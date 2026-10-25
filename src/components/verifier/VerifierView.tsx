@@ -387,37 +387,37 @@ export const VerifierView: React.FC = () => {
       title: 'Verifikasi Lahan & Kebun Petani (EUDR)',
       subtitle: 'Audit Geolokasi, 100% Bebas Deforestasi & Good Agricultural Practices (GAP)',
       icon: MapPin,
-      color: 'from-emerald-600 to-teal-700',
+      color: 'from-[#143424] via-[#1B4332] to-[#0E2419]',
     },
     pengolah: {
       title: 'Verifikasi Stasiun Pengolahan (Mill QA)',
       subtitle: 'Audit Zero Waste, Standar Fermentasi, Kadar Air & Sortasi Biji Hijau',
       icon: Award,
-      color: 'from-cyan-600 to-blue-700',
+      color: 'from-[#2A170E] via-[#432314] to-[#1C100A]',
     },
     gudang: {
       title: 'Verifikasi Gudang & Pergudangan Ekspor',
       subtitle: 'Audit Suhu, RH, Kemasan Hermetik, Green Bean Grading & Standard SCA',
       icon: FileCheck2,
-      color: 'from-indigo-600 to-purple-700',
+      color: 'from-[#1D242B] via-[#2D3742] to-[#161C22]',
     },
     roaster: {
       title: 'Lab Uji Cicip Sensori SCA & Roastery Audit',
       subtitle: 'Tugas Utama: Mencicipi (Cupping) Biji Sangrai & Menilai 10 Atribut Specialty SCA',
       icon: Coffee,
-      color: 'from-amber-600 to-amber-800',
+      color: 'from-[#23120B] via-[#422114] to-[#1A0D07]',
     },
     cafe: {
       title: 'Verifikasi Higienitas & Specialty Bar Kafe',
       subtitle: 'Audit Kalibrasi Ekstraksi Espresso, Manajemen FIFO Biji & Higienitas Bar',
       icon: CheckCircle2,
-      color: 'from-rose-600 to-pink-700',
+      color: 'from-[#2E1513] via-[#4A221E] to-[#1E0D0C]',
     },
     all: {
       title: 'Dewan Audit & Verifikasi Nasional',
       subtitle: 'Semua domain rantai pasok kopi dari hulu ke hilir',
       icon: ShieldCheck,
-      color: 'from-purple-600 to-indigo-800',
+      color: 'from-[#1C120C] via-[#2F1A11] to-[#140D09]',
     },
   };
 
@@ -429,42 +429,42 @@ export const VerifierView: React.FC = () => {
       {/* Toast Notification */}
       {notification && (
         <div
-          className={`fixed bottom-6 right-6 z-50 p-4 rounded-xl shadow-2xl flex items-center gap-3 border ${
+          className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-2xl flex items-center gap-3 border ${
             notification.type === 'success'
-              ? 'bg-emerald-600 text-white border-emerald-500'
-              : 'bg-rose-600 text-white border-rose-500'
+              ? 'bg-emerald-700 text-white border-emerald-600'
+              : 'bg-rose-700 text-white border-rose-600'
           }`}
         >
           <CheckCircle2 className="w-5 h-5 text-white" />
-          <span className="text-sm font-semibold">{notification.message}</span>
+          <span className="text-sm font-bold">{notification.message}</span>
         </div>
       )}
 
-      {/* Verifier Hero Banner */}
-      <div className={`p-6 sm:p-8 rounded-2xl bg-gradient-to-r ${currentDomainInfo.color} text-white shadow-xl relative overflow-hidden`}>
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+      {/* Verifier Hero Banner (Coffee Espresso Prestige Theme) */}
+      <div className={`p-6 sm:p-8 rounded-3xl bg-gradient-to-r ${currentDomainInfo.color} text-white shadow-xl relative overflow-hidden border border-amber-900/40`}>
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-semibold uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4 text-amber-300" />
-              Portal Dewan Verifikator & Auditor Kualitas
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold uppercase tracking-wider text-amber-300">
+              <ShieldCheck className="w-4 h-4 text-amber-400" />
+              Portal Dewan Verifikator &amp; Auditor Kualitas
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{currentDomainInfo.title}</h1>
-            <p className="text-white/90 text-sm max-w-2xl">{currentDomainInfo.subtitle}</p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">{currentDomainInfo.title}</h1>
+            <p className="text-stone-300 text-xs sm:text-sm max-w-2xl">{currentDomainInfo.subtitle}</p>
 
             {currentUser && (
-              <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-white/80">
+              <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-stone-300">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <UserCheck className="w-3.5 h-3.5 text-amber-300" />
-                  Auditor: <strong className="text-white">{currentUser.name}</strong>
+                  <UserCheck className="w-3.5 h-3.5 text-amber-400" />
+                  Auditor: <strong className="text-white font-bold">{currentUser.name}</strong>
                 </span>
                 <span className="flex items-center gap-1.5 font-medium">
-                  <Building className="w-3.5 h-3.5 text-amber-300" />
-                  Lembaga: <strong className="text-white">{currentUser.organization}</strong>
+                  <Building className="w-3.5 h-3.5 text-amber-400" />
+                  Lembaga: <strong className="text-white font-bold">{currentUser.organization}</strong>
                 </span>
                 {currentUser.verifierDomain && (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-900 font-bold uppercase text-[10px]">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-stone-950 font-black uppercase text-[10px] shadow-2xs">
                     Spesialis {currentUser.verifierDomain}
                   </span>
                 )}
@@ -474,28 +474,28 @@ export const VerifierView: React.FC = () => {
 
           {/* Key Metrics Badges */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/15 text-center">
-              <div className="text-2xl font-black text-white">{stats.totalVerified}</div>
-              <div className="text-[11px] text-white/80 font-medium">Lot Terverifikasi</div>
+            <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
+              <div className="text-2xl font-black text-amber-200">{stats.totalVerified}</div>
+              <div className="text-[11px] text-stone-300 font-bold">Lot Terverifikasi</div>
             </div>
-            <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/15 text-center">
-              <div className="text-2xl font-black text-amber-300">{stats.pendingTotal}</div>
-              <div className="text-[11px] text-white/80 font-medium">Menunggu Uji</div>
+            <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
+              <div className="text-2xl font-black text-amber-400">{stats.pendingTotal}</div>
+              <div className="text-[11px] text-stone-300 font-bold">Menunggu Uji</div>
             </div>
-            <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/15 text-center">
+            <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
               <div className="text-2xl font-black text-emerald-300">{stats.avgCuppingScore}</div>
-              <div className="text-[11px] text-white/80 font-medium">Rata-rata SCA</div>
+              <div className="text-[11px] text-stone-300 font-bold">Rata-rata SCA</div>
             </div>
-            <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/15 text-center">
+            <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
               <div className="text-2xl font-black text-white">{stats.totalStamps}</div>
-              <div className="text-[11px] text-white/80 font-medium">Stempel Sah</div>
+              <div className="text-[11px] text-stone-300 font-bold">Stempel Sah</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Domain Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-stone-200/80 pb-3">
         {[
           { id: 'petani', label: '1. Petani & Kebun', icon: MapPin },
           { id: 'pengolah', label: '2. Pengolah (Mill)', icon: Award },
@@ -510,16 +510,18 @@ export const VerifierView: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setVerifierActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20 font-semibold'
-                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
-              } ${tab.highlight && !isActive ? 'ring-1 ring-amber-400/60 dark:ring-amber-500/50' : ''}`}
+                  ? 'bg-[#23140D] text-amber-300 border border-amber-500/50 shadow-xs'
+                  : 'bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 border border-stone-200/90'
+              } ${tab.highlight && !isActive ? 'ring-1 ring-amber-400/70' : ''}`}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : tab.highlight ? 'text-amber-500' : 'text-slate-500'}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-amber-400' : tab.highlight ? 'text-amber-600' : 'text-stone-500'}`} />
               <span className="whitespace-nowrap">{tab.label}</span>
               {tab.highlight && (
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-400 text-slate-900 uppercase whitespace-nowrap shrink-0">
+                <span className={`px-1.5 py-0.2 rounded text-[10px] font-black uppercase whitespace-nowrap shrink-0 ${
+                  isActive ? 'bg-amber-400 text-stone-950' : 'bg-amber-100 text-amber-900 border border-amber-300'
+                }`}>
                   Wajib Cicip
                 </span>
               )}
@@ -529,24 +531,24 @@ export const VerifierView: React.FC = () => {
       </div>
 
       {/* Search and Filters Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-stone-200/90 shadow-2xs">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
             type="text"
             placeholder="Cari ID lot, nama kebun, varietas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full pl-9 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-slate-400" />
+          <Filter className="w-4 h-4 text-stone-400" />
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 cursor-pointer"
           >
             <option value="all">Semua Status Audit</option>
             <option value="pending">Menunggu Audit</option>
@@ -560,19 +562,19 @@ export const VerifierView: React.FC = () => {
       {activeDomain === 'roaster' && (
         <div className="space-y-6">
           {/* Roaster Verifier Highlight Callout */}
-          <div className="p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-5 rounded-2xl bg-amber-50/70 border border-amber-200/90 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/30 shrink-0">
+              <div className="p-3 rounded-2xl bg-[#23140D] text-amber-300 border border-amber-500/40 shadow-xs shrink-0">
                 <Coffee className="w-7 h-7" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                <h3 className="font-bold text-stone-900 text-base flex items-center gap-2">
                   Tugas Khusus Q-Grader: Uji Cicip Sensori Biji Kopi Sangrai
-                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-950 border border-amber-300">
                     SCA Standard
                   </span>
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
+                <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-3xl">
                   Sesuai mandat standar specialty, verifikator roastery wajib mencicipi langsung (cupping) seduhan kopi dari setiap batch sangrai. Anda mengisi lembar penilaian 10 atribut sensori SCA (Aroma, Keasaman, Aftertaste, Body, Sweetness, dll) sebelum memberikan stempel verifikasi emas resmi.
                 </p>
               </div>
@@ -601,17 +603,17 @@ export const VerifierView: React.FC = () => {
                 return (
                   <div
                     key={lot.id}
-                    className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all p-5 flex flex-col justify-between ${
+                    className={`bg-white rounded-2xl border transition-all p-5 flex flex-col justify-between shadow-2xs ${
                       isVerified
-                        ? 'border-amber-300 dark:border-amber-700/60 shadow-md'
+                        ? 'border-amber-400 ring-1 ring-amber-300/60 shadow-xs'
                         : isPending
-                        ? 'border-amber-200 dark:border-amber-800 shadow-sm'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 shadow-sm'
+                        ? 'border-amber-300 shadow-2xs'
+                        : 'border-stone-200/90 hover:border-amber-300'
                     }`}
                   >
                     <div className="space-y-4">
                       {/* Image & Header */}
-                      <div className="relative h-40 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <div className="relative h-40 rounded-xl overflow-hidden bg-stone-100">
                         <img
                           src={lot.photoUrl || 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&auto=format&fit=crop&q=80'}
                           alt={lot.variety}
@@ -620,42 +622,42 @@ export const VerifierView: React.FC = () => {
                         <div className="absolute top-3 right-3">
                           <VerificationStampBadge stamp={lot.verificationStamp} status={lot.verificationStatus} size="sm" />
                         </div>
-                        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-white text-xs font-semibold">
+                        <div className="absolute bottom-3 left-3 bg-[#1C120C]/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-amber-200 text-xs font-semibold border border-amber-500/20">
                           Agtron #{lot.agtronNumber} • DTR {lot.developmentTimeRatio}%
                         </div>
                       </div>
 
                       {/* Lot Info */}
                       <div>
-                        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                          <span>{lot.id}</span>
+                        <div className="flex items-center justify-between text-xs text-stone-500">
+                          <span className="font-mono font-bold">{lot.id}</span>
                           <span>Tgl Sangrai: {lot.roastDate}</span>
                         </div>
-                        <h4 className="font-bold text-base text-slate-900 dark:text-white mt-1">
+                        <h4 className="font-bold text-base text-stone-900 mt-1">
                           {lot.origin} - {lot.variety}
                         </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Roaster: <strong className="text-slate-700 dark:text-slate-300">{lot.roasterName}</strong> ({lot.roasterMachine})
+                        <p className="text-xs text-stone-500">
+                          Roaster: <strong className="text-stone-800">{lot.roasterName}</strong> ({lot.roasterMachine})
                         </p>
                       </div>
 
                       {/* Current Score & Notes */}
-                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-2 text-xs">
+                      <div className="p-3 rounded-xl bg-stone-50 border border-stone-200/70 space-y-2 text-xs">
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-500">Skor Cupping:</span>
-                          <span className="font-bold text-sm text-amber-600 dark:text-amber-400">
+                          <span className="text-stone-500">Skor Cupping:</span>
+                          <span className="font-bold text-sm text-amber-800 font-mono">
                             {lot.scaCuppingScore} SCA Score
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-500">Profil Sangrai:</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">{lot.roastLevel}</span>
+                          <span className="text-stone-500">Profil Sangrai:</span>
+                          <span className="font-semibold text-stone-800">{lot.roastLevel}</span>
                         </div>
                         <div className="flex flex-wrap gap-1 pt-1">
                           {lot.tastingNotes.map((note, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300"
+                              className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200"
                             >
                               {note}
                             </span>
@@ -665,15 +667,15 @@ export const VerifierView: React.FC = () => {
 
                       {/* Cupping Details if Verified */}
                       {lot.verificationStamp?.cuppingEvaluation && (
-                        <div className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/30 dark:bg-emerald-950/20 text-xs">
-                          <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-300 font-bold mb-1">
+                        <div className="p-3 rounded-xl border border-emerald-300 bg-emerald-50/60 text-xs">
+                          <div className="flex items-center justify-between text-emerald-800 font-bold mb-1">
                             <span className="flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                              Telah Dicicipi & Lulus
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              Telah Dicicipi &amp; Lulus
                             </span>
-                            <span>{lot.verificationStamp.cuppingEvaluation.totalScore} Poin</span>
+                            <span className="font-mono">{lot.verificationStamp.cuppingEvaluation.totalScore} Poin</span>
                           </div>
-                          <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2">
+                          <p className="text-[11px] text-stone-600 line-clamp-2">
                             {lot.verificationStamp.notes}
                           </p>
                         </div>
@@ -681,23 +683,23 @@ export const VerifierView: React.FC = () => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                    <div className="pt-4 mt-4 border-t border-stone-100 flex items-center gap-2">
                       <button
                         onClick={() => openCuppingModal(lot)}
-                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                           isVerified
-                            ? 'bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/60 dark:hover:bg-amber-900 text-amber-900 dark:text-amber-100 border border-amber-300 dark:border-amber-700'
-                            : 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-md shadow-amber-600/30'
+                            ? 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-bold'
+                            : 'bg-[#23140D] hover:bg-[#341C11] text-amber-300 border border-amber-500/40 shadow-xs'
                         }`}
                       >
-                        <Coffee className="w-4 h-4" />
+                        <Coffee className="w-4 h-4 text-amber-400" />
                         <span>{isVerified ? 'Evaluasi Ulang Sensori' : 'Cicip Kopi & Isi SCA Sheet'}</span>
                       </button>
 
                       {isVerified && (
                         <button
                           onClick={() => revokeVerificationStamp('roasted', lot.id)}
-                          className="p-2.5 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-medium"
+                          className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-medium cursor-pointer"
                           title="Cabut Sertifikat Stempel"
                         >
                           <XCircle className="w-4 h-4" />
@@ -715,22 +717,22 @@ export const VerifierView: React.FC = () => {
       {activeDomain === 'petani' && (
         <div className="space-y-6">
           {/* Sub-tab Switcher: Panen Ceri vs Lahan Kebun */}
-          <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl max-w-md">
+          <div className="flex items-center gap-2 p-1.5 bg-stone-100 rounded-2xl max-w-md border border-stone-200/80">
             <button
               onClick={() => setFarmerSubSection('harvest')}
-              className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 farmerSubSection === 'harvest'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               <Sprout className="w-4 h-4" />
               <span>Hasil Panen Ceri</span>
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                   farmerSubSection === 'harvest'
                     ? 'bg-emerald-800 text-white'
-                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                    : 'bg-stone-200 text-stone-700'
                 }`}
               >
                 {farmerLots.length}
@@ -739,19 +741,19 @@ export const VerifierView: React.FC = () => {
 
             <button
               onClick={() => setFarmerSubSection('farms')}
-              className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 farmerSubSection === 'farms'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               <MapPin className="w-4 h-4" />
-              <span>Lahan & Kebun EUDR</span>
+              <span>Lahan &amp; Kebun EUDR</span>
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                   farmerSubSection === 'farms'
                     ? 'bg-emerald-800 text-white'
-                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                    : 'bg-stone-200 text-stone-700'
                 }`}
               >
                 {coffeeFarms.length}
@@ -763,19 +765,19 @@ export const VerifierView: React.FC = () => {
           {farmerSubSection === 'harvest' && (
             <div className="space-y-6">
               {/* Highlight Banner */}
-              <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 shrink-0">
+                  <div className="p-3 rounded-2xl bg-emerald-700 text-white shadow-xs shrink-0">
                     <Sprout className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-                      Verifikasi Mutu & Data Panen Ceri Petani
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100">
-                        Uji Kemanisan Brix & Petik Merah
+                    <h3 className="font-bold text-stone-900 text-base flex items-center gap-2">
+                      Verifikasi Mutu &amp; Data Panen Ceri Petani
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-200 text-emerald-950 border border-emerald-300">
+                        Uji Kemanisan Brix &amp; Petik Merah
                       </span>
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
+                    <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-3xl">
                       Semua data panen yang diinput petani diaudit oleh verifikator: kalibrasi refraktometer kadar gula ceri (°Brix), rasio petik merah selective hand-picking, uji floaters, serta kesesuaian koordinat kebun sebelum ceri diserahkan ke stasiun pengolah.
                     </p>
                   </div>
@@ -805,52 +807,52 @@ export const VerifierView: React.FC = () => {
                     return (
                       <div
                         key={lot.id}
-                        className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all p-5 flex flex-col justify-between ${
+                        className={`bg-white rounded-2xl border transition-all p-5 flex flex-col justify-between shadow-2xs ${
                           isVerified
-                            ? 'border-emerald-300 dark:border-emerald-700/60 shadow-md'
+                            ? 'border-emerald-300 ring-1 ring-emerald-300/50 shadow-xs'
                             : isPending
-                            ? 'border-amber-200 dark:border-amber-800/80 shadow-sm'
-                            : 'border-slate-200 dark:border-slate-800 shadow-sm'
+                            ? 'border-amber-200 shadow-2xs'
+                            : 'border-stone-200/90 hover:border-emerald-200'
                         }`}
                       >
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">{lot.id}</span>
+                            <span className="font-mono text-xs font-bold text-stone-500">{lot.id}</span>
                             <VerificationStampBadge stamp={lot.verificationStamp} status={lot.verificationStatus} size="sm" />
                           </div>
 
                           <div>
                             <div className="flex items-center justify-between">
-                              <h4 className="font-bold text-base text-slate-900 dark:text-white">{lot.variety}</h4>
-                              <span className="px-2 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                              <h4 className="font-bold text-base text-stone-900">{lot.variety}</h4>
+                              <span className="px-2 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
                                 {lot.brix}° Brix
                               </span>
                             </div>
-                            <p className="text-xs text-slate-500 mt-0.5">Petani: <strong className="text-slate-700 dark:text-slate-300">{lot.farmerName}</strong></p>
-                            <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                            <p className="text-xs text-stone-500 mt-0.5">Petani: <strong className="text-stone-800">{lot.farmerName}</strong></p>
+                            <p className="text-xs text-stone-400 mt-0.5 flex items-center gap-1">
                               <MapPin className="w-3 h-3 shrink-0" /> {lot.farmName ? `${lot.farmName} • ` : ''}{lot.farmLocation} ({lot.altitude})
                             </p>
                           </div>
 
-                          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1.5 text-xs">
+                          <div className="p-3 rounded-xl bg-stone-50 border border-stone-200/70 space-y-1.5 text-xs">
                             <div className="flex justify-between">
-                              <span className="text-slate-500">Tgl Panen:</span>
-                              <span className="font-semibold text-slate-700 dark:text-slate-300">{lot.harvestDate}</span>
+                              <span className="text-stone-500">Tgl Panen:</span>
+                              <span className="font-semibold text-stone-800">{lot.harvestDate}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-500">Standar Petik:</span>
-                              <span className="font-semibold text-emerald-700 dark:text-emerald-300">{lot.pickingMethod}</span>
+                              <span className="text-stone-500">Standar Petik:</span>
+                              <span className="font-semibold text-emerald-700">{lot.pickingMethod}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-500">Berat Panen:</span>
-                              <span className="font-semibold text-slate-700 dark:text-slate-300">{lot.availableWeightKg} / {lot.totalWeightKg} kg</span>
+                              <span className="text-stone-500">Berat Panen:</span>
+                              <span className="font-semibold text-stone-800">{lot.availableWeightKg} / {lot.totalWeightKg} kg</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-500">Harga Penawaran:</span>
-                              <span className="font-semibold text-slate-900 dark:text-white">Rp {lot.pricePerKg.toLocaleString()} / kg</span>
+                              <span className="text-stone-500">Harga Penawaran:</span>
+                              <span className="font-bold text-stone-900">Rp {lot.pricePerKg.toLocaleString()} / kg</span>
                             </div>
                             {lot.weatherSnapshot && (
-                              <div className="flex justify-between pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-[11px] text-slate-400">
+                              <div className="flex justify-between pt-1 border-t border-stone-200/70 text-[11px] text-stone-400">
                                 <span>Cuaca Panen:</span>
                                 <span>{lot.weatherSnapshot.currentCondition} • {lot.weatherSnapshot.temperatureCelsius}°C</span>
                               </div>
@@ -859,28 +861,28 @@ export const VerifierView: React.FC = () => {
 
                           {/* Verified Stamp Details */}
                           {isVerified && lot.verificationStamp && (
-                            <div className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/40 dark:bg-emerald-950/20 text-xs">
-                              <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-300 font-bold mb-1">
+                            <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 text-xs">
+                              <div className="flex items-center justify-between text-emerald-800 font-bold mb-1">
                                 <span className="flex items-center gap-1">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                   Mutu Panen Sah Terverifikasi
                                 </span>
-                                <span className="text-[11px]">{lot.verificationStamp.scoreDisplay}</span>
+                                <span className="text-[11px] font-mono">{lot.verificationStamp.scoreDisplay}</span>
                               </div>
-                              <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2">
+                              <p className="text-[11px] text-stone-600 line-clamp-2">
                                 {lot.verificationStamp.notes}
                               </p>
                             </div>
                           )}
                         </div>
 
-                        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div className="pt-4 mt-4 border-t border-stone-100 flex items-center gap-2">
                           <button
                             onClick={() => openHarvestModal(lot)}
-                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                               isVerified
-                                ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200'
-                                : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md'
+                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 font-bold'
+                                : 'bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-xs'
                             }`}
                           >
                             <Sprout className="w-4 h-4" />
@@ -890,7 +892,7 @@ export const VerifierView: React.FC = () => {
                           {isVerified && (
                             <button
                               onClick={() => revokeVerificationStamp('harvest', lot.id)}
-                              className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs"
+                              className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs cursor-pointer"
                               title="Cabut Stempel Mutu"
                             >
                               <XCircle className="w-4 h-4" />
@@ -927,58 +929,58 @@ export const VerifierView: React.FC = () => {
                     return (
                       <div
                         key={farm.id}
-                        className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all p-5 flex flex-col justify-between ${
+                        className={`bg-white rounded-2xl border transition-all p-5 flex flex-col justify-between shadow-2xs ${
                           isVerified
-                            ? 'border-emerald-300 dark:border-emerald-700/60 shadow-md'
-                            : 'border-slate-200 dark:border-slate-800 shadow-sm'
+                            ? 'border-emerald-300 ring-1 ring-emerald-300/50 shadow-xs'
+                            : 'border-stone-200/90 hover:border-emerald-200'
                         }`}
                       >
                         <div className="space-y-3">
-                          <div className="relative h-36 rounded-xl overflow-hidden bg-slate-100">
+                          <div className="relative h-36 rounded-xl overflow-hidden bg-stone-100">
                             <img src={farm.photoUrl} alt={farm.farmName} className="w-full h-full object-cover" />
                             <div className="absolute top-3 right-3">
                               <VerificationStampBadge stamp={farm.verificationStamp} status={farm.verificationStatus} size="sm" />
                             </div>
-                            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-white text-xs">
+                            <div className="absolute bottom-3 left-3 bg-[#1C120C]/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-emerald-200 text-xs font-semibold border border-emerald-500/20">
                               {farm.altitudeDisplay}
                             </div>
                           </div>
 
                           <div>
-                            <div className="flex justify-between text-xs text-slate-500">
-                              <span>{farm.id}</span>
+                            <div className="flex justify-between text-xs text-stone-500">
+                              <span className="font-mono font-bold">{farm.id}</span>
                               <span>{farm.landAreaHectares} Ha • {farm.totalTreesCount} Pohon</span>
                             </div>
-                            <h4 className="font-bold text-base text-slate-900 dark:text-white mt-1">{farm.farmName}</h4>
-                            <p className="text-xs text-slate-500">Petani: {farm.farmerName}</p>
-                            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                            <h4 className="font-bold text-base text-stone-900 mt-1">{farm.farmName}</h4>
+                            <p className="text-xs text-stone-500">Petani: <strong className="text-stone-800">{farm.farmerName}</strong></p>
+                            <p className="text-xs text-stone-400 mt-1 flex items-center gap-1">
                               <MapPin className="w-3 h-3 shrink-0" /> {farm.location}
                             </p>
                           </div>
 
-                          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1.5 text-xs">
+                          <div className="p-3 rounded-xl bg-stone-50 border border-stone-200/70 space-y-1.5 text-xs">
                             <div className="flex justify-between">
-                              <span className="text-slate-500">Patok Batas:</span>
-                              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                              <span className="text-stone-500">Patok Batas:</span>
+                              <span className="font-semibold text-stone-800">
                                 {farm.patokList ? `${farm.patokList.length} Patok BPN Terdaftar` : 'Standar Radius'}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-500">Kepatuhan EUDR:</span>
-                              <span className="font-semibold text-emerald-600">
+                              <span className="text-stone-500">Kepatuhan EUDR:</span>
+                              <span className="font-bold text-emerald-700">
                                 {farm.eudrCompliant ? 'Bebas Deforestasi 100%' : 'Sedang Verifikasi'}
                               </span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div className="pt-4 mt-4 border-t border-stone-100 flex items-center gap-2">
                           <button
                             onClick={() => openGenericModal('farm', farm.id, farm.farmName, farm.location)}
-                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                               isVerified
-                                ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200'
-                                : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md'
+                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 font-bold'
+                                : 'bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-xs'
                             }`}
                           >
                             <ShieldCheck className="w-4 h-4" />
@@ -988,7 +990,7 @@ export const VerifierView: React.FC = () => {
                           {isVerified && (
                             <button
                               onClick={() => revokeVerificationStamp('farm', farm.id)}
-                              className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs"
+                              className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs cursor-pointer"
                               title="Cabut Stempel"
                             >
                               <XCircle className="w-4 h-4" />
@@ -1013,52 +1015,57 @@ export const VerifierView: React.FC = () => {
               return (
                 <div
                   key={lot.id}
-                  className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all p-5 flex flex-col justify-between ${
+                  className={`bg-white rounded-2xl border transition-all p-5 flex flex-col justify-between shadow-2xs ${
                     isVerified
-                      ? 'border-cyan-300 dark:border-cyan-700/60 shadow-md'
-                      : 'border-slate-200 dark:border-slate-800 shadow-sm'
+                      ? 'border-amber-300 ring-1 ring-amber-300/50 shadow-xs'
+                      : 'border-stone-200/90 hover:border-amber-200'
                   }`}
                 >
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-xs font-mono text-slate-400">{lot.id}</span>
-                        <h4 className="font-bold text-base text-slate-900 dark:text-white">
+                        <span className="text-xs font-mono font-bold text-stone-400">{lot.id}</span>
+                        <h4 className="font-bold text-base text-stone-900">
                           {lot.variety} ({lot.processMethod})
                         </h4>
-                        <p className="text-xs text-slate-500">Stasiun: {lot.processorName}</p>
+                        <p className="text-xs text-stone-500">Stasiun: <strong className="text-stone-800">{lot.processorName}</strong></p>
                       </div>
                       <VerificationStampBadge stamp={lot.verificationStamp} status={lot.verificationStatus} size="sm" />
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1 text-xs">
+                    <div className="p-3 rounded-xl bg-stone-50 border border-stone-200/70 space-y-1 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Kadar Air:</span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">{lot.moistureContentPercent}%</span>
+                        <span className="text-stone-500">Kadar Air:</span>
+                        <span className="font-semibold text-stone-800">{lot.moistureContentPercent}%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Sortasi Defect:</span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">{lot.defectCount} / 350g</span>
+                        <span className="text-stone-500">Sortasi Defect:</span>
+                        <span className="font-semibold text-stone-800">{lot.defectCount} / 350g</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Grade Olahan:</span>
-                        <span className="font-bold text-cyan-600">{lot.grade}</span>
+                        <span className="text-stone-500">Grade Olahan:</span>
+                        <span className="font-bold text-amber-800">{lot.grade}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                  <div className="pt-4 mt-4 border-t border-stone-100 flex items-center gap-2">
                     <button
                       onClick={() => openGenericModal('processed', lot.id, `Green Bean ${lot.variety}`, lot.processorName)}
-                      className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-700 text-white shadow-md"
+                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        isVerified
+                          ? 'bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold'
+                          : 'bg-[#2E1A10] hover:bg-[#432314] text-amber-300 border border-amber-500/30 font-bold shadow-xs'
+                      }`}
                     >
-                      <Award className="w-4 h-4" />
+                      <Award className="w-4 h-4 text-amber-400" />
                       <span>{isVerified ? 'Perbarui Stempel Mill QA' : 'Beri Stempel Mill QA'}</span>
                     </button>
                     {isVerified && (
                       <button
                         onClick={() => revokeVerificationStamp('processed', lot.id)}
-                        className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs"
+                        className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs cursor-pointer"
+                        title="Cabut Stempel"
                       >
                         <XCircle className="w-4 h-4" />
                       </button>
@@ -1080,47 +1087,47 @@ export const VerifierView: React.FC = () => {
               return (
                 <div
                   key={lot.id}
-                  className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all p-5 flex flex-col justify-between ${
+                  className={`bg-white rounded-2xl border transition-all p-5 flex flex-col justify-between shadow-2xs ${
                     isVerified
-                      ? 'border-indigo-300 dark:border-indigo-700/60 shadow-md'
-                      : 'border-slate-200 dark:border-slate-800 shadow-sm'
+                      ? 'border-amber-300 ring-1 ring-amber-300/50 shadow-xs'
+                      : 'border-stone-200/90 hover:border-amber-200'
                   }`}
                 >
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-xs font-mono text-slate-400">{lot.id}</span>
-                        <h4 className="font-bold text-base text-slate-900 dark:text-white">
+                        <span className="text-xs font-mono font-bold text-stone-400">{lot.id}</span>
+                        <h4 className="font-bold text-base text-stone-900">
                           {lot.variety} • {lot.gradeTier || 'Grade 1'}
                         </h4>
-                        <p className="text-xs text-slate-500">Gudang: {lot.warehouseName}</p>
+                        <p className="text-xs text-stone-500">Gudang: <strong className="text-stone-800">{lot.warehouseName}</strong></p>
                       </div>
                       <VerificationStampBadge stamp={lot.verificationStamp} status={lot.verificationStatus} size="sm" />
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1 text-xs">
+                    <div className="p-3 rounded-xl bg-stone-50 border border-stone-200/70 space-y-1 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Suhu & RH:</span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">
+                        <span className="text-stone-500">Suhu &amp; RH:</span>
+                        <span className="font-semibold text-stone-800">
                           {lot.temperatureCelsius}°C • {lot.humidityPercent}% RH
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Kemasan:</span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">{lot.packagingType}</span>
+                        <span className="text-stone-500">Kemasan:</span>
+                        <span className="font-semibold text-stone-800">{lot.packagingType}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">SCA Pre-Roast:</span>
-                        <span className="font-bold text-indigo-600">{lot.verifiedScaScore} Poin</span>
+                        <span className="text-stone-500">SCA Pre-Roast:</span>
+                        <span className="font-bold text-amber-800 font-mono">{lot.verifiedScaScore} Poin</span>
                       </div>
-                      <div className="flex justify-between items-center pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
-                        <span className="text-slate-500">Health Certificate:</span>
+                      <div className="flex justify-between items-center pt-1 border-t border-stone-200/70">
+                        <span className="text-stone-500">Health Certificate:</span>
                         {lot.hasHealthCertificate ? (
-                          <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[11px] border border-emerald-200 dark:border-emerald-800">
+                          <span className="font-mono font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-[11px] border border-emerald-200">
                             {lot.healthCertificateNumber || 'HC Certified'}
                           </span>
                         ) : (
-                          <span className="font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">
+                          <span className="font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded text-[11px]">
                             No Health Certificate
                           </span>
                         )}
@@ -1128,18 +1135,23 @@ export const VerifierView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                  <div className="pt-4 mt-4 border-t border-stone-100 flex items-center gap-2">
                     <button
                       onClick={() => openGenericModal('warehouse', lot.id, `Lot Gudang ${lot.variety}`, lot.warehouseName)}
-                      className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-700 text-white shadow-md"
+                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        isVerified
+                          ? 'bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold'
+                          : 'bg-[#1D242B] hover:bg-[#2D3742] text-amber-200 border border-stone-600/40 font-bold shadow-xs'
+                      }`}
                     >
-                      <FileCheck2 className="w-4 h-4" />
+                      <FileCheck2 className="w-4 h-4 text-amber-400" />
                       <span>{isVerified ? 'Perbarui Stempel Gudang' : 'Beri Stempel Gudang QA'}</span>
                     </button>
                     {isVerified && (
                       <button
                         onClick={() => revokeVerificationStamp('warehouse', lot.id)}
-                        className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs"
+                        className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs cursor-pointer"
+                        title="Cabut Stempel"
                       >
                         <XCircle className="w-4 h-4" />
                       </button>
@@ -1161,46 +1173,51 @@ export const VerifierView: React.FC = () => {
               return (
                 <div
                   key={prod.id}
-                  className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all p-5 flex flex-col justify-between ${
+                  className={`bg-white rounded-2xl border transition-all p-5 flex flex-col justify-between shadow-2xs ${
                     isVerified
-                      ? 'border-rose-300 dark:border-rose-700/60 shadow-md'
-                      : 'border-slate-200 dark:border-slate-800 shadow-sm'
+                      ? 'border-amber-300 ring-1 ring-amber-300/50 shadow-xs'
+                      : 'border-stone-200/90 hover:border-amber-200'
                   }`}
                 >
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-xs font-mono text-slate-400">{prod.id}</span>
-                        <h4 className="font-bold text-base text-slate-900 dark:text-white">{prod.name}</h4>
-                        <p className="text-xs text-slate-500">Kafe: {prod.cafeName}</p>
+                        <span className="text-xs font-mono font-bold text-stone-400">{prod.id}</span>
+                        <h4 className="font-bold text-base text-stone-900">{prod.name}</h4>
+                        <p className="text-xs text-stone-500">Kafe: <strong className="text-stone-800">{prod.cafeName}</strong></p>
                       </div>
                       <VerificationStampBadge stamp={prod.verificationStamp} status={prod.verificationStatus} size="sm" />
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1 text-xs">
+                    <div className="p-3 rounded-xl bg-stone-50 border border-stone-200/70 space-y-1 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Kemasan:</span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">{prod.packageUnit}</span>
+                        <span className="text-stone-500">Kemasan:</span>
+                        <span className="font-semibold text-stone-800">{prod.packageUnit}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Stok:</span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">{prod.availableStock} Unit</span>
+                        <span className="text-stone-500">Stok:</span>
+                        <span className="font-semibold text-stone-800">{prod.availableStock} Unit</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                  <div className="pt-4 mt-4 border-t border-stone-100 flex items-center gap-2">
                     <button
                       onClick={() => openGenericModal('cafe', prod.id, prod.name, prod.cafeName)}
-                      className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-pink-700 text-white shadow-md"
+                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        isVerified
+                          ? 'bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold'
+                          : 'bg-[#2E1513] hover:bg-[#4A221E] text-amber-200 border border-amber-600/30 font-bold shadow-xs'
+                      }`}
                     >
-                      <CheckCircle2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4 text-amber-400" />
                       <span>{isVerified ? 'Perbarui Stempel Barista' : 'Beri Stempel Kafe QA'}</span>
                     </button>
                     {isVerified && (
                       <button
                         onClick={() => revokeVerificationStamp('cafe', prod.id)}
-                        className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs"
+                        className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs cursor-pointer"
+                        title="Cabut Stempel"
                       >
                         <XCircle className="w-4 h-4" />
                       </button>
@@ -1215,40 +1232,40 @@ export const VerifierView: React.FC = () => {
 
       {/* TAB CONTENT: HISTORY STEMPEL AUDIT */}
       {activeDomain === 'history' && (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-          <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs">
+          <div className="p-5 border-b border-stone-200/80 flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">
+              <h3 className="font-bold text-stone-900 text-base">
                 Daftar Seluruh Stempel Digital Diterbitkan
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-stone-500 mt-0.5">
                 Log sertifikasi kriptografis yang sah dan terdaftar pada database Circular Coffee Trace.
               </p>
             </div>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200">
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-950 border border-amber-300">
               {verificationStamps.length} Stempel Aktif
             </span>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="divide-y divide-stone-100">
             {verificationStamps.map((stamp) => (
-              <div key={stamp.id} className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div key={stamp.id} className="p-5 hover:bg-stone-50/70 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <VerificationStampBadge stamp={stamp} size="sm" />
-                    <span className="text-xs font-mono text-slate-500">#{stamp.certificateNumber}</span>
-                    <span className="text-xs text-slate-400">• {stamp.verifiedAt}</span>
+                    <span className="text-xs font-mono font-bold text-stone-500">#{stamp.certificateNumber}</span>
+                    <span className="text-xs text-stone-400">• {stamp.verifiedAt}</span>
                   </div>
-                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">{stamp.title}</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 max-w-3xl">{stamp.notes}</p>
-                  <div className="text-[11px] text-slate-400 font-mono">
+                  <h4 className="font-bold text-stone-900 text-sm">{stamp.title}</h4>
+                  <p className="text-xs text-stone-600 max-w-3xl leading-relaxed">{stamp.notes}</p>
+                  <div className="text-[11px] text-stone-400 font-mono">
                     Hash: {stamp.digitalSignatureHash}
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">{stamp.verifierName}</div>
-                  <div className="text-[11px] text-slate-500">{stamp.verifierTitle}</div>
+                  <div className="text-xs font-bold text-stone-800">{stamp.verifierName}</div>
+                  <div className="text-[11px] text-stone-500">{stamp.verifierTitle}</div>
                 </div>
               </div>
             ))}
@@ -1263,34 +1280,34 @@ export const VerifierView: React.FC = () => {
           onClick={() => setCuppingModalOpen(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-3xl w-full max-h-[92vh] overflow-y-auto"
+            className="bg-white rounded-3xl shadow-2xl border border-stone-200/90 max-w-3xl w-full max-h-[92vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="p-6 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-800 text-white rounded-t-3xl relative">
+            {/* Modal Header (Deep Espresso & Warm Amber Theme) */}
+            <div className="p-6 bg-gradient-to-r from-[#1C120C] via-[#2F1A11] to-[#1C120C] text-white rounded-t-3xl relative border-b border-amber-500/30">
               <button
                 onClick={() => setCuppingModalOpen(false)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white"
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
               >
-                <XCircle className="w-6 h-6" />
+                <XCircle className="w-6 h-6 text-stone-300" />
               </button>
 
               <div className="flex items-center gap-4">
-                <div className="p-3.5 bg-white/15 backdrop-blur-md rounded-2xl border border-white/20">
-                  <Coffee className="w-8 h-8 text-amber-300" />
+                <div className="p-3.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15">
+                  <Coffee className="w-8 h-8 text-amber-400" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-400 text-slate-950 uppercase tracking-wider">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-400 text-stone-950 uppercase tracking-wider">
                       Uji Cicip Kopi Sangrai (Cupping Lab)
                     </span>
-                    <span className="text-xs text-white/80">#{selectedRoastLot.id}</span>
+                    <span className="text-xs text-amber-200/80 font-mono">#{selectedRoastLot.id}</span>
                   </div>
                   <h3 className="text-xl font-bold mt-1 text-white">
                     {selectedRoastLot.origin} - {selectedRoastLot.variety}
                   </h3>
-                  <p className="text-xs text-white/80">
-                    Roaster: {selectedRoastLot.roasterName} • {selectedRoastLot.roastLevel} • Agtron #{selectedRoastLot.agtronNumber}
+                  <p className="text-xs text-stone-300 mt-0.5">
+                    Roaster: <strong className="text-white">{selectedRoastLot.roasterName}</strong> • {selectedRoastLot.roastLevel} • Agtron #{selectedRoastLot.agtronNumber}
                   </p>
                 </div>
               </div>
@@ -1299,18 +1316,18 @@ export const VerifierView: React.FC = () => {
             {/* Modal Body */}
             <div className="p-6 space-y-6">
               {/* Score Display Card */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-amber-100/80 dark:from-amber-950/50 dark:to-amber-900/30 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-5 rounded-2xl bg-amber-50/80 border border-amber-200/90 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-900">
                     Skor Akhir SCA Specialty Cupping
                   </span>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-4xl font-black text-slate-900 dark:text-white">
+                    <span className="text-4xl font-black text-stone-900 font-mono">
                       {cuppingForm.totalScore.toFixed(2)}
                     </span>
-                    <span className="text-sm font-semibold text-slate-500">/ 100 Poin</span>
+                    <span className="text-sm font-semibold text-stone-500">/ 100 Poin</span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-stone-600 mt-0.5">
                     {cuppingForm.totalScore >= 85
                       ? '⭐ Kategori Specialty Grade 1 (Excellent / Cup of Excellence standard)'
                       : cuppingForm.totalScore >= 80
@@ -1320,7 +1337,7 @@ export const VerifierView: React.FC = () => {
                 </div>
 
                 <div className="text-right">
-                  <span className="px-4 py-2 rounded-xl text-sm font-bold bg-amber-500 text-white shadow-md inline-block">
+                  <span className="px-4 py-2 rounded-xl text-sm font-bold bg-[#23140D] text-amber-300 border border-amber-500/40 shadow-xs inline-block">
                     {cuppingForm.roastEvaluation}
                   </span>
                 </div>
@@ -1328,9 +1345,9 @@ export const VerifierView: React.FC = () => {
 
               {/* 10 SCA Attributes Sliders */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-stone-500 flex items-center justify-between">
                   <span>Penilaian 10 Parameter Sensori SCA (Rentang 6.00 - 10.00)</span>
-                  <span className="text-[11px] text-amber-600">Geser untuk mengubah nilai</span>
+                  <span className="text-[11px] text-amber-700 font-bold">Geser untuk mengubah nilai</span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1348,10 +1365,10 @@ export const VerifierView: React.FC = () => {
                   ].map((attr) => {
                     const val = (cuppingForm as any)[attr.key] as number;
                     return (
-                      <div key={attr.key} className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/60">
+                      <div key={attr.key} className="p-3 bg-stone-50 rounded-xl border border-stone-200/80">
                         <div className="flex justify-between items-center mb-1.5 text-xs">
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">{attr.label}</span>
-                          <span className="font-bold text-amber-600 dark:text-amber-400 font-mono text-sm">
+                          <span className="font-semibold text-stone-800">{attr.label}</span>
+                          <span className="font-bold text-amber-800 font-mono text-sm">
                             {val.toFixed(2)}
                           </span>
                         </div>
@@ -1362,7 +1379,7 @@ export const VerifierView: React.FC = () => {
                           step="0.25"
                           value={val}
                           onChange={(e) => handleAttributeChange(attr.key as any, parseFloat(e.target.value))}
-                          className="w-full accent-amber-600 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+                          className="w-full accent-amber-600 h-1.5 bg-stone-200 rounded-lg cursor-pointer"
                         />
                       </div>
                     );
@@ -1372,20 +1389,20 @@ export const VerifierView: React.FC = () => {
 
               {/* Tasting Notes Tags */}
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <label className="text-xs font-bold uppercase tracking-wider text-stone-500">
                   Catatan Rasa Spesifik (Tasting Notes)
                 </label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {cuppingForm.tastingNotes.map((note) => (
                     <span
                       key={note}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200"
                     >
                       {note}
                       <button
                         type="button"
                         onClick={() => handleRemoveTastingNote(note)}
-                        className="hover:text-rose-600 ml-0.5"
+                        className="hover:text-rose-600 ml-0.5 cursor-pointer"
                       >
                         ×
                       </button>
@@ -1399,12 +1416,12 @@ export const VerifierView: React.FC = () => {
                     value={newNoteInput}
                     onChange={(e) => setNewNoteInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTastingNote())}
-                    className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-amber-500"
+                    className="flex-1 px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                   <button
                     type="button"
                     onClick={handleAddTastingNote}
-                    className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700"
+                    className="px-4 py-2 bg-[#23140D] hover:bg-[#341C11] text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold cursor-pointer"
                   >
                     Tambah
                   </button>
@@ -1414,7 +1431,7 @@ export const VerifierView: React.FC = () => {
               {/* Roast Evaluation & Resting Recommendation */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                  <label className="text-xs font-semibold text-stone-600">
                     Evaluasi Kualitas Sangrai (Roast Quality)
                   </label>
                   <select
@@ -1422,7 +1439,7 @@ export const VerifierView: React.FC = () => {
                     onChange={(e) =>
                       setCuppingForm((prev) => ({ ...prev, roastEvaluation: e.target.value as any }))
                     }
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium"
+                    className="w-full mt-1 px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-medium text-stone-900 focus:ring-2 focus:ring-amber-500 cursor-pointer"
                   >
                     <option value="Optimal Specialty">Optimal Specialty (Pengembangan Sempurna)</option>
                     <option value="Underdeveloped">Underdeveloped (Kurang Matang di Inti Biji)</option>
@@ -1432,7 +1449,7 @@ export const VerifierView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                  <label className="text-xs font-semibold text-stone-600">
                     Rekomendasi Resting Biji (Degassing)
                   </label>
                   <div className="flex items-center gap-2 mt-1">
@@ -1447,21 +1464,21 @@ export const VerifierView: React.FC = () => {
                           recommendationRestDays: parseInt(e.target.value) || 7,
                         }))
                       }
-                      className="w-24 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-center"
+                      className="w-24 px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-bold text-center text-stone-900 focus:ring-2 focus:ring-amber-500"
                     />
-                    <span className="text-xs text-slate-500">Hari sebelum diseduh</span>
+                    <span className="text-xs text-stone-500">Hari sebelum diseduh</span>
                   </div>
                 </div>
               </div>
 
               {/* Interactive Data Checked List */}
-              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+              <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
-                    <ListChecks className="w-4 h-4 text-indigo-600" />
+                  <label className="font-bold text-stone-900 text-xs flex items-center gap-1.5">
+                    <ListChecks className="w-4 h-4 text-amber-700" />
                     Data Checked List "Verified"
                   </label>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
                     {auditChecklist.filter((c) => c.checked).length} / {auditChecklist.length} Terpenuhi
                   </span>
                 </div>
@@ -1469,23 +1486,23 @@ export const VerifierView: React.FC = () => {
                   {auditChecklist.map((item) => (
                     <label
                       key={item.id}
-                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-850 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                      className="p-2.5 rounded-xl border border-stone-200 bg-white flex items-start gap-2.5 cursor-pointer hover:bg-stone-50 transition"
                     >
                       <input
                         type="checkbox"
                         checked={item.checked}
                         onChange={() => handleToggleChecklistItem(item.id)}
-                        className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        className="mt-0.5 w-4 h-4 rounded text-amber-600 accent-amber-600 focus:ring-amber-500 cursor-pointer"
                       />
                       <div className="flex-1 text-[11px]">
                         <div className="flex items-center justify-between">
-                          <span className={`font-bold ${item.checked ? 'text-slate-900 dark:text-white' : 'text-slate-400 line-through'}`}>
+                          <span className={`font-bold ${item.checked ? 'text-stone-900' : 'text-stone-400 line-through'}`}>
                             {item.label}
                           </span>
-                          <span className="text-[9px] uppercase font-bold text-slate-400">{item.category}</span>
+                          <span className="text-[9px] uppercase font-bold text-stone-400">{item.category}</span>
                         </div>
                         {item.description && (
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                          <p className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">
                             {item.description}
                           </p>
                         )}
@@ -1497,7 +1514,7 @@ export const VerifierView: React.FC = () => {
 
               {/* Auditor Notes */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                <label className="text-xs font-semibold text-stone-600">
                   Catatan Resmi Auditor / Q-Grader (Akan tertera di sertifikat)
                 </label>
                 <textarea
@@ -1505,17 +1522,17 @@ export const VerifierView: React.FC = () => {
                   value={auditorNotes}
                   onChange={(e) => setAuditorNotes(e.target.value)}
                   placeholder="Deskripsikan profil rasa cangkir, kebersihan ekstraksi, dan justifikasi stempel mutu..."
-                  className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-amber-500"
+                  className="w-full mt-1 p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 rounded-b-3xl flex items-center justify-between gap-4">
+            <div className="p-6 bg-stone-50 border-t border-stone-200 rounded-b-3xl flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={() => setCuppingModalOpen(false)}
-                className="px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl"
+                className="px-4 py-2.5 text-xs font-semibold text-stone-700 hover:bg-stone-200 rounded-xl cursor-pointer"
               >
                 Batal
               </button>
@@ -1523,10 +1540,10 @@ export const VerifierView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSubmitCuppingStamp}
-                className="px-6 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 rounded-xl shadow-lg shadow-amber-600/30 flex items-center gap-2"
+                className="px-6 py-2.5 text-xs font-bold text-amber-300 bg-[#23140D] hover:bg-[#341C11] border border-amber-500/40 rounded-xl shadow-md flex items-center gap-2 cursor-pointer"
               >
-                <Award className="w-4 h-4 text-amber-200" />
-                <span>Terbitkan Stempel Emas SCA Cupped & Certified</span>
+                <Award className="w-4 h-4 text-amber-400" />
+                <span>Terbitkan Stempel Emas SCA Cupped &amp; Certified</span>
               </button>
             </div>
           </div>
@@ -1540,26 +1557,26 @@ export const VerifierView: React.FC = () => {
           onClick={() => setHarvestModalOpen(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-xl w-full p-6 sm:p-7 space-y-5"
+            className="bg-white rounded-3xl shadow-2xl border border-stone-200/90 max-w-xl w-full p-6 sm:p-7 space-y-5"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-start justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-start justify-between pb-4 border-b border-stone-200">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider mb-1">
-                  <Sprout className="w-3.5 h-3.5" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-950 text-xs font-bold uppercase tracking-wider mb-1 border border-emerald-300">
+                  <Sprout className="w-3.5 h-3.5 text-emerald-700" />
                   Inspeksi Mutu Panen Ceri Petani
                 </span>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white">
-                  {selectedHarvestLot.variety} &bull; {selectedHarvestLot.id}
+                <h3 className="text-xl font-black text-stone-900 mt-1">
+                  {selectedHarvestLot.variety} &bull; <span className="font-mono text-stone-500 text-base">{selectedHarvestLot.id}</span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Petani: <strong className="text-slate-700 dark:text-slate-300">{selectedHarvestLot.farmerName}</strong> &bull; Kebun: {selectedHarvestLot.farmLocation}
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Petani: <strong className="text-stone-800">{selectedHarvestLot.farmerName}</strong> &bull; Kebun: {selectedHarvestLot.farmLocation}
                 </p>
               </div>
               <button
                 onClick={() => setHarvestModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-600 cursor-pointer"
               >
                 <XCircle className="w-6 h-6" />
               </button>
@@ -1567,12 +1584,12 @@ export const VerifierView: React.FC = () => {
 
             <div className="space-y-4 text-xs">
               {/* Quality Metrics Form */}
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 space-y-3">
+              <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-200 text-[11px]">
+                  <span className="font-bold uppercase tracking-wider text-emerald-950 text-[11px]">
                     Hasil Uji Laboratorium Mutu Ceri
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-700 text-white">
                     {harvestBrix >= 21 && harvestRipePercent >= 95
                       ? 'Grade A+ Specialty'
                       : harvestBrix >= 19
@@ -1582,8 +1599,8 @@ export const VerifierView: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-emerald-200/60 dark:border-emerald-800/40">
-                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <div className="bg-white p-3 rounded-xl border border-emerald-200">
+                    <label className="text-[11px] font-bold text-stone-800 block mb-1">
                       Kemanisan Brix (°Brix)
                     </label>
                     <div className="flex items-center gap-1.5">
@@ -1594,15 +1611,15 @@ export const VerifierView: React.FC = () => {
                         max="32"
                         value={harvestBrix}
                         onChange={(e) => setHarvestBrix(parseFloat(e.target.value) || 0)}
-                        className="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg font-mono font-black text-emerald-700 dark:text-emerald-400 text-base"
+                        className="w-full p-2 bg-stone-50 border border-stone-200 rounded-lg font-mono font-black text-emerald-800 text-base focus:ring-2 focus:ring-emerald-500"
                       />
-                      <span className="font-bold text-slate-400">°Bx</span>
+                      <span className="font-bold text-stone-400">°Bx</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1 block">Refraktometer Optik</span>
+                    <span className="text-[10px] text-stone-400 mt-1 block">Refraktometer Optik</span>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-emerald-200/60 dark:border-emerald-800/40">
-                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <div className="bg-white p-3 rounded-xl border border-emerald-200">
+                    <label className="text-[11px] font-bold text-stone-800 block mb-1">
                       Rasio Petik Merah (%)
                     </label>
                     <div className="flex items-center gap-1.5">
@@ -1612,15 +1629,15 @@ export const VerifierView: React.FC = () => {
                         max="100"
                         value={harvestRipePercent}
                         onChange={(e) => setHarvestRipePercent(parseInt(e.target.value) || 0)}
-                        className="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg font-mono font-black text-slate-900 dark:text-white text-base"
+                        className="w-full p-2 bg-stone-50 border border-stone-200 rounded-lg font-mono font-black text-stone-900 text-base focus:ring-2 focus:ring-emerald-500"
                       />
-                      <span className="font-bold text-slate-400">%</span>
+                      <span className="font-bold text-stone-400">%</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1 block">Sortasi Visual 100 butir</span>
+                    <span className="text-[10px] text-stone-400 mt-1 block">Sortasi Visual 100 butir</span>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-emerald-200/60 dark:border-emerald-800/40">
-                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <div className="bg-white p-3 rounded-xl border border-emerald-200">
+                    <label className="text-[11px] font-bold text-stone-800 block mb-1">
                       Uji Ambang Floaters (%)
                     </label>
                     <div className="flex items-center gap-1.5">
@@ -1630,33 +1647,33 @@ export const VerifierView: React.FC = () => {
                         max="20"
                         value={harvestFloatersPercent}
                         onChange={(e) => setHarvestFloatersPercent(parseInt(e.target.value) || 0)}
-                        className="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg font-mono font-black text-rose-600 dark:text-rose-400 text-base"
+                        className="w-full p-2 bg-stone-50 border border-stone-200 rounded-lg font-mono font-black text-rose-700 text-base focus:ring-2 focus:ring-rose-500"
                       />
-                      <span className="font-bold text-slate-400">%</span>
+                      <span className="font-bold text-stone-400">%</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1 block">Uji Rendam Air (Maks 2%)</span>
+                    <span className="text-[10px] text-stone-400 mt-1 block">Uji Rendam Air (Maks 2%)</span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Judul Sertifikat Mutu Panen</label>
+                <label className="font-semibold text-stone-700">Judul Sertifikat Mutu Panen</label>
                 <input
                   type="text"
                   value={harvestStampTitle}
                   onChange={(e) => setHarvestStampTitle(e.target.value)}
-                  className="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                  className="w-full mt-1 p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               {/* Interactive Data Checked List */}
-              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+              <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
-                    <ListChecks className="w-4 h-4 text-emerald-600" />
+                  <label className="font-bold text-stone-900 text-xs flex items-center gap-1.5">
+                    <ListChecks className="w-4 h-4 text-emerald-700" />
                     Data Checked List "Verified"
                   </label>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-950 border border-emerald-300">
                     {auditChecklist.filter((c) => c.checked).length} / {auditChecklist.length} Terpenuhi
                   </span>
                 </div>
@@ -1664,23 +1681,23 @@ export const VerifierView: React.FC = () => {
                   {auditChecklist.map((item) => (
                     <label
                       key={item.id}
-                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-850 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                      className="p-2.5 rounded-xl border border-stone-200 bg-white flex items-start gap-2.5 cursor-pointer hover:bg-stone-50 transition"
                     >
                       <input
                         type="checkbox"
                         checked={item.checked}
                         onChange={() => handleToggleChecklistItem(item.id)}
-                        className="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        className="mt-0.5 w-4 h-4 rounded text-emerald-700 accent-emerald-700 focus:ring-emerald-500 cursor-pointer"
                       />
                       <div className="flex-1 text-[11px]">
                         <div className="flex items-center justify-between">
-                          <span className={`font-bold ${item.checked ? 'text-slate-900 dark:text-white' : 'text-slate-400 line-through'}`}>
+                          <span className={`font-bold ${item.checked ? 'text-stone-900' : 'text-stone-400 line-through'}`}>
                             {item.label}
                           </span>
-                          <span className="text-[9px] uppercase font-bold text-slate-400">{item.category}</span>
+                          <span className="text-[9px] uppercase font-bold text-stone-400">{item.category}</span>
                         </div>
                         {item.description && (
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                          <p className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">
                             {item.description}
                           </p>
                         )}
@@ -1691,44 +1708,44 @@ export const VerifierView: React.FC = () => {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300">
-                  Catatan Resmi Verifikator Mutu Petani (Akan tertera di sertifikat & barcode)
+                <label className="font-semibold text-stone-700">
+                  Catatan Resmi Verifikator Mutu Petani (Akan tertera di sertifikat &amp; barcode)
                 </label>
                 <textarea
                   rows={3}
                   value={harvestNotes}
                   onChange={(e) => setHarvestNotes(e.target.value)}
                   placeholder="Komentar hasil uji laboratorium dan konfirmasi kualitas ceri..."
-                  className="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                  className="w-full mt-1 p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-500 space-y-1">
+              <div className="p-3 rounded-xl bg-stone-100 text-[11px] text-stone-600 space-y-1 border border-stone-200/80">
                 <div className="flex justify-between">
                   <span>Auditor / Verifikator:</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{currentUser?.name}</span>
+                  <span className="font-bold text-stone-800">{currentUser?.name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Lembaga Penguji:</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{currentUser?.organization}</span>
+                  <span className="font-bold text-stone-800">{currentUser?.organization}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tanda Tangan Digital Kriptografi:</span>
-                  <span className="font-mono text-emerald-600">SHA-256 Otomatis Diterbitkan</span>
+                  <span className="font-mono text-emerald-700 font-bold">SHA-256 Otomatis Diterbitkan</span>
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+            <div className="pt-4 border-t border-stone-200 flex justify-end gap-2.5">
               <button
                 onClick={() => setHarvestModalOpen(false)}
-                className="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+                className="px-4 py-2.5 text-xs font-semibold text-stone-700 hover:bg-stone-100 rounded-xl cursor-pointer"
               >
                 Batal
               </button>
               <button
                 onClick={handleSubmitHarvestStamp}
-                className="px-6 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center gap-2"
+                className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-md flex items-center gap-2 cursor-pointer"
               >
                 <Award className="w-4 h-4 text-emerald-200" />
                 <span>Terbitkan Stempel Mutu Panen Sah</span>
@@ -1745,22 +1762,22 @@ export const VerifierView: React.FC = () => {
           onClick={() => setGenericModalOpen(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-lg w-full p-6 space-y-4"
+            className="bg-white rounded-3xl shadow-2xl border border-stone-200/90 max-w-lg w-full p-6 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
               <div>
-                <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
                   Penerbitan Stempel Verifikasi
                 </span>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">
+                <h3 className="text-lg font-bold text-stone-900 mt-0.5">
                   {genericTarget.title}
                 </h3>
-                <p className="text-xs text-slate-500">{genericTarget.subTitle} ({genericTarget.id})</p>
+                <p className="text-xs text-stone-500">{genericTarget.subTitle} ({genericTarget.id})</p>
               </div>
               <button
                 onClick={() => setGenericModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-600 cursor-pointer"
               >
                 <XCircle className="w-5 h-5" />
               </button>
@@ -1768,33 +1785,33 @@ export const VerifierView: React.FC = () => {
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Judul Sertifikasi / Stempel</label>
+                <label className="font-semibold text-stone-700">Judul Sertifikasi / Stempel</label>
                 <input
                   type="text"
                   value={genericTitle}
                   onChange={(e) => setGenericTitle(e.target.value)}
-                  className="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                  className="w-full mt-1 p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Highlight Skor / Metrik Kepatuhan</label>
+                <label className="font-semibold text-stone-700">Highlight Skor / Metrik Kepatuhan</label>
                 <input
                   type="text"
                   value={genericScoreDisplay}
                   onChange={(e) => setGenericScoreDisplay(e.target.value)}
-                  className="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                  className="w-full mt-1 p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               {/* Interactive Data Checked List */}
-              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+              <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
-                    <ListChecks className="w-4 h-4 text-indigo-600" />
+                  <label className="font-bold text-stone-900 text-xs flex items-center gap-1.5">
+                    <ListChecks className="w-4 h-4 text-amber-700" />
                     Data Checked List "Verified"
                   </label>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
                     {auditChecklist.filter((c) => c.checked).length} / {auditChecklist.length} Terpenuhi
                   </span>
                 </div>
@@ -1802,23 +1819,23 @@ export const VerifierView: React.FC = () => {
                   {auditChecklist.map((item) => (
                     <label
                       key={item.id}
-                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-850 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                      className="p-2.5 rounded-xl border border-stone-200 bg-white flex items-start gap-2.5 cursor-pointer hover:bg-stone-50 transition"
                     >
                       <input
                         type="checkbox"
                         checked={item.checked}
                         onChange={() => handleToggleChecklistItem(item.id)}
-                        className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        className="mt-0.5 w-4 h-4 rounded text-amber-700 accent-amber-700 focus:ring-amber-500 cursor-pointer"
                       />
                       <div className="flex-1 text-[11px]">
                         <div className="flex items-center justify-between">
-                          <span className={`font-bold ${item.checked ? 'text-slate-900 dark:text-white' : 'text-slate-400 line-through'}`}>
+                          <span className={`font-bold ${item.checked ? 'text-stone-900' : 'text-stone-400 line-through'}`}>
                             {item.label}
                           </span>
-                          <span className="text-[9px] uppercase font-bold text-slate-400">{item.category}</span>
+                          <span className="text-[9px] uppercase font-bold text-stone-400">{item.category}</span>
                         </div>
                         {item.description && (
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                          <p className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">
                             {item.description}
                           </p>
                         )}
@@ -1829,41 +1846,41 @@ export const VerifierView: React.FC = () => {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Catatan Hasil Pemeriksaan Lapangan</label>
+                <label className="font-semibold text-stone-700">Catatan Hasil Pemeriksaan Lapangan</label>
                 <textarea
                   rows={3}
                   value={genericNotes}
                   onChange={(e) => setGenericNotes(e.target.value)}
-                  className="w-full mt-1 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                  className="w-full mt-1 p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-500 space-y-1">
+              <div className="p-3 rounded-xl bg-stone-100 text-[11px] text-stone-600 space-y-1 border border-stone-200/80">
                 <div className="flex justify-between">
                   <span>Auditor:</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{currentUser?.name}</span>
+                  <span className="font-bold text-stone-800">{currentUser?.name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Lembaga Audit:</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{currentUser?.organization}</span>
+                  <span className="font-bold text-stone-800">{currentUser?.organization}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tanda Tangan Kripto:</span>
-                  <span className="font-mono text-emerald-600">SHA-256 Otomatis Dibuat</span>
+                  <span className="font-mono text-emerald-700 font-bold">SHA-256 Otomatis Dibuat</span>
                 </div>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
+            <div className="pt-3 border-t border-stone-200 flex justify-end gap-2">
               <button
                 onClick={() => setGenericModalOpen(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-100 rounded-xl cursor-pointer"
               >
                 Batal
               </button>
               <button
                 onClick={handleSubmitGenericStamp}
-                className="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md"
+                className="px-5 py-2 text-xs font-bold text-amber-300 bg-[#23140D] hover:bg-[#341C11] border border-amber-500/40 rounded-xl shadow-md cursor-pointer"
               >
                 Terbitkan Stempel Resmi
               </button>

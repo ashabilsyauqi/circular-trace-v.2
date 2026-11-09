@@ -1183,6 +1183,11 @@ export const INITIAL_COFFEE_FARMS: CoffeeFarm[] = [
 export const INITIAL_FARMER_LOTS: FarmerHarvestLot[] = [
   {
     id: 'LOT-PTN-001',
+    isMarketplaceReady: true,
+    marketplaceTitle: 'Cherry Kopi Arabika Gunung Tilu Pangalengan (Brix 22.4°)',
+    marketplacePrice: 14500,
+    marketplaceStock: 1200,
+    marketplaceReleasedAt: '2026-09-18',
     farmerId: 'user-petani-1',
     farmerName: 'Asep Supriatna',
     farmId: 'FARM-PGL-01',
@@ -1230,6 +1235,7 @@ export const INITIAL_FARMER_LOTS: FarmerHarvestLot[] = [
   },
   {
     id: 'LOT-PTN-002',
+    isMarketplaceReady: false,
     farmerId: 'user-petani-1',
     farmerName: 'Asep Supriatna',
     farmId: 'FARM-PGL-02',
@@ -1262,6 +1268,11 @@ export const INITIAL_FARMER_LOTS: FarmerHarvestLot[] = [
   },
   {
     id: 'LOT-PTN-003',
+    isMarketplaceReady: true,
+    marketplaceTitle: 'Cherry Arabika Gayo Burni Telong (Brix 21.8°)',
+    marketplacePrice: 15000,
+    marketplaceStock: 1500,
+    marketplaceReleasedAt: '2026-09-17',
     farmerId: 'user-petani-3',
     farmerName: 'Pak Aman Gayo',
     farmId: 'FARM-GYO-01',
@@ -1294,6 +1305,11 @@ export const INITIAL_FARMER_LOTS: FarmerHarvestLot[] = [
   },
   {
     id: 'LOT-PTN-004',
+    isMarketplaceReady: true,
+    marketplaceTitle: 'Cherry Arabika Kintamani Ulian Agroforestry (Brix 22.0°)',
+    marketplacePrice: 16000,
+    marketplaceStock: 1000,
+    marketplaceReleasedAt: '2026-09-16',
     farmerId: 'user-petani-2',
     farmerName: 'I Wayan Sudirta',
     farmId: 'FARM-BLI-01',
@@ -1502,6 +1518,7 @@ export const INITIAL_FARMER_LOTS: FarmerHarvestLot[] = [
   },
   {
     id: 'LOT-PTN-010',
+    isMarketplaceReady: false,
     farmerId: 'user-petani-4',
     farmerName: 'Mama Maria Doko',
     farmId: 'FARM-FLR-01',

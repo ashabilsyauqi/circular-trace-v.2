@@ -55,6 +55,7 @@ import { RecordBreadcrumb } from './shared/RecordBreadcrumb';
 import { FarmLocationMap, INDONESIAN_COFFEE_ORIGINS } from './shared/FarmLocationMap';
 import { VerificationStampBadge } from './shared/VerificationStampBadge';
 import { StakeholderFormsModal } from './forms/StakeholderFormsModal';
+import { MarketplaceReleaseModal } from './shared/MarketplaceReleaseModal';
 import { ProductImageField } from './shared/ProductImageField';
 
 // 6-Stage Pipeline for Farmer Harvest Lot
@@ -109,7 +110,7 @@ export const FarmerView: React.FC = () => {
 
   // Filter & Search State for Lots
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'sold'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'marketplace' | 'pipeline' | 'available' | 'sold'>('all');
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
 
   // Lot Worksheet State (Lembar Kerja Panen Per Stage)
@@ -193,6 +194,10 @@ export const FarmerView: React.FC = () => {
     'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80'
   );
   const [successMessage, setSuccessMessage] = useState('');
+  // Dual-Path Distribution & Release Modal State
+  const [isHarvestMarketplaceReady, setIsHarvestMarketplaceReady] = useState(false);
+  const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
+  const [selectedReleaseLot, setSelectedReleaseLot] = useState<FarmerHarvestLot | null>(null);
 
   // Barcode Modal State
   const [selectedBarcodeLot, setSelectedBarcodeLot] = useState<FarmerHarvestLot | null>(null);
@@ -414,6 +419,10 @@ export const FarmerView: React.FC = () => {
       brix: Number(brix),
       totalWeightKg: Number(totalWeightKg),
       pricePerKg: Number(pricePerKg),
+      isMarketplaceReady: isHarvestMarketplaceReady,
+      marketplaceTitle: `Ceri Kopi Arabika ${variety} (Brix ${brix}°)`,
+      marketplacePrice: Number(pricePerKg),
+      marketplaceStock: Number(totalWeightKg),
       notes: notes || `Hasil panen ceri merah matang pohon dari ${selectedFarm?.farmName || farmLocation}.`,
       photoUrl:
         harvestPhotoUrl ||
@@ -448,6 +457,8 @@ export const FarmerView: React.FC = () => {
   const filteredLots = myLots.filter((lot) => {
     const matchStatus =
       statusFilter === 'all' ||
+      (statusFilter === 'marketplace' && lot.isMarketplaceReady === true) ||
+      (statusFilter === 'pipeline' && !lot.isMarketplaceReady) ||
       (statusFilter === 'available' && lot.availableWeightKg > 0) ||
       (statusFilter === 'sold' && lot.availableWeightKg === 0);
     const q = searchQuery.toLowerCase();
@@ -1222,9 +1233,51 @@ export const FarmerView: React.FC = () => {
                   />
                 </div>
 
+                
+                {/* Pilihan Jalur Distribusi: Marketplace Publik vs Pipeline Internal */}
+                <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-3 font-['Poppins']">
+                  <label className="text-xs font-bold text-stone-800 block">
+                    Jalur Distribusi Pasokan Hasil Panen
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div
+                      onClick={() => setIsHarvestMarketplaceReady(true)}
+                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                        isHarvestMarketplaceReady
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-950 font-bold shadow-xs'
+                          : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Store className="w-4 h-4 text-emerald-600" />
+                        <span className="text-xs font-black">Rilis ke Marketplace Publik</span>
+                      </div>
+                      <p className="text-[11px] text-stone-500 font-normal mt-1 leading-relaxed">
+                        Langsung terbitkan ke etalase Marketplace agar dapat dibeli oleh pembeli umum, kafe, atau roastery.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => setIsHarvestMarketplaceReady(false)}
+                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                        !isHarvestMarketplaceReady
+                          ? 'border-stone-800 bg-stone-900 text-white font-bold shadow-xs'
+                          : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-black">Simpan untuk Olah Lanjutan (Pipeline)</span>
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-normal mt-1 leading-relaxed">
+                        Masuk ke antrean pasokan internal untuk diserap dan diolah di Stasiun Pengolahan Kopi (Wet & Dry Mill).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="pt-2 flex justify-end">
-                  <button
-                    type="submit"
+                  <button type="submit"
                     className="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2 cursor-pointer"
                   >
                     <PlusCircle className="w-4 h-4" />
@@ -1258,19 +1311,42 @@ export const FarmerView: React.FC = () => {
                     Kelola lot ceri merah siap jual hasil panen kebun Anda. Tetapkan harga penawaran per kg, pantau verifikasi mutu brix refraktometer, dan kirim pasokan resmi ke pengolah kopi.
                   </p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="bg-white/5 px-4 py-2.5 rounded-2xl border border-white/10 text-center">
-                    <span className="text-[10px] text-stone-400 uppercase block font-semibold">Siap Jual</span>
-                    <span className="text-base font-black text-amber-300">
-                      {myLots.filter((l) => l.availableWeightKg > 0).length} Lot
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 text-center">
+                    <span className="text-[10px] text-stone-400 uppercase block font-semibold">Total Panen</span>
+                    <span className="text-sm font-black text-white">
+                      {myLots.length} Lot
                     </span>
                   </div>
-                  <div className="bg-white/5 px-4 py-2.5 rounded-2xl border border-white/10 text-center">
+                  <div className="bg-emerald-500/10 px-3.5 py-2 rounded-2xl border border-emerald-500/30 text-center">
+                    <span className="text-[10px] text-emerald-300 uppercase block font-semibold">🛒 Di Marketplace</span>
+                    <span className="text-sm font-black text-emerald-300">
+                      {myLots.filter((l) => l.isMarketplaceReady === true).length} Lot
+                    </span>
+                  </div>
+                  <div className="bg-amber-500/10 px-3.5 py-2 rounded-2xl border border-amber-500/30 text-center">
+                    <span className="text-[10px] text-amber-300 uppercase block font-semibold">⚙️ Pipeline Olah</span>
+                    <span className="text-sm font-black text-amber-300">
+                      {myLots.filter((l) => !l.isMarketplaceReady).length} Lot
+                    </span>
+                  </div>
+                  <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 text-center">
                     <span className="text-[10px] text-stone-400 uppercase block font-semibold">Total Stok</span>
-                    <span className="text-base font-black text-emerald-300">
+                    <span className="text-sm font-black text-emerald-300">
                       {myLots.reduce((acc, l) => acc + (l.availableWeightKg || 0), 0).toLocaleString()} kg
                     </span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedReleaseLot(null);
+                      setIsReleaseModalOpen(true);
+                    }}
+                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs inline-flex items-center gap-2 shadow-lg shadow-emerald-950/40 border border-emerald-400/40 cursor-pointer transition-all"
+                  >
+                    <Store className="w-4 h-4 text-emerald-200" />
+                    <span>+ Form Rilis ke Marketplace</span>
+                  </button>
                 </div>
               </div>
               <ControlPanel
@@ -1283,6 +1359,8 @@ export const FarmerView: React.FC = () => {
                 onFilterChange={(f) => setStatusFilter(f as any)}
                 filterOptions={[
                   { id: 'all', label: 'Semua Status' },
+                  { id: 'marketplace', label: '🛒 Aktif di Marketplace' },
+                  { id: 'pipeline', label: '⚙️ Pipeline Olah Lanjutan (Mill)' },
                   { id: 'available', label: 'Tersedia Siap Jual' },
                   { id: 'sold', label: 'Terjual' },
                 ]}
@@ -1331,7 +1409,8 @@ export const FarmerView: React.FC = () => {
                               <th className="py-3.5 px-4 whitespace-nowrap">Kemanisan Brix</th>
                               <th className="py-3.5 px-4 whitespace-nowrap">Stok Tersedia</th>
                               <th className="py-3.5 px-4 whitespace-nowrap">Harga / Kg</th>
-                              <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Jalur Distribusi</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Status Stok</th>
                               <th className="py-3.5 px-4 whitespace-nowrap">Audit Mutu</th>
                               <th className="py-3.5 px-4 whitespace-nowrap text-right">Aksi</th>
                             </tr>
@@ -1379,6 +1458,29 @@ export const FarmerView: React.FC = () => {
                                     Rp {lot.pricePerKg.toLocaleString()}
                                   </td>
                                   <td className="py-3 px-4 whitespace-nowrap">
+                                    {lot.isMarketplaceReady ? (
+                                      <div className="space-y-0.5">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                          <Store className="w-3 h-3 text-emerald-600" />
+                                          Aktif di Marketplace
+                                        </span>
+                                        <div className="text-[10px] text-stone-500 font-medium">
+                                          Rp {(lot.marketplacePrice || lot.pricePerKg).toLocaleString()} • {lot.marketplaceStock ?? lot.availableWeightKg} kg
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-0.5">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 text-[10px] font-bold">
+                                          <Layers className="w-3 h-3 text-amber-600" />
+                                          Pipeline Olah (Mill)
+                                        </span>
+                                        <div className="text-[10px] text-stone-400 font-medium">
+                                          Siap diserap pengolah
+                                        </div>
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     {isAvailable ? (
                                       <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold whitespace-nowrap">
                                         Siap Jual
@@ -1398,6 +1500,31 @@ export const FarmerView: React.FC = () => {
                                   </td>
                                   <td className="py-3 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                                     <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                                      {lot.isMarketplaceReady ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedReleaseLot(lot);
+                                            setIsReleaseModalOpen(true);
+                                          }}
+                                          className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer whitespace-nowrap border border-emerald-200"
+                                        >
+                                          <Store className="w-3 h-3 text-emerald-600" />
+                                          Kelola Rilis
+                                        </button>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedReleaseLot(lot);
+                                            setIsReleaseModalOpen(true);
+                                          }}
+                                          className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer whitespace-nowrap border border-amber-300"
+                                        >
+                                          <PlusCircle className="w-3 h-3 text-amber-600" />
+                                          Rilis Marketplace
+                                        </button>
+                                      )}
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -3176,6 +3303,18 @@ export const FarmerView: React.FC = () => {
         onClose={() => setSelectedBarcodeLot(null)}
         lot={selectedBarcodeLot}
         isNewUpload={isNewUpload}
+      />
+
+      {/* Dedicated Marketplace Release Modal */}
+      <MarketplaceReleaseModal
+        isOpen={isReleaseModalOpen}
+        onClose={() => setIsReleaseModalOpen(false)}
+        lot={selectedReleaseLot}
+        availableLots={myLots}
+        onSuccess={(msg) => {
+          setSuccessMessage(msg);
+          setTimeout(() => setSuccessMessage(''), 5000);
+        }}
       />
 
       {/* Blanko Formulir Fisik Lapangan Petani */}

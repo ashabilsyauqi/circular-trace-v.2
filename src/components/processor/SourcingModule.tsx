@@ -13,6 +13,8 @@ import {
   Flame,
   FileText,
   Warehouse,
+  Store,
+  Layers,
 } from 'lucide-react';
 import { FarmerHarvestLot } from '../../types/coffee';
 import { ProcessingMethod } from '../../types/processorErp';
@@ -237,9 +239,22 @@ export const SourcingModule: React.FC = () => {
 
                         <div className="p-5 space-y-3">
                           <div>
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
-                              Petani: {lot.farmerName}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                Petani: {lot.farmerName}
+                              </span>
+                              {lot.isMarketplaceReady ? (
+                                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                  <Store className="w-2.5 h-2.5 text-emerald-600" />
+                                  Marketplace
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
+                                  <Layers className="w-2.5 h-2.5 text-amber-600" />
+                                  Pipeline Internal Mill
+                                </span>
+                              )}
+                            </div>
                             <h3 className="font-bold text-base text-stone-900 mt-1 group-hover:text-amber-800 transition-colors">
                               {lot.variety}
                             </h3>

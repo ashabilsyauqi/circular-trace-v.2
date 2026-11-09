@@ -196,6 +196,15 @@ export interface FarmerHarvestLot {
   shadeTrees?: string[];
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  // Dual-Path: Rilis Marketplace Publik vs Pipeline Olah Lanjutan Internal
+  isMarketplaceReady?: boolean; // true = rilis marketplace publik, false/undefined = olah lanjutan di stasiun berikutnya
+  marketplaceTitle?: string;
+  marketplacePrice?: number;
+  marketplaceStock?: number;
+  marketplaceNotes?: string;
+  marketplacePhotoUrl?: string;
+  marketplaceReleasedAt?: string;
+
 }
 
 // 2. LOT GREEN BEAN PENGOLAH (Hasil Proses Wet/Dry Mill)
@@ -232,6 +241,15 @@ export interface ProcessedGreenBeanLot {
   wasteManagement?: CoffeeWasteManagement;
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  // Dual-Path: Rilis Marketplace Publik vs Pipeline Olah Lanjutan Internal
+  isMarketplaceReady?: boolean; // true = rilis marketplace publik, false/undefined = olah lanjutan di stasiun berikutnya
+  marketplaceTitle?: string;
+  marketplacePrice?: number;
+  marketplaceStock?: number;
+  marketplaceNotes?: string;
+  marketplacePhotoUrl?: string;
+  marketplaceReleasedAt?: string;
+
 }
 
 // Model Pengelolaan & Pemanfaatan Limbah Kopi
@@ -300,6 +318,15 @@ export interface WarehouseLot {
   healthCertificateNumber?: string; // Nomor Sertifikat Kesehatan (Health Certificate) jika ada
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  // Dual-Path: Rilis Marketplace Publik vs Pipeline Olah Lanjutan Internal
+  isMarketplaceReady?: boolean; // true = rilis marketplace publik, false/undefined = olah lanjutan di stasiun berikutnya
+  marketplaceTitle?: string;
+  marketplacePrice?: number;
+  marketplaceStock?: number;
+  marketplaceNotes?: string;
+  marketplacePhotoUrl?: string;
+  marketplaceReleasedAt?: string;
+
 }
 
 // 4. LOT BIJI SANGRAI ROASTER (Roasted Coffee Ready for Brew)
@@ -332,6 +359,15 @@ export interface RoastedBeanLot {
   sourceWorkOrderId?: string;
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  // Dual-Path: Rilis Marketplace Publik vs Pipeline Olah Lanjutan Internal
+  isMarketplaceReady?: boolean; // true = rilis marketplace publik, false/undefined = olah lanjutan di stasiun berikutnya
+  marketplaceTitle?: string;
+  marketplacePrice?: number;
+  marketplaceStock?: number;
+  marketplaceNotes?: string;
+  marketplacePhotoUrl?: string;
+  marketplaceReleasedAt?: string;
+
 }
 
 // 5. INVENTARIS CAFE & PESANAN PEMILIK CAFE
@@ -389,6 +425,15 @@ export interface CafeRetailProduct {
   createdAt: string;
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  // Dual-Path: Rilis Marketplace Publik vs Pipeline Olah Lanjutan Internal
+  isMarketplaceReady?: boolean; // true = rilis marketplace publik, false/undefined = olah lanjutan di stasiun berikutnya
+  marketplaceTitle?: string;
+  marketplacePrice?: number;
+  marketplaceStock?: number;
+  marketplaceNotes?: string;
+  marketplacePhotoUrl?: string;
+  marketplaceReleasedAt?: string;
+
 }
 
 // 7. STANDARDIZED ITEM UNTUK 1 MARKETPLACE TERPADU

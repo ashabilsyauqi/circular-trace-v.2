@@ -357,6 +357,17 @@ interface CoffeeContextType {
     photoUrl?: string;
     notes?: string;
   }) => { success: boolean; message: string };
+  publishLotToMarketplace: (params: {
+    lotId: string;
+    category?: MarketplaceCategory;
+    marketplaceTitle?: string;
+    marketplacePrice?: number;
+    marketplaceStock?: number;
+    marketplaceNotes?: string;
+    marketplacePhotoUrl?: string;
+  }) => { success: boolean; message: string };
+  unpublishLotFromMarketplace: (lotId: string) => { success: boolean; message: string };
+
   resetToDefaultData: () => void;
   seedFarmerLots: () => void;
   getTraceabilityForRoastedLot: (roastedLotId: string) => {
@@ -1257,13 +1268,14 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0 && parsed.some((l: FarmerHarvestLot) => l.availableWeightKg > 0)) {
           return parsed.map((lot: FarmerHarvestLot) => {
-            if (lot.id === 'LOT-PTN-003' || (lot.photoUrl && lot.photoUrl.includes('photo-1596704017254-9b121068fb31'))) {
-              return {
-                ...lot,
-                photoUrl: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
-              };
+            const updated = { ...lot };
+            if (updated.isMarketplaceReady === undefined) {
+              updated.isMarketplaceReady = ['LOT-PTN-001', 'LOT-PTN-003', 'LOT-PTN-004'].includes(updated.id);
             }
-            return lot;
+            if (updated.id === 'LOT-PTN-003' || (updated.photoUrl && updated.photoUrl.includes('photo-1596704017254-9b121068fb31'))) {
+              updated.photoUrl = 'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80';
+            }
+            return updated;
           });
         }
       } catch (e) {
@@ -2484,6 +2496,12 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       shadeTrees: lotData.shadeTrees || linkedFarm?.shadeTrees,
       availableWeightKg: lotData.totalWeightKg,
       status: 'available',
+      isMarketplaceReady: lotData.isMarketplaceReady ?? false,
+      marketplaceTitle: lotData.marketplaceTitle,
+      marketplacePrice: lotData.marketplacePrice,
+      marketplaceStock: lotData.marketplaceStock,
+      marketplaceNotes: lotData.marketplaceNotes,
+      marketplacePhotoUrl: lotData.marketplacePhotoUrl,
       createdAt: new Date().toISOString().split('T')[0],
       verificationStatus: 'pending',
       photoUrl:
@@ -3459,10 +3477,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const unifiedMarketplaceItems: UnifiedMarketplaceItem[] = [
     // A. Ceri Petani
     ...farmerLots
-      .filter((lot) => lot.availableWeightKg > 0)
+      .filter((lot) => lot.availableWeightKg > 0 && lot.isMarketplaceReady === true)
       .map((lot) => ({
         id: lot.id,
-        title: `Cherry Kopi: ${lot.variety}`,
+        title: lot.marketplaceTitle || `Cherry Kopi: ${lot.variety}`,
         category: 'cherry' as MarketplaceCategory,
         categoryLabel: 'Ceri Kopi Segar (Panen)',
         sellerRole: 'petani' as UserRole,
@@ -3472,11 +3490,12 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         variety: lot.variety,
         altitude: lot.altitude,
         tastingNotes: [`Brix ${lot.brix}°`, lot.pickingMethod.split(' ')[0]],
-        price: lot.pricePerKg,
+        price: lot.marketplacePrice || lot.pricePerKg,
         priceUnit: '/ kg',
-        availableStock: lot.availableWeightKg,
+        availableStock: lot.marketplaceStock !== undefined ? lot.marketplaceStock : lot.availableWeightKg,
         stockUnit: 'kg',
         photoUrl:
+          lot.marketplacePhotoUrl ||
           lot.photoUrl ||
           'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
         specsSummary: [
@@ -3767,6 +3786,124 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       success: true,
       message: `Berhasil menerbitkan Biji Sangrai #${newLotId} (${data.stock} pack) ke Marketplace!`,
     };
+  };
+
+  
+  const publishLotToMarketplace = (params: {
+    lotId: string;
+    category?: MarketplaceCategory;
+    marketplaceTitle?: string;
+    marketplacePrice?: number;
+    marketplaceStock?: number;
+    marketplaceNotes?: string;
+    marketplacePhotoUrl?: string;
+  }): { success: boolean; message: string } => {
+    const now = new Date().toISOString();
+
+    const isFarmerLot = farmerLots.some((l) => l.id === params.lotId);
+    if (isFarmerLot) {
+      setFarmerLots((prev) => {
+        const next = prev.map((l) => {
+          if (l.id === params.lotId) {
+            return {
+              ...l,
+              isMarketplaceReady: true,
+              marketplaceTitle: params.marketplaceTitle || l.marketplaceTitle || `Ceri Kopi Arabika ${l.variety}`,
+              marketplacePrice: params.marketplacePrice !== undefined ? params.marketplacePrice : (l.marketplacePrice || l.pricePerKg),
+              marketplaceStock: params.marketplaceStock !== undefined ? params.marketplaceStock : (l.marketplaceStock ?? l.availableWeightKg),
+              marketplaceNotes: params.marketplaceNotes || l.marketplaceNotes || l.notes,
+              marketplacePhotoUrl: params.marketplacePhotoUrl || l.marketplacePhotoUrl || l.photoUrl,
+              marketplaceReleasedAt: now,
+            };
+          }
+          return l;
+        });
+        localStorage.setItem('cct_v3_farmerLots', JSON.stringify(next));
+        return next;
+      });
+      return { success: true, message: `Lot #${params.lotId} berhasil diterbitkan ke Marketplace!` };
+    }
+
+    const isProcessedLot = processedLots.some((l) => l.id === params.lotId);
+    if (isProcessedLot) {
+      setProcessedLots((prev) => {
+        const next = prev.map((l) => {
+          if (l.id === params.lotId) {
+            return {
+              ...l,
+              isMarketplaceReady: true,
+              marketplaceTitle: params.marketplaceTitle || l.marketplaceTitle || `Green Bean: ${l.variety} (${l.processMethod})`,
+              marketplacePrice: params.marketplacePrice !== undefined ? params.marketplacePrice : (l.marketplacePrice || l.pricePerKg),
+              marketplaceStock: params.marketplaceStock !== undefined ? params.marketplaceStock : (l.marketplaceStock ?? l.availableWeightKg),
+              marketplaceNotes: params.marketplaceNotes || l.marketplaceNotes,
+              marketplacePhotoUrl: params.marketplacePhotoUrl || l.marketplacePhotoUrl || l.photoUrl,
+              marketplaceReleasedAt: now,
+            };
+          }
+          return l;
+        });
+        localStorage.setItem('cct_v3_processedLots', JSON.stringify(next));
+        return next;
+      });
+      return { success: true, message: `Green Bean Lot #${params.lotId} berhasil diterbitkan ke Marketplace!` };
+    }
+
+    const isRoastedLot = roastedLots.some((l) => l.id === params.lotId);
+    if (isRoastedLot) {
+      setRoastedLots((prev) => {
+        const next = prev.map((l) => {
+          if (l.id === params.lotId) {
+            return {
+              ...l,
+              isMarketplaceReady: true,
+              marketplaceTitle: params.marketplaceTitle || l.marketplaceTitle || `${l.roasterName} - ${l.origin} ${l.variety}`,
+              marketplacePrice: params.marketplacePrice !== undefined ? params.marketplacePrice : (l.marketplacePrice || l.pricePerPack),
+              marketplaceStock: params.marketplaceStock !== undefined ? params.marketplaceStock : (l.marketplaceStock ?? l.availablePacks),
+              marketplaceNotes: params.marketplaceNotes || l.marketplaceNotes,
+              marketplacePhotoUrl: params.marketplacePhotoUrl || l.marketplacePhotoUrl || l.photoUrl,
+              marketplaceReleasedAt: now,
+            };
+          }
+          return l;
+        });
+        localStorage.setItem('cct_v3_roastedLots', JSON.stringify(next));
+        return next;
+      });
+      return { success: true, message: `Roasted Lot #${params.lotId} berhasil diterbitkan ke Marketplace!` };
+    }
+
+    return { success: false, message: `Lot #${params.lotId} tidak ditemukan.` };
+  };
+
+  const unpublishLotFromMarketplace = (lotId: string): { success: boolean; message: string } => {
+    if (farmerLots.some((l) => l.id === lotId)) {
+      setFarmerLots((prev) => {
+        const next = prev.map((l) => (l.id === lotId ? { ...l, isMarketplaceReady: false } : l));
+        localStorage.setItem('cct_v3_farmerLots', JSON.stringify(next));
+        return next;
+      });
+      return { success: true, message: `Lot #${lotId} dialihkan ke Pipeline Olah Lanjutan (Rantai Pasok Internal).` };
+    }
+
+    if (processedLots.some((l) => l.id === lotId)) {
+      setProcessedLots((prev) => {
+        const next = prev.map((l) => (l.id === lotId ? { ...l, isMarketplaceReady: false } : l));
+        localStorage.setItem('cct_v3_processedLots', JSON.stringify(next));
+        return next;
+      });
+      return { success: true, message: `Green Bean Lot #${lotId} dialihkan ke Pipeline Olah Lanjutan.` };
+    }
+
+    if (roastedLots.some((l) => l.id === lotId)) {
+      setRoastedLots((prev) => {
+        const next = prev.map((l) => (l.id === lotId ? { ...l, isMarketplaceReady: false } : l));
+        localStorage.setItem('cct_v3_roastedLots', JSON.stringify(next));
+        return next;
+      });
+      return { success: true, message: `Roasted Lot #${lotId} dialihkan ke Pipeline Internal Kafe.` };
+    }
+
+    return { success: false, message: `Lot #${lotId} tidak ditemukan.` };
   };
 
   // 8. Universal Buy Action from Unified Marketplace
@@ -4907,6 +5044,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addCafeRetailProduct,
         buyFromUnifiedMarketplace,
         launchMarketplaceProduct,
+        publishLotToMarketplace,
+        unpublishLotFromMarketplace,
         resetToDefaultData,
         seedFarmerLots,
         getTraceabilityForRoastedLot,

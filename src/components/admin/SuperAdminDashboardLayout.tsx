@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCoffee } from '../../context/CoffeeContext';
 import {
+  CreditCard,
   Crown,
   LayoutDashboard,
   Clock,
@@ -128,6 +129,8 @@ export const SuperAdminDashboardLayout: React.FC<SuperAdminDashboardLayoutProps>
         return superAdminRoleFilter !== 'all'
           ? `Direktori Mitra • ${ROLE_DETAILS[superAdminRoleFilter as UserRole]?.label || superAdminRoleFilter}`
           : 'Direktori Semua Mitra Rantai Pasok';
+      case 'subscriptions':
+        return 'Kelola Langganan & Billing (Monetisasi Ekosistem)';
       case 'logs':
         return 'Log Audit & Transaksi Terverifikasi';
       default:
@@ -274,6 +277,23 @@ export const SuperAdminDashboardLayout: React.FC<SuperAdminDashboardLayoutProps>
                   </span>
                   <span className="text-[10px] font-mono font-bold text-stone-400 bg-stone-900 px-2 py-0.5 rounded-full border border-stone-850">
                     {users.length}
+                  </span>
+                </button>
+
+                {/* Kelola Langganan & Billing */}
+                <button
+                  onClick={() => {
+                    navigate({ view: 'dashboard', subRoute: 'subscriptions', userId: null });
+                    setMobileSidebarOpen(false);
+                  }}
+                  className={navTabClass('subscriptions')}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>Langganan &amp; Billing</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/30 text-[10px] font-black">
+                    Aktif
                   </span>
                 </button>
               </div>

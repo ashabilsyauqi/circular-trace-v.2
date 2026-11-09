@@ -44,6 +44,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { FarmerHarvestLot, CoffeeFarm, FarmWeatherData, FarmPatok } from '../types/coffee';
+import { INDONESIAN_PROVINCES_BY_REGION, COFFEE_ORIGIN_PRESETS, CoffeeOriginPreset } from '../constants/provinces';
 import { FarmerBarcodeModal } from './FarmerBarcodeModal';
 import { MetricCard } from './admin/MetricCard';
 import { ControlPanel } from './shared/ControlPanel';
@@ -90,11 +91,21 @@ export const FarmerView: React.FC = () => {
     seedCoffeeFarms,
     farmerActiveTab,
     setFarmerActiveTab,
+    route,
   } = useCoffee();
 
   // Active module tab synced with context
   const activeTab = farmerActiveTab || 'farms';
   const setActiveTab = setFarmerActiveTab;
+
+  // URL Route Synchronization for Farmer Tabs (/petani/lahan, /petani/panen, /petani/katalog, /petani/ledger)
+  React.useEffect(() => {
+    if (route.service === 'petani' && route.subRoute) {
+      if (['farms', 'upload', 'catalog', 'history'].includes(route.subRoute) && route.subRoute !== farmerActiveTab) {
+        setFarmerActiveTab(route.subRoute as any);
+      }
+    }
+  }, [route.service, route.subRoute]);
 
   // Filter & Search State for Lots
   const [searchQuery, setSearchQuery] = useState('');
@@ -151,9 +162,10 @@ export const FarmerView: React.FC = () => {
     'Suhu malam sejuk berkabut tebal memperlambat pematangan ceri, memaksimalkan sintesis gula & rasa specialty.'
   );
 
-  // Form State for uploading new harvest lot
-  const myFarms = coffeeFarms.filter((f) => f.farmerId === currentUser?.id);
-  const myLots = farmerLots.filter((l) => l.farmerId === currentUser?.id);
+  // Safe farmer lot & farm resolution (defaults to user-petani-1 if station is viewed by superadmin/observer)
+  const activeFarmerId = (currentUser?.role === 'petani' && currentUser?.id) ? currentUser.id : 'user-petani-1';
+  const myFarms = coffeeFarms.filter((f) => f.farmerId === activeFarmerId || (!f.farmerId && activeFarmerId === 'user-petani-1'));
+  const myLots = farmerLots.filter((l) => l.farmerId === activeFarmerId || (!l.farmerId && activeFarmerId === 'user-petani-1'));
   const myTransactions = transactions.filter(
     (t) =>
       t.fromName === currentUser?.name ||
@@ -597,14 +609,14 @@ export const FarmerView: React.FC = () => {
 
               <button
                 onClick={() => setActiveTab('catalog')}
-                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer font-['Poppins'] ${
                   activeTab === 'catalog'
-                    ? 'bg-stone-900 text-white shadow-xs font-black'
+                    ? 'bg-stone-900 text-white shadow-xs font-black ring-2 ring-emerald-500/50'
                     : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
                 }`}
               >
-                <Package className="w-4 h-4" />
-                <span>3. Katalog Panen Ceri</span>
+                <Store className="w-4 h-4 text-emerald-400" />
+                <span>3. Panel Seller (Katalog Ceri)</span>
                 <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300">
                   {myLots.length}
                 </span>
@@ -1228,8 +1240,41 @@ export const FarmerView: React.FC = () => {
           {/* ======================================================== */}
           {activeTab === 'catalog' && (
             <div className="space-y-4">
+              {/* Personal Seller Panel Banner for Kelompok Tani */}
+              <div className="bg-gradient-to-r from-stone-950 via-[#1C140E] to-stone-900 text-white rounded-3xl p-5 sm:p-6 border border-amber-900/40 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 font-['Poppins']">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-black text-[10px] border border-amber-400/30 uppercase tracking-wider">
+                      Panel Seller Kelompok Tani
+                    </span>
+                    <span className="text-xs text-stone-300 font-medium">
+                      {currentUser?.organization || 'Kelompok Tani Gunung Tilu Pangalengan'}
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-white">
+                    Katalog Penjualan Ceri Kopi ke Stasiun Olah (Mill)
+                  </h3>
+                  <p className="text-xs text-stone-400 max-w-xl leading-relaxed">
+                    Kelola lot ceri merah siap jual hasil panen kebun Anda. Tetapkan harga penawaran per kg, pantau verifikasi mutu brix refraktometer, dan kirim pasokan resmi ke pengolah kopi.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="bg-white/5 px-4 py-2.5 rounded-2xl border border-white/10 text-center">
+                    <span className="text-[10px] text-stone-400 uppercase block font-semibold">Siap Jual</span>
+                    <span className="text-base font-black text-amber-300">
+                      {myLots.filter((l) => l.availableWeightKg > 0).length} Lot
+                    </span>
+                  </div>
+                  <div className="bg-white/5 px-4 py-2.5 rounded-2xl border border-white/10 text-center">
+                    <span className="text-[10px] text-stone-400 uppercase block font-semibold">Total Stok</span>
+                    <span className="text-base font-black text-emerald-300">
+                      {myLots.reduce((acc, l) => acc + (l.availableWeightKg || 0), 0).toLocaleString()} kg
+                    </span>
+                  </div>
+                </div>
+              </div>
               <ControlPanel
-                breadcrumbs={[{ label: 'Katalog Panen Ceri Petani' }]}
+                breadcrumbs={[{ label: 'Panel Seller • Katalog Penjualan Ceri' }]}
                 primaryActionLabel="+ Daftarkan Panen"
                 onPrimaryAction={() => setActiveTab('upload')}
                 searchQuery={searchQuery}
@@ -2401,6 +2446,25 @@ export const FarmerView: React.FC = () => {
                   </div>
 
                   <div>
+                    <label className="block font-bold text-stone-700 uppercase mb-1">Provinsi</label>
+                    <select
+                      value={editedFarm.province || 'Sumatera Barat'}
+                      onChange={(e) => setEditedFarm({ ...editedFarm, province: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white font-medium"
+                    >
+                      {INDONESIAN_PROVINCES_BY_REGION.map((reg) => (
+                        <optgroup key={reg.region} label={reg.region}>
+                          {reg.provinces.map((prov) => (
+                            <option key={prov} value={prov}>
+                              {prov}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
                     <label className="block font-bold text-stone-700 uppercase mb-1">Ketinggian Rata-rata (mdpl)</label>
                     <input
                       type="number"
@@ -2792,10 +2856,51 @@ export const FarmerView: React.FC = () => {
             <form onSubmit={handleRegisterFarmSubmit} className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto">
               {/* SECTION 1: PROFIL LAHAN & LOKASI */}
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900 border-b border-stone-200 pb-2 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-emerald-600" />
-                  1. Identitas &amp; Lokasi Kebun
+                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900 border-b border-stone-200 pb-2 flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-emerald-600" />
+                    1. Identitas &amp; Lokasi Kebun
+                  </span>
+                  <span className="text-[11px] font-semibold text-stone-500 normal-case">
+                    Isi cepat asal kebun:
+                  </span>
                 </h4>
+
+                {/* Quick Presets Chips - Highlighting Sumatera Barat */}
+                <div className="bg-stone-50 p-3 rounded-xl border border-stone-200">
+                  <div className="text-[11px] font-bold text-stone-700 mb-2 flex items-center gap-1.5">
+                    <span>⚡ Pilih Preset Sentra Kopi Populer (1-Klik Isi Form):</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {COFFEE_ORIGIN_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => {
+                          setNewFarmName(preset.farmName);
+                          setNewFarmLocation(preset.location);
+                          setNewFarmProvince(preset.province);
+                          setNewFarmAltitudeMeters(preset.altitudeMeters);
+                          setNewFarmAltitudeDisplay(preset.altitudeDisplay);
+                          setNewFarmLatitude(preset.latitude);
+                          setNewFarmLongitude(preset.longitude);
+                          setNewFarmVarieties(preset.varieties);
+                          setNewFarmSoilType(preset.soilType);
+                          setNewFarmShadeTrees(preset.shadeTrees);
+                          setNewFarmWeatherCondition(preset.weatherCondition);
+                        }}
+                        className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1 border ${
+                          preset.province === 'Sumatera Barat'
+                            ? 'bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700 shadow-xs'
+                            : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100 hover:border-stone-300'
+                        }`}
+                        title={`Terapkan data ${preset.name} (${preset.province})`}
+                      >
+                        <span>{preset.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
@@ -2827,23 +2932,24 @@ export const FarmerView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
-                      Provinsi *
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                      <span>Provinsi *</span>
+                      <span className="text-[10px] text-emerald-600 font-bold normal-case">38 Provinsi Indonesia Lengkap</span>
                     </label>
                     <select
                       value={newFarmProvince}
                       onChange={(e) => setNewFarmProvince(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 bg-white"
+                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-500 bg-white font-medium text-stone-800"
                     >
-                      <option value="Jawa Barat">Jawa Barat</option>
-                      <option value="Aceh">Aceh</option>
-                      <option value="Sumatera Utara">Sumatera Utara</option>
-                      <option value="Jawa Tengah">Jawa Tengah</option>
-                      <option value="Jawa Timur">Jawa Timur</option>
-                      <option value="Bali">Bali</option>
-                      <option value="Nusa Tenggara Timur">Nusa Tenggara Timur</option>
-                      <option value="Sulawesi Selatan">Sulawesi Selatan</option>
-                      <option value="Papua">Papua</option>
+                      {INDONESIAN_PROVINCES_BY_REGION.map((reg) => (
+                        <optgroup key={reg.region} label={reg.region}>
+                          {reg.provinces.map((prov) => (
+                            <option key={prov} value={prov}>
+                              {prov}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
                     </select>
                   </div>
 

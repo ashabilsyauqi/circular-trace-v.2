@@ -12,6 +12,7 @@ import {
 import {
   AppUser,
   UserRole,
+  TenantOperationalService,
   UserStatus,
   MarketplaceCategory,
   CoffeeFarm,
@@ -23,6 +24,7 @@ import {
   CafeInventoryItem,
   CafeRetailProduct,
   UnifiedMarketplaceItem,
+  MarketplaceCartItem,
   SupplyChainTransaction,
   CoffeeWasteManagement,
   WarehouseGradeTier,
@@ -76,11 +78,26 @@ import {
 } from '../data/mockProcessorErpData';
 import { calculateProcessorEcoRating } from '../utils/ecoRating';
 import { validateStageQualityGate } from '../utils/coffeeQualityGates';
+import {
+  UserSubscription,
+  SubscriptionTierId,
+  SubscriptionStatus,
+  SubscriptionPlan,
+  SubscriptionInvoice,
+} from '../types/subscription';
+import {
+  SUBSCRIPTION_PLANS,
+  INITIAL_SUBSCRIPTIONS,
+  calculateDaysRemaining,
+} from '../data/mockSubscriptions';
 
 interface CoffeeContextType {
   currentUser: AppUser | null;
+  setCurrentUser: (user: AppUser | null) => void;
+  setUsers: React.Dispatch<React.SetStateAction<AppUser[]>>;
+  addTransaction: (tx: SupplyChainTransaction) => void;
   users: AppUser[];
-  loginAsRole: (role: UserRole) => void;
+  loginAsRole: (role: UserRole, targetSubRoute?: string) => void;
   loginAsUser: (userId: string) => void;
   impersonatingFromUser: AppUser | null;
   returnToSuperAdmin: () => void;
@@ -106,8 +123,8 @@ interface CoffeeContextType {
   logout: () => void;
   route: RouteState;
   navigate: (target: NavigationTarget) => RouteState;
-  activeView: 'landing' | 'dashboard' | 'marketplace' | 'transactions' | 'scan';
-  setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions' | 'scan') => void;
+  activeView: AppView;
+  setActiveView: (view: AppView) => void;
   farmerActiveTab: 'farms' | 'upload' | 'catalog' | 'history';
   setFarmerActiveTab: (tab: 'farms' | 'upload' | 'catalog' | 'history') => void;
   roasterActiveTab: 'purchasing' | 'inventory' | 'work_orders' | 'production' | 'qc' | 'selling' | 'history' | 'dashboard';
@@ -120,8 +137,33 @@ interface CoffeeContextType {
   setCafeActiveTab: (tab: 'inventory' | 'calculator' | 'my_products' | 'create_product' | 'history') => void;
   verifierActiveTab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history';
   setVerifierActiveTab: (tab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history') => void;
-  superAdminActiveTab: 'dashboard' | 'approvals' | 'directory' | 'logs';
-  setSuperAdminActiveTab: (tab: 'dashboard' | 'approvals' | 'directory' | 'logs') => void;
+  tenantActiveService: TenantOperationalService;
+  setTenantActiveService: (service: TenantOperationalService) => void;
+  ensureTenantSelfPipeline: (user?: AppUser | null) => void;
+  superAdminActiveTab: 'dashboard' | 'approvals' | 'directory' | 'subscriptions' | 'logs';
+  setSuperAdminActiveTab: (tab: 'dashboard' | 'approvals' | 'directory' | 'subscriptions' | 'logs') => void;
+  subscriptions: UserSubscription[];
+  getUserSubscription: (userId: string) => UserSubscription | null;
+  hasRoleAccess: (role: UserRole, user?: AppUser | null) => boolean;
+  subscribeUser: (params: {
+    userId: string;
+    tierId: SubscriptionTierId;
+    billingCycle: 'monthly' | 'yearly';
+    paymentMethod: string;
+    tenantData?: {
+      name: string;
+      organization: string;
+      email: string;
+      phone: string;
+      province: string;
+      cityAddress: string;
+      role: UserRole;
+      taxId?: string;
+    };
+  }) => { success: boolean; message: string; subscription: UserSubscription; invoice?: SubscriptionInvoice };
+  extendSubscription: (subscriptionId: string, daysToAdd?: number) => { success: boolean; message: string };
+  updateSubscriptionTier: (subscriptionId: string, newTierId: SubscriptionTierId) => { success: boolean; message: string };
+  cancelOrSuspendSubscription: (subscriptionId: string) => { success: boolean; message: string };
   superAdminRoleFilter: string;
   setSuperAdminRoleFilter: (role: string) => void;
   verificationStamps: VerificationStamp[];
@@ -181,6 +223,30 @@ interface CoffeeContextType {
   cafeProducts: CafeRetailProduct[];
   transactions: SupplyChainTransaction[];
   unifiedMarketplaceItems: UnifiedMarketplaceItem[];
+  // Shopping Cart & Bundle Payment
+  cartItems: MarketplaceCartItem[];
+  addToCart: (item: UnifiedMarketplaceItem, quantity?: number) => void;
+  updateCartQuantity: (itemId: string, newQty: number) => void;
+  removeFromCart: (itemId: string) => void;
+  toggleSelectCartItem: (itemId: string) => void;
+  toggleSelectSellerGroup: (sellerName: string) => void;
+  selectAllCartItems: (select: boolean) => void;
+  clearCart: (onlySelected?: boolean) => void;
+  updateCartItemNotes: (itemId: string, notes: string) => void;
+  checkoutBundle: (params: {
+    courierId: string;
+    courierName: string;
+    courierCost: number;
+    paymentMethod: string;
+    shippingAddress?: string;
+  }) => {
+    success: boolean;
+    invoiceNo: string;
+    trackingNo: string;
+    message: string;
+    totalAmount: number;
+    bundledItems: MarketplaceCartItem[];
+  };
   addFarmerHarvest: (
     lotData: Omit<FarmerHarvestLot, 'id' | 'createdAt' | 'status' | 'availableWeightKg' | 'farmerId' | 'farmerName'>
   ) => FarmerHarvestLot | null;
@@ -343,6 +409,21 @@ const CoffeeContext = createContext<CoffeeContextType | undefined>(undefined);
 
 export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(() => {
+    // Priority 1: Check if URL explicitly specifies an operational workstation service domain
+    const fromUrl = parseRouteFromLocation();
+    if (fromUrl.view === 'dashboard' && fromUrl.service) {
+      const s = fromUrl.service.toLowerCase();
+      const serviceRole: UserRole = s === 'admin' ? 'superadmin' : (s as UserRole);
+      if (['petani', 'pengolah', 'gudang', 'roaster', 'cafe', 'verifikator', 'superadmin'].includes(serviceRole)) {
+        const matched = MOCK_USERS.find((u) => u.role === serviceRole);
+        if (matched) {
+          try {
+            localStorage.setItem('cct_live_auth_user', JSON.stringify(matched));
+          } catch {}
+          return matched;
+        }
+      }
+    }
     const saved = localStorage.getItem('cct_live_auth_user');
     if (saved) {
       try {
@@ -431,13 +512,47 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Automatic synchronization for SuperAdmin tab & service filter from URL
       if (parsed.view === 'dashboard') {
-        if (parsed.subRoute && ['dashboard', 'approvals', 'directory', 'logs'].includes(parsed.subRoute)) {
-          setSuperAdminActiveTabState(parsed.subRoute as any);
-        }
         if (parsed.service) {
-          setSuperAdminRoleFilterState(parsed.service);
-        } else if (parsed.subRoute === 'directory' && !parsed.service) {
-          setSuperAdminRoleFilterState('all');
+          const s = parsed.service.toLowerCase();
+          const serviceRole: UserRole = s === 'admin' ? 'superadmin' : (s as UserRole);
+
+          // Synchronize active user if current session is not in this role
+          if (['petani', 'pengolah', 'gudang', 'roaster', 'cafe', 'verifikator'].includes(serviceRole)) {
+            setCurrentUser((prevUser) => {
+              if (!prevUser || prevUser.role !== serviceRole) {
+                const matched = users.find((u) => u.role === serviceRole) || MOCK_USERS.find((u) => u.role === serviceRole);
+                if (matched) {
+                  try {
+                    localStorage.setItem('cct_live_auth_user', JSON.stringify(matched));
+                  } catch {}
+                  return matched;
+                }
+              }
+              return prevUser;
+            });
+          }
+          if (s === 'petani' && parsed.subRoute) {
+            setFarmerActiveTabState(parsed.subRoute as any);
+          } else if (s === 'pengolah' && parsed.subRoute) {
+            setProcessorActiveTabState(parsed.subRoute as any);
+          } else if (s === 'gudang' && parsed.subRoute) {
+            setWarehouseActiveTabState(parsed.subRoute as any);
+          } else if (s === 'roaster' && parsed.subRoute) {
+            setRoasterActiveTabState(parsed.subRoute as any);
+          } else if (s === 'cafe' && parsed.subRoute) {
+            setCafeActiveTabState(parsed.subRoute as any);
+          } else if (s === 'verifikator' && parsed.subRoute) {
+            setVerifierActiveTabState(parsed.subRoute as any);
+          } else if ((s === 'admin' || s === 'superadmin') && parsed.subRoute) {
+            if (['dashboard', 'approvals', 'directory', 'subscriptions', 'logs'].includes(parsed.subRoute)) {
+              setSuperAdminActiveTabState(parsed.subRoute as any);
+            }
+            if (parsed.searchParams?.service) {
+              setSuperAdminRoleFilterState(parsed.searchParams.service);
+            }
+          }
+        } else if (parsed.subRoute && ['dashboard', 'approvals', 'directory', 'logs'].includes(parsed.subRoute)) {
+          setSuperAdminActiveTabState(parsed.subRoute as any);
         }
       }
     };
@@ -609,16 +724,25 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [impersonatingFromUser]);
 
   const [farmerActiveTab, setFarmerActiveTabState] = useState<'farms' | 'upload' | 'catalog' | 'history'>(() => {
+    const fromUrl = parseRouteFromLocation();
+    if (fromUrl.service === 'petani' && fromUrl.subRoute && ['farms', 'upload', 'catalog', 'history'].includes(fromUrl.subRoute)) {
+      return fromUrl.subRoute as any;
+    }
     return (localStorage.getItem('cct_tab_farmer') as 'farms' | 'upload' | 'catalog' | 'history') || 'farms';
   });
   const setFarmerActiveTab = (tab: 'farms' | 'upload' | 'catalog' | 'history') => {
     setFarmerActiveTabState(tab);
     localStorage.setItem('cct_tab_farmer', tab);
+    navigate({ view: 'dashboard', service: 'petani', subRoute: tab });
   };
 
   const [roasterActiveTab, setRoasterActiveTabState] = useState<
     'purchasing' | 'inventory' | 'work_orders' | 'production' | 'qc' | 'selling' | 'history' | 'dashboard'
   >(() => {
+    const fromUrl = parseRouteFromLocation();
+    if (fromUrl.service === 'roaster' && fromUrl.subRoute && ['purchasing', 'inventory', 'work_orders', 'production', 'qc', 'selling', 'history', 'dashboard'].includes(fromUrl.subRoute)) {
+      return fromUrl.subRoute as any;
+    }
     return (
       (localStorage.getItem('cct_tab_roaster') as
         | 'purchasing'
@@ -636,11 +760,16 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   ) => {
     setRoasterActiveTabState(tab);
     localStorage.setItem('cct_tab_roaster', tab);
+    navigate({ view: 'dashboard', service: 'roaster', subRoute: tab });
   };
 
   const [processorActiveTab, setProcessorActiveTabState] = useState<
     'sourcing' | 'batches' | 'inventory' | 'selling' | 'history' | 'dashboard'
   >(() => {
+    const fromUrl = parseRouteFromLocation();
+    if (fromUrl.service === 'pengolah' && fromUrl.subRoute && ['sourcing', 'batches', 'inventory', 'selling', 'history', 'dashboard'].includes(fromUrl.subRoute)) {
+      return fromUrl.subRoute as any;
+    }
     return (
       (localStorage.getItem('cct_tab_processor') as
         | 'sourcing'
@@ -656,19 +785,29 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   ) => {
     setProcessorActiveTabState(tab);
     localStorage.setItem('cct_tab_processor', tab);
+    navigate({ view: 'dashboard', service: 'pengolah', subRoute: tab });
   };
 
   const [warehouseActiveTab, setWarehouseActiveTabState] = useState<'inventory' | 'marketplace' | 'history'>(() => {
+    const fromUrl = parseRouteFromLocation();
+    if (fromUrl.service === 'gudang' && fromUrl.subRoute && ['inventory', 'marketplace', 'history'].includes(fromUrl.subRoute)) {
+      return fromUrl.subRoute as any;
+    }
     return (localStorage.getItem('cct_tab_warehouse') as 'inventory' | 'marketplace' | 'history') || 'inventory';
   });
   const setWarehouseActiveTab = (tab: 'inventory' | 'marketplace' | 'history') => {
     setWarehouseActiveTabState(tab);
     localStorage.setItem('cct_tab_warehouse', tab);
+    navigate({ view: 'dashboard', service: 'gudang', subRoute: tab });
   };
 
   const [cafeActiveTab, setCafeActiveTabState] = useState<
     'inventory' | 'calculator' | 'my_products' | 'create_product' | 'history'
   >(() => {
+    const fromUrl = parseRouteFromLocation();
+    if (fromUrl.service === 'cafe' && fromUrl.subRoute && ['inventory', 'calculator', 'my_products', 'create_product', 'history'].includes(fromUrl.subRoute)) {
+      return fromUrl.subRoute as any;
+    }
     return (
       (localStorage.getItem('cct_tab_cafe') as
         | 'inventory'
@@ -683,11 +822,16 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   ) => {
     setCafeActiveTabState(tab);
     localStorage.setItem('cct_tab_cafe', tab);
+    navigate({ view: 'dashboard', service: 'cafe', subRoute: tab });
   };
 
   const [verifierActiveTab, setVerifierActiveTabState] = useState<
     'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history'
   >(() => {
+    const fromUrl = parseRouteFromLocation();
+    if (fromUrl.service === 'verifikator' && fromUrl.subRoute && ['petani', 'pengolah', 'gudang', 'roaster', 'cafe', 'history'].includes(fromUrl.subRoute)) {
+      return fromUrl.subRoute as any;
+    }
     return (
       (localStorage.getItem('cct_tab_verifier') as
         | 'petani'
@@ -701,17 +845,18 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const setVerifierActiveTab = (tab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history') => {
     setVerifierActiveTabState(tab);
     localStorage.setItem('cct_tab_verifier', tab);
+    navigate({ view: 'dashboard', service: 'verifikator', subRoute: tab });
   };
 
-  const [superAdminActiveTab, setSuperAdminActiveTabState] = useState<'dashboard' | 'approvals' | 'directory' | 'logs'>(() => {
+  const [superAdminActiveTab, setSuperAdminActiveTabState] = useState<'dashboard' | 'approvals' | 'directory' | 'subscriptions' | 'logs'>(() => {
     const fromUrl = parseRouteFromLocation();
-    if (fromUrl.subRoute && ['dashboard', 'approvals', 'directory', 'logs'].includes(fromUrl.subRoute)) {
+    if (fromUrl.subRoute && ['dashboard', 'approvals', 'directory', 'subscriptions', 'logs'].includes(fromUrl.subRoute)) {
       return fromUrl.subRoute as any;
     }
     return (localStorage.getItem('cct_tab_superadmin') as 'dashboard' | 'approvals' | 'directory' | 'logs') || 'dashboard';
   });
 
-  const setSuperAdminActiveTab = (tab: 'dashboard' | 'approvals' | 'directory' | 'logs') => {
+  const setSuperAdminActiveTab = (tab: 'dashboard' | 'approvals' | 'directory' | 'subscriptions' | 'logs') => {
     setSuperAdminActiveTabState(tab);
     localStorage.setItem('cct_tab_superadmin', tab);
     navigate({
@@ -735,6 +880,280 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       service: role,
       userId: null,
     });
+  };
+
+
+  // ---------------------------------------------------------------------------
+  // SUBSCRIPTION & MONETIZATION GOVERNANCE STATE
+  // ---------------------------------------------------------------------------
+  const [subscriptions, setSubscriptions] = useState<UserSubscription[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('cct_subscriptions_master');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error loading subscriptions from localStorage', e);
+        }
+      }
+    }
+    return INITIAL_SUBSCRIPTIONS;
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cct_subscriptions_master', JSON.stringify(subscriptions));
+    }
+  }, [subscriptions]);
+
+  const getUserSubscription = (userId: string): UserSubscription | null => {
+    const found = subscriptions.find((s) => s.userId === userId);
+    if (found) return found;
+
+    // Fallback: Seluruh mitra/petani yang login/register langsung memiliki langganan aktif otomatis
+    const targetUser = users.find((u) => u.id === userId) || MOCK_USERS.find((u) => u.id === userId);
+    if (targetUser) {
+      return {
+        id: 'SUB-AKTIF-' + targetUser.id.replace('user-', '').toUpperCase(),
+        userId: targetUser.id,
+        userName: targetUser.name,
+        userEmail: targetUser.email || (targetUser.username + '@circulartrace.id'),
+        userPhone: targetUser.phone || '0812-3456-7890',
+        organization: targetUser.organization || 'Mitra Rantai Pasok Kopi',
+        location: targetUser.location || 'Indonesia',
+        tierId: '1_year',
+        tierName: 'Bundle 1 Tahun (Full Ecosystem Access)',
+        status: 'active',
+        startDate: '2026-10-01',
+        expiryDate: '2027-10-01',
+        daysRemaining: 330,
+        durationDays: 365,
+        billingCycle: 'yearly',
+        pricePaid: 3990000,
+        paymentMethod: 'bank_transfer',
+        allowedRoles: ['petani', 'pengolah', 'gudang', 'roaster', 'cafe', 'verifikator', 'buyer'],
+        autoRenew: true,
+        notes: 'Akses penuh ekosistem tanpa kunci (Open Access Fase Onboarding Petani & Stakeholder).',
+        invoices: [],
+      };
+    }
+    return null;
+  };
+
+  const hasRoleAccess = (role: UserRole, user?: AppUser | null): boolean => {
+    const targetUser = user || currentUser;
+    if (!targetUser) return false;
+
+    // 1. Super Admin memiliki akses penuh tata kelola ekosistem
+    if (targetUser.role === 'superadmin' || targetUser.isSuperAdmin) {
+      return true;
+    }
+
+    // 2. Akun Pembeli (Buyer) bebas akses tanpa biaya langganan
+    if (role === 'buyer' || targetUser.role === 'buyer') {
+      return true;
+    }
+
+    // 3. Akun Brand / Stakeholder Operasional (Petani, Mill, Gudang, Roaster, Cafe, Verifikator)
+    // WAJIB memiliki paket langganan aktif atau trial yang mencakup perannya
+    const sub = getUserSubscription(targetUser.id);
+    if (!sub) {
+      return false;
+    }
+
+    if (sub.status === 'expired') {
+      return false;
+    }
+
+    // Verifikasi apakah peran operasional tercakup dalam paket yang dibeli
+    return sub.allowedRoles.includes(role);
+  };
+
+  const subscribeUser = (params: {
+    userId: string;
+    tierId: SubscriptionTierId;
+    billingCycle: 'monthly' | 'yearly';
+    paymentMethod: string;
+    tenantData?: {
+      name: string;
+      organization: string;
+      email: string;
+      phone: string;
+      province: string;
+      cityAddress: string;
+      role: UserRole;
+      taxId?: string;
+    };
+  }) => {
+    let targetUser = users.find((u) => u.id === params.userId) || currentUser;
+
+    const plan = SUBSCRIPTION_PLANS.find((p) => p.id === params.tierId);
+    if (!plan) return { success: false, message: 'Paket langganan tidak valid', subscription: null as any, invoice: null as any };
+
+    // If live tenantData is passed from form, register/update the user in state
+    let finalUserId = targetUser?.id || ('user-' + Date.now().toString().slice(-6));
+    let userName = targetUser?.name || 'Mitra Kopi';
+    let userEmail = targetUser?.email || (targetUser ? targetUser.username + '@circulartrace.com' : 'mitra@circulartrace.com');
+    let userPhone = targetUser?.phone || '0812-0000-0000';
+    let organization = targetUser?.organization || 'Kelompok Tani Kopi';
+    let location = targetUser?.location || 'Indonesia';
+    let userRole: UserRole = targetUser?.role || 'petani';
+
+    if (params.tenantData) {
+      finalUserId = 'user-' + Date.now().toString().slice(-6);
+      userName = params.tenantData.name;
+      organization = params.tenantData.organization;
+      userEmail = params.tenantData.email;
+      userPhone = params.tenantData.phone;
+      location = `${params.tenantData.cityAddress}, ${params.tenantData.province}`;
+      userRole = params.tenantData.role;
+
+      const newRegisteredUser: AppUser = {
+        id: finalUserId,
+        name: userName,
+        username: userEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'tenant_' + Date.now().toString().slice(-4),
+        email: userEmail,
+        phone: userPhone,
+        role: userRole,
+        organization: organization,
+        location: location,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        status: 'active',
+        balance: 15000000,
+        registeredAt: new Date().toLocaleString('id-ID'),
+      };
+
+      setUsers((prev) => [newRegisteredUser, ...prev.filter((u) => u.email !== userEmail && u.id !== finalUserId)]);
+      targetUser = newRegisteredUser;
+      setCurrentUser(newRegisteredUser);
+    }
+
+    if (!targetUser) return { success: false, message: 'Pengguna tidak ditemukan', subscription: null as any, invoice: null as any };
+
+    const today = new Date();
+    const startDate = today.toISOString().split('T')[0];
+    const expDate = new Date(today);
+    
+    // Accurate duration calculation based on plan.durationDays
+    const durationDays = plan.durationDays || (params.billingCycle === 'yearly' ? 365 : 30);
+    expDate.setDate(expDate.getDate() + durationDays);
+    const expiryDate = expDate.toISOString().split('T')[0];
+    const daysRemaining = calculateDaysRemaining(expiryDate);
+    const pricePaid = plan.totalPrice !== undefined ? plan.totalPrice : (params.billingCycle === 'yearly' ? plan.pricePerYear : plan.pricePerMonth);
+
+    const invoiceId = 'INV-' + Date.now().toString().slice(-6);
+    const newInvoice: SubscriptionInvoice = {
+      id: invoiceId,
+      invoiceNumber: 'INV/' + new Date().getFullYear() + '/' + (new Date().getMonth() + 1).toString().padStart(2, '0') + '/CCT-' + invoiceId.slice(-4),
+      date: startDate,
+      dueDate: expiryDate,
+      amount: pricePaid,
+      tierId: plan.id,
+      tierName: plan.name,
+      status: 'paid',
+      paymentMethod: params.paymentMethod as any,
+      receiptNumber: 'REC-' + Date.now().toString().slice(-8),
+    };
+
+    const newSub: UserSubscription = {
+      id: 'SUB-' + Date.now().toString().slice(-6),
+      userId: finalUserId,
+      userName,
+      userEmail,
+      userPhone,
+      organization,
+      location,
+      tierId: plan.id,
+      tierName: plan.name,
+      status: 'active',
+      startDate,
+      expiryDate,
+      daysRemaining,
+      durationDays,
+      billingCycle: params.billingCycle,
+      pricePaid,
+      paymentMethod: params.paymentMethod as any,
+      allowedRoles: plan.allowedRoles,
+      autoRenew: true,
+      invoices: [newInvoice],
+      notes: params.tenantData?.taxId ? `NPWP/NIK: ${params.tenantData.taxId}` : undefined,
+    };
+
+    setSubscriptions((prev) => {
+      const filtered = prev.filter((s) => s.userId !== finalUserId);
+      return [newSub, ...filtered];
+    });
+
+    ensureTenantSelfPipeline(targetUser);
+    setTenantActiveService('dashboard');
+
+    return {
+      success: true,
+      message: 'Selamat! Paket ' + plan.name + ' (' + (params.billingCycle === 'yearly' ? 'Tahunan' : 'Bulanan') + ') berhasil diaktifkan untuk ' + targetUser.name + '!',
+      subscription: newSub,
+    };
+  };
+
+  const extendSubscription = (subscriptionId: string, daysToAdd: number = 30) => {
+    let updatedName = '';
+    setSubscriptions((prev) =>
+      prev.map((sub) => {
+        if (sub.id === subscriptionId) {
+          updatedName = sub.organization || sub.userName;
+          const currentExp = new Date(sub.expiryDate);
+          const baseDate = currentExp > new Date() ? currentExp : new Date();
+          baseDate.setDate(baseDate.getDate() + daysToAdd);
+          const newExpStr = baseDate.toISOString().split('T')[0];
+          return {
+            ...sub,
+            expiryDate: newExpStr,
+            daysRemaining: calculateDaysRemaining(newExpStr),
+            status: 'active' as const,
+          };
+        }
+        return sub;
+      })
+    );
+    return {
+      success: true,
+      message: 'Masa sewa ' + (updatedName || 'langganan') + ' berhasil diperpanjang +' + daysToAdd + ' hari!',
+    };
+  };
+
+  const updateSubscriptionTier = (subscriptionId: string, newTierId: SubscriptionTierId) => {
+    const plan = SUBSCRIPTION_PLANS.find((p) => p.id === newTierId);
+    if (!plan) return { success: false, message: 'Paket tidak valid' };
+
+    setSubscriptions((prev) =>
+      prev.map((sub) => {
+        if (sub.id === subscriptionId) {
+          return {
+            ...sub,
+            tierId: plan.id,
+            tierName: plan.name,
+            allowedRoles: plan.allowedRoles,
+          };
+        }
+        return sub;
+      })
+    );
+    return { success: true, message: 'Paket berhasil diubah menjadi ' + plan.name + '!' };
+  };
+
+  const cancelOrSuspendSubscription = (subscriptionId: string) => {
+    setSubscriptions((prev) =>
+      prev.map((sub) => {
+        if (sub.id === subscriptionId) {
+          const nextStatus = sub.status === 'expired' ? ('active' as const) : ('expired' as const);
+          return {
+            ...sub,
+            status: nextStatus,
+          };
+        }
+        return sub;
+      })
+    );
+    return { success: true, message: 'Status langganan berhasil diperbarui.' };
   };
 
   const [verificationStamps, setVerificationStamps] = useState<VerificationStamp[]>(() => {
@@ -879,9 +1298,21 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return saved ? JSON.parse(saved) : INITIAL_CAFE_PRODUCTS;
   });
 
+  
+  const addTransaction = (tx: SupplyChainTransaction) => {
+    setTransactions((prev) => [tx, ...prev]);
+  };
   const [transactions, setTransactions] = useState<SupplyChainTransaction[]>(() => {
     const saved = localStorage.getItem('cct_v3_transactions');
-    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+    if (!saved) return INITIAL_TRANSACTIONS;
+    try {
+      const parsed: SupplyChainTransaction[] = JSON.parse(saved);
+      const existingIds = new Set(parsed.map((t) => t.id));
+      const missingInitial = INITIAL_TRANSACTIONS.filter((t) => !existingIds.has(t.id));
+      return [...missingInitial, ...parsed];
+    } catch {
+      return INITIAL_TRANSACTIONS;
+    }
   });
 
   // --- QREMA ROASTERY ERP STATE ---
@@ -994,14 +1425,329 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem('cct_v3_roasterMachines', JSON.stringify(roasterMachines));
   }, [roasterMachines]);
 
-  const loginAsRole = (role: UserRole) => {
+
+  const [tenantActiveService, setTenantActiveServiceState] = useState<TenantOperationalService>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('cct_tenant_active_service');
+      if (saved) return saved as TenantOperationalService;
+    }
+    return 'dashboard';
+  });
+
+  const setTenantActiveService = (service: TenantOperationalService) => {
+    setTenantActiveServiceState(service);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cct_tenant_active_service', service);
+    }
+  };
+
+  const ensureTenantSelfPipeline = (targetUserParam?: AppUser | null) => {
+    const target = targetUserParam || currentUser;
+    if (!target || target.role === 'superadmin') return;
+
+    const userCleanId = target.id.replace(/[^a-zA-Z0-9]/g, '');
+    const shortId = userCleanId.slice(-4) || 'tnt1';
+    const org = target.organization || 'Kelompok Tani / Bisnis Kopi Mandiri';
+    const loc = target.location || 'Solok, Sumatera Barat';
+
+    // 1. Check if farm exists for this user
+    setCoffeeFarms((prev) => {
+      const existing = prev.find((f) => f.farmerId === target.id);
+      if (existing) return prev;
+      const newFarm: CoffeeFarm = {
+        id: 'FARM-' + shortId + '-01',
+        farmerId: target.id,
+        farmerName: target.name,
+        farmName: 'Kebun Kopi Mandiri ' + org,
+        location: loc,
+        province: 'Sumatera Barat',
+        altitudeDisplay: '1.520 mdpl',
+        altitudeMeters: 1520,
+        landAreaHectares: 2.5,
+        totalTreesCount: 4200,
+        primaryVarieties: ['Sigarar Utang', 'Kartika', 'Typica'],
+        organicStatus: 'Organik Bersertifikat (SNI / USDA)',
+        eudrCompliant: true,
+        establishedYear: 2018,
+        weatherData: { currentCondition: 'Cerah Berawan', temperatureCelsius: 21, humidityPercent: 78, annualRainfallMm: 2200, sunshineHoursPerDay: 7.5, windSpeedKph: 12, microclimateNote: 'Iklim mikro pegunungan sejuk dan lembab' },
+        soilType: 'Andosol Vulkanik',
+        shadeTrees: ['Pohon Alpukat', 'Kayu Manis'],
+        coordinates: { latitude: -0.9241, longitude: 100.6245 },
+        patokList: [
+          {
+            id: 'PTK-01',
+            name: 'Patok 1 (Batas Hutan Konservasi)',
+            latitude: -0.9238,
+            longitude: 100.6241,
+            elevationMeters: 1540,
+            physicalType: 'Patok Beton BPN',
+            condition: 'Kondisi Baik & Kokoh',
+            landmarkNote: 'Sempadan hutan lindung',
+          },
+          {
+            id: 'PTK-02',
+            name: 'Patok 2 (Jalan Usaha Tani)',
+            latitude: -0.9245,
+            longitude: 100.6249,
+            elevationMeters: 1515,
+            physicalType: 'Patok Beton BPN',
+            condition: 'Kondisi Baik & Kokoh',
+            landmarkNote: 'Pintu masuk kebun mandiri',
+          },
+        ],
+        photoUrl: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=800&auto=format&fit=crop&q=80',
+        createdAt: new Date().toISOString().split('T')[0],
+        verificationStatus: 'verified',
+      };
+      return [newFarm, ...prev];
+    });
+
+    // 2. Check if harvest lot exists
+    setFarmerLots((prev) => {
+      const existing = prev.find((l) => l.farmerId === target.id);
+      if (existing) return prev;
+      const newLot: FarmerHarvestLot = {
+        id: 'LOT-PTN-' + shortId + '-01',
+        farmerId: target.id,
+        farmerName: target.name,
+        farmId: 'FARM-' + shortId + '-01',
+        farmName: 'Kebun Kopi Mandiri ' + org,
+        farmLocation: loc,
+        variety: 'Arabika Sigarar Utang',
+        harvestDate: new Date().toISOString().split('T')[0],
+        pickingMethod: 'Petik Merah Optimal (95%+)',
+        brix: 22.8,
+        totalWeightKg: 450,
+        availableWeightKg: 450,
+        altitude: '1.520 mdpl',
+        notes: 'Panen ceri petik merah segar kebun ' + org + '.',
+        photoUrl: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
+        pricePerKg: 16500,
+        status: 'available',
+        createdAt: new Date().toISOString().split('T')[0],
+        verificationStatus: 'verified',
+      };
+      return [newLot, ...prev];
+    });
+
+    // 3. Check if processing batch exists
+    setProcessingBatches((prev) => {
+      const existing = prev.find((b) => b.processorId === target.id);
+      if (existing) return prev;
+      const baseBatch = prev[0] || INITIAL_PROCESSING_BATCHES[0];
+      const newBatch: ProcessingBatch = {
+        ...baseBatch,
+        id: 'BATCH-' + shortId + '-01',
+        batchCode: 'LOT-2026-' + shortId,
+        processorId: target.id,
+        processorName: org + ' Wet & Dry Mill',
+        sourceFarmerLotId: 'LOT-PTN-' + shortId + '-01',
+        sourceFarmerName: target.name,
+        sourceOrigin: loc,
+        startDate: new Date().toISOString().split('T')[0],
+        status: 'in_progress',
+      };
+      return [newBatch, ...prev];
+    });
+
+    // 4. Check if processed green bean exists
+    setProcessedLots((prev) => {
+      const existing = prev.find((p) => p.processorId === target.id);
+      if (existing) return prev;
+      const newGB: ProcessedGreenBeanLot = {
+        id: 'GB-' + shortId + '-01',
+        processorId: target.id,
+        processorName: org + ' Wet & Dry Mill',
+        sourceFarmerLotId: 'LOT-PTN-' + shortId + '-01',
+        sourceFarmerName: target.name,
+        sourceOrigin: loc,
+        variety: 'Arabika Sigarar Utang',
+        altitude: '1.520 mdpl',
+        processMethod: 'Honey (Yellow/Red)',
+        fermentationTimeHours: 72,
+        dryingMethod: 'Solar Dryer Raised Bed',
+        moistureContentPercent: 11.2,
+        waterActivityAw: 0.58,
+        grade: 'Specialty Grade 1',
+        defectCount: 2,
+        screenSize: 'Size 16-18 (Large Screen)',
+        greenBeanWeightKg: 70,
+        availableWeightKg: 70,
+        pricePerKg: 145000,
+        cuppingNotes: ['Blackcurrant', 'Brown Sugar', 'Floral Jasmine', 'Mandarin Orange'],
+        processedDate: new Date().toISOString().split('T')[0],
+        status: 'available',
+        verificationStatus: 'verified',
+        wasteManagement: {
+          wasteType: 'Kulit Ceri (Pulp / Cascara)',
+          utilization: 'Kompos Pupuk Organik Kebun (Sirkular)',
+          weightKgOrLiters: 45,
+          recipientOrLocation: 'Kebun Mandiri ' + org,
+          processingMethod: 'Pengeringan Surya Alami',
+        },
+      };
+      return [newGB, ...prev];
+    });
+
+    // 5. Check if warehouse lot exists
+    setWarehouseLots((prev) => {
+      const existing = prev.find((w) => w.warehouseId === target.id);
+      if (existing) return prev;
+      const newWH: WarehouseLot = {
+        id: 'WH-' + shortId + '-01',
+        warehouseId: target.id,
+        warehouseName: 'Gudang Hermetis ' + org,
+        sourceGreenBeanId: 'GB-' + shortId + '-01',
+        sourceProcessorName: org + ' Wet Mill',
+        sourceFarmerName: target.name,
+        origin: loc,
+        variety: 'Arabika Sigarar Utang',
+        altitude: '1.520 mdpl',
+        processMethod: 'Honey Process',
+        storageLocation: 'Gudang A-03 (Pallet Kayu Pine)',
+        temperatureCelsius: 19.4,
+        humidityPercent: 58,
+        packagingType: 'GrainPro + Karung Goni 60kg',
+        verifiedScaScore: 86.75,
+        weightKg: 70,
+        availableWeightKg: 70,
+        pricePerKg: 145000,
+        purchasePricePerKg: 135000,
+        storedDate: new Date().toISOString().split('T')[0],
+        status: 'available',
+        qcStatus: 'passed',
+        gradeTier: 'Grade 1 - Super Premium',
+        defectCount: 2,
+        screenSize: 'Screen 18+',
+        verificationStatus: 'verified',
+      };
+      return [newWH, ...prev];
+    });
+
+    // 6. Check if roasted lot exists
+    setRoastedLots((prev) => {
+      const existing = prev.find((r) => r.roasterId === target.id);
+      if (existing) return prev;
+      const newRoast: RoastedBeanLot = {
+        id: 'RST-' + shortId + '-01',
+        roasterId: target.id,
+        roasterName: org + ' Artisan Roastery',
+        sourceWarehouseLotId: 'WH-' + shortId + '-01',
+        origin: loc,
+        variety: 'Arabika Sigarar Utang',
+        altitude: '1.520 mdpl',
+        processMethod: 'Honey Process',
+        farmerName: target.name,
+        roasterMachine: 'Probat 5kg Artisan / sangrAI Digital Curve',
+        roastLevel: 'Medium Roast',
+        agtronNumber: 58,
+        roastDate: new Date().toISOString().split('T')[0],
+        developmentTimeRatio: 14.8,
+        tastingNotes: ['Floral Jasmine', 'Blackcurrant', 'Brown Sugar Sweetness', 'Clean Finish'],
+        scaCuppingScore: 86.75,
+        packageWeightGrams: 250,
+        totalPacks: 100,
+        availablePacks: 100,
+        pricePerPack: 95000,
+        restingRecommendationDays: 7,
+        recommendedBrew: ['V60', 'Aeropress', 'Espresso'],
+        status: 'available',
+        verificationStatus: 'verified',
+      };
+      return [newRoast, ...prev];
+    });
+
+    // 7. Check if cafe product exists
+    setCafeProducts((prev) => {
+      const existing = prev.find((c) => c.cafeId === target.id);
+      if (existing) return prev;
+      const newProd: CafeRetailProduct = {
+        id: 'PROD-' + shortId + '-01',
+        cafeId: target.id,
+        cafeName: org + ' Coffee Bar & Brew',
+        name: 'Signature Single Origin V60 - ' + org,
+        origin: loc,
+        variety: 'Arabika Sigarar Utang',
+        roastLevel: 'Medium Roast',
+        tastingNotes: ['Floral Jasmine', 'Sweet Citrus', 'Brown Sugar'],
+        price: 32000,
+        packageUnit: 'Pack 250g',
+        totalStock: 120,
+        availableStock: 120,
+        description: 'Biji kopi dipetik dari Kebun Mandiri ' + org + ', diolah sendiri di mill mandiri dan disangrai khusus profil artisan.',
+        photoUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80',
+        createdAt: new Date().toISOString().split('T')[0],
+        verificationStatus: 'verified',
+      };
+      return [newProd, ...prev];
+    });
+
+    // 8. Check if stamp exists
+    setVerificationStamps((prev) => {
+      const existing = prev.find((s) => s.verifierOrg === org || s.id.includes(shortId));
+      if (existing) return prev;
+      const newStamp: VerificationStamp = {
+        id: 'STAMP-' + shortId + '-01',
+        stampType: 'harvest_quality',
+        title: 'Sertifikasi Mutu & 4C Code of Conduct v4.1',
+        certificateNumber: 'CERT-4C-' + shortId + '-2026',
+        verifierId: 'user-verifier-1',
+        verifierName: 'Dr. Aris Sudrajat',
+        verifierTitle: 'Lead Auditor 4C & EUDR',
+        verifierOrg: 'Dewan Verifikator CT-4CI',
+        verifiedAt: new Date().toISOString().split('T')[0],
+        status: 'verified',
+        scoreDisplay: '96.5 / 100 (Grade A)',
+        notes: 'Kebun terbukti bebas deforestasi (EUDR compliant) dengan skor kepatuhan 96.5/100.',
+        digitalSignatureHash: '0x9c4f' + Date.now().toString(16) + '7b2a',
+      };
+      return [newStamp, ...prev];
+    });
+
+    // 9. Initial ledger transactions
+    setTransactions((prev) => {
+      const existing = prev.find((t) => t.fromName === org || t.toName === org);
+      if (existing) return prev;
+      const newTrx: SupplyChainTransaction = {
+        id: 'TRX-' + shortId + '-01',
+        date: new Date().toISOString().split('T')[0],
+        fromRole: 'petani',
+        fromName: target.name + ' (' + org + ')',
+        toRole: 'pengolah',
+        toName: org + ' Wet Mill',
+        itemName: 'Ceri Kopi Segar Super Grade A',
+        quantity: '350 kg',
+        totalAmount: 5775000,
+        status: 'Selesai',
+      };
+      return [newTrx, ...prev];
+    });
+  };
+
+  useEffect(() => {
+    if (currentUser && currentUser.role !== 'superadmin') {
+      ensureTenantSelfPipeline(currentUser);
+    }
+  }, [currentUser?.id]);
+
+  const loginAsRole = (role: UserRole, targetSubRoute?: string) => {
     const matched = users.find((u) => u.role === role) || MOCK_USERS.find((u) => u.role === role);
     if (matched) {
       setCurrentUser(matched);
-      setActiveView('dashboard');
+      try {
+        localStorage.setItem('cct_live_auth_user', JSON.stringify(matched));
+      } catch {}
       if (matched.role === 'verifikator' && matched.verifierDomain && matched.verifierDomain !== 'all') {
-        setVerifierActiveTab(matched.verifierDomain);
+        setVerifierActiveTabState(matched.verifierDomain);
       }
+      if (role === 'petani' && targetSubRoute === 'catalog') {
+        setFarmerActiveTabState('catalog');
+        try { localStorage.setItem('cct_tab_farmer', 'catalog'); } catch {}
+      } else if (role === 'petani' && targetSubRoute === 'history') {
+        setFarmerActiveTabState('history');
+        try { localStorage.setItem('cct_tab_farmer', 'history'); } catch {}
+      }
+      navigate({ view: 'dashboard', service: role, subRoute: targetSubRoute });
     }
   };
 
@@ -1119,12 +1865,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return { success: false, message: 'Kata sandi salah. Silakan coba kembali atau gunakan Lupa Password.' };
     }
 
-    // Check account approval status
+    // Arahan Om Novizar: Petani & stakeholder baru tidak boleh dikunci
     if (matched.status === 'pending_approval') {
-      return {
-        success: false,
-        message: 'Pendaftaran akun Anda sedang menunggu persetujuan (approval) dari Super Admin (Novizar - Owner sangrAI). Akses login akan aktif setelah akun Anda disetujui.',
-      };
+      matched.status = 'active';
     }
 
     if (matched.status === 'rejected') {
@@ -1372,6 +2115,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       cafe: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       verifikator: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
       superadmin: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      buyer: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     };
 
     const cleanEmail = (userData.email || '').trim().toLowerCase();
@@ -1426,7 +2170,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       email: cleanEmail || `${finalUsername}@${userData.role}.id`,
       password: userData.password || 'password123',
       role: userData.role,
-      status: 'pending_approval', // Pending ACC by Super Admin Novizar
+      status: 'active', // Arahan Om Novizar: Langsung active agar petani baru bisa langsung input data!
       registeredAt: new Date().toLocaleString('id-ID'),
       organization: userData.organization.trim(),
       location: userData.location.trim(),
@@ -3036,6 +3780,58 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const totalCost = item.price * quantity;
 
+    if (currentUser.role === 'buyer') {
+      if ((currentUser.balance || 0) < totalCost) {
+        return {
+          success: false,
+          message: `Saldo E-Wallet Anda (Rp ${(currentUser.balance || 0).toLocaleString('id-ID')}) tidak mencukupi untuk pembayaran Rp ${totalCost.toLocaleString('id-ID')}. Silakan top-up terlebih dahulu.`,
+        };
+      }
+      setCurrentUser({
+        ...currentUser,
+        balance: (currentUser.balance || 0) - totalCost,
+      });
+
+      const orderId = `INV/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/CT/${Math.floor(10000 + Math.random() * 90000)}`;
+      const trackingNo = `JNT-${Date.now().toString().slice(-8)}`;
+
+      const newOrderRecord = {
+        id: 'ord-' + Date.now(),
+        invoiceNo: orderId,
+        date: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
+        status: 'processing',
+        statusLabel: 'Diproses Penjual',
+        sellerName: item.sellerName,
+        sellerOrg: item.sellerOrg || 'Mitra sangrAI Terverifikasi',
+        sellerPhone: '6281234567890',
+        courier: 'J&T Cargo Express',
+        resiNo: trackingNo,
+        totalAmount: totalCost,
+        items: [
+          {
+            title: item.title,
+            variety: item.variety || 'Arabica Specialty',
+            origin: item.origin || 'Indonesia',
+            quantity,
+            unit: (item.stockUnit || 'kg').replace(/^\/+/, '').trim(),
+            price: item.price,
+            subtotal: totalCost,
+            photoUrl: item.photoUrl || '',
+            batchId: item.id,
+          },
+        ],
+      };
+
+      try {
+        const existingStr = localStorage.getItem('cct_buyer_orders');
+        const existing = existingStr ? JSON.parse(existingStr) : [];
+        localStorage.setItem('cct_buyer_orders', JSON.stringify([newOrderRecord, ...existing]));
+        window.dispatchEvent(new CustomEvent('cct_order_created', { detail: newOrderRecord }));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     // A. Beli Ceri Petani
     if (item.category === 'cherry') {
       const sourceLot = farmerLots.find((l) => l.id === item.id);
@@ -3728,6 +4524,308 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.clear();
   };
 
+  
+  // --- SHOPPING CART & BUNDLE PAYMENT STATE ---
+  const [cartItems, setCartItems] = useState<MarketplaceCartItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('cct_marketplace_cart_items');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        console.error('Error loading cart from localStorage', e);
+      }
+    }
+    // Default seed cart items for immediate testing of bundle payment & collapsible table
+    return [
+      {
+        id: 'cart-init-1',
+        item: {
+          id: 'mock-gb-1',
+          title: 'Robusta Pesisir Selatan - Honey Anaerobic',
+          category: 'green_bean_processor',
+          categoryLabel: 'Green Bean Olahan (Mill)',
+          sellerRole: 'pengolah',
+          sellerName: 'Koperasi Kopi Pesisir Mandiri',
+          sellerOrg: 'Koperasi Produsen Kopi Nusantara',
+          origin: 'Pesisir Selatan, Sumatera Barat',
+          variety: 'Robusta Fine',
+          altitude: '700 - 950 mdpl',
+          processMethod: 'Honey Anaerobic 72 Jam',
+          scaScore: 86.5,
+          price: 145000,
+          priceUnit: '/ kg',
+          availableStock: 450,
+          stockUnit: 'kg',
+          tastingNotes: ['Dark Chocolate', 'Molasses', 'Hazelnut'],
+          batchId: 'BATCH-PSS-2026-HNY02',
+          photoUrl: 'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?w=600&auto=format&fit=crop&q=80',
+          verificationStatus: 'verified',
+        },
+        quantity: 2,
+        selected: true,
+        notes: 'Mohon kemas dalam plastik vacuum food-grade 1kg.',
+        addedAt: new Date().toISOString(),
+      },
+      {
+        id: 'cart-init-2',
+        item: {
+          id: 'mock-rb-1',
+          title: 'Arabika Solok Radjo - Full Wash Specialty',
+          category: 'roasted_bean',
+          categoryLabel: 'Biji Kopi Sangrai (Roasted)',
+          sellerRole: 'roaster',
+          sellerName: 'Solok Radjo Artisan Roastery',
+          sellerOrg: 'Koperasi Solok Radjo Mandiri',
+          origin: 'Solok Radjo, Sumatera Barat',
+          variety: 'Arabika Typica & Sigarar Utang',
+          altitude: '1.450 - 1.600 mdpl',
+          processMethod: 'Full Wash Double Ferment',
+          scaScore: 87.5,
+          price: 175000,
+          priceUnit: '/ kg',
+          availableStock: 120,
+          stockUnit: 'kg',
+          tastingNotes: ['Floral Jasmine', 'Brown Sugar', 'Lime Citrus'],
+          batchId: 'BATCH-SLK-2026-WSH01',
+          photoUrl: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&auto=format&fit=crop&q=80',
+          verificationStatus: 'verified',
+        },
+        quantity: 1,
+        selected: true,
+        notes: 'Roast date di bawah 7 hari untuk stok kedai.',
+        addedAt: new Date().toISOString(),
+      },
+      {
+        id: 'cart-init-3',
+        item: {
+          id: 'mock-cherry-1',
+          title: 'Ceri Kopi Segar Malabar Pangalengan',
+          category: 'cherry',
+          categoryLabel: 'Ceri Kopi Segar (Panen)',
+          sellerRole: 'petani',
+          sellerName: 'Kelompok Tani Margamukti',
+          sellerOrg: 'Gapoktan Pangalengan',
+          origin: 'Pangalengan, Jawa Barat',
+          variety: 'Arabika Ateng Super & Typica',
+          altitude: '1.550 mdpl',
+          processMethod: 'Petik Merah Optimal Brix 22.4°',
+          scaScore: 85.0,
+          price: 18000,
+          priceUnit: '/ kg',
+          availableStock: 1200,
+          stockUnit: 'kg',
+          tastingNotes: ['Brix 22.4°', 'Red Cherry Sweetness'],
+          batchId: 'BATCH-MAL-2026-CHY01',
+          photoUrl: 'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe?w=600&auto=format&fit=crop&q=80',
+          verificationStatus: 'verified',
+        },
+        quantity: 5,
+        selected: false,
+        notes: 'Pilihan opsional (belum dicentang untuk demo bundle payment)',
+        addedAt: new Date().toISOString(),
+      },
+    ];
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('cct_marketplace_cart_items', JSON.stringify(cartItems));
+      } catch (e) {
+        console.error('Error saving cart to localStorage', e);
+      }
+    }
+  }, [cartItems]);
+
+  const addToCart = (item: UnifiedMarketplaceItem, quantity: number = 1) => {
+    setCartItems((prev) => {
+      const existing = prev.find((c) => c.item.id === item.id);
+      if (existing) {
+        return prev.map((c) =>
+          c.item.id === item.id ? { ...c, quantity: c.quantity + quantity, selected: true } : c
+        );
+      }
+      return [
+        ...prev,
+        {
+          id: `cart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          item,
+          quantity: Math.max(1, quantity),
+          selected: true,
+          addedAt: new Date().toISOString(),
+        },
+      ];
+    });
+  };
+
+  const updateCartQuantity = (itemId: string, newQty: number) => {
+    setCartItems((prev) =>
+      prev.map((c) =>
+        c.item.id === itemId || c.id === itemId
+          ? { ...c, quantity: Math.max(1, newQty) }
+          : c
+      )
+    );
+  };
+
+  const removeFromCart = (itemId: string) => {
+    setCartItems((prev) =>
+      prev.filter((c) => c.item.id !== itemId && c.id !== itemId)
+    );
+  };
+
+  const toggleSelectCartItem = (itemId: string) => {
+    setCartItems((prev) =>
+      prev.map((c) =>
+        c.item.id === itemId || c.id === itemId
+          ? { ...c, selected: !c.selected }
+          : c
+      )
+    );
+  };
+
+  const toggleSelectSellerGroup = (sellerName: string) => {
+    setCartItems((prev) => {
+      const groupItems = prev.filter((c) => c.item.sellerName === sellerName);
+      const allSelected = groupItems.every((c) => c.selected);
+      return prev.map((c) =>
+        c.item.sellerName === sellerName ? { ...c, selected: !allSelected } : c
+      );
+    });
+  };
+
+  const selectAllCartItems = (select: boolean) => {
+    setCartItems((prev) => prev.map((c) => ({ ...c, selected: select })));
+  };
+
+  const clearCart = (onlySelected: boolean = false) => {
+    if (onlySelected) {
+      setCartItems((prev) => prev.filter((c) => !c.selected));
+    } else {
+      setCartItems([]);
+    }
+  };
+
+  const updateCartItemNotes = (itemId: string, notes: string) => {
+    setCartItems((prev) =>
+      prev.map((c) =>
+        c.item.id === itemId || c.id === itemId ? { ...c, notes } : c
+      )
+    );
+  };
+
+  const checkoutBundle = (params: {
+    courierId: string;
+    courierName: string;
+    courierCost: number;
+    paymentMethod: string;
+    shippingAddress?: string;
+  }) => {
+    const selectedItems = cartItems.filter((c) => c.selected);
+    if (selectedItems.length === 0) {
+      return {
+        success: false,
+        invoiceNo: '',
+        trackingNo: '',
+        message: 'Silakan pilih minimal 1 produk kopi untuk pembayaran bundle.',
+        totalAmount: 0,
+        bundledItems: [],
+      };
+    }
+
+    const itemsSubtotal = selectedItems.reduce((acc, c) => acc + c.item.price * c.quantity, 0);
+    const platformFee = 2500;
+    const circularDiscount = 15000;
+    const grandTotal = Math.max(0, itemsSubtotal + params.courierCost + platformFee - circularDiscount);
+
+    if (params.paymentMethod === 'wallet' && currentUser) {
+      if ((currentUser.balance || 0) < grandTotal) {
+        return {
+          success: false,
+          invoiceNo: '',
+          trackingNo: '',
+          message: `Saldo E-Wallet Anda (Rp ${(currentUser.balance || 0).toLocaleString('id-ID')}) tidak mencukupi untuk tagihan bundle Rp ${grandTotal.toLocaleString('id-ID')}.`,
+          totalAmount: grandTotal,
+          bundledItems: selectedItems,
+        };
+      }
+      setCurrentUser({
+        ...currentUser,
+        balance: (currentUser.balance || 0) - grandTotal,
+      });
+    }
+
+    const invoiceNo = `INV/${new Date().getFullYear()}1106/CT/BND-${Math.floor(10000 + Math.random() * 90000)}`;
+    const trackingNo = `JNT-${Date.now().toString().slice(-8)}`;
+
+    // Add transactions for each bundled item
+    selectedItems.forEach((c, idx) => {
+      addTransaction({
+        id: `TRX-BND-${Date.now()}-${idx + 1}`,
+        date: new Date().toISOString().split('T')[0],
+        fromRole: c.item.sellerRole as any,
+        fromName: c.item.sellerName,
+        toRole: 'buyer',
+        toName: currentUser?.name || 'Siti Rahma (Pembeli)',
+        itemName: `${c.item.title} (${c.item.variety}) [${c.item.batchId || c.item.id}]`,
+        quantity: `${c.quantity} ${(c.item.stockUnit || 'kg').replace(/^\/+/, '').trim()}`,
+        totalAmount: c.item.price * c.quantity,
+        status: 'Diproses',
+      });
+    });
+
+    // Save to local buyer order records & trigger reactive update
+    const bundleOrderRecord = {
+      id: 'ord-' + Date.now(),
+      invoiceNo,
+      date: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
+      status: 'processing',
+      statusLabel: 'Diproses Penjual (Bundle Order)',
+      sellerName: selectedItems[0]?.item.sellerName || 'Penjual sangrAI',
+      sellerOrg: selectedItems[0]?.item.sellerOrg || 'Mitra sangrAI Terverifikasi',
+      sellerPhone: '6281234567890',
+      courier: params.courierName || 'J&T Cargo Express',
+      resiNo: trackingNo,
+      totalAmount: grandTotal,
+      items: selectedItems.map((c) => ({
+        title: c.item.title,
+        variety: c.item.variety || 'Arabica Specialty',
+        origin: c.item.origin || 'Indonesia',
+        quantity: c.quantity,
+        unit: (c.item.stockUnit || 'kg').replace(/^\/+/, '').trim(),
+        price: c.item.price,
+        subtotal: c.item.price * c.quantity,
+        photoUrl: c.item.photoUrl || '',
+        batchId: c.item.id,
+      })),
+    };
+
+    try {
+      const existingStr = localStorage.getItem('cct_buyer_orders');
+      const existing = existingStr ? JSON.parse(existingStr) : [];
+      localStorage.setItem('cct_buyer_orders', JSON.stringify([bundleOrderRecord, ...existing]));
+      window.dispatchEvent(new CustomEvent('cct_order_created', { detail: bundleOrderRecord }));
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Remove purchased items from cart, preserve unselected ones!
+    setCartItems((prev) => prev.filter((c) => !c.selected));
+
+    return {
+      success: true,
+      invoiceNo,
+      trackingNo,
+      message: 'Pembayaran bundle berhasil diproses!',
+      totalAmount: grandTotal,
+      bundledItems: selectedItems,
+    };
+  };
+
+
   return (
     <CoffeeContext.Provider
       value={{
@@ -3763,6 +4861,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setCafeActiveTab,
         verifierActiveTab,
         setVerifierActiveTab,
+        tenantActiveService,
+        setTenantActiveService,
+        ensureTenantSelfPipeline,
         superAdminActiveTab,
         setSuperAdminActiveTab,
         superAdminRoleFilter,
@@ -3838,8 +4939,28 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         language,
         setLanguage,
         t,
+        subscriptions,
+        getUserSubscription,
+        hasRoleAccess,
+        subscribeUser,
+        extendSubscription,
+        updateSubscriptionTier,
+        cancelOrSuspendSubscription,
+        setCurrentUser,
+        setUsers,
+        addTransaction,
         demoModeEnabled,
         setDemoModeEnabled,
+        cartItems,
+        addToCart,
+        updateCartQuantity,
+        removeFromCart,
+        toggleSelectCartItem,
+        toggleSelectSellerGroup,
+        selectAllCartItems,
+        clearCart,
+        updateCartItemNotes,
+        checkoutBundle,
       }}
     >
       {children}

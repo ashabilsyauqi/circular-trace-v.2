@@ -229,7 +229,7 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
           <div className="flex items-center gap-2">
             <Flame className="w-4 h-4 text-amber-600" />
             <span className="text-xs font-black uppercase tracking-wider text-amber-950">
-              Profil Profil Sangrai:
+              Profil Sangrai / Roast Level:
             </span>
           </div>
 

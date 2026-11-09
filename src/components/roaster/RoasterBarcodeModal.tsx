@@ -22,7 +22,7 @@ export const RoasterBarcodeModal: React.FC<RoasterBarcodeModalProps> = ({ isOpen
   // only during local dev — see src/utils/baseUrl.ts.
   const resolvedBaseUrl = getPublicBaseUrl(getNetworkHost());
 
-  const realtimeScanUrl = lot ? `${resolvedBaseUrl}/?lotId=${lot.id}` : '';
+  const realtimeScanUrl = lot ? `${resolvedBaseUrl}/trace?lotId=${lot.id}` : '';
 
   useEffect(() => {
     if (lot && realtimeScanUrl) {

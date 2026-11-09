@@ -43,7 +43,7 @@ export const CafeCupBarcodeModal: React.FC<CafeCupBarcodeModalProps> = ({
   const resolvedBaseUrl = getPublicBaseUrl(networkHost);
 
   // URL for cup barcode scan
-  const realtimeScanUrl = item ? `${resolvedBaseUrl}/?cupId=${item.id}` : '';
+  const realtimeScanUrl = item ? `${resolvedBaseUrl}/trace?cupId=${item.id}` : '';
 
   useEffect(() => {
     if (item && realtimeScanUrl) {

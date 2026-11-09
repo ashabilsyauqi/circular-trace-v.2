@@ -1,22 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
   Flame,
-  ShoppingCart,
   Award,
   Store,
   Warehouse,
   Sprout,
-  Cpu,
   Receipt,
   Search,
   Sliders,
-  Sparkles,
-  Package,
-  PlusCircle,
-  History,
-  CheckCircle2,
-  Home,
+  QrCode,
+  Crown,
+  Coffee,
+  ShieldCheck,
 } from 'lucide-react';
 import { UserRole } from '../../types/coffee';
 import { useCoffee } from '../../context/CoffeeContext';
@@ -24,21 +20,49 @@ import { useCoffee } from '../../context/CoffeeContext';
 interface AppLauncherModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectRole: (role: UserRole) => void;
-  onNavigateView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
+  onSelectRole?: (role: UserRole) => void;
+  onNavigateView?: (view: any) => void;
   onSelectModuleTab?: (role: UserRole, moduleTab?: string) => void;
+}
+
+interface AppTileItem {
+  id: string;
+  name: string;
+  keywords: string[];
+  role?: UserRole;
+  view?: string;
+  routeTarget: {
+    view: 'dashboard' | 'marketplace' | 'transactions' | 'scan' | 'ct4ci' | 'subscription';
+    service?: string;
+    subRoute?: string;
+  };
+  icon: React.ElementType;
+  iconColor: string;
+  bgGlow: string;
+  badge?: number;
+  badgeLabel?: string;
 }
 
 export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
   isOpen,
   onClose,
-  onNavigateView,
-  onSelectModuleTab,
+  onSelectRole,
 }) => {
-  const { currentUser, processingBatches, purchaseOrders, warehouseLots, farmerLots, processedLots } = useCoffee();
+  const {
+    currentUser,
+    loginAsRole,
+    navigate,
+    processingBatches,
+    purchaseOrders,
+    warehouseLots,
+    farmerLots,
+    processedLots,
+    cafeProducts,
+  } = useCoffee();
+
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Handle ESC key to close
+  // Close on ESC
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -49,368 +73,353 @@ export const AppLauncherModal: React.FC<AppLauncherModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
-  const inProgressBatchesCount = processingBatches.filter(
-    (b) => (!b.processorId || b.processorId === currentUser?.id) && b.status === 'in_progress'
-  ).length;
-  const pendingPOCount = purchaseOrders.filter(
-    (p) => (!p.roasterId || p.roasterId === currentUser?.id) && p.status === 'pending_approval'
-  ).length;
-  const pendingWarehouseQCCount = warehouseLots.filter((l) => l.qcStatus === 'pending_qc').length;
-  const availableFarmerLotsCount = farmerLots.filter((l) => l.availableWeightKg > 0).length;
-  const availableGreenBeanCount = processedLots.filter((l) => l.availableWeightKg > 0).length;
-
-  const ALL_APPS = [
-    // Petani Modules
-    {
-      id: 'farmer_farms',
-      name: '1. Lahan & Kebun Kopi',
-      category: 'Hulu (Farm & Harvest)',
-      subtitle: 'Profil Lahan, Elevasi, Cuaca & Patok BPN',
-      icon: Sprout,
-      gradient: 'from-lime-600 to-emerald-700',
-      role: 'petani' as UserRole,
-      moduleTab: 'farms',
-    },
-    {
-      id: 'farmer_upload',
-      name: '2. Registrasi Panen Baru',
-      category: 'Hulu (Farm & Harvest)',
-      subtitle: 'Pencatatan Ceri Merah, Brix & Sortasi',
-      icon: PlusCircle,
-      gradient: 'from-emerald-600 to-teal-700',
-      role: 'petani' as UserRole,
-      moduleTab: 'upload',
-    },
-    {
-      id: 'farmer_catalog',
-      name: '3. Katalog Panen Ceri',
-      category: 'Hulu (Farm & Harvest)',
-      subtitle: 'Daftar Lot Ceri Segar Siap Jual ke Mill',
-      icon: Package,
-      gradient: 'from-amber-600 to-orange-700',
-      role: 'petani' as UserRole,
-      moduleTab: 'catalog',
-    },
-    // Pengolah Modules
-    {
-      id: 'processor_sourcing',
-      name: '1. Sourcing Ceri Petani',
-      category: 'Processing & Mill',
-      subtitle: 'Pengadaan & Pembelian Ceri Merah Petani',
-      icon: ShoppingCart,
-      gradient: 'from-amber-600 to-orange-700',
-      role: 'pengolah' as UserRole,
-      moduleTab: 'sourcing',
-      badge: availableFarmerLotsCount > 0 ? `${availableFarmerLotsCount} Lot` : undefined,
-    },
-    {
-      id: 'processor_batches',
-      name: '2. Lembar Kerja Batch (7-Stage)',
-      category: 'Processing & Mill',
-      subtitle: 'Worksheet 7-Stage Intake, Fermentasi, Penjemuran & Olah',
-      icon: Cpu,
-      gradient: 'from-blue-600 to-indigo-800',
-      role: 'pengolah' as UserRole,
-      moduleTab: 'batches',
-      badge: inProgressBatchesCount > 0 ? `${inProgressBatchesCount} Aktif` : undefined,
-    },
-    {
-      id: 'processor_inventory',
-      name: '3. Gudang & Sirkularitas Limbah',
-      category: 'Processing & Mill',
-      subtitle: 'Stok Green Bean & Pengolahan Limbah Cascara/Pulp',
-      icon: Warehouse,
-      gradient: 'from-cyan-600 to-blue-700',
-      role: 'pengolah' as UserRole,
-      moduleTab: 'inventory',
-    },
-    {
-      id: 'processor_selling',
-      name: '4. Panel Marketplace Pengolah',
-      category: 'Processing & Mill',
-      subtitle: 'Katalog Green Bean, Pesanan & Laporan Margin',
-      icon: Store,
-      gradient: 'from-emerald-600 to-teal-800',
-      role: 'pengolah' as UserRole,
-      moduleTab: 'selling',
-      badge: availableGreenBeanCount > 0 ? `${availableGreenBeanCount} Siap Jual` : undefined,
-    },
-    // Gudang Modules
-    {
-      id: 'warehouse_inventory',
-      name: '1. Penerimaan & Stok Gudang',
-      category: 'Supply Chain QA',
-      subtitle: 'Penyimpanan Hermetik, Suhu & RH Gudang',
-      icon: Warehouse,
-      gradient: 'from-slate-700 to-slate-900',
-      role: 'gudang' as UserRole,
-      moduleTab: 'inventory',
-      badge: pendingWarehouseQCCount > 0 ? `${pendingWarehouseQCCount} QC` : undefined,
-    },
-    {
-      id: 'warehouse_marketplace',
-      name: '2. Beli Green Bean Pengolah',
-      category: 'Supply Chain QA',
-      subtitle: 'Sourcing Biji Hijau dari Mill untuk Grading',
-      icon: Store,
-      gradient: 'from-amber-600 to-orange-700',
-      role: 'gudang' as UserRole,
-      moduleTab: 'marketplace',
-    },
-    // Roaster Modules
-    {
-      id: 'roaster_purchasing',
-      name: '1. Pengadaan PO Roastery',
-      category: 'Roasting & Manufaktur',
-      subtitle: 'Purchase Orders & Pembelian Green Bean',
-      icon: ShoppingCart,
-      gradient: 'from-blue-600 to-sky-700',
-      role: 'roaster' as UserRole,
-      moduleTab: 'purchasing',
-      badge: pendingPOCount > 0 ? `${pendingPOCount} Pending` : undefined,
-    },
-    {
-      id: 'roaster_work_orders',
-      name: '2. Roastery MRP (Sangrai)',
-      category: 'Roasting & Manufaktur',
-      subtitle: 'Work Orders Sangrai, Roast Profil & Batch Schedule',
-      icon: Flame,
-      gradient: 'from-amber-500 to-orange-600',
-      role: 'roaster' as UserRole,
-      moduleTab: 'work_orders',
-    },
-    {
-      id: 'roaster_production',
-      name: '3. Master Profil Sangrai',
-      category: 'Roasting & Manufaktur',
-      subtitle: 'Kurva Roasting, Agtron SCA & DTR Ratio',
-      icon: Sliders,
-      gradient: 'from-orange-600 to-red-700',
-      role: 'roaster' as UserRole,
-      moduleTab: 'production',
-    },
-    {
-      id: 'roaster_qc',
-      name: '4. Quality Control (Cupping Lab)',
-      category: 'Roasting & Manufaktur',
-      subtitle: 'SCA 100-pt Cupping Evaluation & Fragrance Radar',
-      icon: Award,
-      gradient: 'from-purple-600 to-pink-700',
-      role: 'roaster' as UserRole,
-      moduleTab: 'qc',
-    },
-    {
-      id: 'roaster_selling',
-      name: '5. Penjualan B2B & Cafe',
-      category: 'Roasting & Manufaktur',
-      subtitle: 'Distribusi Biji Sangrai ke Coffee Shop',
-      icon: Store,
-      gradient: 'from-emerald-600 to-teal-700',
-      role: 'roaster' as UserRole,
-      moduleTab: 'selling',
-    },
-    // Cafe Modules
-    {
-      id: 'cafe_inventory',
-      name: '1. Inventaris Roasted Bean',
-      category: 'Hilir (Retail & Cafe)',
-      subtitle: 'Biji Kopi Siap Seduh & Rest Period',
-      icon: Package,
-      gradient: 'from-rose-600 to-red-700',
-      role: 'cafe' as UserRole,
-      moduleTab: 'inventory',
-    },
-    {
-      id: 'cafe_calculator',
-      name: '2. Kalkulator HPP & Resep Seduh',
-      category: 'Hilir (Retail & Cafe)',
-      subtitle: 'Hitung Dosis, Rasio Espresso & Margin Cangkir',
-      icon: Sliders,
-      gradient: 'from-amber-600 to-orange-700',
-      role: 'cafe' as UserRole,
-      moduleTab: 'calculator',
-    },
-    {
-      id: 'cafe_products',
-      name: '3. Katalog Produk & Retail Pack',
-      category: 'Hilir (Retail & Cafe)',
-      subtitle: 'House Blend, Drip Bag & Cold Brew',
-      icon: Store,
-      gradient: 'from-emerald-600 to-teal-700',
-      role: 'cafe' as UserRole,
-      moduleTab: 'my_products',
-    },
-    // Verifikator Modules
-    {
-      id: 'verifier_audit',
-      name: '1. Panel Audit & Sertifikasi',
-      category: 'Quality & EUDR Board',
-      subtitle: 'Inspeksi Lahan, Mill, Gudang, Cupping & Kafe',
-      icon: CheckCircle2,
-      gradient: 'from-purple-600 to-indigo-800',
-      role: 'verifikator' as UserRole,
-      moduleTab: currentUser?.verifierDomain && currentUser.verifierDomain !== 'all' ? currentUser.verifierDomain : 'petani',
-    },
-    {
-      id: 'verifier_history',
-      name: '2. Buku Sertifikasi & Stempel',
-      category: 'Quality & EUDR Board',
-      subtitle: 'Daftar Kriptografis Seluruh Stempel Sah',
-      icon: History,
-      gradient: 'from-amber-600 to-orange-700',
-      role: 'verifikator' as UserRole,
-      moduleTab: 'history',
-    },
-    // Shared Public / Cross-Chain Apps
-    {
-      id: 'marketplace_public',
-      name: 'Marketplace Bersama',
-      category: 'Cross-Chain Trade',
-      subtitle: 'Etalase Perdagangan Komoditas Kopi Lintas Stakeholder',
-      icon: Sparkles,
-      gradient: 'from-emerald-500 to-green-700',
-      action: 'marketplace' as const,
-    },
-    {
-      id: 'ledger_public',
-      name: 'Buku Besar Blockchain Ledger',
-      category: 'Audit & Compliance',
-      subtitle: 'Audit Trail Transaksi & Pelacakan Sirkularitas',
-      icon: Receipt,
-      gradient: 'from-indigo-700 to-purple-900',
-      action: 'transactions' as const,
-    },
-    {
-      id: 'landing_home',
-      name: 'Beranda Utama',
-      category: 'Portal Publik',
-      subtitle: 'Halaman Utama Informasi Ekosistem Circular Trace',
-      icon: Home,
-      gradient: 'from-stone-600 to-stone-800',
-      action: 'landing' as const,
-    },
-  ];
-
-  // Only show apps belonging to the logged-in user's role + shared cross-chain apps
-  const scopedApps = ALL_APPS.filter((app) => !app.role || app.role === currentUser?.role || currentUser?.role === 'superadmin');
-
-  const filteredApps = scopedApps.filter((app) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      app.name.toLowerCase().includes(q) ||
-      app.subtitle.toLowerCase().includes(q) ||
-      app.category.toLowerCase().includes(q)
-    );
-  });
-
-  const handleAppClick = (app: (typeof ALL_APPS)[0]) => {
-    if (app.action) {
-      onNavigateView(app.action);
-    } else if (app.role && (app.role === currentUser?.role || currentUser?.role === 'superadmin')) {
-      onNavigateView('dashboard');
-      if (app.moduleTab) {
-        onSelectModuleTab?.(app.role, app.moduleTab);
-      }
+  // Reset search query whenever modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSearchQuery('');
     }
+  }, [isOpen]);
+
+  const activeBatchesCount = processingBatches.filter((b) => b.status === 'in_progress').length;
+  const pendingPOCount = purchaseOrders.filter((p) => p.status === 'pending_approval').length;
+  const warehouseLotsCount = warehouseLots.length;
+  const farmerLotsCount = farmerLots.length;
+  const isSuperAdmin = currentUser?.role === 'superadmin';
+
+  // Dynamic resolution for personal seller panel based on currentUser role
+  const getSellerPanelTarget = (role?: string) => {
+    switch (role) {
+      case 'petani':
+        return { view: 'dashboard' as const, service: 'petani', subRoute: 'catalog' };
+      case 'pengolah':
+        return { view: 'dashboard' as const, service: 'pengolah', subRoute: 'selling' };
+      case 'gudang':
+        return { view: 'dashboard' as const, service: 'gudang', subRoute: 'marketplace' };
+      case 'roaster':
+        return { view: 'dashboard' as const, service: 'roaster', subRoute: 'selling' };
+      case 'cafe':
+        return { view: 'dashboard' as const, service: 'cafe', subRoute: 'my_products' };
+      case 'verifikator':
+      case 'superadmin':
+      default:
+        return { view: 'dashboard' as const, service: 'petani', subRoute: 'catalog' };
+    }
+  };
+
+  // Dynamic resolution for personal ledger based on currentUser role
+  const getLedgerTarget = (role?: string) => {
+    switch (role) {
+      case 'petani':
+        return { view: 'dashboard' as const, service: 'petani', subRoute: 'history' };
+      case 'pengolah':
+        return { view: 'dashboard' as const, service: 'pengolah', subRoute: 'history' };
+      case 'gudang':
+        return { view: 'dashboard' as const, service: 'gudang', subRoute: 'history' };
+      case 'roaster':
+        return { view: 'dashboard' as const, service: 'roaster', subRoute: 'history' };
+      case 'cafe':
+        return { view: 'dashboard' as const, service: 'cafe', subRoute: 'history' };
+      case 'verifikator':
+      case 'superadmin':
+      default:
+        return { view: 'dashboard' as const, service: 'petani', subRoute: 'history' };
+    }
+  };
+
+  // 12 Dedicated App Tiles (matching Gambar 3 Snaprint App Launcher)
+  const appTiles: AppTileItem[] = useMemo(
+    () => [
+      {
+        id: 'petani',
+        name: 'Petani',
+        keywords: ['petani', 'kebun', 'lahan', 'panen', 'ceri', 'poktan'],
+        role: 'petani',
+        routeTarget: { view: 'dashboard', service: 'petani', subRoute: 'farms' },
+        icon: Sprout,
+        iconColor: 'text-lime-400',
+        bgGlow: 'group-hover:bg-lime-500/20 group-hover:border-lime-400/50',
+        badge: farmerLotsCount > 0 ? farmerLotsCount : undefined,
+      },
+      {
+        id: 'pengolah',
+        name: 'Pengolah',
+        keywords: ['pengolah', 'mill', 'wet', 'dry', 'fermentasi', 'batch'],
+        role: 'pengolah',
+        routeTarget: { view: 'dashboard', service: 'pengolah', subRoute: 'sourcing' },
+        icon: Flame,
+        iconColor: 'text-amber-400',
+        bgGlow: 'group-hover:bg-amber-500/20 group-hover:border-amber-400/50',
+        badge: activeBatchesCount > 0 ? activeBatchesCount : undefined,
+      },
+      {
+        id: 'gudang',
+        name: 'Gudang',
+        keywords: ['gudang', 'warehouse', 'stok', 'hermetik', 'klimatik'],
+        role: 'gudang',
+        routeTarget: { view: 'dashboard', service: 'gudang', subRoute: 'inventory' },
+        icon: Warehouse,
+        iconColor: 'text-amber-300',
+        bgGlow: 'group-hover:bg-amber-500/20 group-hover:border-amber-400/50',
+        badge: warehouseLotsCount > 0 ? warehouseLotsCount : undefined,
+      },
+      {
+        id: 'roaster',
+        name: 'Roaster',
+        keywords: ['roaster', 'sangrai', 'cupping', 'spk', 'profil', 'sca'],
+        role: 'roaster',
+        routeTarget: { view: 'dashboard', service: 'roaster', subRoute: 'purchasing' },
+        icon: Coffee,
+        iconColor: 'text-amber-500',
+        bgGlow: 'group-hover:bg-amber-600/20 group-hover:border-amber-500/50',
+        badge: pendingPOCount > 0 ? pendingPOCount : undefined,
+      },
+      {
+        id: 'cafe',
+        name: 'Kafe',
+        keywords: ['cafe', 'kafe', 'bar', 'espresso', 'menu', 'pos', 'hpp'],
+        role: 'cafe',
+        routeTarget: { view: 'dashboard', service: 'cafe', subRoute: 'inventory' },
+        icon: Store,
+        iconColor: 'text-rose-400',
+        bgGlow: 'group-hover:bg-rose-500/20 group-hover:border-rose-400/50',
+        badge: cafeProducts.length > 0 ? cafeProducts.length : undefined,
+      },
+      {
+        id: 'verifikator',
+        name: 'Verifikator',
+        keywords: ['verifikator', 'audit', 'eudr', 'stempel', 'sertifikasi', 'mutu'],
+        role: 'verifikator',
+        routeTarget: { view: 'dashboard', service: 'verifikator', subRoute: 'petani' },
+        icon: ShieldCheck,
+        iconColor: 'text-emerald-400',
+        bgGlow: 'group-hover:bg-emerald-500/20 group-hover:border-emerald-400/50',
+      },
+      {
+        id: 'trace',
+        name: 'Paspor QR',
+        keywords: ['trace', 'scan', 'paspor', 'qr', 'silsilah', 'lot', 'cangkir'],
+        routeTarget: { view: 'scan' },
+        icon: QrCode,
+        iconColor: 'text-cyan-400',
+        bgGlow: 'group-hover:bg-cyan-500/20 group-hover:border-cyan-400/50',
+      },
+      {
+        id: 'seller_panel',
+        name: 'Panel Seller',
+        keywords: ['seller', 'panel', 'toko', 'katalog', 'jual', 'pasar', 'penjualan', 'ceri', 'greenbean'],
+        role: (!currentUser || currentUser.role === 'verifikator' || currentUser.role === 'superadmin') ? 'petani' : (currentUser.role as UserRole),
+        routeTarget: getSellerPanelTarget(currentUser?.role),
+        icon: Store,
+        iconColor: 'text-emerald-400',
+        bgGlow: 'group-hover:bg-emerald-500/20 group-hover:border-emerald-400/50',
+        badge: farmerLotsCount > 0 ? farmerLotsCount : undefined,
+      },
+      {
+        id: 'transactions',
+        name: 'Buku Kas & Ledger',
+        keywords: ['transaksi', 'ledger', 'buku kas', 'keuangan', 'history', 'omzet'],
+        role: (!currentUser || currentUser.role === 'verifikator' || currentUser.role === 'superadmin') ? 'petani' : (currentUser.role as UserRole),
+        routeTarget: getLedgerTarget(currentUser?.role),
+        icon: Receipt,
+        iconColor: 'text-indigo-400',
+        bgGlow: 'group-hover:bg-indigo-500/20 group-hover:border-indigo-400/50',
+      },
+      {
+        id: 'ct4ci',
+        name: 'Standar 4C',
+        keywords: ['ct4ci', '4c', 'keberlanjutan', 'sertifikasi', 'audit kebun'],
+        routeTarget: { view: 'ct4ci' },
+        icon: Award,
+        iconColor: 'text-yellow-400',
+        bgGlow: 'group-hover:bg-yellow-500/20 group-hover:border-yellow-400/50',
+      },
+      {
+        id: 'subscription',
+        name: 'Langganan',
+        keywords: ['subscription', 'langganan', 'sewa', 'paket', 'billing', 'upgrade'],
+        routeTarget: { view: 'subscription' },
+        icon: Crown,
+        iconColor: 'text-amber-300',
+        bgGlow: 'group-hover:bg-amber-400/20 group-hover:border-amber-300/50',
+      },
+      {
+        id: isSuperAdmin ? 'superadmin' : 'profil_mitra',
+        name: isSuperAdmin ? 'Admin' : 'Profil Mitra',
+        keywords: ['admin', 'profil', 'mitra', 'master data', 'poktan', 'organisasi'],
+        routeTarget: isSuperAdmin
+          ? { view: 'dashboard', service: 'superadmin', subRoute: 'approvals' }
+          : { view: 'dashboard', service: currentUser?.role || 'petani', subRoute: 'farms' },
+        icon: Sliders,
+        iconColor: 'text-purple-400',
+        bgGlow: 'group-hover:bg-purple-500/20 group-hover:border-purple-400/50',
+      },
+    ],
+    [
+      farmerLotsCount,
+      activeBatchesCount,
+      warehouseLotsCount,
+      pendingPOCount,
+      cafeProducts.length,
+      processedLots.length,
+      currentUser?.role,
+      isSuperAdmin,
+    ]
+  );
+
+  // Filter tiles based on search query
+  const filteredTiles = useMemo(() => {
+    if (!searchQuery.trim()) return appTiles;
+    const q = searchQuery.toLowerCase().trim();
+    return appTiles.filter(
+      (tile) =>
+        tile.name.toLowerCase().includes(q) ||
+        tile.keywords.some((kw) => kw.toLowerCase().includes(q))
+    );
+  }, [appTiles, searchQuery]);
+
+  const handleTileClick = (tile: AppTileItem) => {
+    if (tile.role) {
+      if (onSelectRole) {
+        onSelectRole(tile.role);
+      }
+      loginAsRole(tile.role);
+    }
+    navigate(tile.routeTarget);
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div
-      className="fixed inset-0 z-50 p-4 sm:p-8 flex flex-col items-center justify-start overflow-y-auto"
-      style={{
-        background: 'linear-gradient(135deg, #140D09 0%, #24160E 50%, #18100B 100%)',
-      }}
-    >
-      {/* Close Button */}
-      <button
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      {/* Dark Coffee Glass Backdrop */}
+      <div
+        className="fixed inset-0 bg-[#0E0805]/90 backdrop-blur-xl transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
-        className="fixed top-5 right-5 text-amber-100/80 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition-colors cursor-pointer border border-white/15 shadow-lg z-50"
-        title="Tutup Menu (ESC)"
-      >
-        <X className="w-5 h-5" />
-      </button>
+      />
 
-      {/* Header: Logo & Subtitle */}
-      <div className="text-center mt-4 sm:mt-8 mb-4 max-w-xl">
-        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 backdrop-blur-md text-amber-400 flex items-center justify-center mx-auto mb-3 shadow-2xl">
-          <Cpu className="w-9 h-9" />
+      {/* Main Container matching Gambar 3 (Snaprint reference) */}
+      <div className="relative w-full max-w-3xl bg-[#160E0A] border border-amber-900/40 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 animate-in fade-in zoom-in-95 duration-200 text-stone-100 flex flex-col items-center">
+        {/* Close Button top-right */}
+        <button
+          onClick={onClose}
+          type="button"
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 active:bg-white/20 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/5"
+          title="Tutup (ESC)"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Center Logo & Title */}
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-950/60 mb-3 border border-amber-400/30">
+            <Coffee className="w-6 h-6 text-stone-950 stroke-[2.2]" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-1.5 font-['Poppins']">
+            <span>Circular</span>
+            <span className="text-amber-400">Coffee</span>
+          </h2>
+          <p className="text-xs text-stone-400 mt-1 max-w-xs sm:max-w-md font-['Poppins']">
+            Panel Stasiun Kerja &amp; Master Data Rantai Pasok Mandiri
+          </p>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md">
-          <span className="text-amber-400">Circular</span>Trace ERP
-        </h2>
-        <p className="text-amber-200/80 text-xs sm:text-sm mt-1 font-medium">
-          Modul Operasional Stasiun Kerja <strong>{currentUser?.organization}</strong>
-        </p>
-      </div>
 
-      {/* Search Bar */}
-      <div className="w-full max-w-lg mb-8 relative">
-        <Search className="w-5 h-5 text-amber-200/50 absolute left-4 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          autoFocus
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Cari modul di stasiun kerja Anda..."
-          className="w-full pl-12 pr-4 py-3 bg-white/10 border border-amber-500/20 rounded-2xl text-white text-sm placeholder-amber-100/40 focus:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-amber-400 transition-all shadow-xl"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-amber-200/60 hover:text-white text-xs font-bold"
-          >
-            Clear
-          </button>
-        )}
-      </div>
-
-      {/* App Grid Matrix */}
-      <div className="max-w-5xl w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 pb-12">
-        {filteredApps.map((app) => {
-          const IconComp = app.icon;
-          return (
+        {/* Center Search Bar (Pill with search icon) */}
+        <div className="w-full max-w-md relative mb-8">
+          <Search className="w-4 h-4 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search Apps... (Ketik nama modul)"
+            autoFocus
+            className="w-full bg-[#20140E] text-stone-100 placeholder-stone-500 border border-stone-800 focus:border-amber-500/80 focus:bg-[#281A12] rounded-full py-2.5 pl-11 pr-10 text-xs font-medium outline-hidden transition-all shadow-inner font-['Poppins']"
+          />
+          {searchQuery && (
             <button
-              key={app.id}
-              onClick={() => handleAppClick(app)}
-              className="group relative flex flex-col items-center text-center p-5 rounded-3xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/40 backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white text-xs cursor-pointer p-0.5"
             >
-              {/* Tile Icon with Vibrant Gradient */}
-              <div
-                className={`w-14 h-14 rounded-2xl bg-gradient-to-tr ${app.gradient} text-white flex items-center justify-center shadow-lg mb-3 transition-transform group-hover:scale-110`}
-              >
-                <IconComp className="w-7 h-7" />
-              </div>
-
-              {/* Title & Category */}
-              <span className="text-[10px] uppercase font-bold text-amber-400/80 tracking-wider mb-0.5">
-                {app.category}
-              </span>
-              <h3 className="font-bold text-sm text-white leading-tight group-hover:text-amber-300 transition-colors">
-                {app.name}
-              </h3>
-              <p className="text-[11px] text-stone-300/70 mt-1 leading-snug line-clamp-2">
-                {app.subtitle}
-              </p>
-
-              {/* Badge */}
-              {app.badge && (
-                <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
-                  {app.badge}
-                </span>
-              )}
+              <X className="w-3.5 h-3.5" />
             </button>
-          );
-        })}
-      </div>
+          )}
+        </div>
 
-      {/* Footer Info */}
-      <div className="mt-auto py-3 text-center text-xs text-amber-200/60 font-mono">
-        Tekan <kbd className="bg-white/20 px-1.5 py-0.5 rounded text-white text-[10px]">ESC</kbd> untuk kembali &bull; Sesi Aktif: <strong>{currentUser?.name}</strong> ({currentUser?.role})
+        {/* Main Grid of Clean Icon Tiles */}
+        <div className="w-full">
+          {filteredTiles.length === 0 ? (
+            <div className="py-12 text-center text-stone-500 text-xs font-['Poppins']">
+              Tidak ada modul yang cocok dengan &ldquo;{searchQuery}&rdquo;.
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-y-6 gap-x-4 sm:gap-x-6 justify-items-center">
+              {filteredTiles.map((tile) => {
+                const IconComponent = tile.icon;
+                const isCurrentActive =
+                  currentUser?.role === tile.role ||
+                  (tile.id === 'superadmin' && isSuperAdmin);
+
+                return (
+                  <button
+                    key={tile.id}
+                    type="button"
+                    onClick={() => handleTileClick(tile)}
+                    className="group flex flex-col items-center gap-2 cursor-pointer focus:outline-hidden transition-transform active:scale-95"
+                    title={tile.name}
+                  >
+                    {/* Rounded Square Tile */}
+                    <div
+                      className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-[#221610] border transition-all duration-200 flex items-center justify-center shadow-md group-hover:scale-105 ${tile.bgGlow} ${
+                        isCurrentActive
+                          ? 'border-amber-400/80 bg-[#2C1D15] ring-2 ring-amber-400/30'
+                          : 'border-stone-800/80'
+                      }`}
+                    >
+                      <IconComponent
+                        className={`w-7 h-7 sm:w-8 sm:h-8 transition-transform group-hover:scale-110 duration-200 ${tile.iconColor}`}
+                      />
+
+                      {/* Notification Count Badge */}
+                      {tile.badge !== undefined && tile.badge > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-stone-950 text-[10px] font-black shadow-md border border-stone-950">
+                          {tile.badge}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Clean Label Below */}
+                    <span
+                      className={`text-xs font-semibold truncate max-w-[85px] text-center transition-colors font-['Poppins'] ${
+                        isCurrentActive
+                          ? 'text-amber-300 font-bold'
+                          : 'text-stone-300 group-hover:text-white'
+                      }`}
+                    >
+                      {tile.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Subtle Footer info */}
+        <div className="mt-8 pt-4 border-t border-stone-800/70 w-full flex items-center justify-between text-[11px] text-stone-500 font-['Poppins']">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>
+              Aktif: <strong className="text-stone-300">{currentUser?.name || 'Mitra'}</strong> (
+              {currentUser?.organization || currentUser?.role || 'Pengguna'}) &bull; Panel Seller &amp; Master Data Mandiri
+            </span>
+          </div>
+          <span className="hidden sm:inline font-mono text-[10px] text-stone-500">
+            ESC untuk menutup
+          </span>
+        </div>
       </div>
     </div>
   );
 };
+
+export default AppLauncherModal;

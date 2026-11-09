@@ -1,3 +1,5 @@
+import { getMarketplaceBaseUrl } from '../utils/baseUrl';
+import { SubscriptionPricingCards } from './subscription/SubscriptionPricingCards';
 import React, { useState, useEffect, useRef } from 'react';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
@@ -15,6 +17,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   Store,
+  ShoppingCart,
   History,
   QrCode,
   Layers,
@@ -36,6 +39,8 @@ import {
   Eye,
   Sliders,
   Thermometer,
+  Tag,
+  Truck,
   Droplets,
   HeartHandshake,
 } from 'lucide-react';
@@ -103,7 +108,7 @@ const ScrollReveal: React.FC<{
 };
 
 export const LandingPage: React.FC = () => {
-  const { language, setActiveView, loginAsRole } = useCoffee();
+  const { language, setActiveView, loginAsRole, navigate } = useCoffee();
   const content = landingContent[language];
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [registerRole, setRegisterRole] = useState<UserRole>('roaster');
@@ -265,12 +270,67 @@ export const LandingPage: React.FC = () => {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
+              <a
+                href="#pricing"
+                className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-white hover:bg-stone-100 text-stone-900 border border-stone-300 font-black text-sm sm:text-base shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Layers className="w-4 h-4 text-amber-600" />
+                <span>Lihat Paket Bundle</span>
+              </a>
               <button
-                onClick={() => setActiveView('marketplace')}
+                onClick={() => {
+                  const targetUrl = getMarketplaceBaseUrl();
+                  if (targetUrl.startsWith('http')) {
+                    window.open(targetUrl, '_blank');
+                  } else {
+                    setActiveView('marketplace');
+                  }
+                }}
                 className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm sm:text-base shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer"
+                title="Buka Platform Marketplace B2B (Direncanakan pada Domain Terpisah)"
               >
                 <Store className="w-4 h-4 text-stone-950" />
                 <span>{content.hero.ctaMarketplace}</span>
+                <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-stone-950 text-amber-300 font-extrabold flex items-center gap-0.5">
+                  <span>Beda Domain</span>
+                  <span>↗</span>
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const targetUrl = getMarketplaceBaseUrl() + '/buyer';
+                  if (targetUrl.startsWith('http')) {
+                    window.open(targetUrl, '_blank');
+                  } else {
+                    setActiveView('buyer');
+                  }
+                }}
+                className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-[#00AA5B] hover:bg-[#03AC0E] text-white font-black text-sm sm:text-base shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer"
+                title="Buka Portal Akun Pembeli Resmi di Marketplace"
+              >
+                <ShoppingCart className="w-4 h-4 text-white" />
+                <span>Portal Pembeli (Marketplace ↗)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  navigate({ view: 'dashboard', service: 'verifikator', subRoute: 'petani' });
+                }}
+                className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-purple-900/90 hover:bg-purple-800 text-purple-200 border border-purple-500/50 font-black text-sm sm:text-base shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer"
+                title="Portal Auditor Independen Pihak Ketiga"
+              >
+                <ShieldCheck className="w-4 h-4 text-purple-300" />
+                <span>Portal Verifikator (Pihak Ketiga ↗)</span>
+              </button>
+
+              <button
+                onClick={() => loginAsRole('petani')}
+                className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-emerald-800 hover:bg-emerald-900 text-white font-black text-sm sm:text-base shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer border border-emerald-500/40"
+                title="Quick Login 1-Klik Langsung ke Dashboard Kelompok Tani (Asep Supriatna - Kelompok Tani Gn. Tilu)"
+              >
+                <Sprout className="w-4 h-4 text-emerald-300" />
+                <span>Quick Login: Kelompok Tani</span>
               </button>
             </div>
 
@@ -407,7 +467,7 @@ export const LandingPage: React.FC = () => {
                       </span>
                     </div>
                     <button
-                      onClick={() => setActiveView('dashboard')}
+                      onClick={() => loginAsRole(current.role)}
                       className="w-full py-2 px-3 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <span>Masuk Panel {current.role.toUpperCase()}</span>
@@ -506,7 +566,7 @@ export const LandingPage: React.FC = () => {
 
                       <div className="pt-3 flex flex-wrap items-center gap-3">
                         <button
-                          onClick={() => setActiveView('dashboard')}
+                          onClick={() => loginAsRole(pillar.id)}
                           className={`px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:shadow-lg ${pillar.buttonColor}`}
                         >
                           <span>{pillar.loginBtnText}</span>
@@ -718,6 +778,115 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------- */}
+      {/* SECTION: TIER 1 BUYER PORTAL (Direct Coffee Commerce & Cart) */}
+      {/* ------------------------------------------------------------- */}
+      <section id="buyer-portal" className="py-20 bg-gradient-to-b from-[#FAF7F2] to-emerald-50/50 border-b border-stone-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-emerald-950 via-stone-900 to-teal-950 text-white shadow-2xl border border-emerald-600/40 relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-xs font-black uppercase tracking-wider">
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    <span>VISITOR TIER 1 &bull; KHUSUS PEMBELI &amp; KEDAI KOPI (BUYER MEMBER)</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white mt-2 tracking-tight">
+                    Akun Pembeli Resmi (Direct Coffee Commerce)
+                  </h3>
+                  <p className="text-stone-300 text-xs sm:text-sm max-w-2xl mt-1 leading-relaxed">
+                    Sesuai instruksi Circular Trace, pengunjung maupun pengusaha kedai kopi wajib memiliki <strong>Akun Member Pembeli Terverifikasi</strong> untuk dapat memesan komoditas kopi langsung dari petani &amp; mill resmi.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const targetUrl = getMarketplaceBaseUrl() + '/buyer';
+                      if (targetUrl.startsWith('http')) {
+                        window.open(targetUrl, '_blank');
+                      } else {
+                        setActiveView('buyer');
+                      }
+                    }}
+                    className="px-6 py-3 rounded-2xl bg-[#00AA5B] hover:bg-[#03AC0E] text-white font-black text-xs sm:text-sm shadow-xl transition-all cursor-pointer flex items-center gap-2"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Buka Portal Pembeli (Marketplace ↗)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('marketplace')}
+                    className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs sm:text-sm transition-all cursor-pointer"
+                  >
+                    Buka Marketplace Bebas
+                  </button>
+                </div>
+              </div>
+
+              {/* 3 Value Pillars for Buyer */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-black">
+                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <h4 className="font-bold text-sm text-white">1. Wajib Akun Terverifikasi</h4>
+                  <p className="text-[11px] text-stone-300 leading-relaxed">
+                    Transaksi komoditas diamankan dengan persetujuan Circular Trace untuk mencegah pesanan fiktif &amp; melindungi para petani.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-black">
+                    <Tag className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <h4 className="font-bold text-sm text-white">2. Biaya Layanan Transparan</h4>
+                  <p className="text-[11px] text-stone-300 leading-relaxed">
+                    Platform fee pembeli Rp 2.500 / order yang transparan untuk pemeliharaan stempel paspor ketelusuran (traceability) dan lab cupping.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center font-black">
+                    <Truck className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <h4 className="font-bold text-sm text-white">3. Kurir Ekspedisi &amp; Resi</h4>
+                  <p className="text-[11px] text-stone-300 leading-relaxed">
+                    Pengiriman dengan J&amp;T Cargo, JNE, dan SiCepat lengkap dengan nomor resi kurir real-time dan barcode ketelusuran farm-to-cup.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------- */}
+      {/* ------------------------------------------------------------- */}
+      {/* SECTION: PRICING BUNDLE ALL-IN-ONE (1 Bulan s/d 1 Tahun)      */}
+      {/* ------------------------------------------------------------- */}
+      <section id="pricing" className="py-24 bg-white border-b border-stone-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
+            <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-amber-600" />
+              <span>Paket Berlangganan Ekosistem sangrAI</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-950 tracking-tight">
+              Satu Paket Bundle, Semua Layanan Aktif
+            </h2>
+            <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
+              Tidak perlu sewa modul terpisah satu per satu. Pilih varian durasi yang sesuai untuk operasional perkebunan, stasiun mill, roastery, hingga kafe Anda &mdash; semua layanan terbuka 100% langsung aktif.
+            </p>
+          </div>
+
+          <SubscriptionPricingCards showAllInclusiveBanner={true} />
         </div>
       </section>
 

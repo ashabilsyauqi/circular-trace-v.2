@@ -1,4 +1,6 @@
-export type UserRole = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'verifikator' | 'superadmin';
+export type TenantOperationalService = 'dashboard' | 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'verifikator' | 'buyer';
+
+export type UserRole = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'verifikator' | 'superadmin' | 'buyer';
 
 export type UserStatus = 'active' | 'pending_approval' | 'rejected' | 'suspended';
 
@@ -391,6 +393,7 @@ export interface CafeRetailProduct {
 
 // 7. STANDARDIZED ITEM UNTUK 1 MARKETPLACE TERPADU
 export interface UnifiedMarketplaceItem {
+  batchId?: string;
   id: string;
   title: string;
   category: MarketplaceCategory;
@@ -429,4 +432,13 @@ export interface SupplyChainTransaction {
   quantity: string;
   totalAmount: number;
   status: 'Selesai' | 'Diproses' | 'Terkirim';
+}
+
+export interface MarketplaceCartItem {
+  id: string;
+  item: UnifiedMarketplaceItem;
+  quantity: number;
+  selected: boolean;
+  notes?: string;
+  addedAt: string;
 }

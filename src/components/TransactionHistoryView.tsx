@@ -1,6 +1,7 @@
+import { BuyerPassportQrModal } from './buyer/BuyerPassportQrModal';
 import React from 'react';
 import { useCoffee } from '../context/CoffeeContext';
-import { History, CheckCircle2, ArrowRight, Receipt, TrendingUp, Layers } from 'lucide-react';
+import { History, CheckCircle2, ArrowRight, Receipt, TrendingUp, Layers, ShoppingCart } from 'lucide-react';
 
 const roleAccent: Record<string, string> = {
   petani: 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -11,16 +12,20 @@ const roleAccent: Record<string, string> = {
 };
 
 export const TransactionHistoryView: React.FC = () => {
-  const { currentUser, transactions } = useCoffee();
+  const { currentUser, transactions, setActiveView } = useCoffee();
+  const [activeTab, setActiveTab] = React.useState<'orders' | 'ledger'>('orders');
+  const [selectedTraceOrder, setSelectedTraceOrder] = React.useState<any | null>(null);
 
   const myTransactions = transactions.filter(
     (t) =>
-      t.fromName === currentUser?.name ||
-      t.toName === currentUser?.name ||
-      t.toName === currentUser?.organization ||
-      t.fromRole === currentUser?.role ||
-      t.toRole === currentUser?.role ||
-      true
+      !currentUser ||
+      currentUser.role === 'superadmin' ||
+      t.fromName === currentUser.name ||
+      t.toName === currentUser.name ||
+      t.fromName === currentUser.organization ||
+      t.toName === currentUser.organization ||
+      t.fromRole === currentUser.role ||
+      t.toRole === currentUser.role
   );
 
   const totalTrxAmount = myTransactions.reduce((acc, curr) => acc + curr.totalAmount, 0);
@@ -48,6 +53,48 @@ export const TransactionHistoryView: React.FC = () => {
       </div>
 
       {/* Summary Stat Cards */}
+            {/* TABS NAVIGATION & CART SHORTCUT */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('orders')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === 'orders'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            <span>Pesanan Saya &amp; Lacak Paspor QR</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('ledger')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === 'ledger'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>Buku Besar Transaksi Rantai Pasok</span>
+          </button>
+        </div>
+
+        {/* Clear Action: Shortcut ke Keranjang Belanja */}
+        <button
+          type="button"
+          onClick={() => setActiveView('cart')}
+          className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-all border border-emerald-200 flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+        >
+          <ShoppingCart className="w-4 h-4 text-emerald-600" />
+          <span>Buka Keranjang Belanja</span>
+          <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
           <div className="flex items-center gap-2 text-stone-400 text-[11px] font-bold uppercase tracking-wider mb-1">

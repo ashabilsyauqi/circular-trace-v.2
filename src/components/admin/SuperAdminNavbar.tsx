@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCoffee } from '../../context/CoffeeContext';
 import {
+  CreditCard,
   Crown,
   ShieldCheck,
   Clock,
@@ -139,6 +140,20 @@ export const SuperAdminNavbar: React.FC = () => {
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-800 text-stone-300 font-bold">
                 {users.length}
               </span>
+            </button>
+
+                        {/* Tab 2.5: Kelola Langganan (Subscriptions) */}
+            <button
+              type="button"
+              onClick={() => setSuperAdminActiveTab('subscriptions')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                superAdminActiveTab === 'subscriptions'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-stone-950 shadow-md shadow-emerald-500/20'
+                  : 'text-stone-300 hover:text-white hover:bg-stone-800'
+              }`}
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Langganan &amp; Billing</span>
             </button>
 
             {/* Tab 3: Audit Log & Transaksi */}

@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useCoffee } from '../context/CoffeeContext';
 import {
   Sprout,
+  Store,
+  QrCode,
+  Search,
   ShieldCheck,
   MapPin,
   Layers,
@@ -38,8 +41,23 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
   lotId,
   onContinue,
 }) => {
-  const { farmerLots, processedLots, warehouseLots, cafeInventory } = useCoffee();
+  const { farmerLots, processedLots, warehouseLots, cafeInventory, navigate } = useCoffee();
+  const [activeLotId, setActiveLotId] = useState<string>(lotId || 'LOT-PTN-001');
+  const [searchInput, setSearchInput] = useState<string>('');
   const [activeEcoTab, setActiveEcoTab] = useState<'overview' | 'scientific' | 'material' | 'compliance'>('overview');
+
+  React.useEffect(() => {
+    if (lotId) {
+      setActiveLotId(lotId);
+    }
+  }, [lotId]);
+
+  const handleSelectLot = (newId: string) => {
+    setActiveLotId(newId);
+    if (navigate) {
+      navigate({ view: 'scan', lotId: newId, replace: true });
+    }
+  };
 
   // 1. Check if the scanned ID is a Cafe cup item
   const cafeItem = cafeInventory.find(
@@ -50,17 +68,17 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
 
   // 2. Check if the scanned ID is a warehouse lot
   const warehouseLot = warehouseLots.find(
-    (w) => w.id.toLowerCase() === lotId.toLowerCase()
+    (w) => w.id.toLowerCase() === activeLotId.toLowerCase()
   );
 
   // 3. Check if the scanned ID is a processed green bean lot
   const processedLot = processedLots.find(
-    (p) => p.id.toLowerCase() === lotId.toLowerCase()
+    (p) => p.id.toLowerCase() === activeLotId.toLowerCase()
   );
 
   // 4. Check if the scanned ID is a farmer harvest lot
   const farmerLot = farmerLots.find(
-    (l) => l.id.toLowerCase() === lotId.toLowerCase()
+    (l) => l.id.toLowerCase() === activeLotId.toLowerCase()
   );
 
   const isCafeCup =
@@ -68,7 +86,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
     lotId.toUpperCase().startsWith('CAFE-') ||
     lotId.toUpperCase().startsWith('CUP-');
   const isWarehouse =
-    !isCafeCup && (Boolean(warehouseLot) || lotId.toUpperCase().startsWith('WH-'));
+    !isCafeCup && (Boolean(warehouseLot) || activeLotId.toUpperCase().startsWith('WH-'));
   const isProcessed =
     !isCafeCup &&
     !isWarehouse &&
@@ -543,34 +561,108 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8 selection:bg-amber-500 selection:text-stone-950">
-      {/* Top Header Navigation — warm, story-driven, consumer-facing */}
-      <header className="max-w-3xl mx-auto w-full flex items-center justify-between py-4 border-b border-stone-200">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-stone-950 text-amber-400 flex items-center justify-center font-black text-sm shadow-md shrink-0">
-            sAI
+      {/* Top Header Navigation — CircularTrace Official Digital Passport */}
+      <header className="max-w-4xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-b border-stone-200">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-900 text-amber-400 flex items-center justify-center font-black text-sm shadow-md shrink-0 border border-emerald-700/60">
+            <Coffee className="w-6 h-6 text-emerald-300" />
           </div>
           <div>
-            <span className="font-black text-sm block text-stone-950 tracking-tight">
-              sangrAI
-            </span>
-            <span className="text-[10px] text-stone-500 font-semibold block leading-tight">
-              Kisah Asli di Balik Cangkir Kopi Anda
+            <div className="flex items-center gap-2">
+              <span className="font-black text-base text-stone-950 tracking-tight">
+                Circular<span className="text-emerald-700">Trace</span>
+              </span>
+              <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 font-extrabold border border-emerald-300">
+                Paspor Digital Traceability
+              </span>
+            </div>
+            <span className="text-[11px] text-stone-500 font-semibold block leading-tight mt-0.5">
+              Sistem Ketertelusuran Silsilah Kopi Sirkular (Farm-to-Cup) • UNAND TPHP
             </span>
           </div>
         </div>
 
-        <button
-          onClick={handleShare}
-          className="p-2.5 sm:px-4 rounded-full bg-white border border-stone-300 text-stone-700 hover:bg-stone-100 hover:border-stone-400 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
-          title="Bagikan Tautan Verifikasi"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Bagikan Cerita Ini</span>
-        </button>
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button
+            onClick={onContinue}
+            className="px-3.5 py-2 rounded-xl bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 text-stone-700 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            title="Buka Marketplace Katalog Kopi"
+          >
+            <Store className="w-4 h-4 text-emerald-600" />
+            <span>Katalog Marketplace</span>
+          </button>
+
+          <button
+            onClick={handleShare}
+            className="p-2 sm:px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            title="Bagikan Tautan Verifikasi Paspor Ini"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Bagikan Paspor</span>
+          </button>
+        </div>
       </header>
 
+      {/* Interactive Lot Search & Switcher Bar */}
+      <div className="max-w-4xl mx-auto w-full mt-4 bg-white rounded-2xl p-3 sm:p-4 border border-stone-200/90 shadow-2xs space-y-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (searchInput.trim()) {
+              handleSelectLot(searchInput.trim());
+              setSearchInput('');
+            }
+          }}
+          className="flex flex-col sm:flex-row items-center gap-2"
+        >
+          <div className="relative flex-1 w-full">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Cari / Masukkan ID Lot Karung atau Cup (misal: LOT-PTN-001, GB-MLB-001, WH-PGL-001)..."
+              className="w-full pl-9 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-mono"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full sm:w-auto px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl transition-colors shrink-0 cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <QrCode className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Lacak ID Lot</span>
+          </button>
+        </form>
+
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-stone-100 text-xs">
+          <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider shrink-0">
+            Contoh Rantai Pasok:
+          </span>
+          {[
+            { id: 'LOT-PTN-001', label: 'Kebun Petani (Ceri)', stage: 'Panen' },
+            { id: 'GB-MLB-001', label: 'Wet Mill Processor (GB)', stage: 'Olahan' },
+            { id: 'WH-PGL-001', label: 'Gudang Ekspor (Silo)', stage: 'Grading' },
+            { id: 'CUP-STD-001', label: 'Kedai Specialty (Cup)', stage: 'Seduhan' },
+          ].map((sample) => (
+            <button
+              key={sample.id}
+              type="button"
+              onClick={() => handleSelectLot(sample.id)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                activeLotId.toLowerCase() === sample.id.toLowerCase()
+                  ? 'bg-emerald-600 text-white shadow-2xs font-bold'
+                  : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+              }`}
+            >
+              <span className="font-mono text-[11px]">{sample.id}</span>
+              <span className="text-[10px] opacity-75">({sample.stage})</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main Verified Specification Card */}
-      <main className="max-w-3xl mx-auto w-full my-8 space-y-6">
+      <main className="max-w-4xl mx-auto w-full my-8 space-y-6">
         {/* ==================================================================== */}
         {/* CASE 0: GELAS KOPI PELANGGAN CAFE (FARM-TO-CUP CONSUMER EXPERIENCE) */}
         {/* ==================================================================== */}
@@ -587,7 +679,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   Nikmati Seduhan Asli Specialty Coffee
                 </h1>
                 <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-                  Selamat menikmati! Cangkir kopi yang sedang Anda nikmati di <strong className="text-amber-300 font-bold">{currentCafeItem.cafeName}</strong> terhubung langsung ke petani dan roastery melalui sistem ketertelusuran sangrAI.
+                  Selamat menikmati! Cangkir kopi yang sedang Anda nikmati di <strong className="text-amber-300 font-bold">{currentCafeItem.cafeName}</strong> terhubung langsung ke petani dan roastery melalui sistem ketertelusuran CircularTrace.
                 </p>
               </div>
 
@@ -780,7 +872,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   <span>Jaminan Transparansi & Keadilan Rantai Pasok (Direct Trade)</span>
                 </div>
                 <p className="text-[11px] text-stone-500 leading-relaxed">
-                  Biji kopi pada cangkir ini dibeli langsung oleh <strong className="text-stone-800">{currentCafeItem.cafeName}</strong> melalui platform sangrAI tanpa perantara spekulan. Memastikan nilai tambah terbaik dinikmati petani dan kualitas seduhan terbaik disajikan untuk Anda.
+                  Biji kopi pada cangkir ini dibeli langsung oleh <strong className="text-stone-800">{currentCafeItem.cafeName}</strong> melalui platform CircularTrace tanpa perantara spekulan. Memastikan nilai tambah terbaik dinikmati petani dan kualitas seduhan terbaik disajikan untuk Anda.
                 </p>
               </div>
 
@@ -807,7 +899,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   Sertifikasi Mutu & Grading Gudang
                 </h1>
                 <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-                  Data ini didekripsi langsung dari kode QR stiker karung gudang sangrAI. Memuat hasil uji sensorik cupping (SCA), penilaian cacat fisik (defect), serta kontrol iklim ruang simpan.
+                  Data ini didekripsi langsung dari kode QR stiker karung gudang CircularTrace. Memuat hasil uji sensorik cupping (SCA), penilaian cacat fisik (defect), serta kontrol iklim ruang simpan.
                 </p>
               </div>
 
@@ -1339,7 +1431,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                   Spesifikasi Mutu Lot Panen Ceri
                 </h1>
                 <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-                  Data berikut didekripsi langsung dari kode QR resmi pada stiker karung panen petani. Data tercatat secara transparan di buku besar rantai pasok sangrAI.
+                  Data berikut didekripsi langsung dari kode QR resmi pada stiker karung panen petani. Data tercatat secara transparan di buku besar rantai pasok CircularTrace.
                 </p>
               </div>
 
@@ -1450,7 +1542,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
               <div className="pt-4 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span>Tersertifikasi Asli oleh Jaringan sangrAI Traceability</span>
+                  <span>Tersertifikasi Asli oleh Jaringan CircularTrace Traceability</span>
                 </div>
                 <span>Timestamp: {currentFarmerLot.createdAt}</span>
               </div>
@@ -1458,29 +1550,58 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
           </>
         )}
 
-        {/* Closing Trust Statement + Action Button to Open sangrAI Platform */}
-        <div className="bg-gradient-to-br from-stone-950 via-amber-950 to-stone-950 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[11px] font-bold">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            100% Transparan, dari Kebun hingga Cangkir
+        {/* Differentiated Navigation: Passport Verification vs Marketplace Order */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-emerald-950 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-emerald-800/60 space-y-3 flex flex-col justify-between">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-bold mb-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                Integritas Silsilah Terjamin
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-white">Paspor Digital Kopi Sirkular</h3>
+              <p className="text-xs text-emerald-200/80 leading-relaxed mt-1">
+                Data batch panen, parameter sangrai, material balance limbah, dan audit deforestasi EUDR tersimpan permanen tanpa manipulasi pada ledger CircularTrace.
+              </p>
+            </div>
+            <div className="pt-2">
+              <button
+                onClick={handleShare}
+                className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Bagikan Paspor Digital Ini</span>
+              </button>
+            </div>
           </div>
-          <p className="text-white/90 text-sm sm:text-base font-semibold max-w-lg mx-auto leading-relaxed">
-            Ingin menjelajahi lebih banyak kopi bersertifikat serupa, atau melihat bagaimana platform sangrAI menghubungkan petani, pengolah, gudang, roaster, dan kedai kopi?
-          </p>
-          <button
-            onClick={onContinue}
-            className="px-8 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs sm:text-sm transition-all shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto"
-          >
-            <Layers className="w-4 h-4" />
-            Jelajahi Marketplace & Ekosistem sangrAI
-            <ArrowRight className="w-4 h-4" />
-          </button>
+
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-stone-200 space-y-3 flex flex-col justify-between">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-[11px] font-bold mb-2">
+                <Store className="w-3.5 h-3.5 text-amber-700" />
+                Katalog Komoditas Kopi
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-stone-900">Tertarik Memesan Lot Ini?</h3>
+              <p className="text-xs text-stone-500 leading-relaxed mt-1">
+                Kunjungi marketplace terpadu untuk melihat harga penawaran terkini, ketersediaan stok karung, atau memesan langsung secara resmi.
+              </p>
+            </div>
+            <div className="pt-2">
+              <button
+                onClick={onContinue}
+                className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Store className="w-3.5 h-3.5" />
+                <span>Lihat di Katalog Marketplace</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="max-w-3xl mx-auto w-full text-center py-6 border-t border-stone-200 text-xs text-stone-500">
-        sangrAI Traceability • Standar Label Karung Fisik Terverifikasi
+      <footer className="max-w-4xl mx-auto w-full text-center py-6 border-t border-stone-200 text-xs text-stone-500">
+        CircularTrace Ecosystem • Sistem Ketertelusuran Silsilah Kopi Sirkular (Farm-to-Cup) • Standar Riset UNAND TPHP
       </footer>
     </div>
   );

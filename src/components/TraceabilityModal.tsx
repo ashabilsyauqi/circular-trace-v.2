@@ -1,6 +1,8 @@
+import { useCoffee } from '../context/CoffeeContext';
 import React, { useState } from 'react';
 import {
   X,
+  ArrowRight,
   Sprout,
   Cog,
   Warehouse,
@@ -30,6 +32,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
   onClose,
   data,
 }) => {
+  const { navigate } = useCoffee();
   const [activeTraceTab, setActiveTraceTab] = useState<'timeline' | 'sensory'>('timeline');
 
   if (!isOpen || !data) return null;
@@ -39,7 +42,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
   const beanName = isCafeItem ? data.beanName : `${data.origin} - ${data.variety}`;
   const variety = data.variety;
   const resolvedBaseUrl = getPublicBaseUrl(getNetworkHost());
-  const traceUrl = data ? `${resolvedBaseUrl}/?lotId=${data.id}` : '';
+  const traceUrl = data ? `${resolvedBaseUrl}/trace?lotId=${data.id}` : '';
   const processMethod = data.processMethod;
   const roastLevel = data.roastLevel;
   const tastingNotes = data.tastingNotes;
@@ -329,17 +332,29 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
         )}
 
         {/* Modal Footer */}
-        <div className="bg-stone-50 border-t border-stone-200 p-4 sm:p-5 flex items-center justify-between">
-          <div className="text-xs text-stone-500 flex items-center gap-1">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            Data silsilah tercatat permanen di jaringan rantai pasok sangrAI.
+        <div className="bg-stone-50 border-t border-stone-200 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-xs text-stone-500 flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>Data silsilah tercatat permanen di jaringan CircularTrace.</span>
           </div>
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition-colors shadow-xs"
-          >
-            Tutup Silsilah
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onClose();
+                navigate({ view: 'scan', lotId: data.id });
+              }}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Buka Paspor Digital Penuh</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 text-xs font-bold transition-colors cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
         </div>
       </div>
     </div>

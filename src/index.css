@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
+    color-scheme: light !important;
     --color-coffee-dark: #18110D;
     --color-coffee-espresso: #291B13;
     --color-coffee-roast: #6F4E37;
@@ -20,11 +23,21 @@
   body {
     background-color: #F8F5F0;
     color: #261A13;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 400;
     margin: 0;
     padding: 0;
     -webkit-font-smoothing: antialiased;
     font-size: 13px;
+  }
+
+  button, input, select, textarea {
+    font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 700;
   }
 }
 

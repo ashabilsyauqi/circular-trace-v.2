@@ -3,6 +3,7 @@ import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
 import { ROLE_DETAILS, REGISTRABLE_ROLES } from '../constants/roles';
 import {
+  ShoppingCart,
   X,
   UserPlus,
   Sprout,
@@ -35,6 +36,7 @@ const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   cafe: <Coffee className="w-4 h-4" />,
   verifikator: <Award className="w-4 h-4" />,
   superadmin: <Crown className="w-4 h-4" />,
+  buyer: <ShoppingCart className="w-4 h-4" />,
 };
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({

@@ -8,6 +8,7 @@ import {
   Coffee,
   ShieldCheck,
   Crown,
+  ShoppingCart,
 } from 'lucide-react';
 
 export const ROLES_ORDER: UserRole[] = [
@@ -17,6 +18,7 @@ export const ROLES_ORDER: UserRole[] = [
   'roaster',
   'cafe',
   'verifikator',
+  'buyer',
 ];
 
 export const REGISTRABLE_ROLES: UserRole[] = [
@@ -25,6 +27,7 @@ export const REGISTRABLE_ROLES: UserRole[] = [
   'gudang',
   'roaster',
   'cafe',
+  'buyer',
 ];
 
 export const ROLE_DETAILS: Record<
@@ -32,10 +35,10 @@ export const ROLE_DETAILS: Record<
   { label: string; badgeClass: string; icon: React.ReactNode; description: string }
 > = {
   petani: {
-    label: 'Petani Kopi',
+    label: 'Kelompok Tani (Kebun)',
     badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
     icon: <Sprout className="w-4 h-4 text-emerald-600" />,
-    description: 'Upload hasil panen cherry & jual ke Pengolah',
+    description: 'Kelompok Tani: Kelola kebun, panen ceri, sertifikasi 4C/EUDR, & pasok ke mill',
   },
   pengolah: {
     label: 'Pengolah Mill',
@@ -72,5 +75,11 @@ export const ROLE_DETAILS: Record<
     badgeClass: 'bg-amber-100 text-amber-900 border-amber-400 font-bold',
     icon: <Crown className="w-4 h-4 text-amber-600" />,
     description: 'Owner & Pemilik Sistem sangrAI - Approval & Pengawasan Seluruh Ekosistem',
+  },
+  buyer: {
+    label: 'Pembeli (Buyer)',
+    badgeClass: 'bg-emerald-100 text-emerald-900 border-emerald-400 font-bold',
+    icon: <ShoppingCart className="w-4 h-4 text-emerald-600" />,
+    description: 'Konsumen & Pembeli Komoditas Kopi (Dapat membeli langsung Ceri, Green Bean, Roasted Bean, hingga Seduhan Kafe)',
   },
 };

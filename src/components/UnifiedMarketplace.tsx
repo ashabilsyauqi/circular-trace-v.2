@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCoffee } from '../context/CoffeeContext';
 import {
   MarketplaceCategory,
@@ -28,16 +28,70 @@ import {
   Plus,
   PackagePlus,
   ShieldCheck,
+  RotateCcw,
 } from 'lucide-react';
 import { TraceabilityModal } from './TraceabilityModal';
 import { FarmerBarcodeModal } from './FarmerBarcodeModal';
 import { ProcessorBarcodeModal } from './ProcessorBarcodeModal';
 import { WarehouseBarcodeModal } from './WarehouseBarcodeModal';
+import { BuyerTokopediaGateModal } from './buyer/BuyerTokopediaGateModal';
+import { TokopediaCartModal, CartItem } from './buyer/TokopediaCartModal';
+import { ArrowRight } from 'lucide-react';
 import { ProductDetailModal } from './ProductDetailModal';
 import { LaunchToMarketplaceModal } from './marketplace/LaunchToMarketplaceModal';
 import { ProcessedGreenBeanLot, WarehouseLot } from '../types/coffee';
 import { VerificationStampBadge } from './shared/VerificationStampBadge';
 import { WhatsAppIcon, openOrderWhatsApp, getSellerWhatsAppNumber } from '../utils/whatsapp';
+
+
+export interface CoffeeRegionOption {
+  id: string;
+  label: string;
+  province: string;
+  keywords: string[];
+}
+
+export const COFFEE_REGIONS: CoffeeRegionOption[] = [
+  {
+    id: 'pangalengan',
+    label: 'Pangalengan (Jawa Barat)',
+    province: 'Jawa Barat',
+    keywords: ['pangalengan', 'margamukti', 'sukaluyu', 'malabar', 'tilu', 'preanger', 'bandung', 'pasir kunci', 'cukul'],
+  },
+  {
+    id: 'gayo',
+    label: 'Aceh Gayo (Sumatera)',
+    province: 'Aceh',
+    keywords: ['gayo', 'takengon', 'bener meriah', 'pantan musara', 'aceh', 'burni telong', 'pegasing', 'wih pesam'],
+  },
+  {
+    id: 'kintamani',
+    label: 'Kintamani (Bali)',
+    province: 'Bali',
+    keywords: ['kintamani', 'bali', 'ulian', 'belancan', 'bangli', 'batur'],
+  },
+  {
+    id: 'bajawa',
+    label: 'Bajawa Flores (NTT)',
+    province: 'Nusa Tenggara Timur',
+    keywords: ['bajawa', 'flores', 'ngada', 'rowa', 'radabata', 'inerie', 'ntt', 'boawae'],
+  },
+  {
+    id: 'solok',
+    label: 'Solok Radjo (Sumatera Barat)',
+    province: 'Sumatera Barat',
+    keywords: ['solok', 'gumanti', 'aie dingin', 'sumatera barat', 'sumbar'],
+  },
+];
+
+export function itemMatchesRegion(originStr: string | undefined, regionId: string): boolean {
+  if (regionId === 'all') return true;
+  if (!originStr) return false;
+  const region = COFFEE_REGIONS.find((r) => r.id === regionId);
+  if (!region) return originStr.toLowerCase().includes(regionId.toLowerCase());
+  const s = originStr.toLowerCase();
+  return region.keywords.some((kw) => s.includes(kw));
+}
 
 export const UnifiedMarketplace: React.FC = () => {
   const {
@@ -47,15 +101,25 @@ export const UnifiedMarketplace: React.FC = () => {
     createPOFromMarketplace,
     setActiveView,
     setRoasterActiveTab,
+    navigate,
     language,
     t,
+    cartItems: globalCartItems,
+    addToCart,
   } = useCoffee();
 
+  // Filter States
   const [selectedCategory, setSelectedCategory] = useState<MarketplaceCategory | 'all'>('all');
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
+  const [selectedOrigin, setSelectedOrigin] = useState<string>('all');
+  const [minScaScore, setMinScaScore] = useState<number>(0);
+  const [onlyVerified, setOnlyVerified] = useState(false);
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [tempMinPrice, setTempMinPrice] = useState('');
+  const [tempMaxPrice, setTempMaxPrice] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc' | 'sca_desc' | 'stock_desc'>('default');
-  const [onlyVerified, setOnlyVerified] = useState(false);
 
   // Launch to Marketplace Modal State
   const [isLaunchModalOpen, setIsLaunchModalOpen] = useState(false);
@@ -65,49 +129,154 @@ export const UnifiedMarketplace: React.FC = () => {
   const [buyQuantity, setBuyQuantity] = useState<number>(1);
   const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  // Tokopedia Buyer Gate & Cart States
+  const [gateModalOpen, setGateModalOpen] = useState(false);
+  const [pendingItem, setPendingItem] = useState<UnifiedMarketplaceItem | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   // Traceability Modal State
   const [traceItem, setTraceItem] = useState<any | null>(null);
 
-  // Farmer Barcode Modal State
+  // Barcode Lot Modals
   const [barcodeLot, setBarcodeLot] = useState<FarmerHarvestLot | null>(null);
-
-  // Processor Barcode Modal State
   const [processorBarcodeLot, setProcessorBarcodeLot] = useState<ProcessedGreenBeanLot | null>(null);
-
-  // Warehouse Barcode Modal State
   const [warehouseBarcodeLot, setWarehouseBarcodeLot] = useState<WarehouseLot | null>(null);
 
   // Product Detail Modal State
   const [selectedDetailItem, setSelectedDetailItem] = useState<UnifiedMarketplaceItem | null>(null);
+
+  const isBuyerMember = !!currentUser && (currentUser.role === 'buyer' || currentUser.isSuperAdmin);
+
+  // Selected Origin Label for Display
+  const selectedOriginLabel = useMemo(() => {
+    if (selectedOrigin === 'all') return 'Semua Origin';
+    const region = COFFEE_REGIONS.find((r) => r.id === selectedOrigin);
+    return region ? region.label : selectedOrigin;
+  }, [selectedOrigin]);
+
+  // Faceted counts: items matching other filters excluding Category
+  const itemsMatchingNonCategory = useMemo(() => {
+    return unifiedMarketplaceItems.filter((item) => {
+      const matchOrigin = selectedOrigin === 'all' || itemMatchesRegion(item.origin, selectedOrigin);
+      const matchRole = selectedRole === 'all' || item.sellerRole === selectedRole;
+      const isItemVerified = item.verificationStatus === 'verified' || !!item.verificationStamp;
+      const matchVerified = !onlyVerified || isItemVerified;
+      const matchSca = minScaScore === 0 || ((item.scaScore || 0) >= minScaScore);
+      const matchMinPrice = minPrice === null || item.price >= minPrice;
+      const matchMaxPrice = maxPrice === null || item.price <= maxPrice;
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch = !q || (
+        item.title.toLowerCase().includes(q) ||
+        item.origin.toLowerCase().includes(q) ||
+        item.variety.toLowerCase().includes(q) ||
+        item.sellerName.toLowerCase().includes(q) ||
+        item.tastingNotes.some((t) => t.toLowerCase().includes(q))
+      );
+      return matchOrigin && matchRole && matchVerified && matchSca && matchMinPrice && matchMaxPrice && matchSearch;
+    });
+  }, [unifiedMarketplaceItems, selectedOrigin, selectedRole, onlyVerified, minScaScore, minPrice, maxPrice, searchQuery]);
+
+  // Faceted counts: items matching other filters excluding Origin
+  const itemsMatchingNonOrigin = useMemo(() => {
+    return unifiedMarketplaceItems.filter((item) => {
+      const matchCategory = selectedCategory === 'all' || item.category === selectedCategory;
+      const matchRole = selectedRole === 'all' || item.sellerRole === selectedRole;
+      const isItemVerified = item.verificationStatus === 'verified' || !!item.verificationStamp;
+      const matchVerified = !onlyVerified || isItemVerified;
+      const matchSca = minScaScore === 0 || ((item.scaScore || 0) >= minScaScore);
+      const matchMinPrice = minPrice === null || item.price >= minPrice;
+      const matchMaxPrice = maxPrice === null || item.price <= maxPrice;
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch = !q || (
+        item.title.toLowerCase().includes(q) ||
+        item.origin.toLowerCase().includes(q) ||
+        item.variety.toLowerCase().includes(q) ||
+        item.sellerName.toLowerCase().includes(q) ||
+        item.tastingNotes.some((t) => t.toLowerCase().includes(q))
+      );
+      return matchCategory && matchRole && matchVerified && matchSca && matchMinPrice && matchMaxPrice && matchSearch;
+    });
+  }, [unifiedMarketplaceItems, selectedCategory, selectedRole, onlyVerified, minScaScore, minPrice, maxPrice, searchQuery]);
 
   const categoryMeta: Record<
     MarketplaceCategory,
     { label: string; icon: React.ReactNode; color: string; badgeClass: string }
   > = {
     cherry: {
-      label: t('market.cat.cherry'),
-      icon: <Sprout className="w-4 h-4 text-emerald-600" />,
-      color: 'border-emerald-300 bg-emerald-50 text-emerald-900',
-      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+      label: 'Ceri Kopi Segar (Panen)',
+      icon: <Sprout className="w-4 h-4 text-orange-600" />,
+      color: 'border-orange-200 bg-orange-50 text-orange-700',
+      badgeClass: 'bg-orange-50 text-orange-700 border-orange-200',
     },
     green_bean_processor: {
-      label: t('market.cat.green_bean_processor'),
-      icon: <Cog className="w-4 h-4 text-amber-600" />,
-      color: 'border-amber-300 bg-amber-50 text-amber-900',
-      badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+      label: 'Green Bean Olahan (Mill)',
+      icon: <Cog className="w-4 h-4 text-emerald-700" />,
+      color: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     },
     green_bean_warehouse: {
-      label: t('market.cat.green_bean_warehouse'),
-      icon: <Warehouse className="w-4 h-4 text-blue-600" />,
-      color: 'border-blue-300 bg-blue-50 text-blue-900',
-      badgeClass: 'bg-blue-100 text-blue-800 border-blue-300',
+      label: 'Green Bean Gudang Ekspor',
+      icon: <Warehouse className="w-4 h-4 text-emerald-700" />,
+      color: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     },
     roasted_bean: {
-      label: t('market.cat.roasted_bean'),
-      icon: <Flame className="w-4 h-4 text-orange-600" />,
-      color: 'border-orange-300 bg-orange-50 text-orange-900',
-      badgeClass: 'bg-orange-100 text-orange-800 border-orange-300',
+      label: 'Biji Kopi Sangrai (Roasted)',
+      icon: <Flame className="w-4 h-4 text-amber-700" />,
+      color: 'border-amber-200 bg-amber-50 text-amber-700',
+      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
     },
+  };
+
+  const formatUnitDisplay = (unitStr?: string) => {
+    if (!unitStr) return '/ kg';
+    const clean = unitStr.replace(/^\/+/, '').trim();
+    return clean ? `/ ${clean}` : '/ kg';
+  };
+
+  const handleAddToCart = (item: UnifiedMarketplaceItem) => {
+    if (!isBuyerMember) {
+      setPendingItem(item);
+      setGateModalOpen(true);
+      return;
+    }
+    setCartItems((prev) => {
+      const idx = prev.findIndex((c) => c.item.id === item.id);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + 1 };
+        return updated;
+      }
+      return [...prev, { item, quantity: 1 }];
+    });
+    setActionNotice({
+      type: 'success',
+      message: `${item.title} berhasil ditambahkan ke Keranjang Belanja!`,
+    });
+    setTimeout(() => setActionNotice(null), 3500);
+  };
+
+  const handleApplyPriceFilter = (e: React.FormEvent) => {
+    e.preventDefault();
+    const min = tempMinPrice.trim() !== '' ? Number(tempMinPrice) : null;
+    const max = tempMaxPrice.trim() !== '' ? Number(tempMaxPrice) : null;
+    setMinPrice(min);
+    setMaxPrice(max);
+  };
+
+  const handleResetFilters = () => {
+    setSelectedCategory('all');
+    setSelectedRole('all');
+    setSelectedOrigin('all');
+    setMinScaScore(0);
+    setOnlyVerified(false);
+    setMinPrice(null);
+    setMaxPrice(null);
+    setTempMinPrice('');
+    setTempMaxPrice('');
+    setSearchQuery('');
+    setSortBy('default');
   };
 
   // Filter items
@@ -116,6 +285,11 @@ export const UnifiedMarketplace: React.FC = () => {
     const matchRole = selectedRole === 'all' || item.sellerRole === selectedRole;
     const isItemVerified = item.verificationStatus === 'verified' || !!item.verificationStamp;
     const matchVerified = !onlyVerified || isItemVerified;
+    const matchOrigin = selectedOrigin === 'all' || itemMatchesRegion(item.origin, selectedOrigin);
+    const matchSca = minScaScore === 0 || ((item.scaScore || 0) >= minScaScore);
+    const matchMinPrice = minPrice === null || item.price >= minPrice;
+    const matchMaxPrice = maxPrice === null || item.price <= maxPrice;
+
     const q = searchQuery.toLowerCase();
     const matchSearch =
       item.title.toLowerCase().includes(q) ||
@@ -124,7 +298,7 @@ export const UnifiedMarketplace: React.FC = () => {
       item.sellerName.toLowerCase().includes(q) ||
       item.tastingNotes.some((t) => t.toLowerCase().includes(q));
 
-    return matchCategory && matchRole && matchVerified && matchSearch;
+    return matchCategory && matchRole && matchVerified && matchOrigin && matchSca && matchMinPrice && matchMaxPrice && matchSearch;
   });
 
   // Sort items
@@ -137,8 +311,12 @@ export const UnifiedMarketplace: React.FC = () => {
   });
 
   const handleOpenBuy = (item: UnifiedMarketplaceItem) => {
+    if (!isBuyerMember) {
+      setPendingItem(item);
+      setGateModalOpen(true);
+      return;
+    }
     setBuyingItem(item);
-    // default quantity
     if (item.category === 'cherry') {
       setBuyQuantity(Math.min(item.availableStock, 100));
     } else if (item.category === 'green_bean_processor' || item.category === 'green_bean_warehouse') {
@@ -148,9 +326,6 @@ export const UnifiedMarketplace: React.FC = () => {
     }
   };
 
-  // A roaster buying a green bean listing creates a Purchase Order (goes through digital
-  // signature approval + incoming QC before it becomes usable stock) instead of an instantly
-  // completed transaction — same "beli langsung" click, different result under the hood.
   const isRoasterGreenBeanPurchase =
     !!buyingItem &&
     currentUser?.role === 'roaster' &&
@@ -173,48 +348,12 @@ export const UnifiedMarketplace: React.FC = () => {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Marketplace Header Hero */}
-      <div className="bg-linear-to-r from-stone-950 via-amber-950 to-stone-900 text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
-        <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-400/30 px-3.5 py-1 rounded-full text-xs font-semibold mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            {t('market.hero.tag')}
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
-            {t('market.hero.title')}
-          </h1>
-          <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-            {t('market.hero.desc')}
-          </p>
-
-          <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-stone-300">
-            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs">
-              {t('market.hero.total')} <strong className="text-amber-400">{unifiedMarketplaceItems.length} Listing</strong>
-            </span>
-            <span className="bg-white/10 px-3 py-1 rounded-xl backdrop-blur-xs">
-              {t('market.hero.activeUser')} <strong className="text-emerald-400">{currentUser?.name}</strong> ({currentUser?.organization})
-            </span>
-            <button
-              onClick={() => setIsLaunchModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all hover:scale-105 cursor-pointer ml-auto sm:ml-2"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              {t('market.hero.launchBtn')}
-            </button>
-          </div>
-        </div>
-
-        <div className="absolute right-4 -bottom-6 opacity-10 text-white pointer-events-none">
-          <ShoppingCart className="w-56 h-56" />
-        </div>
-      </div>
-
+﻿  return (
+    <div className="space-y-5 pb-20">
       {/* Notification banner */}
       {actionNotice && (
         <div
-          className={`p-4 rounded-2xl text-xs font-bold flex flex-wrap items-center justify-between gap-3 border ${
+          className={`p-4 rounded-2xl text-xs font-bold flex flex-wrap items-center justify-between gap-3 border animate-in fade-in ${
             actionNotice.type === 'success'
               ? 'bg-emerald-100 border-emerald-300 text-emerald-950'
               : 'bg-red-100 border-red-300 text-red-950'
@@ -229,7 +368,7 @@ export const UnifiedMarketplace: React.FC = () => {
             {currentUser?.role === 'cafe' && actionNotice.type === 'success' && (
               <button
                 onClick={() => setActiveView('dashboard')}
-                className="px-3 py-1.5 rounded-xl bg-stone-900 text-amber-300 hover:bg-stone-800 text-xs font-black transition-all flex items-center gap-1.5 shadow-xs"
+                className="px-3 py-1.5 rounded-xl bg-stone-900 text-amber-300 hover:bg-stone-800 text-xs font-black transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <Coffee className="w-3.5 h-3.5 text-amber-400" />
                 Buka Bar & Cetak Stiker Gelas
@@ -241,401 +380,584 @@ export const UnifiedMarketplace: React.FC = () => {
                   setActiveView('dashboard');
                   setRoasterActiveTab('purchasing');
                 }}
-                className="px-3 py-1.5 rounded-xl bg-stone-900 text-orange-300 hover:bg-stone-800 text-xs font-black transition-all flex items-center gap-1.5 shadow-xs"
+                className="px-3 py-1.5 rounded-xl bg-stone-900 text-orange-300 hover:bg-stone-800 text-xs font-black transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <ShoppingCart className="w-3.5 h-3.5 text-orange-400" />
                 Tanda Tangani di Purchasing
               </button>
             )}
-            <button onClick={() => setActionNotice(null)} className="hover:opacity-75 p-1">
+            <button onClick={() => setActionNotice(null)} className="hover:opacity-75 p-1 cursor-pointer">
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* Category Filter Pills (5 Utama) */}
-      <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-xs">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-              selectedCategory === 'all'
-                ? 'bg-stone-900 text-white shadow-xs'
-                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            {t('market.cat.all')} ({unifiedMarketplaceItems.length})
-          </button>
-
-          {(Object.keys(categoryMeta) as MarketplaceCategory[]).map((catKey) => {
-            const meta = categoryMeta[catKey];
-            const isSelected = selectedCategory === catKey;
-            const count = unifiedMarketplaceItems.filter((i) => i.category === catKey).length;
-            return (
+      {/* TOP SEARCH BAR (NO HERO SECTION - Direct clean search header) */}
+      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {/* Search Input */}
+          <div id="tour-search-bar" className="relative flex-1 w-full">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari kopi specialty, varietas (Typica, Bourbon), origin (Solok, Gayo, Kerinci), roastery..."
+              className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-normal focus:ring-2 focus:ring-emerald-600 focus:outline-hidden text-slate-900 placeholder:text-slate-400"
+            />
+            {searchQuery && (
               <button
-                key={catKey}
-                onClick={() => setSelectedCategory(catKey)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
-                  isSelected
-                    ? 'bg-amber-500 text-stone-950 border-amber-600 shadow-xs font-black'
-                    : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Quick Sort Dropdown */}
+          <div id="tour-sort-select" className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-1.5 bg-stone-50 px-3 py-1.5 rounded-2xl border border-stone-200 w-full sm:w-auto">
+              <ArrowUpDown className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="bg-transparent text-xs font-bold text-stone-800 focus:outline-none cursor-pointer w-full"
+              >
+                <option value="default">Urutkan: Rekomendasi</option>
+                <option value="price_asc">Harga: Termurah</option>
+                <option value="price_desc">Harga: Termahal</option>
+                <option value="sca_desc">Skor SCA: Tertinggi</option>
+                <option value="stock_desc">Stok: Terbanyak</option>
+              </select>
+            </div>
+
+
+          </div>
+        </div>
+
+        {/* Results Summary & Active Filter Tags */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-stone-100 text-xs">
+          <span className="text-stone-500 font-medium">
+            Menampilkan <strong className="text-stone-900 font-bold">{sortedItems.length}</strong> produk kopi specialty terdaftar
+          </span>
+
+          {/* Active filter chips */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {selectedCategory !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+                <span>{categoryMeta[selectedCategory].label.split(' ')[0]} {categoryMeta[selectedCategory].label.split(' ')[1] || ''}</span>
+                <button onClick={() => setSelectedCategory('all')} className="hover:text-red-500 cursor-pointer">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {selectedOrigin !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+                <span>Asal: {selectedOriginLabel}</span>
+                <button onClick={() => setSelectedOrigin('all')} className="hover:text-red-500 cursor-pointer">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {minScaScore > 0 && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 text-[11px] font-bold border border-amber-200">
+                <span>SCA &ge; {minScaScore}</span>
+                <button onClick={() => setMinScaScore(0)} className="hover:text-red-500 cursor-pointer">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {onlyVerified && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-teal-50 text-teal-800 text-[11px] font-bold border border-teal-200">
+                <span>✓ Terverifikasi Audit</span>
+                <button onClick={() => setOnlyVerified(false)} className="hover:text-red-500 cursor-pointer">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {(minPrice !== null || maxPrice !== null) && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-medium">
+                <span>Rp {(minPrice || 0).toLocaleString()} - Rp {(maxPrice || 999999).toLocaleString()}</span>
+                <button onClick={() => { setMinPrice(null); setMaxPrice(null); setTempMinPrice(''); setTempMaxPrice(''); }} className="hover:text-red-500 cursor-pointer">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {(selectedCategory !== 'all' || selectedOrigin !== 'all' || minScaScore > 0 || onlyVerified || minPrice !== null || maxPrice !== null || selectedRole !== 'all') && (
+              <button
+                onClick={handleResetFilters}
+                className="text-[11px] text-red-500 hover:underline font-bold ml-1 cursor-pointer flex items-center gap-1"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset Semua</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+﻿      {/* MAIN 2-COLUMN LAYOUT: Carded Filter Sidebar (Left) + Products Grid (Right) */}
+      <div className="flex flex-col lg:flex-row items-start gap-6">
+
+        {/* SIDEBAR CARDED FILTERS (Just like Tokopedia) */}
+        <aside className="w-full lg:w-64 xl:w-72 shrink-0 space-y-3.5">
+          {/* Filter Header Box */}
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-emerald-600" />
+              <span className="font-extrabold text-xs text-stone-900 uppercase tracking-wider">
+                Filter Pencarian
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold transition-colors hover:underline cursor-pointer"
+            >
+              Reset
+            </button>
+          </div>
+
+          {/* CARD 1: Kategori Produk */}
+          <div id="tour-category-filter" className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 pb-2 border-b border-slate-100">
+              Kategori Komoditas
+            </h4>
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('all')}
+                className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex items-center justify-between cursor-pointer border-l-4 ${
+                  selectedCategory === 'all'
+                    ? 'bg-emerald-50 border-emerald-600 text-emerald-900 font-semibold'
+                    : 'border-transparent text-slate-700 hover:bg-slate-50 font-normal'
                 }`}
               >
-                {meta.icon}
-                {meta.label}
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                    isSelected ? 'bg-stone-950 text-white' : 'bg-stone-100 text-stone-500'
-                  }`}
-                >
-                  {count}
+                <span>Semua Kategori</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  selectedCategory === 'all' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {itemsMatchingNonCategory.length}
                 </span>
               </button>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Search & Secondary Filter Toolbar */}
-      <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        {/* Search Bar */}
-        <div className="relative flex-1 min-w-[260px]">
-          <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('market.search.placeholder')}
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-stone-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
-          />
-        </div>
+              {(Object.keys(categoryMeta) as MarketplaceCategory[]).map((catKey) => {
+                const meta = categoryMeta[catKey];
+                const count = itemsMatchingNonCategory.filter((i) => i.category === catKey).length;
+                const isSelected = selectedCategory === catKey;
+                return (
+                  <button
+                    key={catKey}
+                    type="button"
+                    disabled={count === 0}
+                    onClick={() => setSelectedCategory(isSelected ? 'all' : catKey)}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex items-center justify-between border-l-4 ${
+                      count === 0
+                        ? 'border-transparent text-slate-400 opacity-40 cursor-not-allowed'
+                        : isSelected
+                        ? 'bg-emerald-50 border-emerald-600 text-emerald-900 font-semibold cursor-pointer'
+                        : 'border-transparent text-slate-700 hover:bg-slate-50 font-normal cursor-pointer'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      {meta.icon}
+                      <span className="truncate">{meta.label}</span>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                      isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-        {/* Filter Seller Role */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-stone-500 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5" /> {t('market.filter.seller')}
-          </span>
-          <select
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value as UserRole | 'all')}
-            className="px-3 py-2 rounded-xl border border-stone-200 text-xs font-medium bg-white focus:ring-2 focus:ring-amber-500"
+          {/* CARD 2: Wilayah Origin Nusantara */}
+          <div id="tour-origin-filter" className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center justify-between">
+              <span>Wilayah Origin Nusantara</span>
+              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+            </h4>
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => setSelectedOrigin('all')}
+                className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex items-center justify-between cursor-pointer border-l-4 ${
+                  selectedOrigin === 'all'
+                    ? 'bg-emerald-50 border-emerald-600 text-emerald-900 font-semibold'
+                    : 'border-transparent text-slate-700 hover:bg-slate-50 font-normal'
+                }`}
+              >
+                <span>Semua Wilayah</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  selectedOrigin === 'all' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {itemsMatchingNonOrigin.length}
+                </span>
+              </button>
+
+              {COFFEE_REGIONS.map((region) => {
+                const count = itemsMatchingNonOrigin.filter((i) => itemMatchesRegion(i.origin, region.id)).length;
+                const isSelected = selectedOrigin === region.id;
+                return (
+                  <button
+                    key={region.id}
+                    type="button"
+                    disabled={count === 0}
+                    onClick={() => setSelectedOrigin(isSelected ? 'all' : region.id)}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex items-center justify-between border-l-4 ${
+                      count === 0
+                        ? 'border-transparent text-slate-400 opacity-40 cursor-not-allowed'
+                        : isSelected
+                        ? 'bg-emerald-50 border-emerald-600 text-emerald-900 font-semibold cursor-pointer'
+                        : 'border-transparent text-slate-700 hover:bg-slate-50 font-normal cursor-pointer'
+                    }`}
+                  >
+                    <span className="truncate">{region.label}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                      isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* CARD 3: Rentang Harga (Rp) */}
+          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs space-y-2.5">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-stone-900 pb-1.5 border-b border-stone-100">
+              Rentang Harga (Rp)
+            </h4>
+            <form onSubmit={handleApplyPriceFilter} className="space-y-2">
+              <div className="space-y-1">
+                <span className="text-[10px] text-stone-400">Harga Minimal</span>
+                <input
+                  type="number"
+                  placeholder="Rp 0"
+                  value={tempMinPrice}
+                  onChange={(e) => setTempMinPrice(e.target.value)}
+                  className="w-full px-2.5 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded-xl font-mono focus:outline-none focus:border-[#00AA5B]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] text-stone-400">Harga Maksimal</span>
+                <input
+                  type="number"
+                  placeholder="Rp 500.000"
+                  value={tempMaxPrice}
+                  onChange={(e) => setTempMaxPrice(e.target.value)}
+                  className="w-full px-2.5 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded-xl font-mono focus:outline-none focus:border-[#00AA5B]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+              >
+                Terapkan Harga
+              </button>
+            </form>
+          </div>
+
+          {/* CARD 4: Skor SCA Cupping */}
+          <div id="tour-sca-filter" className="bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs space-y-2.5">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-stone-900 pb-1.5 border-b border-stone-100 flex items-center justify-between">
+              <span>Skor Cupping SCA</span>
+              <Award className="w-3.5 h-3.5 text-amber-500" />
+            </h4>
+            <div className="space-y-1.5">
+              {[
+                { score: 0, label: 'Semua Skor' },
+                { score: 86, label: 'SCA 86+ (Specialty Superior)' },
+                { score: 84, label: 'SCA 84+ (Specialty Standard)' },
+              ].map((s) => (
+                <label key={s.score} className="flex items-center gap-2 text-xs text-stone-700 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="scaScoreFilter"
+                    checked={minScaScore === s.score}
+                    onChange={() => setMinScaScore(s.score)}
+                    className="accent-emerald-600"
+                  />
+                  <span className="font-medium">{s.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* CARD 5: Sertifikasi & Standar Sirkular */}
+          <div id="tour-eudr-filter" className="bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs space-y-2.5">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-stone-900 pb-1.5 border-b border-stone-100 flex items-center justify-between">
+              <span>Sertifikasi Hijau</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            </h4>
+            <label className="flex items-center gap-2 text-xs text-stone-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={onlyVerified}
+                onChange={(e) => setOnlyVerified(e.target.checked)}
+                className="accent-emerald-600"
+              />
+              <span className="font-bold text-emerald-800">
+                ✓ Lulus Verifikasi Audit &amp; EUDR
+              </span>
+            </label>
+          </div>
+
+          {/* CARD 6: Peran Penjual / Koperasi */}
+          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-2xs space-y-2.5">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-stone-900 pb-1.5 border-b border-stone-100">
+              Tipe Penjual
+            </h4>
+            <div className="space-y-1.5">
+              {[
+                { id: 'all', label: 'Semua Penjual' },
+                { id: 'petani', label: 'Petani (Kebun Mandiri)' },
+                { id: 'pengolah', label: 'Pengolah (Mill Basah/Kering)' },
+                { id: 'gudang', label: 'Gudang Silo Ekspor' },
+                { id: 'roaster', label: 'Roastery Kopi' },
+              ].map((r) => (
+                <label key={r.id} className="flex items-center gap-2 text-xs text-stone-700 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="sellerRoleFilter"
+                    checked={selectedRole === r.id}
+                    onChange={() => setSelectedRole(r.id as any)}
+                    className="accent-emerald-600"
+                  />
+                  <span>{r.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Reset All Button */}
+          <button
+            type="button"
+            onClick={handleResetFilters}
+            className="w-full py-2.5 bg-stone-100 hover:bg-stone-200 active:scale-98 text-stone-800 text-xs font-extrabold rounded-xl border border-stone-300 transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
           >
-            <option value="all">{t('market.filter.allSellers')}</option>
-            <option value="petani">{t('market.filter.farmer')}</option>
-            <option value="pengolah">{t('market.filter.processor')}</option>
-            <option value="gudang">{t('market.filter.warehouse')}</option>
-            <option value="roaster">{t('market.filter.roaster')}</option>
-          </select>
-        </div>
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Semua Filter</span>
+          </button>
+        </aside>
 
-        {/* Sort */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-stone-500 flex items-center gap-1">
-            <ArrowUpDown className="w-3.5 h-3.5" /> {t('market.sort.label')}
-          </span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 rounded-xl border border-stone-200 text-xs font-medium bg-white focus:ring-2 focus:ring-amber-500"
-          >
-            <option value="default">{t('market.sort.default')}</option>
-            <option value="price_asc">{t('market.sort.priceAsc')}</option>
-            <option value="price_desc">{t('market.sort.priceDesc')}</option>
-            <option value="sca_desc">{t('market.sort.scaDesc')}</option>
-            <option value="stock_desc">{t('market.sort.stockDesc')}</option>
-          </select>
-        </div>
-
-        {/* Verified Only Filter Toggle */}
-        <button
-          type="button"
-          onClick={() => setOnlyVerified(!onlyVerified)}
-          className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border cursor-pointer ${
-            onlyVerified
-              ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
-              : 'bg-white text-stone-700 border-stone-200 hover:bg-emerald-50'
-          }`}
-          title="Tampilkan hanya produk yang telah lulus verifikasi auditor"
-        >
-          <ShieldCheck className="w-3.5 h-3.5 text-current" />
-          <span>{onlyVerified ? t('market.filter.verifiedActive') : t('market.filter.verifiedOnly')}</span>
-        </button>
-
-        {/* Launch Button in Toolbar */}
-        <button
-          onClick={() => setIsLaunchModalOpen(true)}
-          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-black text-xs flex items-center gap-1.5 shadow-xs whitespace-nowrap cursor-pointer transition-all ml-auto"
-        >
-          <Plus className="w-3.5 h-3.5 stroke-[3]" />
-          {t('market.hero.launchBtnShort')}
-        </button>
-      </div>
+        {/* RIGHT COLUMN: Products Grid */}
+        <section className="flex-1 min-w-0 space-y-4">
 
       {/* Items Grid */}
       {sortedItems.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-stone-200">
-          <ShoppingCart className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-stone-800">
-            {t('market.empty.title')}
-          </h3>
-          <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto">
-            {t('market.empty.desc')}
-          </p>
+        <div className="bg-white rounded-3xl p-10 sm:p-14 text-center border border-stone-200 shadow-2xs space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-[#00AA5B] flex items-center justify-center mx-auto shadow-2xs">
+            <Search className="w-8 h-8 text-[#00AA5B]" />
+          </div>
+          <div className="space-y-1.5 max-w-md mx-auto">
+            <h3 className="text-lg font-extrabold text-stone-900 tracking-tight">
+              {t('market.empty.title')}
+            </h3>
+            <p className="text-xs text-stone-500 leading-relaxed">
+              {t('market.empty.desc')}
+            </p>
+          </div>
+
+          {/* Quick Recovery Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+            {selectedOrigin !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setSelectedOrigin('all')}
+                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#00AA5B] text-xs font-bold border border-emerald-300/80 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              >
+                <span>Hapus Filter Origin ({selectedOriginLabel})</span>
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {selectedCategory !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('all')}
+                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#00AA5B] text-xs font-bold border border-emerald-300/80 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              >
+                <span>Tampilkan Semua Kategori</span>
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="px-4 py-2 rounded-xl bg-[#00AA5B] hover:bg-[#03AC0E] text-white text-xs font-extrabold transition-all cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-95"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Semua Filter</span>
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sortedItems.map((item) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+          {sortedItems.map((item, index) => {
             const meta = categoryMeta[item.category];
             return (
               <div
+                id={index === 0 ? 'tour-first-product-card' : undefined}
                 key={`${item.category}-${item.id}`}
-                className="group relative bg-white rounded-3xl border border-stone-200/90 hover:border-amber-400/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('button')) return;
+                  navigate({ view: 'product', lotId: item.id });
+                }}
+                className="group relative bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden h-full cursor-pointer"
               >
                 <div>
-                  {/* Photo & Category Banner (Clickable to view detail) */}
+                  {/* Photo Banner (Aspect Ratio 16:9 Standar Design System) */}
                   <div
-                    onClick={() => setSelectedDetailItem(item)}
-                    className="relative h-52 bg-stone-900 overflow-hidden cursor-pointer"
+                    onClick={() => navigate({ view: 'product', lotId: item.id })}
+                    className="relative aspect-video w-full bg-slate-100 overflow-hidden cursor-pointer"
                   >
                     <img
                       src={item.photoUrl}
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out opacity-95"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
 
-                    {/* Gradient overlays for readability */}
-                    <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/60 via-black/20 to-transparent pointer-events-none" />
-                    <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
-
-                    {/* Top Left: Category Badge & ID */}
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+                    {/* Top-Left: Commodity Category Pill (Spec Semantic Tokens) */}
+                    <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
                       <span
-                        className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg shadow-xs backdrop-blur-md border flex items-center gap-1 ${meta.badgeClass}`}
+                        className={`text-xs font-medium px-2.5 py-1 rounded-lg shadow-xs backdrop-blur-xs border flex items-center gap-1.5 ${meta.badgeClass}`}
                       >
                         {meta.icon}
                         <span>{meta.label.split(' ')[0]} {meta.label.split(' ')[1] || ''}</span>
                       </span>
-                      <span className="bg-black/60 backdrop-blur-md text-white/90 text-[10px] font-mono px-2 py-1 rounded-lg border border-white/10">
-                        {item.id}
-                      </span>
                     </div>
 
-                    {/* Top Right: Verified Badge (Hanya tampil jika sudah verified / ada stempel audit sah) */}
+                    {/* Top-Right: Verified Stamp */}
                     {(item.verificationStamp || item.verificationStatus === 'verified') && (
-                      <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5 z-10">
-                        {item.verificationStamp ? (
-                          <VerificationStampBadge stamp={item.verificationStamp} size="sm" />
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-950 bg-emerald-400 border border-emerald-500 px-2.5 py-1 rounded-full shadow-sm backdrop-blur-xs">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-950" />
-                            ✓ Verified
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Bottom Left: SCA Score */}
-                    {item.scaScore && (
-                      <div className="absolute bottom-3 left-3 z-10 bg-amber-400 text-stone-950 px-2.5 py-1 rounded-lg text-xs font-black flex items-center gap-1 shadow-md">
-                        <Award className="w-3.5 h-3.5 text-stone-950" />
-                        <span>SCA {item.scaScore}</span>
-                      </div>
-                    )}
-
-                    {/* Bottom Right: Grade Tier / Hover Indicator */}
-                    {item.gradeTier ? (
-                      <div className="absolute bottom-3 right-3 z-10 bg-stone-950/80 backdrop-blur-md text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 shadow-sm">
-                        <span>✨ {item.gradeTier.split(' - ')[0]}</span>
-                      </div>
-                    ) : (
-                      <div className="absolute bottom-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-md text-stone-900 text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
-                        <Eye className="w-3.5 h-3.5 text-stone-600" />
-                        <span>{t('market.card.details')}</span>
+                      <div className="absolute top-2.5 right-2.5 z-10">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full shadow-xs backdrop-blur-xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>Verified</span>
+                        </span>
                       </div>
                     )}
                   </div>
 
-                  {/* Body Content */}
-                  <div className="p-5 space-y-3.5">
-                    {/* Seller Details & Origin */}
-                    <div className="flex items-center justify-between text-xs pb-2 border-b border-stone-100">
-                      <div className="flex items-center gap-1.5 text-stone-700 min-w-0">
-                        <Building2 className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-                        <span className="font-bold text-stone-800 truncate">
-                          {item.sellerName}
-                        </span>
-                        <span className="text-[10px] uppercase font-bold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded shrink-0">
-                          {item.sellerRole}
-                        </span>
+                  {/* Card Body */}
+                  <div className="p-4 space-y-2">
+                    {/* Row 1: Origin Location & Seller */}
+                    <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+                      <div className="flex items-center gap-1 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{item.origin.split(',')[0]}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] text-stone-500 shrink-0 ml-2">
-                        <MapPin className="w-3 h-3 text-stone-400 shrink-0" />
-                        <span className="truncate max-w-[110px]">{item.origin.split(',')[0]}</span>
+                      <div className="flex items-center gap-1 truncate max-w-[130px]" title={item.sellerName}>
+                        <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span className="truncate text-xs font-medium">{item.sellerName}</span>
                       </div>
                     </div>
 
-                    {/* Title */}
-                    <div>
-                      <h3
-                        onClick={() => setSelectedDetailItem(item)}
-                        className="font-bold text-base text-stone-900 leading-snug group-hover:text-amber-800 transition-colors cursor-pointer line-clamp-2"
-                        title={item.title}
-                      >
-                        {item.title}
-                      </h3>
-                    </div>
+                    {/* Row 2: Product Title (text-card-title: 16px, Semibold 600) */}
+                    <h3
+                      onClick={() => navigate({ view: 'product', lotId: item.id })}
+                      className="text-base font-semibold text-slate-900 group-hover:text-emerald-700 leading-snug line-clamp-2 cursor-pointer transition-colors"
+                      title={item.title}
+                    >
+                      {item.title}
+                    </h3>
 
-                    {/* Technical Specs Grid (Compact & Crisp) */}
-                    <div className="grid grid-cols-2 gap-2 text-xs p-2.5 bg-stone-50/80 rounded-2xl border border-stone-100">
-                      {item.specsSummary.slice(0, 4).map((spec, idx) => (
-                        <div key={idx} className="min-w-0">
-                          <span className="text-[10px] text-stone-400 font-medium block truncate">
-                            {spec.label}:
-                          </span>
-                          <span className="font-bold text-stone-800 truncate block text-xs">
-                            {spec.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Tasting Notes */}
-                    {item.tastingNotes.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-stone-400 mr-0.5">{t('market.card.notes')}</span>
-                        {item.tastingNotes.slice(0, 3).map((note, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-900 border border-amber-200/80 shadow-2xs"
-                          >
-                            {note}
-                          </span>
-                        ))}
-                        {item.tastingNotes.length > 3 && (
-                          <span className="text-[10px] font-bold text-stone-400">
-                            +{item.tastingNotes.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Quick Barcode & Traceability Strip */}
-                    <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-xs">
-                      {item.category === 'cherry' && (
-                        <button
-                          type="button"
-                          onClick={() => setBarcodeLot(item.rawItem as FarmerHarvestLot)}
-                          className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1.5 transition-colors cursor-pointer"
-                        >
-                          <QrCode className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>{t('market.card.barcodeCherry')}</span>
-                        </button>
-                      )}
-                      {item.category === 'green_bean_processor' && (
-                        <button
-                          type="button"
-                          onClick={() => setProcessorBarcodeLot(item.rawItem as ProcessedGreenBeanLot)}
-                          className="text-[11px] font-bold text-amber-800 hover:text-amber-950 flex items-center gap-1.5 transition-colors cursor-pointer"
-                        >
-                          <QrCode className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                          <span>{t('market.card.barcodeProcessor')}</span>
-                        </button>
-                      )}
-                      {item.category === 'green_bean_warehouse' && (
-                        <button
-                          type="button"
-                          onClick={() => setWarehouseBarcodeLot(item.rawItem as WarehouseLot)}
-                          className="text-[11px] font-bold text-blue-800 hover:text-blue-950 flex items-center gap-1.5 transition-colors cursor-pointer"
-                        >
-                          <QrCode className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          <span>{t('market.card.barcodeWarehouse')}</span>
-                        </button>
-                      )}
-                      {item.category === 'roasted_bean' && (
-                        <span className="text-[11px] font-semibold text-orange-800 flex items-center gap-1">
-                          <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                          <span>{t('market.card.roastedBadge')}</span>
+                    {/* Row 3: Metadata Inline (Varietas • Elevasi mdpl Ringkas) */}
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-500 pt-0.5">
+                      <span className="truncate">
+                        {[
+                          item.variety,
+                          item.altitude || (item.specsSummary && item.specsSummary[0]?.value)
+                        ].filter(Boolean).join(' • ')}
+                      </span>
+                      {item.scaScore && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md shrink-0 ml-auto">
+                          <Award className="w-3 h-3 text-amber-600" />
+                          <span>SCA {item.scaScore}</span>
                         </span>
-                      )}
-
-                      {item.canTrace && (
-                        <button
-                          type="button"
-                          onClick={() => setTraceItem(item.rawItem)}
-                          className="text-[11px] font-bold text-amber-700 hover:text-amber-900 flex items-center gap-1 transition-colors cursor-pointer ml-auto"
-                        >
-                          <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
-                          <span>{t('market.card.trace')}</span>
-                        </button>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Card Footer: Clean Price & Dual Action Engine */}
-                <div className="p-4 bg-stone-50/90 border-t border-stone-200/80 space-y-3">
-                  {/* Row 1: Price and Stock (No Awkward Wrapping) */}
+                {/* Card Footer: Clear Price/Stock & Simplified CTA Architecture */}
+                <div className="p-4 bg-slate-50/70 border-t border-slate-100 space-y-3">
+                  {/* Price & Stock Row */}
                   <div className="flex items-baseline justify-between gap-2">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block mb-0.5">
-                        {t('market.card.offerPrice')}
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block mb-0.5">
+                        Harga Penawaran
                       </span>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-lg font-black text-stone-900 tracking-tight">
+                        <span className="text-lg font-bold text-slate-900 tracking-tight">
                           Rp {item.price.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')}
                         </span>
-                        <span className="text-xs font-semibold text-stone-500 whitespace-nowrap">
-                          {item.priceUnit}
+                        <span className="text-xs font-normal text-slate-500">
+                          {formatUnitDisplay(item.priceUnit)}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg shadow-2xs whitespace-nowrap">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                        {t('market.card.stock')} {item.availableStock.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} {item.stockUnit}
+                        Stok: {item.availableStock.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} {(item.stockUnit || 'kg').replace(/^\/+/, '').trim()}
                       </span>
                     </div>
                   </div>
 
-                  {/* Row 2: Action Buttons (WhatsApp + Beli + Detail Icon) */}
+                  {/* Actions Row (CTA Architecture: Single wide Beli Langsung + Secondary Cart & WA Icons) */}
                   <div className="flex items-center gap-2 pt-0.5">
+                    {/* Secondary WhatsApp */}
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        if (!isBuyerMember) {
+                          setPendingItem(item);
+                          setGateModalOpen(true);
+                          return;
+                        }
                         openOrderWhatsApp({
                           item,
                           quantity: 1,
                           buyerName: currentUser?.name,
                           buyerOrg: currentUser?.organization,
                           buyerRole: currentUser?.role,
-                        })
-                      }
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer hover:shadow-emerald-600/30 whitespace-nowrap"
-                      title="Pesan komoditas ini langsung via WhatsApp"
+                        });
+                      }}
+                      className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-emerald-700 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                      title="Hubungi Penjual via WhatsApp"
                     >
-                      <WhatsAppIcon className="w-4 h-4 text-white shrink-0" />
-                      <span>{t('market.card.orderWa')}</span>
+                      <WhatsAppIcon className="w-4 h-4 fill-emerald-600 text-emerald-600" />
                     </button>
 
+                    {/* Secondary Add to Cart */}
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCart(item)}
+                      className="p-2.5 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 hover:border-emerald-300 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                      title="Tambah ke Keranjang Belanja"
+                    >
+                      <ShoppingCart className="w-4 h-4 text-emerald-600" />
+                    </button>
+
+                    {/* Primary Wide Action: Beli Langsung */}
                     <button
                       type="button"
                       onClick={() => handleOpenBuy(item)}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-stone-900 hover:bg-amber-900 active:bg-stone-950 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer hover:shadow-stone-900/30 whitespace-nowrap"
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-semibold text-sm transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
+                      title="Beli Langsung Komoditas Ini"
                     >
-                      <ShoppingCart className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>{t('market.card.buyDirect')}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDetailItem(item)}
-                      className="p-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 font-bold text-xs transition-colors border border-stone-200 shadow-2xs flex items-center justify-center cursor-pointer shrink-0"
-                      title="Lihat Detail & Sertifikat Lengkap"
-                    >
-                      <Eye className="w-4 h-4 text-stone-600" />
+                      <span>Beli Langsung</span>
                     </button>
                   </div>
                 </div>
@@ -645,11 +967,16 @@ export const UnifiedMarketplace: React.FC = () => {
         </div>
       )}
 
+        </section>
+      </div>
+
       {/* Modal Beli Universal dari Marketplace */}
+
       {buyingItem && (
+
         <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
           <div className="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
-            <div className="bg-linear-to-r from-stone-900 to-amber-950 text-white p-6 relative">
+            <div className="bg-gradient-to-r from-emerald-800 to-teal-900 text-white p-6 relative">
               <button
                 onClick={() => setBuyingItem(null)}
                 className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
@@ -724,7 +1051,7 @@ export const UnifiedMarketplace: React.FC = () => {
                       className="text-xs text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-1.5 underline underline-offset-2"
                     >
                       <QrCode className="w-3.5 h-3.5" />
-                      Lihat Stiker Barcode & Simulasi Scan Spesifikasi Lot
+                      Lihat Stiker Barcode & Scan Spesifikasi Lot
                     </button>
                   </div>
                 </div>
@@ -810,7 +1137,7 @@ export const UnifiedMarketplace: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-amber-800 text-white text-xs font-bold transition-colors shadow-md flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-900 hover:bg-emerald-950 active:scale-95 text-white font-extrabold text-xs font-bold transition-colors shadow-md flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>
@@ -876,6 +1203,49 @@ export const UnifiedMarketplace: React.FC = () => {
         onSuccessNotice={(message) => {
           setActionNotice({ type: 'success', message });
           setTimeout(() => setActionNotice(null), 6000);
+        }}
+      />
+
+      {/* Floating cart removed per user request */}
+
+      {/* Buyer Member Registration & Verification Gate Modal */}
+      <BuyerTokopediaGateModal
+        isOpen={gateModalOpen}
+        onClose={() => setGateModalOpen(false)}
+        pendingBuyItemName={pendingItem?.title}
+        onApprovedLogin={(buyer) => {
+          if (pendingItem) {
+            // Add pending item to cart and open Tokopedia Cart Modal
+            setCartItems((prev) => {
+              const idx = prev.findIndex((c) => c.item.id === pendingItem.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + 1 };
+                return updated;
+              }
+              return [...prev, { item: pendingItem, quantity: 1 }];
+            });
+            setTimeout(() => setIsCartOpen(true), 300);
+          }
+        }}
+      />
+
+      {/* Tokopedia Shopping Cart Modal */}
+      <TokopediaCartModal
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cartItems}
+        onUpdateQuantity={(id, qty) =>
+          setCartItems((prev) => prev.map((c) => (c.item.id === id ? { ...c, quantity: qty } : c)))
+        }
+        onRemoveItem={(id) => setCartItems((prev) => prev.filter((c) => c.item.id !== id))}
+        onClearCart={() => setCartItems([])}
+        onSuccessOrder={() => {
+          setActionNotice({
+            type: 'success',
+            message: 'Pesanan berhasil dibuat! Lihat riwayat transaksi di Portal Pembeli.',
+          });
+          setTimeout(() => setActionNotice(null), 4000);
         }}
       />
     </div>

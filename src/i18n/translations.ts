@@ -11,7 +11,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'brand.enterprise': 'Enterprise Coffee ERP',
 
     // Top navbar (marketing / marketplace shell)
-    'navbar.demoSwitcher': 'Peralihan Akun Demo (Scope Switcher):',
+    'navbar.demoSwitcher': 'Hak Akses Operator (Multi-Role):',
     'navbar.demoSwitcherHint': 'Pilih peran untuk membuka akses panel admin:',
     'navbar.reset': 'Reset',
     'navbar.home': 'Beranda',
@@ -38,7 +38,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'profile.sessionHint': 'Untuk beralih ke akun atau stasiun lain, silakan keluar (Logout) terlebih dahulu dan login menggunakan kredensial akun tujuan.',
     'profile.returnSuperAdmin': 'Kembali ke Super Admin Novizar',
     'profile.systemTime': 'Waktu Sistem',
-    'profile.demoMode': 'Mode Demo',
+    'profile.demoMode': 'Mode Operator',
     'profile.demoModeHint': 'Tampilkan tombol pindah peran cepat',
     'profile.logout': 'Keluar Akun',
     'profile.navigation': 'Navigasi',
@@ -89,8 +89,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'market.card.barcodeWarehouse': 'Barcode Grading & Ekspor',
     'market.card.roastedBadge': 'Fresh Artisan Roasted',
     'market.card.verifiedBadge': '✓ Terverifikasi',
-    'market.empty.title': 'Tidak ada komoditas yang cocok dengan kriteria pencarian',
-    'market.empty.desc': 'Coba ganti filter kategori, kosongkan kata kunci pencarian, atau tambahkan produk baru dari dashboard masing-masing akun.',
+    'market.empty.title': 'Tidak Ada Produk Kopi yang Sesuai Filter',
+    'market.empty.desc': 'Kombinasi kategori atau filter origin yang Anda pilih saat ini tidak memiliki produk. Silakan sesuaikan filter atau reset untuk melihat seluruh katalog kopi.',
 
     // Purchasing Modal
     'market.orderModal.badge': 'Formulir Pemesanan Marketplace Bersama',
@@ -130,7 +130,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'sidebar.barcodeCafe': 'Stiker Gelas & Meja',
     'sidebar.barcodeDefault': 'Stiker Barcode Karung',
     'sidebar.ledger': 'Buku Besar Transaksi',
-    'sidebar.demoSwitch': 'Pindah Peran (Demo)',
+    'sidebar.demoSwitch': 'Pindah Hak Akses',
     'sidebar.processorSourcing': '1. Sourcing Ceri',
     'sidebar.processorBatches': '2. Lembar Kerja Batch',
     'sidebar.processorInventory': '3. Gudang & Limbah',
@@ -162,7 +162,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'brand.enterprise': 'Enterprise Coffee ERP',
 
     // Top navbar (marketing / marketplace shell)
-    'navbar.demoSwitcher': 'Demo Account Switcher:',
+    'navbar.demoSwitcher': 'Operator Role Switcher:',
     'navbar.demoSwitcherHint': 'Pick a role to open the admin panel:',
     'navbar.reset': 'Reset',
     'navbar.home': 'Home',
@@ -189,7 +189,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'profile.sessionHint': 'To switch to another account or station, please log out first and sign in with the target credentials.',
     'profile.returnSuperAdmin': 'Return to Super Admin Novizar',
     'profile.systemTime': 'System Time',
-    'profile.demoMode': 'Demo Mode',
+    'profile.demoMode': 'Operator Mode',
     'profile.demoModeHint': 'Show quick role-switch buttons',
     'profile.logout': 'Log Out',
     'profile.navigation': 'Navigation',
@@ -240,8 +240,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'market.card.barcodeWarehouse': 'Grading & Export Barcode',
     'market.card.roastedBadge': 'Fresh Artisan Roasted',
     'market.card.verifiedBadge': '✓ Verified',
-    'market.empty.title': 'No commodities match your search criteria',
-    'market.empty.desc': 'Try changing your category filter, clearing your search keywords, or adding new listings from your station dashboard.',
+    'market.empty.title': 'No Coffee Products Match Selected Filter',
+    'market.empty.desc': 'The selected category or origin combination currently has no matching products. Please adjust or reset your filters to view the full coffee catalog.',
 
     // Purchasing Modal
     'market.orderModal.badge': 'Unified Marketplace Order Form',
@@ -281,7 +281,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'sidebar.barcodeCafe': 'Cup & Table Stickers',
     'sidebar.barcodeDefault': 'Sack Barcode Stickers',
     'sidebar.ledger': 'Transaction Ledger',
-    'sidebar.demoSwitch': 'Switch Role (Demo)',
+    'sidebar.demoSwitch': 'Switch Role',
     'sidebar.processorSourcing': '1. Cherry Sourcing',
     'sidebar.processorBatches': '2. Batch Processing',
     'sidebar.processorInventory': '3. Warehouse & Waste',

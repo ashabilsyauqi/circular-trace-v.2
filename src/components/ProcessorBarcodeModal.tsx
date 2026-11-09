@@ -46,7 +46,7 @@ export const ProcessorBarcodeModal: React.FC<ProcessorBarcodeModalProps> = ({
 
   const resolvedBaseUrl = getPublicBaseUrl(networkHost);
 
-  const realtimeScanUrl = lot ? `${resolvedBaseUrl}/?lotId=${lot.id}` : '';
+  const realtimeScanUrl = lot ? `${resolvedBaseUrl}/trace?lotId=${lot.id}` : '';
 
   useEffect(() => {
     if (lot && realtimeScanUrl) {

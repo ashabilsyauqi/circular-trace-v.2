@@ -28,7 +28,10 @@ import {
   Droplets,
   Scale,
   ListChecks,
+  FileBadge,
+  ArrowRight,
 } from 'lucide-react';
+import { navigateTo } from '../../utils/routes';
 import {
   CoffeeFarm,
   FarmerHarvestLot,
@@ -492,6 +495,39 @@ export const VerifierView: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* CT-4CI Farm Certification Banner Link */}
+      <div className="bg-gradient-to-r from-stone-900 via-amber-950/80 to-stone-900 rounded-2xl p-5 border border-amber-600/40 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-amber-600 flex items-center justify-center text-white shrink-0 shadow-md">
+            <FileBadge className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-extrabold text-amber-300 uppercase tracking-wider">
+                Modul Khusus Auditor ICS & Enumerator
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                108 Checkpoints 4C v4.1
+              </span>
+            </div>
+            <h4 className="text-base sm:text-lg font-bold text-white mt-0.5">
+              Sertifikasi CT-4CI Farm: BP Producer Compliance & Audit Readiness
+            </h4>
+            <p className="text-xs text-stone-300 mt-1 max-w-2xl">
+              Pengumpulan data lapangan enumerator, verifikasi bukti ICS, kalkulasi skor kesiapan pra-audit baseline, dan monitoring rencana aksi korektif (CAP).
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => navigateTo({ view: 'ct4ci' })}
+          className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 shrink-0 self-end md:self-auto cursor-pointer"
+        >
+          <span>Buka Modul CT-4CI Farm</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Domain Navigation Grid (Responsive Big Cards Container) */}

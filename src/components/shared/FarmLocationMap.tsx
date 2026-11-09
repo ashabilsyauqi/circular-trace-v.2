@@ -37,6 +37,9 @@ export interface FarmLocationMapProps {
 }
 
 export const INDONESIAN_COFFEE_ORIGINS = [
+  { name: 'Solok Radjo Lembah Gumanti (Sumatera Barat)', lat: -1.0423, lng: 100.7381, alt: '1.450 mdpl', area: 2.5 },
+  { name: 'Tanah Datar Lereng Marapi (Sumatera Barat)', lat: -0.4521, lng: 100.4852, alt: '1.320 mdpl', area: 2.0 },
+  { name: 'Agam Koto Tuo (Sumatera Barat)', lat: -0.285, lng: 100.32, alt: '1.280 mdpl', area: 1.8 },
   { name: 'Gunung Tilu Pangalengan (Jabar)', lat: -7.1824, lng: 107.5612, alt: '1.550 mdpl', area: 2.4 },
   { name: 'Gayo Burni Telong (Aceh)', lat: 4.7123, lng: 96.8456, alt: '1.650 mdpl', area: 3.5 },
   { name: 'Kintamani Ulian (Bali)', lat: -8.2435, lng: 115.3285, alt: '1.350 mdpl', area: 2.0 },

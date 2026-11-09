@@ -3,6 +3,7 @@ import { useCoffee } from '../../context/CoffeeContext';
 import { AppUser, UserRole } from '../../types/coffee';
 import { ROLE_DETAILS } from '../../constants/roles';
 import {
+  ShoppingCart,
   ArrowLeft,
   User,
   Building2,
@@ -49,6 +50,7 @@ const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   cafe: <Coffee className="w-4 h-4 text-stone-700" />,
   verifikator: <Award className="w-4 h-4 text-purple-600" />,
   superadmin: <ShieldCheck className="w-4 h-4 text-amber-500" />,
+  buyer: <ShoppingCart className="w-4 h-4 text-emerald-600" />,
 };
 
 export const UserMasterDataDetailPage: React.FC<UserMasterDataDetailPageProps> = ({

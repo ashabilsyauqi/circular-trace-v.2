@@ -375,6 +375,26 @@ const idServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Tanda Tangan Digital', value: 'SHA256 Validated • Terotentikasi' },
     ],
   },
+  buyer: {
+    badge: 'Konsumen & Pembeli Bebas',
+    title: 'E-Commerce Marketplace Kopi Terbuka & Transparan',
+    desc: 'Pembeli umum (konsumen akhir, home brewer, maupun roastery independen) dapat langsung membeli produk apapun di ekosistem: ceri segar, green bean terverifikasi EUDR, roasted bean specialty, hingga botol cold brew cafe dengan dompet digital dan lacak silsilah asal kebun.',
+    bullets: [
+      'Belanja bebas aneka produk kopi dari hulu ke hilir dalam 1 platform.',
+      'Sistem dompet digital e-wallet terintegrasi dengan riwayat transaksi transparan.',
+      'Akses barcode dan ketertelusuran penuh ke lereng gunung asal petani.',
+    ],
+    ctaOpen: 'Buka Toko Kopi',
+    ctaRegister: 'Daftar Akun Pembeli',
+    previewTitle: 'Keranjang Belanja Pembeli',
+    previewRows: [
+      { label: 'Role Akun', value: 'Pembeli (Buyer / Consumer)' },
+      { label: 'Akses Produk', value: 'Bebas Semua Komoditas Kopi' },
+      { label: 'Metode Bayar', value: 'E-Wallet Saldo sangrAI' },
+      { label: 'Ketertelusuran', value: '✓ Terverifikasi QR Terpasang' },
+      { label: 'Status Pengiriman', value: 'Siap Kirim ke Seluruh Indonesia' },
+    ],
+  },
   superadmin: {
     badge: 'Owner & Root Ekosistem',
     title: 'Pusat Kendali & Persetujuan Mitra sangrAI',
@@ -516,6 +536,26 @@ const enServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Evaluation Result', value: '87.50 SCA Score (Specialty Grade)' },
       { label: 'Lead Auditor', value: 'Jessica Tan, CQI Q-Grader' },
       { label: 'Digital Signature', value: 'SHA256 Validated • Authenticated' },
+    ],
+  },
+  buyer: {
+    badge: 'Consumer & Universal Buyer',
+    title: 'Open & Transparent Coffee E-Commerce Marketplace',
+    desc: 'Everyday coffee buyers (end consumers, home brewers, and specialty coffee lovers) can purchase any product across the entire circular chain: fresh cherries, EUDR-verified green beans, roasted specialty beans, and cafe signature brews with e-wallet checkout and complete origin traceability.',
+    bullets: [
+      'Freely shop coffee products across all supply tiers in one unified marketplace.',
+      'Integrated e-wallet payment system with complete real-time order history.',
+      'Full origin traceability and terroir verification back to the source farm.',
+    ],
+    ctaOpen: 'Open Coffee Shop',
+    ctaRegister: 'Sign Up as Buyer',
+    previewTitle: 'Buyer Shopping Cart Preview',
+    previewRows: [
+      { label: 'Account Role', value: 'Buyer / Retail Consumer' },
+      { label: 'Product Access', value: 'All Coffee Commodities Available' },
+      { label: 'Payment Method', value: 'sangrAI Digital E-Wallet' },
+      { label: 'Traceability', value: '✓ Farm-to-Cup QR Verified' },
+      { label: 'Nationwide Delivery', value: 'Shipped Directly from Source' },
     ],
   },
   superadmin: {
@@ -765,7 +805,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       roleCards: idCtaRoleCards,
       bannerTitle: 'Coba Seluruh Fitur Tanpa Komitmen',
       bannerDesc:
-        'Pilih peran Anda sekarang untuk menjelajahi simulasi marketplace B2B, manajemen lot, dan generator QR code.',
+        'Pilih peran Anda sekarang untuk menjelajahi marketplace B2B, manajemen lot, dan generator QR code.',
       bannerBtn: 'Buka Formulir Pendaftaran',
       faqTitle: 'Pertanyaan yang Sering Diajukan (FAQ)',
     },
@@ -784,7 +824,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
       subtitleStrong2: 'Cafe Owners',
       subtitleEnd:
         '. Featuring 100% QR traceability, SCA cupping standards, and eco-friendly circular integration.',
-      ctaRegister: 'Create Account / Start Demo',
+      ctaRegister: 'Daftar Akun / Mulai Berlangganan',
       ctaMarketplace: 'Explore B2B Marketplace',
       ctaLedger: 'Transaction Log',
       trust1: 'SCA 100-Point Scoring Standard',

@@ -3,6 +3,7 @@ import { useCoffee } from '../context/CoffeeContext';
 import { UserRole, UserStatus, AppUser } from '../types/coffee';
 import { ROLE_DETAILS } from '../constants/roles';
 import {
+  ShoppingCart,
   ShieldCheck,
   CheckCircle2,
   XCircle,
@@ -41,6 +42,7 @@ import {
 } from 'lucide-react';
 import { UserMasterDataDetailPage } from './admin/UserMasterDataDetailPage';
 import { RegisterModal } from './RegisterModal';
+import { SuperAdminSubscriptionsTab } from './admin/SuperAdminSubscriptionsTab';
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   petani: <Sprout className="w-4 h-4 text-emerald-600" />,
@@ -50,6 +52,7 @@ const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   cafe: <Coffee className="w-4 h-4 text-stone-700" />,
   verifikator: <Award className="w-4 h-4 text-purple-600" />,
   superadmin: <Crown className="w-4 h-4 text-amber-500" />,
+  buyer: <ShoppingCart className="w-4 h-4 text-emerald-600" />,
 };
 
 export const SuperAdminView: React.FC = () => {
@@ -104,6 +107,7 @@ export const SuperAdminView: React.FC = () => {
   const roasterUsers = users.filter((u) => u.role === 'roaster');
   const cafeUsers = users.filter((u) => u.role === 'cafe');
   const verifikatorUsers = users.filter((u) => u.role === 'verifikator');
+  const buyerUsers = users.filter((u) => u.role === 'buyer');
 
   const handleApprove = (userId: string) => {
     const res = approveUser(userId);
@@ -347,7 +351,7 @@ export const SuperAdminView: React.FC = () => {
               <span className="text-xs font-bold text-stone-400">6 Kategori Aktor</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
               {/* Petani */}
               <button
                 onClick={() => {
@@ -360,7 +364,7 @@ export const SuperAdminView: React.FC = () => {
                   <Sprout className="w-4 h-4" />
                 </div>
                 <p className="text-xl font-black text-stone-900 mt-3">{petaniUsers.length}</p>
-                <p className="text-xs font-bold text-stone-600">Petani & Kebun</p>
+                <p className="text-xs font-bold text-stone-600">Kelompok Tani</p>
                 <p className="text-[10px] text-stone-400 mt-0.5">Lahan & Panen</p>
               </button>
 
@@ -426,6 +430,22 @@ export const SuperAdminView: React.FC = () => {
                 <p className="text-xl font-black text-stone-900 mt-3">{cafeUsers.length}</p>
                 <p className="text-xs font-bold text-stone-600">Cafe & Kedai</p>
                 <p className="text-[10px] text-stone-400 mt-0.5">Menu & Seduhan</p>
+              </button>
+
+              {/* Pembeli (Buyer Member Tokopedia) */}
+              <button
+                onClick={() => {
+                  setSuperAdminRoleFilter('buyer');
+                  setActiveTab('directory');
+                }}
+                className="p-4 rounded-2xl bg-stone-50 hover:bg-teal-50/60 border border-stone-200/80 hover:border-teal-300 transition-all text-left cursor-pointer group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <ShoppingCart className="w-4 h-4" />
+                </div>
+                <p className="text-xl font-black text-stone-900 mt-3">{buyerUsers.length}</p>
+                <p className="text-xs font-bold text-stone-600">Member Pembeli</p>
+                <p className="text-[10px] text-stone-400 mt-0.5">Buyer Member</p>
               </button>
 
               {/* Verifikator */}
@@ -893,7 +913,7 @@ export const SuperAdminView: React.FC = () => {
                 }`}
               >
                 <Sprout className="w-3.5 h-3.5" />
-                <span>Petani</span>
+                <span>Kelompok Tani</span>
                 <span
                   className={`px-1.5 py-0.5 rounded-md text-[10px] ${
                     superAdminRoleFilter === 'petani' ? 'bg-emerald-700 text-emerald-100' : 'bg-stone-200 text-stone-700'
@@ -976,6 +996,25 @@ export const SuperAdminView: React.FC = () => {
                   }`}
                 >
                   {cafeUsers.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setSuperAdminRoleFilter('buyer')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                  superAdminRoleFilter === 'buyer'
+                    ? 'bg-teal-600 text-white shadow-sm'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200/80'
+                }`}
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                <span>Pembeli (Buyer)</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded-md text-[10px] ${
+                    superAdminRoleFilter === 'buyer' ? 'bg-teal-700 text-teal-100' : 'bg-stone-200 text-stone-700'
+                  }`}
+                >
+                  {buyerUsers.length}
                 </span>
               </button>
 
@@ -1151,6 +1190,11 @@ export const SuperAdminView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ----------------------------------------------------------------- */}
+      {/* TAB: KELOLA LANGGANAN & MONETISASI                                */}
+      {/* ----------------------------------------------------------------- */}
+      {activeTab === 'subscriptions' && <SuperAdminSubscriptionsTab />}
 
       {/* ----------------------------------------------------------------- */}
       {/* TAB: AUDIT LOG & TRANSAKSI                                        */}

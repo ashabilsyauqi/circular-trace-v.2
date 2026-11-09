@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { ROLE_DETAILS } from '../../constants/roles';
+import { UserRole } from '../../types/coffee';
 import {
   ShieldCheck,
   Store,
@@ -27,6 +28,7 @@ import {
   Clock,
   Users,
   Crown,
+  Home,
 } from 'lucide-react';
 import { AppLauncherModal } from '../shared/AppLauncherModal';
 import { ProfileMenu } from '../shared/ProfileMenu';
@@ -51,6 +53,8 @@ interface PipelineStageItem {
 export const AdminHeader: React.FC<AdminHeaderProps> = () => {
   const {
     currentUser,
+    route,
+    getUserSubscription,
     users,
     setActiveView,
     loginAsRole,
@@ -81,6 +85,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     verifierActiveTab,
     setVerifierActiveTab,
     verificationStamps,
+    tenantActiveService,
+    setTenantActiveService,
     impersonatingFromUser,
     returnToSuperAdmin,
   } = useCoffee();
@@ -94,8 +100,18 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
 
   if (!currentUser) return null;
 
-  const currentRoleInfo = ROLE_DETAILS[currentUser.role];
+  const effectiveRole: UserRole =
+    route.view === 'dashboard' && route.service && ['petani', 'pengolah', 'gudang', 'roaster', 'cafe', 'verifikator', 'superadmin', 'admin'].includes(route.service)
+      ? (route.service === 'admin' ? 'superadmin' : (route.service as UserRole))
+      : (currentUser.role !== 'superadmin' && tenantActiveService && tenantActiveService !== 'dashboard' ? (tenantActiveService as UserRole) : currentUser.role);
+
+  const activeStationUser = (currentUser.role === effectiveRole)
+    ? currentUser
+    : (users.find(u => u.role === effectiveRole) || currentUser);
+
+  const currentRoleInfo = ROLE_DETAILS[effectiveRole] || ROLE_DETAILS[currentUser.role];
   const recentTransactions = transactions.slice(0, 4);
+  const currentSub = currentUser ? getUserSubscription(currentUser.id) : null;
 
   // Roaster metrics
   const pendingApprovalPOCount = purchaseOrders.filter(
@@ -195,9 +211,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'catalog',
       stepNumber: 3,
-      label: 'Katalog Ceri',
-      subtitle: 'Daftar Lot Ceri Segar Siap Jual ke Mill',
-      icon: Package,
+      label: 'Panel Seller Ceri',
+      subtitle: 'Katalog Penjualan Ceri Pribadi ke Mill',
+      icon: Store,
       badge: myFarmerLotsCount,
       badgeLabel: `${myFarmerLotsCount} Lot`,
     },
@@ -243,8 +259,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'selling',
       stepNumber: 4,
-      label: 'Marketplace Mill',
-      subtitle: 'Publikasi Lot Green Bean ke Gudang / Roaster',
+      label: 'Panel Seller Mill',
+      subtitle: 'Katalog Penjualan Green Bean ke Roaster',
       icon: Store,
       badge: readyToSellProcessedLotsCount,
       badgeLabel: `${readyToSellProcessedLotsCount} Siap Jual`,
@@ -309,8 +325,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'selling',
       stepNumber: 6,
-      label: 'Penjualan B2B',
-      subtitle: 'Distribusi Biji Sangrai ke Coffee Shop',
+      label: 'Panel Seller B2B',
+      subtitle: 'Katalog Penjualan Biji Sangrai ke Kedai',
       icon: Store,
       badge: activeSalesOrdersCount,
       badgeLabel: `${activeSalesOrdersCount} Order Aktif`,
@@ -377,11 +393,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     {
       id: 'my_products',
       stepNumber: 3,
-      label: 'Katalog Produk',
-      subtitle: 'House Blend, Drip Bag & Cold Brew',
+      label: 'Panel Toko & Menu',
+      subtitle: 'Katalog Menu Minuman & Retail Kafe',
       icon: Store,
       badge: myCafeProductsCount,
-      badgeLabel: `${myCafeProductsCount} Produk`,
+      badgeLabel: `${myCafeProductsCount} Menu`,
     },
     {
       id: 'create_product',
@@ -494,22 +510,22 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
   let roleStages: PipelineStageItem[] = [];
   let currentActiveTabId = '';
 
-  if (currentUser.role === 'petani') {
+  if (effectiveRole === 'petani') {
     roleStages = farmerStages;
     currentActiveTabId = farmerActiveTab || 'farms';
-  } else if (currentUser.role === 'pengolah') {
+  } else if (effectiveRole === 'pengolah') {
     roleStages = processorStages;
     currentActiveTabId = processorActiveTab || 'sourcing';
-  } else if (currentUser.role === 'roaster') {
+  } else if (effectiveRole === 'roaster') {
     roleStages = roasterStages;
     currentActiveTabId = roasterActiveTab || 'purchasing';
-  } else if (currentUser.role === 'gudang') {
+  } else if (effectiveRole === 'gudang') {
     roleStages = warehouseStages;
     currentActiveTabId = warehouseActiveTab || 'inventory';
-  } else if (currentUser.role === 'cafe') {
+  } else if (effectiveRole === 'cafe') {
     roleStages = cafeStages;
     currentActiveTabId = cafeActiveTab || 'inventory';
-  } else if (currentUser.role === 'verifikator') {
+  } else if (effectiveRole === 'verifikator') {
     roleStages = verifierStages;
     currentActiveTabId = verifierActiveTab || 'petani';
   } else if (currentUser.role === 'superadmin') {
@@ -521,17 +537,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     roleStages.find((s) => s.id === currentActiveTabId) || roleStages[0];
 
   const handleSelectStage = (stageId: string) => {
-    if (currentUser.role === 'petani') {
+    if (effectiveRole === 'petani') {
       setFarmerActiveTab(stageId as typeof farmerActiveTab);
-    } else if (currentUser.role === 'pengolah') {
+    } else if (effectiveRole === 'pengolah') {
       setProcessorActiveTab(stageId as typeof processorActiveTab);
-    } else if (currentUser.role === 'roaster') {
+    } else if (effectiveRole === 'roaster') {
       setRoasterActiveTab(stageId as typeof roasterActiveTab);
-    } else if (currentUser.role === 'gudang') {
+    } else if (effectiveRole === 'gudang') {
       setWarehouseActiveTab(stageId as typeof warehouseActiveTab);
-    } else if (currentUser.role === 'cafe') {
+    } else if (effectiveRole === 'cafe') {
       setCafeActiveTab(stageId as typeof cafeActiveTab);
-    } else if (currentUser.role === 'verifikator') {
+    } else if (effectiveRole === 'verifikator') {
       setVerifierActiveTab(stageId as typeof verifierActiveTab);
     }
     setModuleDropdownOpen(false);
@@ -549,50 +565,48 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
   return (
     <>
       {/* Odoo / Skripsi ERP Main Top Navbar (Circular Coffee Warm Deep Roast) */}
-      <nav className="o_main_navbar sticky top-0 z-40">
+      <nav className="o_main_navbar sticky top-0 z-40 px-2 sm:px-4 flex items-center justify-between">
+        {/* Left Side: App Launcher Icon + Brand + Breadcrumb */}
         <div className="flex items-center h-full gap-2 sm:gap-3 min-w-0">
           {/* App Switcher Matrix 3x3 Button */}
           <button
             onClick={() => setAppSwitcherOpen(true)}
-            className="text-white hover:bg-white/10 px-2 h-full flex items-center justify-center transition-colors cursor-pointer relative rounded-sm group shrink-0"
-            title="App Switcher Matrix (Home)"
+            className="text-white hover:bg-white/10 px-2.5 py-1.5 h-9 flex items-center justify-center transition-all cursor-pointer relative rounded-xl group shrink-0 border border-white/10 hover:border-amber-400/40"
+            title="Buka Grid Layanan & Stasiun Kerja"
           >
-            <Grid className="w-5 h-5 text-amber-400 group-hover:rotate-90 transition-transform duration-300" />
+            <Grid className="w-4 h-4 text-amber-400 group-hover:rotate-90 transition-transform duration-300" />
             {totalPendingNotifications > 0 && (
               <>
-                <span className="absolute top-2.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                <span className="absolute top-2.5 right-1.5 w-2 h-2 rounded-full bg-amber-500" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500" />
               </>
             )}
           </button>
 
-          {/* Brand Logo & Active Role Identifier */}
-          <div className="flex items-center gap-2 border-r border-white/15 pr-3 mr-1 h-6 shrink-0">
-            <span className="font-extrabold tracking-tight text-white text-xs sm:text-sm flex items-center gap-1">
-              <span className="text-amber-400 font-black">Circular</span>Trace
+          {/* Brand Logo & Active Role Badge */}
+          <div className="flex items-center gap-2 border-r border-white/15 pr-3 mr-0.5 h-6 shrink-0">
+            <span className="font-extrabold tracking-tight text-white text-xs sm:text-sm flex items-center gap-1 font-['Poppins']">
+              <span className="text-amber-400 font-black">Circular</span>Coffee
             </span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/90 text-amber-200 border border-amber-500/40">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/90 text-amber-200 border border-amber-500/40 font-['Poppins']">
               {currentRoleInfo.label.split(' ')[0]}
             </span>
           </div>
 
-          {/* Single Dynamic Pipeline Stage Dropdown Button */}
+          {/* Clean Stage Breadcrumb Dropdown */}
           {roleStages.length > 0 && (
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setModuleDropdownOpen(!moduleDropdownOpen)}
-                className="group px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 active:bg-white/20 text-white text-xs font-bold flex items-center gap-2 border border-white/15 hover:border-amber-400/50 transition-all cursor-pointer shadow-2xs"
-                title="Pilih Tahap Alur Kerja / Lembar Kerja"
+                className="group px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white text-xs font-semibold flex items-center gap-2 border border-white/10 hover:border-amber-400/40 transition-all cursor-pointer shadow-2xs font-['Poppins']"
+                title="Pilih Tahap Alur Kerja"
               >
                 <div className="w-5 h-5 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/30 group-hover:bg-amber-500 group-hover:text-stone-950 transition-colors">
                   <ActiveStageIcon className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex items-center gap-1.5 truncate text-left">
-                  <span className="hidden md:inline text-amber-200/75 font-medium text-[11px]">
-                    Tahap {currentActiveStage?.stepNumber}:
-                  </span>
-                  <span className="font-bold text-white truncate max-w-[150px] sm:max-w-[220px] lg:max-w-[280px]">
+                  <span className="text-stone-300 font-medium truncate max-w-[140px] sm:max-w-[200px] lg:max-w-[260px]">
                     {currentActiveStage?.label}
                   </span>
                 </div>
@@ -602,7 +616,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
                   </span>
                 ) : null}
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-stone-300 group-hover:text-amber-300 transition-transform duration-200 shrink-0 ${
+                  className={`w-3.5 h-3.5 text-stone-400 group-hover:text-amber-300 transition-transform duration-200 shrink-0 ${
                     moduleDropdownOpen ? 'rotate-180 text-amber-300' : ''
                   }`}
                 />
@@ -615,18 +629,18 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
                     className="fixed inset-0 z-40"
                     onClick={() => setModuleDropdownOpen(false)}
                   />
-                  <div className="absolute left-0 mt-2 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-stone-200/90 p-3 sm:p-3.5 z-50 text-stone-900 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-md">
+                  <div className="absolute left-0 mt-2 w-80 sm:w-96 bg-[#18110D] rounded-3xl shadow-2xl border border-amber-900/40 p-3 sm:p-3.5 z-50 text-stone-100 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-md font-['Poppins']">
                     {/* Header Banner */}
-                    <div className="px-3 py-2 border-b border-stone-100 flex items-center justify-between">
+                    <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] uppercase font-black tracking-wider text-amber-800/80 block">
+                        <span className="text-[10px] uppercase font-black tracking-wider text-amber-400 block">
                           Tahapan Operasional &amp; Lembar Kerja
                         </span>
-                        <span className="text-xs font-bold text-stone-900">
+                        <span className="text-xs font-bold text-white">
                           {currentRoleInfo.label}
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">
                         {roleStages.length} Tahap
                       </span>
                     </div>
@@ -643,8 +657,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
                             onClick={() => handleSelectStage(stage.id)}
                             className={`w-full text-left p-2.5 rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-2.5 group ${
                               isActive
-                                ? 'bg-amber-900/10 text-amber-950 border border-amber-300/80 shadow-2xs font-bold'
-                                : 'text-stone-700 hover:bg-stone-50 hover:text-stone-900 border border-transparent'
+                                ? 'bg-amber-500/20 text-amber-200 border border-amber-400/60 shadow-2xs font-bold'
+                                : 'text-stone-300 hover:bg-white/5 hover:text-white border border-transparent'
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
@@ -652,8 +666,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
                               <div
                                 className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-transform group-hover:scale-105 ${
                                   isActive
-                                    ? 'bg-amber-700 text-white shadow-2xs'
-                                    : 'bg-stone-100 text-stone-600 border border-stone-200'
+                                    ? 'bg-amber-500 text-stone-950 shadow-2xs'
+                                    : 'bg-white/10 text-stone-300 border border-white/10'
                                 }`}
                               >
                                 {stage.stepNumber}
@@ -663,14 +677,14 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
                                 <div className="flex items-center gap-1.5">
                                   <StageIcon
                                     className={`w-3.5 h-3.5 shrink-0 ${
-                                      isActive ? 'text-amber-800' : 'text-stone-400 group-hover:text-amber-700'
+                                      isActive ? 'text-amber-400' : 'text-stone-400 group-hover:text-amber-300'
                                     }`}
                                   />
                                   <span className="text-xs font-bold truncate">
                                     {stage.label}
                                   </span>
                                 </div>
-                                <p className="text-[10.5px] text-stone-500 truncate mt-0.5">
+                                <p className="text-[10.5px] text-stone-400 truncate mt-0.5">
                                   {stage.subtitle}
                                 </p>
                               </div>
@@ -681,15 +695,15 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
                                 <span
                                   className={`text-[9.5px] px-2 py-0.5 rounded-full font-bold ${
                                     isActive
-                                      ? 'bg-amber-200/80 text-amber-950 border border-amber-300'
-                                      : 'bg-stone-100 text-stone-600 border border-stone-200'
+                                      ? 'bg-amber-400/30 text-amber-200 border border-amber-400/50'
+                                      : 'bg-white/5 text-stone-400 border border-white/10'
                                   }`}
                                 >
                                   {stage.badgeLabel}
                                 </span>
                               )}
                               {isActive && (
-                                <Check className="w-4 h-4 text-amber-700 stroke-[3]" />
+                                <Check className="w-4 h-4 text-amber-400 stroke-[3]" />
                               )}
                             </div>
                           </button>
@@ -698,9 +712,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
                     </div>
 
                     {/* Quick Footer hint */}
-                    <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500 px-2">
+                    <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-stone-400 px-2">
                       <span>Pilih lembar kerja untuk dieksekusi</span>
-                      <span className="font-mono text-[10px] text-amber-700 font-semibold">
+                      <span className="font-mono text-[10px] text-amber-400 font-semibold">
                         ESC to close
                       </span>
                     </div>
@@ -711,21 +725,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
           )}
         </div>
 
-        {/* Right side System Tray: Search, Storefront, Notifications, and All-in-One Profile */}
+        {/* Right Side: Return to Novizar (if impersonating) + Blanko + Bell + Language + Profile */}
         <div className="flex items-center gap-1.5 sm:gap-2 h-full shrink-0">
-          {/* Quick Search Button (⌘K) */}
-          <button
-            onClick={() => setSearchModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 text-xs font-medium border border-white/15 transition-all cursor-pointer shadow-2xs"
-            title="Pencarian Cepat (Ctrl+K)"
-          >
-            <Search className="w-3.5 h-3.5 text-amber-300" />
-            <span className="hidden xl:inline text-[11px] font-semibold">Cari...</span>
-            <kbd className="hidden sm:inline text-[9px] font-mono bg-white/15 text-amber-200 px-1 py-0.5 rounded border border-white/20">
-              ⌘K
-            </kbd>
-          </button>
-
           {/* Impersonation Return Button for Super Admin Novizar */}
           {Boolean(
             impersonatingFromUser ||
@@ -734,34 +735,24 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
             <button
               type="button"
               onClick={() => returnToSuperAdmin()}
-              className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0 border border-amber-500 animate-pulse"
+              className="px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0 border border-amber-500 animate-pulse font-['Poppins']"
               title="Kembali ke Panel Kendali Super Admin Novizar"
             >
               <Crown className="w-4 h-4 text-stone-950" />
-              <span>Kembali ke Novizar</span>
+              <span className="hidden sm:inline">Kembali ke Novizar</span>
             </button>
           )}
 
-          {/* Marketplace Storefront Link */}
-          <button
-            onClick={() => setActiveView('marketplace')}
-            className="px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer shrink-0"
-            title="Buka Toko E-Commerce Publik"
-          >
-            <Store className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Toko Publik</span>
-          </button>
-
-          {/* Printable Physical Blank Forms Button (Khusus stasiun operasional lapangan, disembunyikan untuk Super Admin) */}
+          {/* Printable Physical Blank Forms Button (Field Workstations only) */}
           {currentUser.role !== 'superadmin' && (
             <button
               type="button"
               onClick={() => setFormsModalOpen(true)}
-              className="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-bold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer shrink-0"
-              title="Cetak & Download Blanko Formulir Fisik Lapangan (Petani, Pengolah, Gudang, Roastery)"
+              className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-stone-300 hover:text-white border border-white/10 hover:border-amber-400/40 font-semibold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer shrink-0 font-['Poppins']"
+              title="Cetak & Download Blanko Formulir Fisik Lapangan"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Blanko Form</span>
+              <span className="hidden sm:inline">Blanko</span>
             </button>
           )}
 
@@ -769,17 +760,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
           <div className="relative">
             <button
               onClick={() => setNotificationOpen(!notificationOpen)}
-              className="text-white hover:bg-white/15 p-1.5 rounded-xl relative transition-colors cursor-pointer border border-transparent hover:border-white/10"
-              title="Notifikasi Aktivitas & Buku Besar"
+              className="text-stone-300 hover:text-white hover:bg-white/10 p-2 rounded-xl relative transition-colors cursor-pointer border border-transparent hover:border-white/10"
+              title="Notifikasi Aktivitas & Buku Kas"
             >
-              <Bell className="w-4 h-4 text-white" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
             </button>
 
             {notificationOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setNotificationOpen(false)} />
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-stone-200 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-stone-800">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-stone-200 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-stone-800 font-['Poppins']">
                   <div className="flex items-center justify-between pb-3 border-b border-stone-100">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs">
@@ -821,7 +812,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
                     }}
                     className="w-full mt-2 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors text-center block"
                   >
-                    Buka Semua Buku Besar Transaksi →
+                    Buka Semua Buku Kas Transaksi →
                   </button>
                 </div>
               </>
@@ -831,8 +822,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
           {/* Language Switcher beside Profile Menu */}
           <LanguageSwitch variant="dark" />
           <ProfileMenu variant="dark" onOpenLedger={() => setActiveView('transactions')} />
-        </div>
-      </nav>
+        </div></nav>
 
       {/* Global Quick Search Modal */}
       {searchModalOpen && (

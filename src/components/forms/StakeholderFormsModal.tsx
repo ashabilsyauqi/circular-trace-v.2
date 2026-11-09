@@ -592,7 +592,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
               onClick={handleFillSample}
               type="button"
               className="px-3 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-amber-500/30"
-              title="Isi contoh data otomatis untuk demo"
+              title="Isi contoh data otomatis (Auto-fill)"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Isi Contoh</span>

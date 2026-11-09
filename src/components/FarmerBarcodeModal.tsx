@@ -42,7 +42,7 @@ export const FarmerBarcodeModal: React.FC<FarmerBarcodeModalProps> = ({
 
   const resolvedBaseUrl = getPublicBaseUrl(networkHost);
 
-  const realtimeScanUrl = lot ? `${resolvedBaseUrl}/?lotId=${lot.id}` : '';
+  const realtimeScanUrl = lot ? `${resolvedBaseUrl}/trace?lotId=${lot.id}` : '';
 
   useEffect(() => {
     if (lot && realtimeScanUrl) {
@@ -192,7 +192,7 @@ export const FarmerBarcodeModal: React.FC<FarmerBarcodeModalProps> = ({
                   SCAN DENGAN KAMERA HP
                 </span>
                 <span className="text-[8px] font-mono text-stone-500 truncate max-w-[130px] block mt-0.5">
-                  {isLoopback ? networkHost : (typeof window !== 'undefined' ? window.location.host : '')}/?lotId={lot.id}
+                  {isLoopback ? networkHost : (typeof window !== 'undefined' ? window.location.host : '')}/trace?lotId={lot.id}
                 </span>
               </div>
             </div>

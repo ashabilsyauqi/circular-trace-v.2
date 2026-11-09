@@ -68,7 +68,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const networkHost = getNetworkHost();
   const resolvedBaseUrl = getPublicBaseUrl(networkHost);
 
-  const realtimeScanUrl = item ? `${resolvedBaseUrl}/?lotId=${item.id}` : '';
+  const realtimeScanUrl = item ? `${resolvedBaseUrl}/trace?lotId=${item.id}` : '';
 
   useEffect(() => {
     if (

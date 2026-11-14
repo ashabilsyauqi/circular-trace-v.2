@@ -9,6 +9,16 @@ import sys
 import getpass
 from ftplib import FTP, FTP_TLS, error_perm
 
+# Load .env if present
+env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(env_file):
+    with open(env_file) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip().strip("'\""))
+
 HOST = os.environ.get("CPANEL_HOST", "202.10.43.69")  # cikaso.dua.rumahweb.net
 USER = os.environ.get("CPANEL_USER", "cirp8652")
 REMOTE_TARGET_DIR = os.environ.get("CPANEL_DIR", "public_html/circularcoffee.circulartrace.id")
@@ -29,6 +39,8 @@ def ensure_remote_dir(ftp: FTP, path: str):
             except error_perm:
                 pass
 
+
+import time
 
 def upload_tree(ftp: FTP, local_path: str, remote_target: str):
     print(f"\n📂 Menyiapkan direktori remote: {remote_target}")
@@ -64,8 +76,17 @@ def upload_tree(ftp: FTP, local_path: str, remote_target: str):
             sys.stdout.write(f"  ⬆  [{uploaded_files + 1}/{total_files}] Mengunggah {display_name} ({file_size_kb:.1f} KB)... ")
             sys.stdout.flush()
 
-            with open(file_path, "rb") as fp:
-                ftp.storbinary(f"STOR {filename}", fp)
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    with open(file_path, "rb") as fp:
+                        ftp.storbinary(f"STOR {filename}", fp)
+                    break
+                except Exception as upload_err:
+                    if attempt < max_retries - 1:
+                        time.sleep(2)
+                        continue
+                    raise upload_err
 
             uploaded_files += 1
             sys.stdout.write("✓ Selesai\n")
@@ -98,17 +119,16 @@ def main():
     try:
         print(f"\n🔌 Menghubungkan ke FTP {HOST}:21...")
         try:
-            ftp = FTP_TLS(HOST, timeout=15)
-            ftp.login(USER, password)
-            ftp.prot_p()  # Enforce secure TLS data connection if supported
-            print("🔒 Terhubung via FTPS (TLS Terenkripsi)!")
-        except Exception as tls_err:
-            print(f"⚠️  FTPS info: {tls_err}. Mencoba FTP standard...")
-            ftp = FTP(HOST, timeout=15)
+            ftp = FTP(HOST, timeout=30)
             ftp.login(USER, password)
             print("🔓 Terhubung via FTP standard!")
+        except Exception as ftp_err:
+            print(f"⚠️  FTP standard info: {ftp_err}. Mencoba FTPS...")
+            ftp = FTP_TLS(HOST, timeout=30)
+            ftp.login(USER, password)
+            print("🔒 Terhubung via FTPS!")
 
-        ftp.set_pasv(True)
+        ftp.set_pasv(False)
 
         upload_tree(ftp, LOCAL_DIR, REMOTE_TARGET_DIR)
 

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CircularTrace Cross-Domain Storage Bridge</title>
+</head>
+<body>
+<script>
+(function() {
+  function isAllowedOrigin(origin) {
+    if (!origin) return false;
+    if (origin.includes('circulartrace.id')) return true;
+    if (origin.includes('dutaglobaltech.com')) return true;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) return true;
+    return false;
+  }
+
+  function getLotsData() {
+    var keys = [
+      'cct_farmerLots',
+      'cct_processedLots',
+      'cct_warehouseLots',
+      'cct_roastedLots',
+      'cct_sellerOrders'
+    ];
+    var data = {};
+    keys.forEach(function(k) {
+      try {
+        var raw = localStorage.getItem(k);
+        if (raw) {
+          data[k] = JSON.parse(raw);
+        }
+      } catch (e) {}
+    });
+    return data;
+  }
+
+  window.addEventListener('message', function(event) {
+    if (!isAllowedOrigin(event.origin)) return;
+    var msg = event.data;
+    if (!msg || typeof msg !== 'object') return;
+
+    if (msg.type === 'CCT_SYNC_REQUEST') {
+      var lots = getLotsData();
+      event.source.postMessage({
+        type: 'CCT_SYNC_RESPONSE',
+        payload: lots,
+        timestamp: Date.now()
+      }, event.origin);
+    }
+  });
+
+  // Post ready signal to parent window if in an iframe
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'CCT_BRIDGE_READY' }, '*');
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

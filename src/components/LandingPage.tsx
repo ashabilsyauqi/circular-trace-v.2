@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
 import { RegisterModal } from './RegisterModal';
@@ -41,7 +42,8 @@ import {
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-  const { language, setActiveView, loginAsRole } = useCoffee();
+  const navigate = useNavigate();
+  const { language, setActiveView } = useCoffee();
   const content = landingContent[language];
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [registerRole, setRegisterRole] = useState<UserRole>('roaster');
@@ -257,7 +259,7 @@ export const LandingPage: React.FC = () => {
                       </span>
                     </div>
                     <button
-                      onClick={() => loginAsRole(current.role)}
+                      onClick={() => navigate('/login')}
                       className="w-full py-2 px-3 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <span>{content.hero.pipeline.tryPanelPrefix} {current.role.toUpperCase()}</span>
@@ -350,7 +352,7 @@ export const LandingPage: React.FC = () => {
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
                     <button
-                      onClick={() => loginAsRole('petani')}
+                      onClick={() => navigate('/login')}
                       className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                       <span>{content.servicePanels.petani.ctaOpen}</span>
@@ -427,7 +429,7 @@ export const LandingPage: React.FC = () => {
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
                     <button
-                      onClick={() => loginAsRole('pengolah')}
+                      onClick={() => navigate('/login')}
                       className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                       <span>{content.servicePanels.pengolah.ctaOpen}</span>
@@ -504,7 +506,7 @@ export const LandingPage: React.FC = () => {
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
                     <button
-                      onClick={() => loginAsRole('gudang')}
+                      onClick={() => navigate('/login')}
                       className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                       <span>{content.servicePanels.gudang.ctaOpen}</span>
@@ -581,7 +583,7 @@ export const LandingPage: React.FC = () => {
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
                     <button
-                      onClick={() => loginAsRole('roaster')}
+                      onClick={() => navigate('/login')}
                       className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                       <span>{content.servicePanels.roaster.ctaOpen}</span>
@@ -658,7 +660,7 @@ export const LandingPage: React.FC = () => {
                   </ul>
                   <div className="pt-2 flex items-center gap-3">
                     <button
-                      onClick={() => loginAsRole('cafe')}
+                      onClick={() => navigate('/login')}
                       className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                       <span>{content.servicePanels.cafe.ctaOpen}</span>

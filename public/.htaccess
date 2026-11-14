@@ -5,11 +5,15 @@
 # 1. SPA Routing Fallback (Direct All Non-File Requests to index.html)
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  RewriteBase /
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . index.html [L]
+  RewriteRule . /index.html [L]
 </IfModule>
+
+# Direct deep-link fallback
+ErrorDocument 404 /index.html
 
 # 2. Prevent Directory Browsing
 Options -Indexes
@@ -65,4 +69,12 @@ Options -Indexes
   Header set X-Frame-Options "SAMEORIGIN"
   Header set X-XSS-Protection "1; mode=block"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Exemption for cross-domain storage bridge between circulartrace.id subdomains
+  <Files "marketplace-bridge.html">
+    Header unset X-Frame-Options
+    Header always unset X-Frame-Options
+    Header set Access-Control-Allow-Origin "*"
+    Header set Content-Security-Policy "frame-ancestors 'self' https://marketplace.circulartrace.id https://marketplace-circulartrace.circulartrace.id https://circularcoffee.circulartrace.id http://localhost:* http://127.0.0.1:*"
+  </Files>
 </IfModule>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
 import { ROLE_DETAILS } from '../constants/roles';
@@ -31,7 +32,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   onClose,
   initialRole = 'roaster',
 }) => {
-  const { registerUser, loginAsRole } = useCoffee();
+  const navigate = useNavigate();
+  const { registerUser } = useCoffee();
   const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole);
   const [name, setName] = useState('');
   const [org, setOrg] = useState('');
@@ -55,6 +57,16 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       defaultLocExample: string;
     }
   > = {
+    admin_kelompok_tani: {
+      title: 'Admin Kelompok Tani',
+      tier: 'Pusat Kendali Gapoktan',
+      desc: 'Kelola ekosistem terpadu 5 layanan hulu-hilir dan alokasi akun anggota kelompok tani.',
+      icon: <Building2 className="w-5 h-5 text-amber-700" />,
+      color: 'border-amber-500 ring-amber-500/20',
+      bgBadge: 'bg-amber-50 text-amber-900 border-amber-300',
+      defaultOrgExample: 'e.g. Gapoktan Kopi Mandiri Nusantara',
+      defaultLocExample: 'e.g. Pangalengan, Jawa Barat',
+    },
     petani: {
       title: 'Petani Kopi (Farmer)',
       tier: 'Hulu: Kebun Kopi',
@@ -115,6 +127,16 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       defaultOrgExample: 'e.g. Dewan Sertifikasi Kopi Specialty & Q-Grader Lab',
       defaultLocExample: 'e.g. Jakarta / Bandung',
     },
+    ict: {
+      title: 'Petugas ICT (Verifikator)',
+      tier: 'Internal Kelompok Tani',
+      desc: 'Verifikasi NIK/KTA data petani, validasi koordinat GPS & patok batas poligon EUDR lahan kebun, serta uji mutu brix panen ceri.',
+      icon: <ShieldCheck className="w-5 h-5 text-blue-600" />,
+      color: 'border-blue-500 ring-blue-500/20',
+      bgBadge: 'bg-blue-50 text-blue-700 border-blue-200',
+      defaultOrgExample: 'e.g. Tim ICT Gapoktan Kopi Mandiri',
+      defaultLocExample: 'e.g. Pangalengan, Jawa Barat',
+    },
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -133,20 +155,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         phone: phone.trim() || '0812-3456-7890',
         bio: bio.trim() || `Akun ${ROLE_DETAILS[selectedRole].label} baru terdaftar di platform sangrAI.`,
       });
-    } else {
-      loginAsRole(selectedRole);
     }
 
     setIsSuccess(true);
     setTimeout(() => {
       onClose();
       setIsSuccess(false);
-    }, 1000);
-  };
-
-  const handleQuickDemo = (role: UserRole) => {
-    loginAsRole(role);
-    onClose();
+      navigate('/login');
+    }, 1200);
   };
 
   return (
@@ -330,21 +346,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo(selectedRole)}
-                  className="w-full sm:w-auto text-xs font-bold text-stone-600 hover:text-stone-900 py-2.5 px-4 rounded-xl border border-stone-300 hover:bg-stone-100 transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  Masuk Mode Demo Cepat
-                </button>
-
+              <div className="pt-2 flex items-center justify-end">
                 <button
                   type="submit"
                   className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>Daftar & Buka Panel Admin</span>
+                  <span>Daftar Akun &amp; Lanjut ke Login</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

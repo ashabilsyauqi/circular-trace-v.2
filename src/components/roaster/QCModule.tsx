@@ -317,16 +317,16 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
       {viewMode === 'table' && (
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[950px]">
               <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
-                  <th className="py-4 px-5">No. Sesi</th>
-                  <th className="py-4 px-5">Komoditas & Batch</th>
-                  <th className="py-4 px-5">Evaluator Q-Grader</th>
-                  <th className="py-4 px-5">Skor SCA</th>
-                  <th className="py-4 px-5">Agtron (W/G)</th>
-                  <th className="py-4 px-5">Status Kelayakan</th>
-                  <th className="py-4 px-5 text-right">Aksi</th>
+                  <th className="py-4 px-5 whitespace-nowrap">No. Sesi</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Komoditas &amp; Batch</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Evaluator Q-Grader</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Skor SCA</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Agtron (W/G)</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Status Kelayakan</th>
+                  <th className="py-4 px-5 text-right whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -336,23 +336,23 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                     onClick={() => setDetailModalQC(qc)}
                     className="hover:bg-stone-50/80 transition-colors cursor-pointer group"
                   >
-                    <td className="py-4 px-5 font-mono font-bold text-sm text-[#EA580C] group-hover:underline">
+                    <td className="py-4 px-5 font-mono font-bold text-sm text-[#EA580C] group-hover:underline whitespace-nowrap">
                       {qc.sessionCode}
                     </td>
-                    <td className="py-4 px-5">
+                    <td className="py-4 px-5 whitespace-nowrap">
                       <div className="font-bold text-stone-900">{qc.beanName}</div>
                       <div className="text-[10px] text-stone-500">{qc.sessionName}</div>
                     </td>
-                    <td className="py-4 px-5 font-medium text-stone-800">{qc.cupperName}</td>
-                    <td className="py-4 px-5 font-mono font-black text-sm text-amber-800">
+                    <td className="py-4 px-5 font-medium text-stone-800 whitespace-nowrap">{qc.cupperName}</td>
+                    <td className="py-4 px-5 font-mono font-black text-sm text-amber-800 whitespace-nowrap">
                       SCA {qc.totalScaScore}
                     </td>
-                    <td className="py-4 px-5 font-mono text-stone-700">
+                    <td className="py-4 px-5 font-mono text-stone-700 whitespace-nowrap">
                       #{qc.agtronWhole} / #{qc.agtronGround}
                     </td>
-                    <td className="py-4 px-5">
+                    <td className="py-4 px-5 whitespace-nowrap">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
                           qc.status === 'approved_specialty'
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-amber-100 text-amber-900'
@@ -361,13 +361,13 @@ export const QCModule: React.FC<QCModuleProps> = ({ initialWorkOrder }) => {
                         {qc.status === 'approved_specialty' ? 'Specialty Grade' : 'Commercial Grade'}
                       </span>
                     </td>
-                    <td className="py-4 px-5 text-right">
+                    <td className="py-4 px-5 text-right whitespace-nowrap">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setDetailModalQC(qc);
                         }}
-                        className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-[11px] transition-colors"
+                        className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-[11px] transition-colors whitespace-nowrap shrink-0"
                       >
                         Lembar Cupping
                       </button>

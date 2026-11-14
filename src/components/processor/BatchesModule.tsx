@@ -557,18 +557,18 @@ export const BatchesModule: React.FC = () => {
             /* DEFAULT VIEW: ODOO ERP LIST TABLE */
             <div className="o_form_sheet p-0 overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-2xs">
               <div className="overflow-x-auto">
-                <table className="o_list_table w-full text-left text-xs text-slate-700">
+                <table className="o_list_table w-full text-left text-xs text-slate-700 min-w-[1050px]">
                   <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
                     <tr>
-                      <th className="px-5 py-3.5">Batch Code &amp; Varietas</th>
-                      <th className="px-4 py-3.5">Petani Asal &amp; Lokasi</th>
-                      <th className="px-4 py-3.5">Metode Olah</th>
-                      <th className="px-4 py-3.5">Tahap Berjalan</th>
-                      <th className="px-4 py-3.5 text-right">Ceri Intake</th>
-                      <th className="px-4 py-3.5 text-right">Kadar Air</th>
-                      <th className="px-4 py-3.5 text-right">Rendemen</th>
-                      <th className="px-4 py-3.5">Target Grade</th>
-                      <th className="px-5 py-3.5 text-right">Aksi Lembar Kerja</th>
+                      <th className="px-5 py-3.5 whitespace-nowrap">Batch Code &amp; Varietas</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Petani Asal &amp; Lokasi</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Metode Olah</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Tahap Berjalan</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Ceri Intake</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Kadar Air</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Rendemen</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Target Grade</th>
+                      <th className="px-5 py-3.5 text-right whitespace-nowrap">Aksi Lembar Kerja</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -583,9 +583,9 @@ export const BatchesModule: React.FC = () => {
                           onClick={() => handleSelectBatch(batch)}
                           className="hover:bg-amber-50/40 transition-colors cursor-pointer group"
                         >
-                          <td className="px-5 py-3.5">
+                          <td className="px-5 py-3.5 whitespace-nowrap">
                             <div className="flex items-center gap-3">
-                              <div className="p-2 rounded-xl bg-amber-50 text-amber-800 font-bold group-hover:bg-amber-700 group-hover:text-white transition-colors">
+                              <div className="p-2 rounded-xl bg-amber-50 text-amber-800 font-bold group-hover:bg-amber-700 group-hover:text-white transition-colors shrink-0">
                                 <Flame className="w-4 h-4" />
                               </div>
                               <div>
@@ -597,34 +597,34 @@ export const BatchesModule: React.FC = () => {
                             </div>
                           </td>
 
-                          <td className="px-4 py-3.5">
+                          <td className="px-4 py-3.5 whitespace-nowrap">
                             <span className="font-bold text-stone-900 block">{batch.sourceFarmerName}</span>
                             <span className="text-stone-500 text-[11px] flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3 h-3 text-stone-400" />
+                              <MapPin className="w-3 h-3 text-stone-400 shrink-0" />
                               {batch.sourceOrigin} ({batch.altitude})
                             </span>
                           </td>
 
-                          <td className="px-4 py-3.5">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-800 border border-stone-200">
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-800 border border-stone-200 whitespace-nowrap shrink-0">
                               {batch.fermentationLog.method}
                             </span>
                           </td>
 
-                          <td className="px-4 py-3.5">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200 whitespace-nowrap shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse shrink-0" />
                               {currentStageInfo?.label || batch.currentStage}
                             </span>
                           </td>
 
-                          <td className="px-4 py-3.5 text-right font-mono font-bold text-stone-900">
+                          <td className="px-4 py-3.5 text-right font-mono font-bold text-stone-900 whitespace-nowrap">
                             {batch.intakeLog.cherryWeightKg} kg
                           </td>
 
-                          <td className="px-4 py-3.5 text-right">
+                          <td className="px-4 py-3.5 text-right whitespace-nowrap">
                             <span
-                              className={`font-mono font-bold ${
+                              className={`font-mono font-bold whitespace-nowrap shrink-0 ${
                                 moisturePassed ? 'text-emerald-700' : 'text-amber-700'
                               }`}
                             >
@@ -632,23 +632,23 @@ export const BatchesModule: React.FC = () => {
                             </span>
                           </td>
 
-                          <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-800">
+                          <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-800 whitespace-nowrap">
                             {mb.actualYieldPercent}%
                           </td>
 
-                          <td className="px-4 py-3.5">
-                            <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200 whitespace-nowrap shrink-0">
                               {batch.qcAssessment.calculatedGrade}
                             </span>
                           </td>
 
-                          <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
+                          <td className="px-5 py-3.5 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => handleSelectBatch(batch)}
-                              className="btn-odoo-primary text-xs py-1 px-3"
+                              className="btn-odoo-primary text-xs py-1 px-3 whitespace-nowrap shrink-0 inline-flex items-center gap-1"
                             >
                               <span>Buka Lembar Kerja</span>
-                              <ChevronRight className="w-3.5 h-3.5" />
+                              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                             </button>
                           </td>
                         </tr>
@@ -1428,39 +1428,39 @@ export const BatchesModule: React.FC = () => {
                       </div>
 
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                        <table className="w-full text-left text-xs min-w-[850px]">
                           <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase text-[10px]">
                             <tr>
-                              <th className="py-3 px-4">Hari Ke</th>
-                              <th className="py-3 px-4">Tanggal</th>
-                              <th className="py-3 px-4">Kadar Air (%)</th>
-                              <th className="py-3 px-4">Suhu Dome (°C)</th>
-                              <th className="py-3 px-4">Kelembaban (RH%)</th>
-                              <th className="py-3 px-4">Frekuensi Balik</th>
-                              <th className="py-3 px-4">Catatan</th>
-                              <th className="py-3 px-4 text-right">Aksi</th>
+                              <th className="py-3 px-4 whitespace-nowrap">Hari Ke</th>
+                              <th className="py-3 px-4 whitespace-nowrap">Tanggal</th>
+                              <th className="py-3 px-4 whitespace-nowrap">Kadar Air (%)</th>
+                              <th className="py-3 px-4 whitespace-nowrap">Suhu Dome (°C)</th>
+                              <th className="py-3 px-4 whitespace-nowrap">Kelembaban (RH%)</th>
+                              <th className="py-3 px-4 whitespace-nowrap">Frekuensi Balik</th>
+                              <th className="py-3 px-4 whitespace-nowrap">Catatan</th>
+                              <th className="py-3 px-4 text-right whitespace-nowrap">Aksi</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-stone-100">
                             {(editedBatch.dryingLog.dailyLogs || []).map((log, index) => (
                               <tr key={index} className="hover:bg-amber-50/40">
-                                <td className="py-3 px-4 font-bold text-stone-900">Hari #{log.dayNumber}</td>
-                                <td className="py-3 px-4 text-stone-600">{log.date}</td>
-                                <td className="py-3 px-4 font-mono font-black text-amber-900">
+                                <td className="py-3 px-4 font-bold text-stone-900 whitespace-nowrap">Hari #{log.dayNumber}</td>
+                                <td className="py-3 px-4 text-stone-600 whitespace-nowrap">{log.date}</td>
+                                <td className="py-3 px-4 font-mono font-black text-amber-900 whitespace-nowrap">
                                   {log.moisturePercent}%
                                 </td>
-                                <td className="py-3 px-4 font-mono">{log.ambientTempCelsius}°C</td>
-                                <td className="py-3 px-4 font-mono">{log.rhPercent}%</td>
-                                <td className="py-3 px-4 text-stone-700">{log.turningFrequency}</td>
-                                <td className="py-3 px-4 text-stone-500 italic">{log.notes || '-'}</td>
-                                <td className="py-3 px-4 text-right">
+                                <td className="py-3 px-4 font-mono whitespace-nowrap">{log.ambientTempCelsius}°C</td>
+                                <td className="py-3 px-4 font-mono whitespace-nowrap">{log.rhPercent}%</td>
+                                <td className="py-3 px-4 text-stone-700 whitespace-nowrap">{log.turningFrequency}</td>
+                                <td className="py-3 px-4 text-stone-500 italic whitespace-nowrap">{log.notes || '-'}</td>
+                                <td className="py-3 px-4 text-right whitespace-nowrap">
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteDailyLog(index)}
-                                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
+                                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                                     title="Hapus baris log"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
                                   </button>
                                 </td>
                               </tr>

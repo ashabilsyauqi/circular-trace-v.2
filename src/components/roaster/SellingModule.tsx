@@ -113,16 +113,16 @@ export const SellingModule: React.FC = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs min-w-[850px]">
                   <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                     <tr>
-                      <th className="py-3 px-4">Lot</th>
-                      <th className="py-3 px-4">Origin / Varietas</th>
-                      <th className="py-3 px-4">Roast</th>
-                      <th className="py-3 px-4">Harga / Pack</th>
-                      <th className="py-3 px-4">Stok</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4 text-right">Aksi</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Lot</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Origin / Varietas</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Roast</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Harga / Pack</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Stok</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Status</th>
+                      <th className="py-3 px-4 text-right whitespace-nowrap">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
@@ -132,18 +132,18 @@ export const SellingModule: React.FC = () => {
                         onClick={() => setDetailLot(lot)}
                         className="hover:bg-amber-50/60 cursor-pointer transition-colors"
                       >
-                        <td className="py-3 px-4 font-mono font-bold text-stone-700">{lot.id}</td>
-                        <td className="py-3 px-4 text-stone-900 font-semibold">
+                        <td className="py-3 px-4 font-mono font-bold text-stone-700 whitespace-nowrap">{lot.id}</td>
+                        <td className="py-3 px-4 text-stone-900 font-semibold whitespace-nowrap">
                           {lot.origin} — {lot.variety}
                         </td>
-                        <td className="py-3 px-4 text-stone-600">{lot.roastLevel}</td>
-                        <td className="py-3 px-4 font-bold text-stone-900">Rp {lot.pricePerPack.toLocaleString()}</td>
-                        <td className="py-3 px-4 text-stone-700">
+                        <td className="py-3 px-4 text-stone-600 whitespace-nowrap">{lot.roastLevel}</td>
+                        <td className="py-3 px-4 font-bold text-stone-900 whitespace-nowrap">Rp {lot.pricePerPack.toLocaleString()}</td>
+                        <td className="py-3 px-4 text-stone-700 whitespace-nowrap">
                           {lot.availablePacks}/{lot.totalPacks} pack
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
                               lot.availablePacks > 0
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : 'bg-stone-200 text-stone-600'
@@ -152,15 +152,15 @@ export const SellingModule: React.FC = () => {
                             {lot.availablePacks > 0 ? 'Tersedia' : 'Habis'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setQrLot(lot);
                             }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100 text-[11px] font-bold"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100 text-[11px] font-bold whitespace-nowrap shrink-0"
                           >
-                            <QrCode className="w-3.5 h-3.5" /> QR
+                            <QrCode className="w-3.5 h-3.5 shrink-0" /> QR
                           </button>
                         </td>
                       </tr>
@@ -183,25 +183,25 @@ export const SellingModule: React.FC = () => {
               <p className="text-xs text-stone-400 py-10 text-center">Belum ada penjualan tercatat.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs min-w-[800px]">
                   <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                     <tr>
-                      <th className="py-3 px-4">Tanggal</th>
-                      <th className="py-3 px-4">Pembeli</th>
-                      <th className="py-3 px-4">Item</th>
-                      <th className="py-3 px-4">Total</th>
-                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Tanggal</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Pembeli</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Item</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Total</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
                     {salesHistory.map((t) => (
                       <tr key={t.id} className="hover:bg-stone-50">
-                        <td className="py-3 px-4 text-stone-600">{t.date}</td>
-                        <td className="py-3 px-4 font-semibold text-stone-900">{t.toName}</td>
-                        <td className="py-3 px-4 text-stone-700">{t.itemName}</td>
-                        <td className="py-3 px-4 font-bold text-stone-900">Rp {t.totalAmount.toLocaleString()}</td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                        <td className="py-3 px-4 text-stone-600 whitespace-nowrap">{t.date}</td>
+                        <td className="py-3 px-4 font-semibold text-stone-900 whitespace-nowrap">{t.toName}</td>
+                        <td className="py-3 px-4 text-stone-700 whitespace-nowrap">{t.itemName}</td>
+                        <td className="py-3 px-4 font-bold text-stone-900 whitespace-nowrap">Rp {t.totalAmount.toLocaleString()}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold whitespace-nowrap shrink-0">
                             {t.status}
                           </span>
                         </td>
@@ -349,25 +349,25 @@ export const SellingModule: React.FC = () => {
               <p className="text-xs text-stone-400 py-10 text-center">Belum ada penjualan untuk produk ini.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs min-w-[800px]">
                   <thead className="bg-stone-50 text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                     <tr>
-                      <th className="py-3 px-4">Tanggal</th>
-                      <th className="py-3 px-4">Pembeli</th>
-                      <th className="py-3 px-4">Jumlah</th>
-                      <th className="py-3 px-4">Total</th>
-                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Tanggal</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Pembeli</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Jumlah</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Total</th>
+                      <th className="py-3 px-4 whitespace-nowrap">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
                     {salesForLot(detailLot).map((t) => (
                       <tr key={t.id} className="hover:bg-stone-50">
-                        <td className="py-3 px-4 text-stone-600">{t.date}</td>
-                        <td className="py-3 px-4 font-semibold text-stone-900">{t.toName}</td>
-                        <td className="py-3 px-4 text-stone-700">{t.quantity}</td>
-                        <td className="py-3 px-4 font-bold text-stone-900">Rp {t.totalAmount.toLocaleString()}</td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                        <td className="py-3 px-4 text-stone-600 whitespace-nowrap">{t.date}</td>
+                        <td className="py-3 px-4 font-semibold text-stone-900 whitespace-nowrap">{t.toName}</td>
+                        <td className="py-3 px-4 text-stone-700 whitespace-nowrap">{t.quantity}</td>
+                        <td className="py-3 px-4 font-bold text-stone-900 whitespace-nowrap">Rp {t.totalAmount.toLocaleString()}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold whitespace-nowrap shrink-0">
                             {t.status}
                           </span>
                         </td>

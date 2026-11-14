@@ -1,4 +1,8 @@
-export type UserRole = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'verifikator';
+import type { CtCertificationSnapshot } from '../services/ct4ci/types';
+
+export type OperationalService = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe';
+
+export type UserRole = OperationalService | 'admin_kelompok_tani' | 'verifikator' | 'ict';
 
 export type VerifierDomain = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'all';
 
@@ -13,7 +17,12 @@ export interface AppUser {
   name: string;
   email?: string;
   password?: string;
+  username?: string;
   role: UserRole;
+  assignedService?: OperationalService; // Tepat 1 service operasional (1 akun = 1 service)
+  kelompokTaniName?: string;
+  status?: 'active' | 'inactive';
+  registeredAt?: string;
   verifierDomain?: VerifierDomain;
   organization: string;
   location: string;
@@ -21,6 +30,22 @@ export interface AppUser {
   phone: string;
   balance: number;
   bio?: string;
+  nik?: string;
+  farmerCardNumber?: string;
+  village?: string;
+  subdistrict?: string;
+  district?: string;
+  province?: string;
+  rtRw?: string;
+  totalLandAreaHa?: number;
+  farmWorkerCount?: number;
+  certification?: string;
+  startYear?: number;
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationStamp?: VerificationStamp;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  verificationNotes?: string;
 }
 
 // Evaluasi Uji Sensori Cupping SCA oleh Verifikator / Q-Grader
@@ -39,14 +64,19 @@ export interface CuppingEvaluationData {
   tastingNotes: string[];   // e.g. ["Floral Jasmine", "Bergamot", "Peach", "Brown Sugar"]
   defectDeduction?: number; // nilai penalti cacat
   defectNotes?: string;
-  roastEvaluation: 'Optimal Specialty' | 'Underdeveloped' | 'Baked' | 'Overdeveloped';
+  roastEvaluation?: 'Optimal Specialty' | 'Underdeveloped' | 'Baked' | 'Overdeveloped';
   recommendationRestDays: number;
+  evaluatorName?: string;
+  evaluatorNotes?: string;
+  evaluatedAt?: string;
+  waterTdsPpm?: number;
+  waterTempCelsius?: number;
 }
 
 // Stempel Digital Resmi yang Diterbitkan Verifikator
 export interface VerificationStamp {
   id: string;
-  stampType: 'eudr_farm' | 'harvest_quality' | 'processing_mill' | 'warehouse_silo' | 'roast_cupping' | 'cafe_safety';
+  stampType: 'farmer_identity' | 'eudr_farm' | 'harvest_quality' | 'processing_mill' | 'warehouse_silo' | 'roast_cupping' | 'cafe_safety';
   title: string;
   certificateNumber: string;
   verifierId: string;
@@ -59,6 +89,49 @@ export interface VerificationStamp {
   notes: string;
   digitalSignatureHash: string;
   cuppingEvaluation?: CuppingEvaluationData;
+  targetType?: 'farmer' | 'farm' | 'harvest' | 'processed' | 'warehouse' | 'roasted' | 'cafe';
+  targetId?: string;
+}
+
+// LEMBAR KERJA AUDIT SISTEM PENGENDALIAN INTERNAL (ICS / INTERNAL CONTROL SYSTEM)
+export interface IcsChecklistItem {
+  id: string;
+  category: 'farmer' | 'farm' | 'harvest';
+  factorId: string;
+  factorNumber: string;
+  factorName: string;
+  factorDescription?: string;
+  code: string;
+  question: string;
+  description: string;
+  standardReference: string;
+  thresholdOrStandard?: string;
+  defaultMeasuredValue?: string;
+  isMandatory: boolean;
+}
+
+export interface IcsAuditReport {
+  id: string;
+  reportNumber: string;
+  auditDate: string;
+  auditorId: string;
+  auditorName: string;
+  targetType: 'farmer' | 'farm' | 'harvest';
+  targetId: string;
+  targetTitle: string;
+  checklistResponses: Record<string, 'pass' | 'fail' | 'na'>;
+  checklistNotes: Record<string, string>;
+  checklistValues?: Record<string, string>;
+  totalPassed: number;
+  totalFailed: number;
+  totalMandatoryFailed: number;
+  complianceScorePercent: number;
+  verdict: 'approved' | 'conditional' | 'rejected';
+  auditorNotes: string;
+  remedialActions?: string;
+  digitalSignatureHash: string;
+  stampId?: string;
+  createdAt: string;
 }
 
 // 0. REGISTRASI & MANAJEMEN LAHAN / KEBUN KOPI PETANI
@@ -149,6 +222,7 @@ export interface CoffeeFarm {
   createdAt: string;
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  ctCertificationSnapshot?: CtCertificationSnapshot;
 }
 
 // 1. LOT HASIL PANEN PETANI (Cherry Segar / Gabah Kopi)
@@ -176,6 +250,12 @@ export interface FarmerHarvestLot {
   shadeTrees?: string[];
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  isReleasedToMarketplace?: boolean;
+  marketplacePricePerKg?: number;
+  marketplaceTitle?: string;
+  marketplaceDescription?: string;
+  sentToProcessor?: boolean;
+  releasedAt?: string;
 }
 
 // 2. LOT GREEN BEAN PENGOLAH (Hasil Proses Wet/Dry Mill)
@@ -212,6 +292,8 @@ export interface ProcessedGreenBeanLot {
   wasteManagement?: CoffeeWasteManagement;
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  marketplaceTitle?: string;
+  marketplaceDescription?: string;
 }
 
 // Model Pengelolaan & Pemanfaatan Limbah Kopi
@@ -235,6 +317,41 @@ export type WarehouseGradeTier =
   | 'Grade 2 - Premium Grade'
   | 'Grade 3 - Medium Commercial'
   | 'Grade 4 - Basic Commercial';
+
+// Hasil Evaluasi Lembar Kerja Penyortiran & Grading Standar SCA / SNI
+export interface WarehouseSortingData {
+  moistureContentPercent: number; // Kadar air (%)
+  waterActivityAw: number; // Aktivitas air (aW)
+  bulkDensityGramsPerLiter: number; // Densitas biji (g/L)
+  screenSizeDistribution: {
+    screen18PlusPercent: number;
+    screen1617Percent: number;
+    screen1415Percent: number;
+    underScreen14Percent: number;
+  };
+  primaryDefects: {
+    blackBean: number;
+    sourBean: number;
+    dryCherry: number;
+    fungus: number;
+    foreignMatter: number;
+    severeInsect: number;
+  };
+  secondaryDefects: {
+    brokenBean: number;
+    immatureBean: number;
+    slightInsect: number;
+    parchmentHusks: number;
+  };
+  totalDefectPoints: number;
+  assignedGradeTier: WarehouseGradeTier;
+  sorterName: string;
+  sortedAt: string;
+  notes?: string;
+  healthCertificateIssued?: boolean;
+  healthCertificateNumber?: string;
+  finalDecision: 'release_marketplace' | 'keep_in_inventory';
+}
 
 // 3. LOT PENYIMPANAN GUDANG (Warehouse Inventory & QA)
 export interface WarehouseLot {
@@ -274,11 +391,18 @@ export interface WarehouseLot {
   purchasePricePerKg: number; // Harga beli modal dari pengolah untuk analisis margin
   targetMarket?: string; // Rekomendasi target pembeli (Roastery Specialty / Cafe / Industri)
   gradingNotes?: string;
+  // Status Alur Penyortiran & Rilis Marketplace
+  sortingStatus?: 'pending_sorting' | 'sorted';
+  isReleasedToMarketplace?: boolean;
+  sortingData?: WarehouseSortingData;
   // Health Certificate (Karantina / Ekspor Gudang)
   hasHealthCertificate?: boolean; // Pilihan: Pakai sertifikat atau tidak
   healthCertificateNumber?: string; // Nomor Sertifikat Kesehatan (Health Certificate) jika ada
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  marketplaceTitle?: string;
+  marketplaceDescription?: string;
+  photoUrl?: string;
 }
 
 // 4. LOT BIJI SANGRAI ROASTER (Roasted Coffee Ready for Brew)
@@ -307,10 +431,16 @@ export interface RoastedBeanLot {
   recommendedBrew: string[]; // e.g., ["V60", "Aeropress", "Espresso", "Japanese Drip"]
   status: 'available' | 'sold' | 'partial';
   photoUrl?: string;
+  // Status Alur Sangrai, Cupping & Rilis Marketplace
+  roastStatus?: 'in_production' | 'completed' | 'cupping_pending';
+  isReleasedToMarketplace?: boolean;
+  cuppingData?: CuppingEvaluationData;
   // Referensi asal Work Order MRP (jika dipublikasikan dari modul Production/Work Orders)
   sourceWorkOrderId?: string;
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  marketplaceTitle?: string;
+  marketplaceDescription?: string;
 }
 
 // 5. INVENTARIS CAFE & PESANAN PEMILIK CAFE
@@ -396,7 +526,10 @@ export interface UnifiedMarketplaceItem {
   specsSummary: { label: string; value: string }[];
   gradeTier?: WarehouseGradeTier | string;
   canTrace: boolean;
+  isExclusiveKelompokTani?: boolean;
+  exclusiveKelompokTaniName?: string;
   rawItem: FarmerHarvestLot | ProcessedGreenBeanLot | WarehouseLot | RoastedBeanLot | CafeRetailProduct;
+  description?: string;
 }
 
 export interface SupplyChainTransaction {
@@ -411,3 +544,79 @@ export interface SupplyChainTransaction {
   totalAmount: number;
   status: 'Selesai' | 'Diproses' | 'Terkirim';
 }
+
+// ==============================================================
+// SELLER PANEL & ORDER LIFECYCLE MANAGEMENT
+// ==============================================================
+export type SellerOrderStatus =
+  | 'menunggu_konfirmasi'
+  | 'diproses'
+  | 'dikirim'
+  | 'selesai'
+  | 'dibatalkan';
+
+export interface SellerOrderStatusHistoryItem {
+  status: SellerOrderStatus;
+  timestamp: string;
+  notes?: string;
+  updatedBy?: string;
+}
+
+export interface SellerOrder {
+  id: string; // e.g. ORD-2026-001
+  orderNumber: string; // e.g. SO/RST/2026/09/001
+  date: string;
+  sellerId: string;
+  sellerRole: UserRole;
+  sellerName: string;
+  sellerOrganization?: string;
+  buyerId: string;
+  buyerRole: UserRole;
+  buyerName: string;
+  buyerOrganization?: string;
+
+  // Item details
+  listingId: string;
+  sourceLotId: string;
+  category: MarketplaceCategory;
+  productTitle: string;
+  productImage?: string;
+  packageWeight: string; // e.g. "250g", "1 kg", "60 kg"
+  quantity: number; // Jumlah unit/pack/kg
+  unitPrice: number; // Harga Jual per unit
+  unitHpp: number; // Biaya Pokok Penjualan (HPP Modal) per unit
+  totalAmount: number; // quantity * unitPrice (Nilai Pesanan / Omset)
+  totalHpp: number; // quantity * unitHpp (Total Beban Pokok)
+  grossProfit: number; // totalAmount - totalHpp (Laba Kotor / Margin Bersih)
+  marginPercent: number; // ((totalAmount - totalHpp) / totalAmount) * 100
+
+  // Logistik & Pengiriman
+  shippingAddress?: string;
+  courierName?: string;
+  trackingNumber?: string;
+  estimatedDeliveryDate?: string;
+
+  // Status Siklus Hidup Pesanan
+  status: SellerOrderStatus;
+  statusHistory: SellerOrderStatusHistoryItem[];
+  cancellationReason?: string;
+  notes?: string;
+}
+
+// Payload untuk upload produk dari lot internal ber-QR
+export interface PublishProductPayload {
+  sourceLotId: string;
+  category: MarketplaceCategory;
+  title: string;
+  photoUrl: string;
+  description: string;
+  packageWeight: string;
+  stockQuantity: number;
+  unitHpp: number;
+  pricePerUnit: number;
+  minOrderQuantity: number;
+  packagingType: string;
+  tastingNotes?: string[];
+  recommendedBrew?: string[];
+}
+

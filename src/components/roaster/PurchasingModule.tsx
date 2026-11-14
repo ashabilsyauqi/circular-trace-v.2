@@ -173,7 +173,7 @@ export const PurchasingModule: React.FC = () => {
     const meta = STATUS_BADGE[status] || STATUS_BADGE.draft;
     return (
       <span
-        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 w-fit whitespace-nowrap ${meta.className}`}
+        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 w-fit whitespace-nowrap shrink-0 ${meta.className}`}
       >
         {meta.icon} {meta.label}
       </span>
@@ -186,9 +186,9 @@ export const PurchasingModule: React.FC = () => {
       return (
         <button
           onClick={() => submitPurchaseOrderForApproval(po.id)}
-          className="px-3 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto"
+          className="px-3 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto whitespace-nowrap shrink-0"
         >
-          <Send className="w-3.5 h-3.5" />
+          <Send className="w-3.5 h-3.5 shrink-0" />
           Ajukan Persetujuan
         </button>
       );
@@ -197,9 +197,9 @@ export const PurchasingModule: React.FC = () => {
       return (
         <button
           onClick={() => openSignatureModal(po)}
-          className="px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto"
+          className="px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto whitespace-nowrap shrink-0"
         >
-          <PenTool className="w-3.5 h-3.5" />
+          <PenTool className="w-3.5 h-3.5 shrink-0" />
           Tanda Tangani &amp; Setujui
         </button>
       );
@@ -208,9 +208,9 @@ export const PurchasingModule: React.FC = () => {
       return (
         <button
           onClick={() => receivePurchaseOrder(po.id)}
-          className="px-3 py-1.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto"
+          className="px-3 py-1.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1 ml-auto whitespace-nowrap shrink-0"
         >
-          <CheckCircle2 className="w-3.5 h-3.5" />
+          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
           Terima Barang ke Inventory
         </button>
       );
@@ -218,7 +218,7 @@ export const PurchasingModule: React.FC = () => {
     return (
       <button
         onClick={() => setDetailModalPO(po)}
-        className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-[11px] transition-colors"
+        className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-[11px] transition-colors whitespace-nowrap shrink-0"
       >
         Detail PO
       </button>
@@ -326,16 +326,16 @@ export const PurchasingModule: React.FC = () => {
       {activeSubTab === 'orders' && (
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[1000px]">
               <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
-                  <th className="py-4 px-5">No. PO</th>
-                  <th className="py-4 px-5">Supplier & Peran</th>
-                  <th className="py-4 px-5">Komoditas Biji</th>
-                  <th className="py-4 px-5">Volume (Karung / Kg)</th>
-                  <th className="py-4 px-5">Total Biaya (Rp)</th>
-                  <th className="py-4 px-5">Status</th>
-                  <th className="py-4 px-5 text-right">Aksi</th>
+                  <th className="py-4 px-5 whitespace-nowrap">No. PO</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Supplier &amp; Peran</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Komoditas Biji</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Volume (Karung / Kg)</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Total Biaya (Rp)</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Status</th>
+                  <th className="py-4 px-5 text-right whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -347,35 +347,35 @@ export const PurchasingModule: React.FC = () => {
                       onClick={() => setDetailModalPO(po)}
                       className="hover:bg-stone-50/80 transition-colors cursor-pointer group"
                     >
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-mono font-bold text-sm text-stone-900 group-hover:underline">
                           {po.poNumber}
                         </div>
                         <div className="text-[10px] text-stone-400">{po.orderDate}</div>
                       </td>
 
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-bold text-stone-900">{po.supplierName}</div>
                         <div className="text-[10px] text-stone-400 capitalize">{po.supplierRole} Partner</div>
                       </td>
 
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-semibold text-stone-800">{item?.greenBeanName}</div>
                         <div className="text-[11px] text-stone-500">{item?.variety} • {item?.processMethod}</div>
                       </td>
 
-                      <td className="py-4 px-5 font-mono font-bold text-stone-800">
+                      <td className="py-4 px-5 font-mono font-bold text-stone-800 whitespace-nowrap">
                         {item ? `${item.bagCount} Karung (${item.totalWeightKg} kg)` : '-'}
                       </td>
 
-                      <td className="py-4 px-5 font-black text-sm text-stone-900">
+                      <td className="py-4 px-5 font-black text-sm text-stone-900 whitespace-nowrap">
                         Rp {po.totalAmount.toLocaleString()}
                       </td>
 
-                      <td className="py-4 px-5">{renderStatusBadge(po.status)}</td>
+                      <td className="py-4 px-5 whitespace-nowrap">{renderStatusBadge(po.status)}</td>
 
                       <td
-                        className="py-4 px-5 text-right"
+                        className="py-4 px-5 text-right whitespace-nowrap"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {renderRowAction(po)}

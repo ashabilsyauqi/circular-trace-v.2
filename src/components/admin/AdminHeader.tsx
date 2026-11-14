@@ -24,6 +24,9 @@ import {
   PlusCircle,
   FileSpreadsheet,
   Coffee,
+  Building2,
+  Users,
+  Cog,
 } from 'lucide-react';
 import { AppLauncherModal } from '../shared/AppLauncherModal';
 import { ProfileMenu } from '../shared/ProfileMenu';
@@ -47,6 +50,9 @@ interface PipelineStageItem {
 export const AdminHeader: React.FC<AdminHeaderProps> = () => {
   const {
     currentUser,
+    users,
+    adminKelompokTab,
+    setAdminKelompokTab,
     setActiveView,
     loginAsRole,
     transactions,
@@ -452,11 +458,80 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     },
   ];
 
+  const kelompokTaniStages: PipelineStageItem[] = [
+    {
+      id: 'overview',
+      stepNumber: 1,
+      label: 'Control Tower',
+      subtitle: 'Ringkasan Ekosistem 5 Layanan Hulu-Hilir',
+      icon: Building2,
+      badge: 5,
+      badgeLabel: '5 Layanan',
+    },
+    {
+      id: 'users',
+      stepNumber: 2,
+      label: 'Master Users',
+      subtitle: 'Kelola Akun Anggota & Penugasan Layanan',
+      icon: Users,
+      badge: users.filter((u) => u.role !== 'verifikator').length,
+      badgeLabel: `${users.filter((u) => u.role !== 'verifikator').length} Akun`,
+    },
+    {
+      id: 'petani',
+      stepNumber: 3,
+      label: '1. Petani',
+      subtitle: 'Kebun Kopi, Lahan & Panen Ceri',
+      icon: Sprout,
+      badge: farmerLots.length,
+      badgeLabel: `${farmerLots.length} Lot`,
+    },
+    {
+      id: 'pengolah',
+      stepNumber: 4,
+      label: '2. Pengolah',
+      subtitle: 'Stasiun Wet Mill & 7 Metode Olah',
+      icon: Cog,
+      badge: processedLots.length,
+      badgeLabel: `${processedLots.length} Lot`,
+    },
+    {
+      id: 'gudang',
+      stepNumber: 5,
+      label: '3. Gudang Silo',
+      subtitle: 'Penyimpanan Klimatik Green Bean',
+      icon: Warehouse,
+      badge: warehouseLots.length,
+      badgeLabel: `${warehouseLots.length} Lot`,
+    },
+    {
+      id: 'roaster',
+      stepNumber: 6,
+      label: '4. Roaster',
+      subtitle: 'Roastery Artisan & Cupping SCA',
+      icon: Flame,
+      badge: roastedLots.length,
+      badgeLabel: `${roastedLots.length} Lot`,
+    },
+    {
+      id: 'cafe',
+      stepNumber: 7,
+      label: '5. Coffee Shop',
+      subtitle: 'Kedai Kopi & Farm-to-Cup QR Cup',
+      icon: Coffee,
+      badge: cafeInventory.length,
+      badgeLabel: `${cafeInventory.length} Menu`,
+    },
+  ];
+
   // Resolve active stages list and current active tab
   let roleStages: PipelineStageItem[] = [];
   let currentActiveTabId = '';
 
-  if (currentUser.role === 'petani') {
+  if (currentUser.role === 'admin_kelompok_tani') {
+    roleStages = kelompokTaniStages;
+    currentActiveTabId = adminKelompokTab || 'overview';
+  } else if (currentUser.role === 'petani') {
     roleStages = farmerStages;
     currentActiveTabId = farmerActiveTab || 'farms';
   } else if (currentUser.role === 'pengolah') {
@@ -480,7 +555,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     roleStages.find((s) => s.id === currentActiveTabId) || roleStages[0];
 
   const handleSelectStage = (stageId: string) => {
-    if (currentUser.role === 'petani') {
+    if (currentUser.role === 'admin_kelompok_tani') {
+      setAdminKelompokTab(stageId as typeof adminKelompokTab);
+    } else if (currentUser.role === 'petani') {
       setFarmerActiveTab(stageId as typeof farmerActiveTab);
     } else if (currentUser.role === 'pengolah') {
       setProcessorActiveTab(stageId as typeof processorActiveTab);

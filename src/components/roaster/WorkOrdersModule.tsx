@@ -247,17 +247,17 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
       {viewMode === 'table' && (
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[1100px]">
               <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
-                  <th className="py-4 px-5">No. Work Order</th>
-                  <th className="py-4 px-5">Komoditas Green Bean</th>
-                  <th className="py-4 px-5">Master Profile</th>
-                  <th className="py-4 px-5">Mesin & Roaster</th>
-                  <th className="py-4 px-5">Target / Aktual (Kg)</th>
-                  <th className="py-4 px-5">Susut (Loss %)</th>
-                  <th className="py-4 px-5">Status</th>
-                  <th className="py-4 px-5 text-right">Aksi Operasi</th>
+                  <th className="py-4 px-5 whitespace-nowrap">No. Work Order</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Komoditas Green Bean</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Master Profile</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Mesin &amp; Roaster</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Target / Aktual (Kg)</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Susut (Loss %)</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Status</th>
+                  <th className="py-4 px-5 text-right whitespace-nowrap">Aksi Operasi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -275,7 +275,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       onClick={() => setDetailModalWO(wo)}
                     >
                       {/* WO Number & Date */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-mono font-bold text-sm text-[#EA580C] group-hover:underline">
                           {wo.woNumber}
                         </div>
@@ -285,7 +285,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Green Bean */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-bold text-stone-900">{wo.greenBeanName}</div>
                         <div className="text-[11px] text-stone-500">
                           {wo.origin} • <span className="font-medium">{wo.variety}</span>
@@ -293,7 +293,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Master Profile */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-bold text-stone-800">{wo.masterProfileName}</div>
                         <div className="text-[10px] text-stone-500 mt-0.5 flex items-center gap-1.5">
                           <span className="font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
@@ -304,7 +304,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Machine & Operator */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-semibold text-stone-900">{wo.assignedMachine}</div>
                         <div className="text-[11px] text-stone-500 flex items-center gap-1">
                           <User className="w-3 h-3 text-stone-400" /> {wo.assignedRoaster}
@@ -312,7 +312,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Target / Actual Weight */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-mono font-bold text-sm text-stone-900">
                           {wo.actualGreenKg > 0 ? wo.actualGreenKg : wo.targetGreenKg} kg Green
                         </div>
@@ -330,7 +330,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Weight Loss */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         {wo.weightLossPercent > 0 ? (
                           <div className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
                             <span>{wo.weightLossPercent}%</span>
@@ -341,9 +341,9 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                       </td>
 
                       {/* Status */}
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap shrink-0 ${badge.bg} ${badge.text} ${badge.border}`}
                         >
                           <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
                           {badge.label}

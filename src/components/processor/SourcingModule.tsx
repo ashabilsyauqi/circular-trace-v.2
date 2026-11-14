@@ -320,16 +320,16 @@ export const SourcingModule: React.FC = () => {
               {viewMode === 'table' && (
                 <div className="o_form_sheet p-0 overflow-hidden bg-white border border-stone-200 rounded-2xl shadow-2xs">
                   <div className="overflow-x-auto">
-                    <table className="o_list_table w-full text-left text-xs text-stone-700">
+                    <table className="o_list_table w-full text-left text-xs text-stone-700 min-w-[950px]">
                       <thead className="bg-[#FAF7F2] border-b border-stone-200 text-stone-700 font-bold uppercase tracking-wider text-[11px]">
                         <tr>
-                          <th className="py-3.5 px-4">ID Lot Ceri</th>
-                          <th className="py-3.5 px-4">Petani &amp; Varietas</th>
-                          <th className="py-3.5 px-4">Lokasi &amp; Elevasi</th>
-                          <th className="py-3.5 px-4">Kemanisan Brix</th>
-                          <th className="py-3.5 px-4">Stok Ceri</th>
-                          <th className="py-3.5 px-4">Harga / kg</th>
-                          <th className="py-3.5 px-4 text-right">Tindakan Cepat</th>
+                          <th className="py-3.5 px-4 whitespace-nowrap">ID Lot Ceri</th>
+                          <th className="py-3.5 px-4 whitespace-nowrap">Petani &amp; Varietas</th>
+                          <th className="py-3.5 px-4 whitespace-nowrap">Lokasi &amp; Elevasi</th>
+                          <th className="py-3.5 px-4 whitespace-nowrap">Kemanisan Brix</th>
+                          <th className="py-3.5 px-4 whitespace-nowrap">Stok Ceri</th>
+                          <th className="py-3.5 px-4 whitespace-nowrap">Harga / kg</th>
+                          <th className="py-3.5 px-4 text-right whitespace-nowrap">Tindakan Cepat</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-stone-100">
@@ -339,35 +339,35 @@ export const SourcingModule: React.FC = () => {
                             onClick={() => handleOpenDetail(lot)}
                             className="hover:bg-amber-50/40 cursor-pointer transition-colors"
                           >
-                            <td className="py-3.5 px-4 font-mono font-bold text-stone-900">{lot.id}</td>
-                            <td className="py-3.5 px-4">
+                            <td className="py-3.5 px-4 font-mono font-bold text-stone-900 whitespace-nowrap">{lot.id}</td>
+                            <td className="py-3.5 px-4 whitespace-nowrap">
                               <div className="font-bold text-stone-900">{lot.variety}</div>
                               <div className="text-[11px] text-stone-500">Petani: {lot.farmerName}</div>
                             </td>
-                            <td className="py-3.5 px-4 text-stone-700">
+                            <td className="py-3.5 px-4 text-stone-700 whitespace-nowrap">
                               <div>{lot.farmLocation}</div>
                               <div className="text-[11px] text-stone-400">{lot.altitude}</div>
                             </td>
-                            <td className="py-3.5 px-4">
-                              <span className="font-black text-emerald-700 font-mono text-sm">{lot.brix}° Brix</span>
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <span className="font-black text-emerald-700 font-mono text-sm inline-block whitespace-nowrap shrink-0">{lot.brix}° Brix</span>
                             </td>
-                            <td className="py-3.5 px-4 font-bold text-stone-900 font-mono">
+                            <td className="py-3.5 px-4 font-bold text-stone-900 font-mono whitespace-nowrap">
                               {lot.availableWeightKg} kg
                             </td>
-                            <td className="py-3.5 px-4 font-bold text-stone-900 font-mono">
+                            <td className="py-3.5 px-4 font-bold text-stone-900 font-mono whitespace-nowrap">
                               Rp {lot.pricePerKg.toLocaleString()}
                             </td>
-                            <td className="py-3.5 px-4 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
+                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1.5 whitespace-nowrap shrink-0">
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDirectBuyToStock(lot);
                                   }}
-                                  className="btn-odoo-secondary text-xs py-1 px-2.5"
+                                  className="btn-odoo-secondary text-xs py-1 px-2.5 whitespace-nowrap shrink-0"
                                 >
-                                  <Warehouse className="w-3.5 h-3.5 text-emerald-700" />
+                                  <Warehouse className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                                   <span>Beli ke Gudang</span>
                                 </button>
                                 <button
@@ -376,9 +376,9 @@ export const SourcingModule: React.FC = () => {
                                     e.stopPropagation();
                                     handleDirectStart7Stage(lot);
                                   }}
-                                  className="btn-odoo-primary text-xs py-1 px-3"
+                                  className="btn-odoo-primary text-xs py-1 px-3 whitespace-nowrap shrink-0"
                                 >
-                                  <Flame className="w-3.5 h-3.5" />
+                                  <Flame className="w-3.5 h-3.5 shrink-0" />
                                   <span>Olah 7-Stage →</span>
                                 </button>
                               </div>

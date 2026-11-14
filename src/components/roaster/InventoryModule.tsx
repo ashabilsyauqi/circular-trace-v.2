@@ -222,18 +222,18 @@ export const InventoryModule: React.FC = () => {
       {activeCategory === 'green' && (
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[1050px]">
               <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
-                  <th className="py-4 px-5">Lot ID</th>
-                  <th className="py-4 px-5">Origin & Varietas</th>
-                  <th className="py-4 px-5">Proses & Mutu</th>
-                  <th className="py-4 px-5">Lokasi Gudang / Bay</th>
-                  <th className="py-4 px-5">Stok Tersedia (Kg)</th>
-                  <th className="py-4 px-5">HPP Modal (Rp/Kg)</th>
-                  <th className="py-4 px-5">Total Nilai Aset</th>
-                  <th className="py-4 px-5">Status Stok</th>
-                  <th className="py-4 px-5 text-right">Aksi</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Lot ID</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Origin &amp; Varietas</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Proses &amp; Mutu</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Lokasi Gudang / Bay</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Stok Tersedia (Kg)</th>
+                  <th className="py-4 px-5 whitespace-nowrap">HPP Modal (Rp/Kg)</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Total Nilai Aset</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Status Stok</th>
+                  <th className="py-4 px-5 text-right whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -249,50 +249,50 @@ export const InventoryModule: React.FC = () => {
                       onClick={() => setDetailGreenLot(lot)}
                       className="hover:bg-amber-50/60 cursor-pointer transition-colors"
                     >
-                      <td className="py-4 px-5 font-mono font-bold text-sm text-stone-900">{lot.id}</td>
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 font-mono font-bold text-sm text-stone-900 whitespace-nowrap">{lot.id}</td>
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-bold text-stone-900">{lot.origin}</div>
                         <div className="text-[10px] text-stone-400">{lot.variety} • {lot.altitude}</div>
                       </td>
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <div className="font-semibold text-stone-800">{lot.processMethod}</div>
                         <div className="text-[10px] text-amber-800 font-mono font-bold">
                           {qc === 'pending_qc' ? 'Menunggu skor QC' : `SCA ${lot.verifiedScaScore} (KA: ${lot.moistureContentPercent || 11.2}%)`}
                         </div>
                       </td>
-                      <td className="py-4 px-5 text-stone-600">{lot.storageLocation}</td>
-                      <td className="py-4 px-5 font-mono font-black text-stone-900 text-sm">
+                      <td className="py-4 px-5 text-stone-600 whitespace-nowrap">{lot.storageLocation}</td>
+                      <td className="py-4 px-5 font-mono font-black text-stone-900 text-sm whitespace-nowrap">
                         {lot.availableWeightKg} kg
                       </td>
-                      <td className="py-4 px-5 text-stone-800">
+                      <td className="py-4 px-5 text-stone-800 whitespace-nowrap">
                         Rp {lot.purchasePricePerKg.toLocaleString()}
                       </td>
-                      <td className="py-4 px-5 font-black text-sm text-stone-900">
+                      <td className="py-4 px-5 font-black text-sm text-stone-900 whitespace-nowrap">
                         Rp {(lot.availableWeightKg * lot.purchasePricePerKg).toLocaleString()}
                       </td>
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         {qc === 'pending_qc' && (
-                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300">
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300 shrink-0">
                             <Clock className="w-3 h-3 shrink-0" /> Menunggu QC
                           </span>
                         )}
                         {qc === 'rejected' && (
-                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300">
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300 shrink-0">
                             <AlertTriangle className="w-3 h-3 shrink-0" /> Ditolak QC
                           </span>
                         )}
                         {qc === 'passed' && isLow && (
-                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300">
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-300 shrink-0">
                             <AlertTriangle className="w-3 h-3 shrink-0" /> Stok Menipis
                           </span>
                         )}
                         {qc === 'passed' && !isLow && (
-                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shrink-0">
                             <CheckCircle2 className="w-3 h-3 shrink-0" /> Stok Aman
                           </span>
                         )}
                       </td>
-                      <td className="py-4 px-5 text-right">
+                      <td className="py-4 px-5 text-right whitespace-nowrap">
                         {qc === 'pending_qc' ? (
                           <button
                             onClick={(e) => {
@@ -320,17 +320,17 @@ export const InventoryModule: React.FC = () => {
       {activeCategory === 'roasted' && (
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[1050px]">
               <thead className="bg-[#FAF7F2] text-stone-600 font-bold border-b border-stone-200 uppercase tracking-wider">
                 <tr>
-                  <th className="py-4 px-5">Lot Sangrai</th>
-                  <th className="py-4 px-5">Nama Produk & Asal</th>
-                  <th className="py-4 px-5">Roast Level & Agtron</th>
-                  <th className="py-4 px-5">Tanggal Sangrai</th>
-                  <th className="py-4 px-5">Format Pack</th>
-                  <th className="py-4 px-5">Stok Pack Tersedia</th>
-                  <th className="py-4 px-5">Harga Jual / Pack</th>
-                  <th className="py-4 px-5 text-right">Total Nilai Retail</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Lot Sangrai</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Nama Produk &amp; Asal</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Roast Level &amp; Agtron</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Tanggal Sangrai</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Format Pack</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Stok Pack Tersedia</th>
+                  <th className="py-4 px-5 whitespace-nowrap">Harga Jual / Pack</th>
+                  <th className="py-4 px-5 text-right whitespace-nowrap">Total Nilai Retail</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -340,26 +340,26 @@ export const InventoryModule: React.FC = () => {
                     onClick={() => setDetailRoastedLot(rLot)}
                     className="hover:bg-amber-50/60 cursor-pointer transition-colors"
                   >
-                    <td className="py-4 px-5 font-mono font-bold text-sm text-[#EA580C]">{rLot.id}</td>
-                    <td className="py-4 px-5">
+                    <td className="py-4 px-5 font-mono font-bold text-sm text-[#EA580C] whitespace-nowrap">{rLot.id}</td>
+                    <td className="py-4 px-5 whitespace-nowrap">
                       <div className="font-bold text-stone-900">{rLot.origin} ({rLot.variety})</div>
                       <div className="text-[10px] text-stone-400">{rLot.processMethod}</div>
                     </td>
-                    <td className="py-4 px-5">
+                    <td className="py-4 px-5 whitespace-nowrap">
                       <div className="font-semibold text-stone-800">{rLot.roastLevel}</div>
                       <div className="text-[10px] text-amber-800 font-mono font-bold">
                         Agtron #{rLot.agtronNumber} (DTR: {rLot.developmentTimeRatio}%)
                       </div>
                     </td>
-                    <td className="py-4 px-5 text-stone-600">{rLot.roastDate}</td>
-                    <td className="py-4 px-5 font-mono text-stone-800">{rLot.packageWeightGrams}g Pack</td>
-                    <td className="py-4 px-5 font-mono font-black text-[#EA580C] text-sm">
+                    <td className="py-4 px-5 text-stone-600 whitespace-nowrap">{rLot.roastDate}</td>
+                    <td className="py-4 px-5 font-mono text-stone-800 whitespace-nowrap">{rLot.packageWeightGrams}g Pack</td>
+                    <td className="py-4 px-5 font-mono font-black text-[#EA580C] text-sm whitespace-nowrap">
                       {rLot.availablePacks} / {rLot.totalPacks} Pack
                     </td>
-                    <td className="py-4 px-5 font-bold text-stone-900">
+                    <td className="py-4 px-5 font-bold text-stone-900 whitespace-nowrap">
                       Rp {rLot.pricePerPack.toLocaleString()}
                     </td>
-                    <td className="py-4 px-5 text-right font-black text-stone-950">
+                    <td className="py-4 px-5 text-right font-black text-stone-950 whitespace-nowrap">
                       Rp {(rLot.availablePacks * rLot.pricePerPack).toLocaleString()}
                     </td>
                   </tr>

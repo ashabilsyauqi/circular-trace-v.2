@@ -141,53 +141,53 @@ export const TransactionHistoryView: React.FC = () => {
 
           {/* Desktop: softened table */}
           <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[950px]">
               <thead className="bg-stone-50 text-stone-500 font-bold border-b border-stone-200 uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="py-3 px-5">ID Transaksi</th>
-                  <th className="py-3 px-5">Tanggal</th>
-                  <th className="py-3 px-5">Penjual</th>
-                  <th className="py-3 px-5">Pembeli</th>
-                  <th className="py-3 px-5">Komoditas</th>
-                  <th className="py-3 px-5">Kuantitas</th>
-                  <th className="py-3 px-5">Total Biaya</th>
-                  <th className="py-3 px-5">Status</th>
+                  <th className="py-3 px-5 whitespace-nowrap">ID Transaksi</th>
+                  <th className="py-3 px-5 whitespace-nowrap">Tanggal</th>
+                  <th className="py-3 px-5 whitespace-nowrap">Penjual</th>
+                  <th className="py-3 px-5 whitespace-nowrap">Pembeli</th>
+                  <th className="py-3 px-5 whitespace-nowrap">Komoditas</th>
+                  <th className="py-3 px-5 whitespace-nowrap">Kuantitas</th>
+                  <th className="py-3 px-5 whitespace-nowrap">Total Biaya</th>
+                  <th className="py-3 px-5 whitespace-nowrap">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {myTransactions.map((trx) => (
                   <tr key={trx.id} className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-5 font-mono font-bold text-stone-700">{trx.id}</td>
-                    <td className="py-4 px-5 text-stone-500">{trx.date}</td>
-                    <td className="py-4 px-5">
+                    <td className="py-4 px-5 font-mono font-bold text-stone-700 whitespace-nowrap">{trx.id}</td>
+                    <td className="py-4 px-5 text-stone-500 whitespace-nowrap">{trx.date}</td>
+                    <td className="py-4 px-5 whitespace-nowrap">
                       <span className="font-semibold text-stone-900 block">{trx.fromName}</span>
                       <span
-                        className={`inline-block mt-1 text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full border ${
+                        className={`inline-block mt-1 text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${
                           roleAccent[trx.fromRole] || 'bg-stone-100 text-stone-600 border-stone-200'
                         }`}
                       >
                         {trx.fromRole}
                       </span>
                     </td>
-                    <td className="py-4 px-5">
+                    <td className="py-4 px-5 whitespace-nowrap">
                       <span className="font-semibold text-stone-900 block">{trx.toName}</span>
                       <span
-                        className={`inline-block mt-1 text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full border ${
+                        className={`inline-block mt-1 text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${
                           roleAccent[trx.toRole] || 'bg-stone-100 text-stone-600 border-stone-200'
                         }`}
                       >
                         {trx.toRole}
                       </span>
                     </td>
-                    <td className="py-4 px-5 font-medium text-stone-800">{trx.itemName}</td>
-                    <td className="py-4 px-5 font-bold text-amber-800">{trx.quantity}</td>
-                    <td className="py-4 px-5 font-black text-stone-900">
+                    <td className="py-4 px-5 font-medium text-stone-800 whitespace-nowrap">{trx.itemName}</td>
+                    <td className="py-4 px-5 font-bold text-amber-800 whitespace-nowrap">{trx.quantity}</td>
+                    <td className="py-4 px-5 font-black text-stone-900 whitespace-nowrap">
                       Rp {trx.totalAmount.toLocaleString()}
                     </td>
-                    <td className="py-4 px-5">
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1 w-fit">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        {trx.status}
+                    <td className="py-4 px-5 whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold inline-flex items-center gap-1 w-fit whitespace-nowrap shrink-0">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                        <span>{trx.status}</span>
                       </span>
                     </td>
                   </tr>

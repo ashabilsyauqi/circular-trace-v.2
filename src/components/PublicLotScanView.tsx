@@ -38,7 +38,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
   lotId,
   onContinue,
 }) => {
-  const { farmerLots, processedLots, warehouseLots, cafeInventory } = useCoffee();
+  const { farmerLots, processedLots, warehouseLots, roastedLots, cafeInventory } = useCoffee();
   const [activeEcoTab, setActiveEcoTab] = useState<'overview' | 'scientific' | 'material' | 'compliance'>('overview');
 
   // 1. Check if the scanned ID is a Cafe cup item
@@ -48,23 +48,36 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
       c.sourceRoastedBeanId.toLowerCase() === lotId.toLowerCase()
   );
 
+  // 1b. Check if the scanned ID is a Roasted bean lot (from Roastery ERP)
+  const matchedRoastedLot = roastedLots.find(
+    (r) => r.id.toLowerCase() === lotId.toLowerCase()
+  );
+
   // 2. Check if the scanned ID is a warehouse lot
   const warehouseLot = warehouseLots.find(
-    (w) => w.id.toLowerCase() === lotId.toLowerCase()
+    (w) =>
+      w.id.toLowerCase() === lotId.toLowerCase() ||
+      (matchedRoastedLot && w.id.toLowerCase() === matchedRoastedLot.sourceWarehouseLotId.toLowerCase())
   );
 
   // 3. Check if the scanned ID is a processed green bean lot
   const processedLot = processedLots.find(
-    (p) => p.id.toLowerCase() === lotId.toLowerCase()
+    (p) =>
+      p.id.toLowerCase() === lotId.toLowerCase() ||
+      (warehouseLot && p.id.toLowerCase() === warehouseLot.sourceGreenBeanId.toLowerCase())
   );
 
   // 4. Check if the scanned ID is a farmer harvest lot
   const farmerLot = farmerLots.find(
-    (l) => l.id.toLowerCase() === lotId.toLowerCase()
+    (l) =>
+      l.id.toLowerCase() === lotId.toLowerCase() ||
+      (processedLot && l.id.toLowerCase() === processedLot.sourceFarmerLotId.toLowerCase())
   );
 
   const isCafeCup =
     Boolean(cafeItem) ||
+    Boolean(matchedRoastedLot) ||
+    lotId.toUpperCase().startsWith('RST-') ||
     lotId.toUpperCase().startsWith('CAFE-') ||
     lotId.toUpperCase().startsWith('CUP-');
   const isWarehouse =
@@ -74,39 +87,39 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
     !isWarehouse &&
     (Boolean(processedLot) || lotId.toUpperCase().startsWith('GB-'));
 
-  // Fallback data for Cafe cup item
+  // Fallback data for Cafe cup / Roasted bean item
   const currentCafeItem: CafeInventoryItem = cafeItem || {
-    id: lotId,
-    cafeId: 'user-cafe-1',
-    cafeName: 'Seduh Teduh Specialty Coffee & Eatery',
-    sourceRoastedBeanId: 'RST-KRS-001',
-    beanName: 'Pangalengan Java Preanger - Typica Floral',
-    roasterName: 'Karsa Craft Roastery',
-    origin: 'Pangalengan Gn. Tilu, Jawa Barat',
-    variety: 'Typica Java Preanger',
-    processMethod: 'Full Washed',
-    roastLevel: 'Light-Medium',
-    tastingNotes: ['Jasmine Floral', 'Lemon Zest', 'Peach Blossom', 'Cane Sugar Sweetness'],
-    scaScore: 87.5,
-    packWeightGrams: 250,
-    packsInStock: 25,
-    purchaseDate: '2026-09-15',
-    costPerPack: 95000,
+    id: matchedRoastedLot ? matchedRoastedLot.id : lotId,
+    cafeId: 'user-roaster-1',
+    cafeName: matchedRoastedLot?.roasterName || 'Karsa Craft Roastery',
+    sourceRoastedBeanId: matchedRoastedLot ? matchedRoastedLot.id : 'RST-KRS-001',
+    beanName: matchedRoastedLot ? `${matchedRoastedLot.origin} - ${matchedRoastedLot.variety}` : 'Pangalengan Java Preanger - Typica Floral',
+    roasterName: matchedRoastedLot?.roasterName || 'Karsa Craft Roastery',
+    origin: matchedRoastedLot?.origin || 'Pangalengan Gn. Tilu, Jawa Barat',
+    variety: matchedRoastedLot?.variety || 'Typica Java Preanger',
+    processMethod: matchedRoastedLot?.processMethod || 'Full Washed',
+    roastLevel: matchedRoastedLot?.roastLevel || 'Light-Medium',
+    tastingNotes: matchedRoastedLot?.tastingNotes || ['Jasmine Floral', 'Lemon Zest', 'Peach Blossom', 'Cane Sugar Sweetness'],
+    scaScore: matchedRoastedLot?.scaCuppingScore || 87.5,
+    packWeightGrams: matchedRoastedLot?.packageWeightGrams || 250,
+    packsInStock: matchedRoastedLot?.availablePacks || 25,
+    purchaseDate: matchedRoastedLot?.roastDate || '2026-09-15',
+    costPerPack: matchedRoastedLot?.pricePerPack || 95000,
     lineage: {
-      farmerName: 'Asep Supriatna (Kelompok Tani Gn. Tilu)',
-      farmLocation: 'Pangalengan, Jawa Barat (1.600 mdpl)',
-      altitude: '1.600 mdpl',
-      harvestDate: '2026-09-05',
-      brix: 21.8,
-      processorName: 'CV Malabar Wet & Dry Mill Station',
-      fermentationTime: '36 Jam Full Washed with Spring Water',
-      moisturePercent: 10.8,
-      warehouseName: 'PT Nusantara Green Bean Warehouse (Gudang A-03)',
-      storageConditions: 'Suhu 20.4°C, RH 54%, GrainPro hermetic',
-      warehouseScaScore: 86.75,
-      roasterName: 'Karsa Craft Roastery (Giesen W6A Artisan)',
-      roastProfile: 'Light-Medium Roast (Agtron #68, DTR 14.5%)',
-      roastDate: '2026-09-14',
+      farmerName: farmerLot?.farmerName || warehouseLot?.sourceFarmerName || matchedRoastedLot?.farmerName || 'Asep Supriatna (Kelompok Tani Gn. Tilu)',
+      farmLocation: farmerLot?.farmLocation || warehouseLot?.origin || matchedRoastedLot?.origin || 'Pangalengan, Jawa Barat (1.600 mdpl)',
+      altitude: farmerLot?.altitude || warehouseLot?.altitude || matchedRoastedLot?.altitude || '1.600 mdpl',
+      harvestDate: farmerLot?.harvestDate || '2026-09-05',
+      brix: farmerLot?.brix || 21.8,
+      processorName: processedLot?.processorName || warehouseLot?.sourceProcessorName || 'CV Malabar Wet & Dry Mill Station',
+      fermentationTime: processedLot?.processMethod || '36 Jam Full Washed with Spring Water',
+      moisturePercent: warehouseLot?.moistureContentPercent || 10.8,
+      warehouseName: warehouseLot?.warehouseName || 'PT Nusantara Green Bean Warehouse (Gudang A-03)',
+      storageConditions: warehouseLot ? `Suhu ${warehouseLot.temperatureCelsius}°C, RH ${warehouseLot.humidityPercent}%, ${warehouseLot.packagingType}` : 'Suhu 20.4°C, RH 54%, GrainPro hermetic',
+      warehouseScaScore: warehouseLot?.verifiedScaScore || 86.75,
+      roasterName: `${matchedRoastedLot?.roasterName || 'Karsa Craft Roastery'} (${matchedRoastedLot?.roasterMachine || 'Giesen W6A Artisan'})`,
+      roastProfile: `${matchedRoastedLot?.roastLevel || 'Light-Medium Roast'} (Agtron #${matchedRoastedLot?.agtronNumber || 68}, DTR ${matchedRoastedLot?.developmentTimeRatio || 14.5}%)`,
+      roastDate: matchedRoastedLot?.roastDate || '2026-09-14',
     },
   };
 

@@ -50,37 +50,37 @@ export const HistoryModule: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="o_list_table">
+            <table className="o_list_table min-w-[900px]">
               <thead>
                 <tr>
-                  <th className="!pl-5">ID Transaksi</th>
-                  <th>Tanggal</th>
-                  <th>Pengirim &rarr; Penerima</th>
-                  <th>Produk / Komoditas</th>
-                  <th className="text-right">Volume</th>
-                  <th className="text-right">Total Tagihan</th>
-                  <th className="!pr-5 text-right">Status</th>
+                  <th className="!pl-5 whitespace-nowrap">ID Transaksi</th>
+                  <th className="whitespace-nowrap">Tanggal</th>
+                  <th className="whitespace-nowrap">Pengirim &rarr; Penerima</th>
+                  <th className="whitespace-nowrap">Produk / Komoditas</th>
+                  <th className="text-right whitespace-nowrap">Volume</th>
+                  <th className="text-right whitespace-nowrap">Total Tagihan</th>
+                  <th className="!pr-5 text-right whitespace-nowrap">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {myProcessorTransactions.map((trx) => (
                   <tr key={trx.id}>
-                    <td className="!pl-5 font-mono font-bold text-slate-900">{trx.id}</td>
-                    <td className="text-slate-500">{trx.date}</td>
-                    <td>
+                    <td className="!pl-5 font-mono font-bold text-slate-900 whitespace-nowrap">{trx.id}</td>
+                    <td className="text-slate-500 whitespace-nowrap">{trx.date}</td>
+                    <td className="whitespace-nowrap">
                       <div className="flex items-center gap-1.5 font-semibold text-slate-900">
                         <span>{trx.fromName}</span>
-                        <ArrowRight className="w-3 h-3 text-slate-400" />
+                        <ArrowRight className="w-3 h-3 text-slate-400 shrink-0" />
                         <span>{trx.toName}</span>
                       </div>
                     </td>
-                    <td className="font-medium text-slate-800">{trx.itemName}</td>
-                    <td className="text-right font-mono font-bold text-slate-900">{trx.quantity}</td>
-                    <td className="text-right font-mono font-bold text-emerald-800">
+                    <td className="font-medium text-slate-800 whitespace-nowrap">{trx.itemName}</td>
+                    <td className="text-right font-mono font-bold text-slate-900 whitespace-nowrap">{trx.quantity}</td>
+                    <td className="text-right font-mono font-bold text-emerald-800 whitespace-nowrap">
                       Rp {trx.totalAmount.toLocaleString()}
                     </td>
-                    <td className="!pr-5 text-right">
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                    <td className="!pr-5 text-right whitespace-nowrap">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-300 whitespace-nowrap shrink-0">
                         {trx.status}
                       </span>
                     </td>

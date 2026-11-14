@@ -42,6 +42,7 @@ import {
   Printer,
   Sliders,
   AlertCircle,
+  Users,
 } from 'lucide-react';
 import { FarmerHarvestLot, CoffeeFarm, FarmWeatherData, FarmPatok } from '../types/coffee';
 import { FarmerBarcodeModal } from './FarmerBarcodeModal';
@@ -54,6 +55,10 @@ import { RecordBreadcrumb } from './shared/RecordBreadcrumb';
 import { FarmLocationMap, INDONESIAN_COFFEE_ORIGINS } from './shared/FarmLocationMap';
 import { VerificationStampBadge } from './shared/VerificationStampBadge';
 import { StakeholderFormsModal } from './forms/StakeholderFormsModal';
+import { MasterPetaniTab } from './admin/MasterPetaniTab';
+import { MasterKebunTab } from './admin/MasterKebunTab';
+import { MasterHasilPanenTab } from './admin/MasterHasilPanenTab';
+import { FarmerStageStepper } from './admin/FarmerStageStepper';
 
 // 6-Stage Pipeline for Farmer Harvest Lot
 export const FARMER_LOT_STAGES: PipelineStage[] = [
@@ -77,6 +82,7 @@ export const FARM_MANAGEMENT_STAGES: PipelineStage[] = [
 export const FarmerView: React.FC = () => {
   const {
     currentUser,
+    users,
     farmerLots,
     addFarmerHarvest,
     updateFarmerHarvestLot,
@@ -92,7 +98,7 @@ export const FarmerView: React.FC = () => {
   } = useCoffee();
 
   // Active module tab synced with context
-  const activeTab = farmerActiveTab || 'farms';
+  const activeTab = farmerActiveTab || 'master_petani';
   const setActiveTab = setFarmerActiveTab;
 
   // Filter & Search State for Lots
@@ -508,39 +514,39 @@ export const FarmerView: React.FC = () => {
           {/* 4 Cruip-Style Metric Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
-              title="Lahan &amp; Kebun Aktif"
-              value={`${myFarms.length} Blok`}
-              subtitle={`${totalLandArea.toFixed(1)} Ha • ${totalTrees.toLocaleString()} Pohon`}
-              icon={<TreePine className="w-5 h-5 text-emerald-600" />}
+              title="Total Anggota Petani"
+              value={`${users.filter((u) => u.role === 'petani' || u.assignedService === 'petani').length} Petani`}
+              subtitle="Terdaftar di Kelompok Tani"
+              icon={<Users className="w-5 h-5 text-emerald-600" />}
               color="emerald"
               trend={{ value: '100% Terverifikasi', isPositive: true }}
             />
 
             <MetricCard
-              title="Total Panen Dicatat"
-              value={`${totalHarvestedKg.toLocaleString()} kg`}
+              title="Lahan &amp; Kebun Terdaftar"
+              value={`${coffeeFarms.length} Blok`}
+              subtitle={`${coffeeFarms.reduce((acc, f) => acc + f.landAreaHectares, 0).toFixed(1)} Ha • ${coffeeFarms.reduce((acc, f) => acc + f.totalTreesCount, 0).toLocaleString()} Pohon`}
+              icon={<TreePine className="w-5 h-5 text-emerald-600" />}
+              color="emerald"
+              badge="EUDR Polygon"
+            />
+
+            <MetricCard
+              title="Total Panen Ceri"
+              value={`${farmerLots.reduce((acc, l) => acc + l.totalWeightKg, 0).toLocaleString()} kg`}
               subtitle="Cherry merah segar"
               icon={<Package className="w-5 h-5 text-emerald-600" />}
               color="emerald"
-              trend={{ value: '18.4%', isPositive: true, label: 'vs musim lalu' }}
+              trend={{ value: `${farmerLots.filter((l) => l.isReleasedToMarketplace ?? true).length} Lot Rilis`, isPositive: true }}
             />
 
             <MetricCard
               title="Stok Ceri Tersedia"
-              value={`${availableKg.toLocaleString()} kg`}
-              subtitle="Siap dibeli Pengolah"
+              value={`${farmerLots.reduce((acc, l) => acc + l.availableWeightKg, 0).toLocaleString()} kg`}
+              subtitle="Siap Olah / Jual Pasar"
               icon={<Sprout className="w-5 h-5 text-amber-600" />}
               color="amber"
               badge="Siap Jual"
-            />
-
-            <MetricCard
-              title="Total Penjualan"
-              value={`Rp ${totalRevenue.toLocaleString()}`}
-              subtitle={`Dari ${myTransactions.length} transaksi selesai`}
-              icon={<TrendingUp className="w-5 h-5 text-emerald-600" />}
-              color="emerald"
-              trend={{ value: '+24.5%', isPositive: true, label: 'MoM' }}
             />
           </div>
 
@@ -560,81 +566,46 @@ export const FarmerView: React.FC = () => {
             </div>
           )}
 
-          {/* Navigation Tabs (ERP Workstation Style) */}
-          <div className="bg-white p-1.5 rounded-2xl border border-stone-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-1.5">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <button
-                onClick={() => setActiveTab('farms')}
-                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                  activeTab === 'farms'
-                    ? 'bg-stone-900 text-white shadow-xs font-black'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-                }`}
-              >
-                <TreePine className="w-4 h-4 text-emerald-400" />
-                <span>1. Registrasi &amp; Lahan Kebun</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300">
-                  {myFarms.length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('upload')}
-                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                  activeTab === 'upload'
-                    ? 'bg-stone-900 text-white shadow-xs font-black'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-                }`}
-              >
-                <PlusCircle className="w-4 h-4 text-emerald-400" />
-                <span>2. Form Panen Baru</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('catalog')}
-                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                  activeTab === 'catalog'
-                    ? 'bg-stone-900 text-white shadow-xs font-black'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-                }`}
-              >
-                <Package className="w-4 h-4" />
-                <span>3. Katalog Panen Ceri</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300">
-                  {myLots.length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                  activeTab === 'history'
-                    ? 'bg-stone-900 text-white shadow-xs font-black'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-                }`}
-              >
-                <History className="w-4 h-4" />
-                <span>4. Buku Kas &amp; Ledger</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
-                  {myTransactions.length}
-                </span>
-              </button>
-            </div>
-
-            {/* Blanko Cetak Fisik Petani */}
-            <button
-              type="button"
-              onClick={() => setFormsModalOpen(true)}
-              className="py-2.5 px-3.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
-              title="Cetak & Download Blanko Formulir Petani (A4)"
-            >
-              <Printer className="w-3.5 h-3.5 text-amber-600" />
-              <span>Blanko Form Petani (A4)</span>
-            </button>
-          </div>
+          {/* Visual Stage Stepper (Alur Tahapan Terpadu Layanan Petani) */}
+          <FarmerStageStepper
+            activeTab={activeTab}
+            onSelectTab={(tab) => setActiveTab(tab)}
+            farmerCount={users.filter((u) => u.role === 'petani' || u.assignedService === 'petani').length}
+            farmCount={coffeeFarms.length}
+            lotCount={farmerLots.length}
+            releasedCount={farmerLots.filter((l) => l.isReleasedToMarketplace ?? true).length}
+            transactionCount={myTransactions.length}
+            onOpenFormsModal={() => setFormsModalOpen(true)}
+          />
 
           {/* ======================================================== */}
-          {/* TAB 1: REGISTRASI & MANAJEMEN LAHAN KEBUN KOPI            */}
+          {/* DATA MASTER 1: MASTER PETANI (BIODATA & CETAK BARCODE)   */}
+          {/* ======================================================== */}
+          {activeTab === 'master_petani' && (
+            <MasterPetaniTab
+              onSelectFarmerForFarms={() => setActiveTab('master_kebun')}
+              onSelectFarmerForHarvest={() => setActiveTab('master_panen')}
+            />
+          )}
+
+          {/* ======================================================== */}
+          {/* DATA MASTER 2: MASTER KEBUN (PLOT, ELEVASI, GPS LEAFLET) */}
+          {/* ======================================================== */}
+          {activeTab === 'master_kebun' && (
+            <MasterKebunTab
+              onSelectFarmForHarvest={() => setActiveTab('master_panen')}
+            />
+          )}
+
+          {/* ======================================================== */}
+          {/* DATA MASTER 3: HASIL PANEN (CERI, RILIS MARKET, PROCESS) */}
+          {/* ======================================================== */}
+          {activeTab === 'master_panen' && (
+            <MasterHasilPanenTab />
+          )}
+
+          {/* ======================================================== */}
+          {/* TAB: REGISTRASI & MANAJEMEN LAHAN KEBUN KOPI (LEGACY)     */}
           {/* ======================================================== */}
           {activeTab === 'farms' && (
             <div className="space-y-4">
@@ -821,17 +792,17 @@ export const FarmerView: React.FC = () => {
                   {farmViewMode === 'table' && (
                     <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                        <table className="w-full text-left text-xs min-w-[1050px]">
                           <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
                             <tr>
-                              <th className="py-3.5 px-4">ID Kebun</th>
-                              <th className="py-3.5 px-4">Nama Lahan &amp; Lokasi</th>
-                              <th className="py-3.5 px-4">Elevasi mdpl</th>
-                              <th className="py-3.5 px-4">Kondisi Cuaca Mikro</th>
-                              <th className="py-3.5 px-4">Varietas &amp; Jenis Tanah</th>
-                              <th className="py-3.5 px-4">Luas &amp; Populasi</th>
-                              <th className="py-3.5 px-4">EUDR Maps</th>
-                              <th className="py-3.5 px-4 text-right">Aksi</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">ID Kebun</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Nama Lahan &amp; Lokasi</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Elevasi mdpl</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Kondisi Cuaca Mikro</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Varietas &amp; Jenis Tanah</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Luas &amp; Populasi</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">EUDR Maps</th>
+                              <th className="py-3.5 px-4 text-right whitespace-nowrap">Aksi</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-stone-100">
@@ -841,53 +812,53 @@ export const FarmerView: React.FC = () => {
                                 onClick={() => handleOpenFarmWorksheet(farm)}
                                 className="hover:bg-emerald-50/40 cursor-pointer transition-colors"
                               >
-                                <td className="py-3 px-4 font-mono font-bold text-stone-900">
+                                <td className="py-3 px-4 font-mono font-bold text-stone-900 whitespace-nowrap">
                                   {farm.id}
                                 </td>
-                                <td className="py-3 px-4">
+                                <td className="py-3 px-4 whitespace-nowrap">
                                   <div className="font-bold text-stone-900">{farm.farmName}</div>
                                   <div className="text-[11px] text-stone-500">{farm.location} • {farm.province}</div>
                                 </td>
-                                <td className="py-3 px-4">
-                                  <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 inline-block whitespace-nowrap shrink-0">
                                     {farm.altitudeDisplay}
                                   </span>
                                 </td>
-                                <td className="py-3 px-4">
-                                  <div className="flex items-center gap-1.5 font-semibold text-stone-800">
-                                    {renderWeatherIcon(farm.weatherData.currentCondition, 'w-3.5 h-3.5')}
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <div className="flex items-center gap-1.5 font-semibold text-stone-800 whitespace-nowrap">
+                                    {renderWeatherIcon(farm.weatherData.currentCondition, 'w-3.5 h-3.5 shrink-0')}
                                     <span>{farm.weatherData.currentCondition}</span>
                                   </div>
-                                  <div className="text-[11px] text-stone-500 font-mono">
+                                  <div className="text-[11px] text-stone-500 font-mono whitespace-nowrap">
                                     {farm.weatherData.temperatureCelsius}°C • {farm.weatherData.humidityPercent}% RH
                                   </div>
                                 </td>
-                                <td className="py-3 px-4">
-                                  <div className="font-medium text-stone-900 truncate max-w-[160px]">
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <div className="font-medium text-stone-900">
                                     {farm.primaryVarieties.join(', ')}
                                   </div>
                                   <div className="text-[11px] text-stone-500">{farm.soilType}</div>
                                 </td>
-                                <td className="py-3 px-4">
+                                <td className="py-3 px-4 whitespace-nowrap">
                                   <span className="font-bold text-stone-900">{farm.landAreaHectares} Ha</span>
                                   <span className="text-stone-400 text-[11px]"> (~{farm.totalTreesCount.toLocaleString()} phn)</span>
                                 </td>
-                                <td className="py-3 px-4">
-                                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold inline-flex items-center gap-1">
-                                    <ShieldCheck className="w-3 h-3" /> Maps OK
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold inline-flex items-center gap-1 whitespace-nowrap shrink-0">
+                                    <ShieldCheck className="w-3 h-3 shrink-0" /> Maps OK
                                   </span>
                                 </td>
-                                <td className="py-3 px-4 text-right">
+                                <td className="py-3 px-4 text-right whitespace-nowrap">
                                   <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleOpenFarmWorksheet(farm);
                                     }}
-                                    className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0"
                                   >
                                     <span>Lembar Kerja</span>
-                                    <ChevronRight className="w-3 h-3" />
+                                    <ChevronRight className="w-3 h-3 shrink-0" />
                                   </button>
                                 </td>
                               </tr>
@@ -1261,19 +1232,19 @@ export const FarmerView: React.FC = () => {
                   {viewMode === 'table' && (
                     <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                        <table className="w-full text-left text-xs min-w-[1100px]">
                           <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
                             <tr>
-                              <th className="py-3.5 px-4">ID Lot Panen</th>
-                              <th className="py-3.5 px-4">Varietas &amp; Kebun Asal</th>
-                              <th className="py-3.5 px-4">Tgl Panen</th>
-                              <th className="py-3.5 px-4">Ketinggian &amp; Cuaca</th>
-                              <th className="py-3.5 px-4">Kemanisan Brix</th>
-                              <th className="py-3.5 px-4">Stok Tersedia</th>
-                              <th className="py-3.5 px-4">Harga Penawaran</th>
-                              <th className="py-3.5 px-4">Tahap Kerja</th>
-                              <th className="py-3.5 px-4">Audit Mutu</th>
-                              <th className="py-3.5 px-4 text-right">Aksi Lembar Kerja</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">ID Lot Panen</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Varietas &amp; Kebun Asal</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Tgl Panen</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Ketinggian &amp; Cuaca</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Kemanisan Brix</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Stok Tersedia</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Harga Penawaran</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Tahap Kerja</th>
+                              <th className="py-3.5 px-4 whitespace-nowrap">Audit Mutu</th>
+                              <th className="py-3.5 px-4 text-right whitespace-nowrap">Aksi Lembar Kerja</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-stone-100">
@@ -1285,77 +1256,77 @@ export const FarmerView: React.FC = () => {
                                   onClick={() => handleOpenLotWorksheet(lot)}
                                   className="hover:bg-emerald-50/40 cursor-pointer transition-colors group"
                                 >
-                                  <td className="py-3 px-4 font-mono font-bold text-stone-900 group-hover:text-emerald-700">
+                                  <td className="py-3 px-4 font-mono font-bold text-stone-900 group-hover:text-emerald-700 whitespace-nowrap">
                                     {lot.id}
                                   </td>
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     <div className="font-bold text-stone-900">{lot.variety}</div>
                                     <div className="text-[11px] text-stone-500">
                                       {lot.farmName ? `${lot.farmName} • ` : ''}{lot.farmLocation}
                                     </div>
                                   </td>
-                                  <td className="py-3 px-4 text-stone-700 font-medium">
+                                  <td className="py-3 px-4 text-stone-700 font-medium whitespace-nowrap">
                                     {lot.harvestDate}
                                   </td>
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     <div className="font-bold text-stone-800">{lot.altitude}</div>
                                     {lot.weatherSnapshot ? (
                                       <div className="text-[11px] text-stone-500 flex items-center gap-1">
-                                        {renderWeatherIcon(lot.weatherSnapshot.currentCondition, 'w-3 h-3')}
+                                        {renderWeatherIcon(lot.weatherSnapshot.currentCondition, 'w-3 h-3 shrink-0')}
                                         <span>{lot.weatherSnapshot.temperatureCelsius}°C</span>
                                       </div>
                                     ) : (
                                       <span className="text-[11px] text-stone-400">EUDR GPS OK</span>
                                     )}
                                   </td>
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     <span className="font-black text-emerald-700">{lot.brix}° Brix</span>
                                   </td>
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     <span className="font-bold text-stone-900">{lot.availableWeightKg}</span>
                                     <span className="text-stone-400 text-[11px]"> / {lot.totalWeightKg} kg</span>
                                   </td>
-                                  <td className="py-3 px-4 font-bold text-stone-900">
+                                  <td className="py-3 px-4 font-bold text-stone-900 whitespace-nowrap">
                                     Rp {lot.pricePerKg.toLocaleString()} / kg
                                   </td>
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     {isAvailable ? (
-                                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold whitespace-nowrap shrink-0">
                                         Siap Jual
                                       </span>
                                     ) : (
-                                      <span className="px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-bold">
+                                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-bold whitespace-nowrap shrink-0">
                                         Terjual
                                       </span>
                                     )}
                                   </td>
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     <VerificationStampBadge
                                       stamp={lot.verificationStamp}
                                       status={lot.verificationStatus}
                                       size="sm"
                                     />
                                   </td>
-                                  <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex items-center justify-end gap-1.5">
+                                  <td className="py-3 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex items-center justify-end gap-1.5 whitespace-nowrap shrink-0">
                                       <button
                                         type="button"
                                         onClick={() => {
                                           setSelectedBarcodeLot(lot);
                                           setIsNewUpload(false);
                                         }}
-                                        className="px-2 py-1 rounded-lg bg-stone-100 hover:bg-emerald-100 text-stone-700 hover:text-emerald-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                        className="px-2 py-1 rounded-lg bg-stone-100 hover:bg-emerald-100 text-stone-700 hover:text-emerald-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0"
                                       >
-                                        <QrCode className="w-3 h-3" />
+                                        <QrCode className="w-3 h-3 shrink-0" />
                                         Barcode
                                       </button>
                                       <button
                                         type="button"
                                         onClick={() => handleOpenLotWorksheet(lot)}
-                                        className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                        className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0"
                                       >
                                         <span>Lembar Kerja</span>
-                                        <ChevronRight className="w-3 h-3" />
+                                        <ChevronRight className="w-3 h-3 shrink-0" />
                                       </button>
                                     </div>
                                   </td>

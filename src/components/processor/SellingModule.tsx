@@ -269,17 +269,17 @@ export const SellingModule: React.FC = () => {
                 /* DEFAULT VIEW: RICH ERP DATA TABLE / LIST */
                 <div className="o_form_sheet overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="o_list_table">
+                    <table className="o_list_table min-w-[1050px]">
                       <thead>
                         <tr>
-                          <th className="!pl-5">ID Lot &amp; Varietas</th>
-                          <th>Petani Asal &amp; Elevasi</th>
-                          <th>Metode Olah</th>
-                          <th>Grade &amp; SCA Score</th>
-                          <th className="text-right">Stok Tersedia</th>
-                          <th className="text-right">Harga / kg</th>
-                          <th>Status Listing</th>
-                          <th className="!pr-5 text-right">Aksi</th>
+                          <th className="!pl-5 whitespace-nowrap">ID Lot &amp; Varietas</th>
+                          <th className="whitespace-nowrap">Petani Asal &amp; Elevasi</th>
+                          <th className="whitespace-nowrap">Metode Olah</th>
+                          <th className="whitespace-nowrap">Grade &amp; SCA Score</th>
+                          <th className="text-right whitespace-nowrap">Stok Tersedia</th>
+                          <th className="text-right whitespace-nowrap">Harga / kg</th>
+                          <th className="whitespace-nowrap">Status Listing</th>
+                          <th className="!pr-5 text-right whitespace-nowrap">Aksi</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -290,9 +290,9 @@ export const SellingModule: React.FC = () => {
                               key={lot.id}
                               onClick={() => setSelectedLotForDetail(lot)}
                             >
-                              <td className="!pl-5">
+                              <td className="!pl-5 whitespace-nowrap">
                                 <div className="flex items-center gap-2.5">
-                                  <div className="p-1.5 rounded-lg bg-amber-50 text-amber-800 font-bold">
+                                  <div className="p-1.5 rounded-lg bg-amber-50 text-amber-800 font-bold shrink-0">
                                     <Coffee className="w-3.5 h-3.5" />
                                   </div>
                                   <div>
@@ -304,32 +304,32 @@ export const SellingModule: React.FC = () => {
                                 </div>
                               </td>
 
-                              <td>
+                              <td className="whitespace-nowrap">
                                 <span className="font-bold text-slate-900 block">{lot.sourceFarmerName}</span>
                                 <span className="text-slate-500 text-[11px] flex items-center gap-1 mt-0.5">
-                                  <MapPin className="w-3 h-3 text-slate-400" />
+                                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                                   {lot.sourceOrigin} ({lot.altitude})
                                 </span>
                               </td>
 
-                              <td>
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                              <td className="whitespace-nowrap">
+                                <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 whitespace-nowrap shrink-0">
                                   {lot.processMethod}
                                 </span>
                               </td>
 
-                              <td>
+                              <td className="whitespace-nowrap">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
+                                  <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200 whitespace-nowrap shrink-0">
                                     {lot.grade}
                                   </span>
-                                  <span className="font-mono font-bold text-emerald-700 text-xs">
+                                  <span className="font-mono font-bold text-emerald-700 text-xs whitespace-nowrap">
                                     {lot.defectCount !== undefined ? `Def: ${lot.defectCount}` : 'SCA 87+'}
                                   </span>
                                 </div>
                               </td>
 
-                              <td className="text-right">
+                              <td className="text-right whitespace-nowrap">
                                 <span className="font-mono font-bold text-slate-900 block">
                                   {lot.availableWeightKg || 0} kg
                                 </span>
@@ -338,41 +338,41 @@ export const SellingModule: React.FC = () => {
                                 </span>
                               </td>
 
-                              <td className="text-right">
+                              <td className="text-right whitespace-nowrap">
                                 <span className="font-mono font-black text-slate-900 block">
                                   Rp {(lot.pricePerKg || 125000).toLocaleString()}
                                 </span>
                                 <span className="text-[10px] text-slate-400">/ kilogram</span>
                               </td>
 
-                              <td>
+                              <td className="whitespace-nowrap">
                                 {isAvailable ? (
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 whitespace-nowrap shrink-0">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse shrink-0" />
                                     Siap Jual
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap shrink-0">
                                     Habis Terjual
                                   </span>
                                 )}
                               </td>
 
-                              <td className="!pr-5 text-right" onClick={(e) => e.stopPropagation()}>
+                              <td className="!pr-5 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                                 <div className="flex items-center justify-end gap-1.5">
                                   <button
                                     onClick={() => handleOpenBarcode(lot)}
                                     title="Cetak Stiker QR Barcode"
-                                    className="btn-odoo-secondary !py-1 !px-2 !text-xs"
+                                    className="btn-odoo-secondary !py-1 !px-2 !text-xs whitespace-nowrap shrink-0"
                                   >
-                                    <QrCode className="w-3.5 h-3.5 text-slate-600" />
+                                    <QrCode className="w-3.5 h-3.5 text-slate-600 shrink-0" />
                                   </button>
                                   <button
                                     onClick={() => setSelectedLotForDetail(lot)}
-                                    className="btn-odoo-primary !py-1 !px-2.5 !text-[11px] inline-flex items-center gap-1"
+                                    className="btn-odoo-primary !py-1 !px-2.5 !text-[11px] inline-flex items-center gap-1 whitespace-nowrap shrink-0"
                                   >
                                     <span>Detail</span>
-                                    <ChevronRight className="w-3 h-3" />
+                                    <ChevronRight className="w-3 h-3 shrink-0" />
                                   </button>
                                 </div>
                               </td>
@@ -488,44 +488,44 @@ export const SellingModule: React.FC = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="o_list_table">
+                  <table className="o_list_table min-w-[950px]">
                     <thead>
                       <tr>
-                        <th className="!pl-5">No Transaksi</th>
-                        <th>Tanggal</th>
-                        <th>Pembeli (Buyer)</th>
-                        <th>Produk Green Bean</th>
-                        <th className="text-right">Volume</th>
-                        <th className="text-right">Total Tagihan</th>
-                        <th className="!pr-5">Status</th>
+                        <th className="!pl-5 whitespace-nowrap">No Transaksi</th>
+                        <th className="whitespace-nowrap">Tanggal</th>
+                        <th className="whitespace-nowrap">Pembeli (Buyer)</th>
+                        <th className="whitespace-nowrap">Produk Green Bean</th>
+                        <th className="text-right whitespace-nowrap">Volume</th>
+                        <th className="text-right whitespace-nowrap">Total Tagihan</th>
+                        <th className="!pr-5 whitespace-nowrap">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredTransactions.map((trx) => (
                         <tr key={trx.id}>
-                          <td className="!pl-5 font-mono font-bold text-slate-900">
+                          <td className="!pl-5 font-mono font-bold text-slate-900 whitespace-nowrap">
                             {trx.id}
                           </td>
-                          <td className="text-slate-500 flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <td className="text-slate-500 flex items-center gap-1.5 whitespace-nowrap">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             {trx.date}
                           </td>
-                          <td>
+                          <td className="whitespace-nowrap">
                             <span className="font-bold text-slate-900 block">{trx.toName}</span>
                             <span className="text-[10px] text-slate-400 uppercase font-bold">{trx.toRole}</span>
                           </td>
-                          <td className="font-semibold text-slate-800">
+                          <td className="font-semibold text-slate-800 whitespace-nowrap">
                             {trx.itemName}
                           </td>
-                          <td className="text-right font-mono font-bold text-slate-900">
+                          <td className="text-right font-mono font-bold text-slate-900 whitespace-nowrap">
                             {trx.quantity}
                           </td>
-                          <td className="text-right font-mono font-bold text-emerald-800">
+                          <td className="text-right font-mono font-bold text-emerald-800 whitespace-nowrap">
                             Rp {trx.totalAmount.toLocaleString()}
                           </td>
-                          <td className="!pr-5">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <td className="!pr-5 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 whitespace-nowrap shrink-0">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
                               {trx.status}
                             </span>
                           </td>
@@ -565,18 +565,18 @@ export const SellingModule: React.FC = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="o_list_table">
+                  <table className="o_list_table min-w-[1050px]">
                     <thead>
                       <tr>
-                        <th className="!pl-5">Batch Code</th>
-                        <th>Petani &amp; Metode</th>
-                        <th className="text-right">Ceri Masuk</th>
-                        <th className="text-right">Rendemen</th>
-                        <th className="text-right">Green Bean (kg)</th>
-                        <th className="text-right">Harga Jual / kg</th>
-                        <th className="text-right">Potensi Omzet</th>
-                        <th className="text-right">Estimasi Biaya Ceri</th>
-                        <th className="!pr-5 text-right">Gross Margin</th>
+                        <th className="!pl-5 whitespace-nowrap">Batch Code</th>
+                        <th className="whitespace-nowrap">Petani &amp; Metode</th>
+                        <th className="text-right whitespace-nowrap">Ceri Masuk</th>
+                        <th className="text-right whitespace-nowrap">Rendemen</th>
+                        <th className="text-right whitespace-nowrap">Green Bean (kg)</th>
+                        <th className="text-right whitespace-nowrap">Harga Jual / kg</th>
+                        <th className="text-right whitespace-nowrap">Potensi Omzet</th>
+                        <th className="text-right whitespace-nowrap">Estimasi Biaya Ceri</th>
+                        <th className="!pr-5 text-right whitespace-nowrap">Gross Margin</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -593,36 +593,36 @@ export const SellingModule: React.FC = () => {
 
                         return (
                           <tr key={b.id}>
-                            <td className="!pl-5 font-mono font-bold text-slate-900">
+                            <td className="!pl-5 font-mono font-bold text-slate-900 whitespace-nowrap">
                               {b.batchCode}
                             </td>
-                            <td>
+                            <td className="whitespace-nowrap">
                               <span className="font-bold text-slate-900 block">{b.sourceFarmerName}</span>
                               <span className="text-[10px] text-amber-800 font-bold uppercase">{b.fermentationLog.method}</span>
                             </td>
-                            <td className="text-right font-mono font-bold text-slate-800">
+                            <td className="text-right font-mono font-bold text-slate-800 whitespace-nowrap">
                               {cherryKg} kg
                             </td>
-                            <td className="text-right font-mono font-bold text-emerald-700">
+                            <td className="text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
                               {yieldPercent}%
                             </td>
-                            <td className="text-right font-mono font-black text-slate-900">
+                            <td className="text-right font-mono font-black text-slate-900 whitespace-nowrap">
                               {greenKg} kg
                             </td>
-                            <td className="text-right font-mono font-semibold text-slate-800">
+                            <td className="text-right font-mono font-semibold text-slate-800 whitespace-nowrap">
                               Rp {priceKg.toLocaleString()}
                             </td>
-                            <td className="text-right font-mono font-bold text-slate-900">
+                            <td className="text-right font-mono font-bold text-slate-900 whitespace-nowrap">
                               Rp {totalSalesPotential.toLocaleString()}
                             </td>
-                            <td className="text-right font-mono text-slate-500">
+                            <td className="text-right font-mono text-slate-500 whitespace-nowrap">
                               Rp {estimatedCherryCost.toLocaleString()}
                             </td>
-                            <td className="!pr-5 text-right">
+                            <td className="!pr-5 text-right whitespace-nowrap">
                               <span className="font-mono font-bold text-emerald-700 block">
                                 Rp {grossProfit.toLocaleString()}
                               </span>
-                              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                              <span className="inline-block text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap shrink-0">
                                 +{marginPercent}% Margin
                               </span>
                             </td>

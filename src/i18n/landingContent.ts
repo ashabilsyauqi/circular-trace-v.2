@@ -255,6 +255,26 @@ const enPipelineStages: PipelineStage[] = [
 ];
 
 const idServicePanels: Record<UserRole, ServicePanel> = {
+  admin_kelompok_tani: {
+    badge: 'Pusat Kendali Induk',
+    title: 'Control Tower & Manajemen Ekosistem Kelompok Tani',
+    desc: 'Platform kendali operasional hulu-ke-hilir untuk Gapoktan dan Koperasi Kopi. Mengawasi 5 stasiun layanan serta mengatur penugasan akun anggota.',
+    bullets: [
+      'Supervisi realtime 5 layanan: Petani, Pengolah, Gudang, Roaster, Coffee Shop.',
+      'Manajemen Master Users dengan penugasan eksklusif 1 akun = 1 layanan.',
+      'Laporan analitik ekosistem hulu-hilir terintegrasi.',
+    ],
+    ctaOpen: 'Buka Control Tower',
+    ctaRegister: 'Daftar Kelompok Tani',
+    previewTitle: 'Preview Control Tower Gapoktan',
+    previewRows: [
+      { label: 'Kelompok Tani', value: 'Gapoktan Kopi Mandiri Nusantara' },
+      { label: 'Layanan Terkelola', value: '5 Stasiun Rantai Pasok' },
+      { label: 'Total Anggota', value: '18 Operator Aktif' },
+      { label: 'Integrasi', value: '100% Farm-to-Cup Terhubung' },
+      { label: 'Status Legalitas', value: 'Terdaftar & Terverifikasi' },
+    ],
+  },
   petani: {
     badge: 'Pilar 1: Hulu Pertanian & Panen',
     title: 'Digitalisasi Panen Ceri Kopi dari Lereng Kebun',
@@ -375,9 +395,49 @@ const idServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Tanda Tangan Digital', value: 'SHA256 Validated • Terotentikasi' },
     ],
   },
+  ict: {
+    badge: 'Internal: Petugas Verifikasi ICT',
+    title: 'Audit & Verifikasi Hulu Internal Kelompok Tani',
+    desc: 'Tim ICT internal kelompok tani memverifikasi keabsahan data NIK & KTA petani anggota, validasi koordinat GPS actual dan patokan batas poligon kebun (EUDR), serta uji standar kemanisan brix panen ceri.',
+    bullets: [
+      'Verifikasi identitas dan keanggotaan resmi petani kelompok tani.',
+      'Audit koordinat GPS actual dan kepatuhan EUDR Deforestation-Free lahan kebun.',
+      'Uji refraktometer kemanisan brix (°Bx) dan QC fisik panen ceri segar.',
+    ],
+    ctaOpen: 'Buka Pusat Verifikasi ICT',
+    ctaRegister: 'Masuk Petugas ICT',
+    previewTitle: 'Pusat Verifikasi ICT Kelompok Tani',
+    previewRows: [
+      { label: 'Otoritas Audit', value: 'Tim ICT Kelompok Tani' },
+      { label: 'Cakupan Verifikasi', value: 'Data Petani, Lahan Kebun, Panen Ceri' },
+      { label: 'Kepatuhan Regulasi', value: 'EUDR Deforestation-Free & SNI Organik' },
+      { label: 'Standar Ceri Segar', value: 'Brix ≥ 18°Bx • Petik Merah 95%+' },
+      { label: 'Format Stempel', value: 'Digital Integrity Seal Validated' },
+    ],
+  },
 };
 
 const enServicePanels: Record<UserRole, ServicePanel> = {
+  admin_kelompok_tani: {
+    badge: 'Central Control Tower',
+    title: 'Farmer Group Ecosystem Control Tower & Management',
+    desc: 'End-to-end operational control tower for coffee cooperatives and farmer associations. Oversee 5 integrated service stations and manage member account assignments.',
+    bullets: [
+      'Real-time supervision across 5 services: Farmer, Processor, Warehouse, Roaster, Coffee Shop.',
+      'Master Users management with strict 1 account = 1 service assignment.',
+      'Unified farm-to-cup ecosystem analytics and traceability.',
+    ],
+    ctaOpen: 'Open Control Tower',
+    ctaRegister: 'Register Farmer Group',
+    previewTitle: 'Cooperative Control Tower Preview',
+    previewRows: [
+      { label: 'Organization', value: 'Nusantara Coffee Farmer Association' },
+      { label: 'Managed Services', value: '5 Supply Chain Stations' },
+      { label: 'Active Members', value: '18 Active Operators' },
+      { label: 'Integration', value: '100% Farm-to-Cup Connected' },
+      { label: 'Legal Status', value: 'Registered & Certified' },
+    ],
+  },
   petani: {
     badge: 'Pillar 1: Upstream Farming & Harvest',
     title: 'Digitizing the Coffee Cherry Harvest from the Farm Slope',
@@ -496,6 +556,26 @@ const enServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Evaluation Result', value: '87.50 SCA Score (Specialty Grade)' },
       { label: 'Lead Auditor', value: 'Jessica Tan, CQI Q-Grader' },
       { label: 'Digital Signature', value: 'SHA256 Validated • Authenticated' },
+    ],
+  },
+  ict: {
+    badge: 'Internal: ICT Verification Officer',
+    title: 'Upstream Internal Audit & Verification for Farmer Group',
+    desc: 'Cooperative internal ICT team verifies member farmer identity & membership cards, validates actual GPS coordinates and plot polygon boundaries (EUDR), and tests cherry harvest brix sugar standards.',
+    bullets: [
+      'Farmer identity and cooperative membership verification.',
+      'Actual GPS coordinate audit and EUDR Deforestation-Free compliance.',
+      'Refractometer brix testing (°Bx) and fresh cherry QC.',
+    ],
+    ctaOpen: 'Open ICT Verification Center',
+    ctaRegister: 'Sign In as ICT Officer',
+    previewTitle: 'Farmer Group ICT Verification Hub',
+    previewRows: [
+      { label: 'Audit Authority', value: 'Cooperative Internal ICT Team' },
+      { label: 'Verification Scope', value: 'Farmer Data, Farm Plots, Cherry Lots' },
+      { label: 'Compliance Standard', value: 'EUDR Deforestation-Free & Organic SNI' },
+      { label: 'Fresh Cherry Standard', value: 'Brix ≥ 18°Bx • Red Picked 95%+' },
+      { label: 'Stamp Format', value: 'Digital Integrity Seal Validated' },
     ],
   },
 };

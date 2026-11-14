@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserRole } from '../types/coffee';
+import { UserRole, OperationalService } from '../types/coffee';
 import {
   Sprout,
   Cog,
@@ -7,12 +7,27 @@ import {
   Flame,
   Coffee,
   ShieldCheck,
+  Building2,
 } from 'lucide-react';
+
+export const ACTIVE_OPERATIONAL_SERVICES: OperationalService[] = [
+  'petani',
+  'pengolah',
+  'gudang',
+  'roaster',
+  'cafe',
+];
 
 export const ROLE_DETAILS: Record<
   UserRole,
   { label: string; badgeClass: string; icon: React.ReactNode; description: string }
 > = {
+  admin_kelompok_tani: {
+    label: 'Admin Kelompok Tani',
+    badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
+    icon: <Building2 className="w-4 h-4 text-amber-700" />,
+    description: 'Control Tower pengelola ekosistem terpadu 5 layanan & penugasan akun anggota',
+  },
   petani: {
     label: 'Petani Kopi',
     badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
@@ -44,9 +59,15 @@ export const ROLE_DETAILS: Record<
     description: 'Beli roasted beans & sajikan dengan Farm-to-Cup Traceability',
   },
   verifikator: {
-    label: 'Verifikator (Auditor QA & Q-Grader)',
-    badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
-    icon: <ShieldCheck className="w-4 h-4 text-purple-700" />,
-    description: 'Audit lahan EUDR, sertifikasi olahan, uji gudang, cupping sensori roast, & stempel mutu resmi',
+    label: 'Verifikator (Non-aktif)',
+    badgeClass: 'bg-slate-100 text-slate-500 border-slate-300 opacity-60',
+    icon: <ShieldCheck className="w-4 h-4 text-slate-400" />,
+    description: 'Layanan audit & sertifikasi mutu eksternal (sementara dinonaktifkan)',
+  },
+  ict: {
+    label: 'Petugas ICT (Verifikator)',
+    badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
+    icon: <ShieldCheck className="w-4 h-4 text-blue-600" />,
+    description: 'Tim ICT Kelompok Tani: Verifikasi data petani, peta lahan kebun EUDR, & hasil panen ceri',
   },
 };

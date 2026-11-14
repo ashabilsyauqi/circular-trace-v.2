@@ -1,34 +1,117 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCoffee } from '../context/CoffeeContext';
-import { UserRole } from '../types/coffee';
 import {
   Sprout,
-  Cog,
   Warehouse,
   Flame,
   Coffee,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   ShieldCheck,
   CheckCircle2,
   Sparkles,
-  Lock,
-  Mail,
-  Eye,
-  EyeOff,
   KeyRound,
   AlertCircle,
-  HelpCircle,
   Check,
   RotateCcw,
-  UserCheck,
-  Award,
 } from 'lucide-react';
 
-export const LoginPage: React.FC = () => {
-  const { users, login, loginAsUser, requestPasswordReset, verifyResetCode, resetPassword } = useCoffee();
+interface CoffeeSlide {
+  id: string;
+  category: string;
+  roleTitle: string;
+  badge: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  highlightStat: string;
+  imageUrl: string;
+}
 
-  // Mode: 'credentials' (Email & Password) vs 'quick' (Demo Role Picker)
-  const [activeTab, setActiveTab] = useState<'credentials' | 'quick'>('credentials');
+const COFFEE_SLIDES: CoffeeSlide[] = [
+  {
+    id: 'kelompok-tani',
+    category: 'Tahap 1 • Hulu',
+    roleTitle: 'Kelompok Tani',
+    badge: 'Hulu & Perkebunan',
+    icon: <Sprout className="w-5 h-5 text-emerald-400" />,
+    title: 'Harmoni Perkebunan & Panen Petik Merah',
+    description:
+      'Pencatatan poligon kebun, kepastian varietas unggul, verifikasi elevasi mdpl, dan kepatuhan audit geolokasi EUDR untuk menjamin integritas kopi sejak awal.',
+    highlightStat: 'Elevasi 1.400–1.650 mdpl • 98% Petik Merah Terstandar',
+    imageUrl:
+      'https://images.unsplash.com/photo-1524350876685-274059332603?w=1600&auto=format&fit=crop&q=85',
+  },
+  {
+    id: 'gudang',
+    category: 'Tahap 2 & 3 • Penyimpanan',
+    roleTitle: 'Gudang & QA',
+    badge: 'Gudang Hermetik',
+    icon: <Warehouse className="w-5 h-5 text-blue-400" />,
+    title: 'Kontrol Mutu Hermetik & Standarisasi Green Bean',
+    description:
+      'Penyimpanan karung hermetik dengan sensor suhu dan kelembaban ruangan (RH) terkontrol, pengujian kadar air pre-roast, dan validasi standar mutu ekspor.',
+    highlightStat: 'Kadar Air Presisi 11–12% • Akreditasi SCA Q-Grader',
+    imageUrl:
+      'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=1600&auto=format&fit=crop&q=85',
+  },
+  {
+    id: 'roaster',
+    category: 'Tahap 4 • Penyangraian',
+    roleTitle: 'Roaster ERP',
+    badge: 'Roastery Artisan',
+    icon: <Flame className="w-5 h-5 text-amber-400" />,
+    title: 'Eksplorasi Profil Rasa & Konsistensi Kurva Roasting',
+    description:
+      'Perintah kerja penyangraian terintegrasi, kalibrasi nilai Agtron, rasio DTR, dan sensory spider chart untuk menghasilkan karakter seduh terbaik.',
+    highlightStat: 'Specialty Grade • Agtron Gourmet Scale Terkalibrasi',
+    imageUrl:
+      'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=1600&auto=format&fit=crop&q=85',
+  },
+  {
+    id: 'coffee-shop',
+    category: 'Tahap 5 • Hilir',
+    roleTitle: 'Coffee Shop',
+    badge: 'Barista & Retail',
+    icon: <Coffee className="w-5 h-5 text-stone-300" />,
+    title: 'Sajian Cangkir Autentik dengan Narasi Farm-to-Cup',
+    description:
+      'Menyajikan seduhan kopi premium dengan transparansi penuh. Cetak kartu traceability digital agar pelanggan dapat menelusuri kisah petani di setiap cangkir.',
+    highlightStat: 'Farm-to-Cup Transparency • Paspor Digital QR Trace',
+    imageUrl:
+      'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1600&auto=format&fit=crop&q=85',
+  },
+];
+
+export const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { currentUser, login, requestPasswordReset, verifyResetCode, resetPassword } = useCoffee();
+
+  // If already logged in, redirect to intended target or user's workstation
+  useEffect(() => {
+    if (currentUser) {
+      const fromPath = (location.state as any)?.from?.pathname;
+      if (fromPath) {
+        navigate(fromPath, { replace: true });
+      } else {
+        const dest = currentUser.role === 'admin_kelompok_tani'
+          ? '/admin/overview'
+          : currentUser.role === 'roaster'
+          ? '/admin/roaster/inventory'
+          : currentUser.role === 'gudang'
+          ? '/admin/gudang/inventory'
+          : `/admin/${currentUser.role}`;
+        navigate(dest, { replace: true });
+      }
+    }
+  }, [currentUser, location, navigate]);
 
   // Form states
   const [email, setEmail] = useState('');
@@ -37,6 +120,10 @@ export const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(true);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
+
+  // Carousel states
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Forgot password flow states
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
@@ -58,6 +145,25 @@ export const LoginPage: React.FC = () => {
     }
   }, []);
 
+  // Slide navigation
+  const nextSlide = useCallback(() => {
+    setCurrentSlideIndex((prev) => (prev + 1) % COFFEE_SLIDES.length);
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlideIndex((prev) => (prev - 1 + COFFEE_SLIDES.length) % COFFEE_SLIDES.length);
+  }, []);
+
+  // Automatic carousel rotation (every 5.5 seconds, pauses when hovered)
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      nextSlide();
+    }, 5500);
+
+    return () => clearInterval(timer);
+  }, [isPaused, nextSlide]);
+
   const handleCredentialsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
@@ -69,15 +175,7 @@ export const LoginPage: React.FC = () => {
       if (!res.success) {
         setLoginError(res.message);
       }
-    }, 400);
-  };
-
-  // Quick fill demo user into form
-  const handleSelectDemoUser = (userEmail: string, userPass: string = 'password123') => {
-    setEmail(userEmail);
-    setPassword(userPass);
-    setActiveTab('credentials');
-    setLoginError(null);
+    }, 450);
   };
 
   // Step 1: Request OTP
@@ -86,8 +184,8 @@ export const LoginPage: React.FC = () => {
     setForgotError(null);
     const res = requestPasswordReset(forgotEmail);
     if (res.success && res.resetCode) {
-      setSimulatedOtpNotice(`Kode OTP Verifikasi Demo: ${res.resetCode}`);
-      setForgotOtp(res.resetCode); // Pre-fill in demo for maximum user convenience
+      setSimulatedOtpNotice(`Kode OTP Verifikasi: ${res.resetCode}`);
+      setForgotOtp(res.resetCode);
       setForgotStep('otp');
     } else {
       setForgotError(res.message);
@@ -140,357 +238,415 @@ export const LoginPage: React.FC = () => {
     setSimulatedOtpNotice(null);
   };
 
-  const roleCardMeta: Record<
-    UserRole,
-    {
-      title: string;
-      tier: string;
-      color: string;
-      badgeColor: string;
-      icon: React.ReactNode;
-      duty: string;
-      marketplaceAction: string;
-    }
-  > = {
-    petani: {
-      title: 'Petani Kopi',
-      tier: 'Tahap 1: Hulu (Farm)',
-      color: 'hover:border-emerald-500 hover:shadow-emerald-50',
-      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300',
-      icon: <Sprout className="w-5 h-5 text-emerald-600" />,
-      duty: 'Kelola kebun & patok BPN, registrasi panen ceri lengkap dengan brix & varietas.',
-      marketplaceAction: 'Menjual ceri langsung ke Pengolah (Processor)',
-    },
-    pengolah: {
-      title: 'Pengolah (Mill Station)',
-      tier: 'Tahap 2: Pengolahan (Mill)',
-      color: 'hover:border-cyan-500 hover:shadow-cyan-50',
-      badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-950 dark:text-cyan-300',
-      icon: <Cog className="w-5 h-5 text-cyan-600" />,
-      duty: 'Beli ceri petani, fermentasi terkontrol, uji kadar air & defect green bean.',
-      marketplaceAction: 'Menjual Green Bean olahan ke Gudang',
-    },
-    gudang: {
-      title: 'Gudang (Warehouse & QA)',
-      tier: 'Tahap 3: Gudang Hermetik',
-      color: 'hover:border-indigo-500 hover:shadow-indigo-50',
-      badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950 dark:text-indigo-300',
-      icon: <Warehouse className="w-5 h-5 text-indigo-600" />,
-      duty: 'Kelola inventaris gudang, kontrol suhu & RH, verifikasi mutu ekspor pre-roast.',
-      marketplaceAction: 'Menjual Green Bean bergradasi ke Roaster',
-    },
-    roaster: {
-      title: 'Roaster (Roastery ERP)',
-      tier: 'Tahap 4: Penyangraian',
-      color: 'hover:border-amber-500 hover:shadow-amber-50',
-      badgeColor: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300',
-      icon: <Flame className="w-5 h-5 text-amber-600" />,
-      duty: 'Penyangraian artisan, profil Agtron, tasting notes, dan perintah produksi ERP.',
-      marketplaceAction: 'Menjual Roasted Beans ke Pemilik Kafe',
-    },
-    cafe: {
-      title: 'Pemilik Kafe (Barista & Shop)',
-      tier: 'Tahap 5: Hilir (Cup & Retail)',
-      color: 'hover:border-stone-600 hover:shadow-stone-50',
-      badgeColor: 'bg-stone-200 text-stone-800 border-stone-400 dark:bg-stone-800 dark:text-stone-300',
-      icon: <Coffee className="w-5 h-5 text-stone-700" />,
-      duty: 'Pilih roasted beans berkualitas, kalkulator racikan, dan sajikan ke pelanggan.',
-      marketplaceAction: 'Membeli beans dari Roastery & sajikan ke Konsumen',
-    },
-    verifikator: {
-      title: 'Verifikator & Auditor Kualitas',
-      tier: 'Dewan Audit Independen',
-      color: 'hover:border-purple-500 hover:shadow-purple-50',
-      badgeColor: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300',
-      icon: <ShieldCheck className="w-5 h-5 text-purple-600" />,
-      duty: 'Audit sertifikasi EUDR, zero-waste mill, gudang hermetik, uji cicip cangkir (cupping) SCA, dan terbitkan stempel digital.',
-      marketplaceAction: 'Memberi Stempel Mutu Terverifikasi pada Rantai Pasok',
-    },
-  };
+  const activeSlide = COFFEE_SLIDES[currentSlideIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FAF6F0] via-[#F4EDE2] to-[#EFE7DC] dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col justify-between p-4 sm:p-6 lg:p-8">
-      {/* Top Header */}
-      <div className="max-w-4xl mx-auto w-full pt-4 pb-6 text-center">
-        <div className="inline-flex items-center gap-2 bg-amber-100/90 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60 px-4 py-1.5 rounded-full text-xs font-semibold mb-3 shadow-xs">
-          <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          Platform Digital Rantai Pasok Kopi Terintegrasi & Terverifikasi
-        </div>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-900 dark:text-white tracking-tight">
-          Circular Coffee Trace
-        </h1>
-        <p className="mt-2 text-stone-600 dark:text-slate-400 text-xs sm:text-sm max-w-xl mx-auto">
-          Autentikasi terpusat untuk <strong className="text-emerald-700 dark:text-emerald-400">Petani</strong>,{' '}
-          <strong className="text-cyan-700 dark:text-cyan-400">Pengolah</strong>,{' '}
-          <strong className="text-indigo-700 dark:text-indigo-400">Gudang</strong>,{' '}
-          <strong className="text-amber-700 dark:text-amber-400">Roaster</strong>,{' '}
-          <strong className="text-stone-800 dark:text-stone-300">Kafe</strong>, dan{' '}
-          <strong className="text-purple-700 dark:text-purple-400">Dewan Verifikator Mutu</strong>.
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col lg:flex-row">
+      {/* ============================================================== */}
+      {/* COLUMN 1: WELCOME & INTERACTIVE COFFEE SLIDESHOW (LEFT)        */}
+      {/* ============================================================== */}
+      <div
+        className="relative lg:w-[54%] xl:w-[58%] min-h-[480px] sm:min-h-[540px] lg:min-h-screen bg-stone-950 flex flex-col justify-between overflow-hidden p-6 sm:p-10 lg:p-12 select-none"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {/* Background Images with smooth opacity crossfade */}
+        {COFFEE_SLIDES.map((slide, idx) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              idx === currentSlideIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'
+            } transform transition-transform duration-3000`}
+            style={{
+              backgroundImage: `url(${slide.imageUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
+        ))}
 
-      {/* Main Container Card */}
-      <div className="max-w-4xl mx-auto w-full mb-8">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-stone-200/80 dark:border-slate-800 overflow-hidden">
-          {/* Top Switcher Tabs */}
-          <div className="flex border-b border-stone-200 dark:border-slate-800 bg-stone-50 dark:bg-slate-950">
-            <button
-              onClick={() => setActiveTab('credentials')}
-              className={`flex-1 py-4 text-center text-xs sm:text-sm font-bold transition-all border-b-2 flex items-center justify-center gap-2 ${
-                activeTab === 'credentials'
-                  ? 'border-amber-600 text-amber-900 dark:text-amber-400 bg-white dark:bg-slate-900'
-                  : 'border-transparent text-stone-500 dark:text-slate-400 hover:text-stone-800'
-              }`}
-            >
-              <Lock className="w-4 h-4" />
-              <span>Masuk dengan Kredensial (Email & Password)</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('quick')}
-              className={`flex-1 py-4 text-center text-xs sm:text-sm font-bold transition-all border-b-2 flex items-center justify-center gap-2 ${
-                activeTab === 'quick'
-                  ? 'border-amber-600 text-amber-900 dark:text-amber-400 bg-white dark:bg-slate-900'
-                  : 'border-transparent text-stone-500 dark:text-slate-400 hover:text-stone-800'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Demo Cepat (Pilih Akun Terdaftar)</span>
-            </button>
+        {/* Ambient Dark/Warm Gradient Overlays for optimal readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-950/95 via-stone-950/50 to-stone-950/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-transparent to-stone-950/40" />
+
+        {/* Top Header / Branding */}
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 backdrop-blur-md border border-amber-400/40 flex items-center justify-center text-amber-400 shadow-md">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                <span>sangrAI</span>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500 text-stone-950 uppercase tracking-wider">
+                  Supply Chain
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-300">
+                Platform Rantai Pasok Kopi Terintegrasi Farm-to-Cup
+              </p>
+            </div>
           </div>
 
-          <div className="p-6 sm:p-8">
-            {/* TAB 1: FORM LOGIN RESMI KREDENSIAL */}
-            {activeTab === 'credentials' && (
-              <div className="max-w-md mx-auto space-y-6">
-                <div className="text-center space-y-1">
-                  <h2 className="text-xl font-bold text-stone-900 dark:text-white">
-                    Masuk ke Akun Anda
-                  </h2>
-                  <p className="text-xs text-stone-500 dark:text-slate-400">
-                    Gunakan email dan kata sandi yang telah terdaftar di sistem.
-                  </p>
-                </div>
+          <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-stone-200">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Multi-Stakeholder Architecture</span>
+          </div>
+        </div>
 
-                {loginError && (
-                  <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2 animate-shake">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{loginError}</span>
-                  </div>
+        {/* Center / Bottom: Narrative & Showcase Content for Current Slide */}
+        <div className="relative z-10 my-auto py-8 max-w-xl">
+          {/* Badge & Category */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 backdrop-blur-md border border-amber-400/40 text-amber-300 text-xs font-bold">
+              {activeSlide.icon}
+              <span>{activeSlide.badge}</span>
+            </span>
+            <span className="text-xs text-stone-400 font-medium">
+              {activeSlide.category}
+            </span>
+          </div>
+
+          {/* Slide Headline */}
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight tracking-tight mb-3">
+            {activeSlide.title}
+          </h2>
+
+          {/* Slide Description */}
+          <p className="text-stone-300 text-xs sm:text-sm leading-relaxed mb-4">
+            {activeSlide.description}
+          </p>
+
+          {/* Key Metric Pill */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-xs text-amber-200 font-semibold shadow-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{activeSlide.highlightStat}</span>
+          </div>
+        </div>
+
+        {/* Bottom Controls: Stakeholder Pills & Navigation */}
+        <div className="relative z-10 pt-4 border-t border-white/15 space-y-4">
+          {/* 4 Interactive Stakeholder Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            {COFFEE_SLIDES.map((slide, idx) => {
+              const isActive = idx === currentSlideIndex;
+              return (
+                <button
+                  key={slide.id}
+                  type="button"
+                  onClick={() => setCurrentSlideIndex(idx)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                    isActive
+                      ? 'bg-amber-500 text-stone-950 shadow-md scale-102'
+                      : 'bg-white/10 hover:bg-white/20 text-stone-300 border border-white/10'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  <span>{slide.roleTitle}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Slider Controls: Dots + Prev / Next */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              {COFFEE_SLIDES.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setCurrentSlideIndex(idx)}
+                  aria-label={`Buka slide ${idx + 1}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    idx === currentSlideIndex
+                      ? 'w-8 bg-amber-400'
+                      : 'w-2 bg-stone-600 hover:bg-stone-400'
+                  }`}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={prevSlide}
+                aria-label="Slide sebelumnya"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/25 border border-white/15 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={nextSlide}
+                aria-label="Slide berikutnya"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/25 border border-white/15 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* COLUMN 2: PURE LOGIN FORM (RIGHT)                              */}
+      {/* ============================================================== */}
+      <div className="lg:w-[46%] xl:w-[42%] flex flex-col justify-between p-6 sm:p-10 lg:p-14 bg-[#FAF7F2]">
+        {/* Top Link */}
+        <div className="flex items-center justify-between pb-6">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-amber-800 transition-colors"
+          >
+            <span>&larr; Kembali ke Marketplace Publik</span>
+          </Link>
+          <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+            Portal Kredensial
+          </span>
+        </div>
+
+        {/* Center: Main Login Form Card */}
+        <div className="my-auto max-w-md w-full mx-auto py-6">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300/80 text-xs font-bold mb-3 shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>Portal Akses Sistem</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
+              Masuk ke Akun Anda
+            </h1>
+            <p className="mt-2 text-xs sm:text-sm text-stone-600 leading-relaxed">
+              Silakan masukkan email dan kata sandi akun Anda untuk mengakses ruang kerja terisolasi sistem kopi terintegrasi.
+            </p>
+          </div>
+
+          {/* Error Banner */}
+          {loginError && (
+            <div className="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2.5 shadow-2xs">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleCredentialsSubmit} className="space-y-4.5">
+            {/* Input Email */}
+            <div>
+              <label
+                htmlFor="login-email"
+                className="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1.5"
+              >
+                Alamat Email Akun
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                <input
+                  id="login-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nama@organisasi.id"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-2xs"
+                />
+              </div>
+            </div>
+
+            {/* Input Password */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="login-password"
+                  className="block text-xs font-bold text-stone-800 uppercase tracking-wider"
+                >
+                  Kata Sandi
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotEmail(email);
+                    setForgotModalOpen(true);
+                  }}
+                  className="text-xs font-semibold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                >
+                  Lupa kata sandi?
+                </button>
+              </div>
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                <input
+                  id="login-password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Masukkan kata sandi akun..."
+                  className="w-full pl-10 pr-11 py-3 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-2xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Remember Me */}
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-stone-700">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded text-amber-600 focus:ring-amber-500 border-stone-300"
+                />
+                <span>Ingat akun saya di peramban ini</span>
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loginLoading}
+                className="w-full py-3.5 px-4 rounded-xl bg-stone-900 hover:bg-amber-700 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-75 cursor-pointer"
+              >
+                {loginLoading ? (
+                  <>
+                    <RotateCcw className="w-4 h-4 animate-spin" />
+                    <span>Memverifikasi Kredensial...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Masuk ke Sistem</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
                 )}
+              </button>
+            </div>
+          </form>
 
-                <form onSubmit={handleCredentialsSubmit} className="space-y-4">
-                  {/* Email input */}
-                  <div>
-                    <label className="block text-xs font-bold text-stone-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                      Alamat Email
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="contoh: jessica.qgrader@cuppinglab.id"
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password input */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-bold text-stone-700 dark:text-slate-300 uppercase tracking-wider">
-                        Kata Sandi
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setForgotEmail(email);
-                          setForgotModalOpen(true);
-                        }}
-                        className="text-xs font-semibold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
-                      >
-                        Lupa kata sandi?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Masukkan kata sandi akun..."
-                        className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-slate-200"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Remember Me Checkbox */}
-                  <div className="flex items-center justify-between pt-1">
-                    <label className="flex items-center gap-2 cursor-pointer text-xs text-stone-600 dark:text-slate-400">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="rounded text-amber-600 focus:ring-amber-500"
-                      />
-                      <span>Ingat email saya di peramban ini</span>
-                    </label>
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={loginLoading}
-                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-stone-900 to-stone-800 hover:from-amber-700 hover:to-amber-800 text-white font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
-                    >
-                      {loginLoading ? (
-                        <>
-                          <RotateCcw className="w-4 h-4 animate-spin" />
-                          <span>Memverifikasi Kredensial...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Masuk ke Dashboard</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-
-                {/* Helper hint for tester */}
-                <div className="p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-[11px] text-amber-900 dark:text-amber-300 space-y-1">
-                  <div className="font-bold flex items-center gap-1.5">
-                    <HelpCircle className="w-3.5 h-3.5" /> Kredensial Demo Cepat:
-                  </div>
-                  <p>
-                    Semua akun menggunakan kata sandi: <strong className="font-mono bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-amber-300">password123</strong>
-                  </p>
-                  <p className="text-stone-500 dark:text-slate-400">
-                    Contoh Verifikator Roastery: <code className="text-amber-800 dark:text-amber-400">jessica.qgrader@cuppinglab.id</code>
-                  </p>
-                </div>
+          {/* Supported Stakeholder Scope Card */}
+          <div className="mt-8 p-4 rounded-2xl bg-stone-100/80 border border-stone-200/80 text-[11px] text-stone-600 space-y-2">
+            <div className="font-bold text-stone-800 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Lingkup Pengguna Sistem Terdaftar:</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-1 text-stone-700 font-medium">
+              <div className="flex items-center gap-1.5">
+                <Sprout className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>1. Kelompok Tani</span>
               </div>
-            )}
-
-            {/* TAB 2: QUICK DEMO ROLE SWITCHER (ALL ROLES INCL. VERIFIKATOR) */}
-            {activeTab === 'quick' && (
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h2 className="text-xl font-bold text-stone-900 dark:text-white">
-                      Pilih Akun Demo Sesuai Rantai Pasok
-                    </h2>
-                    <p className="text-xs text-stone-500 dark:text-slate-400">
-                      Klik salah satu akun untuk langsung masuk atau mengisi kredensial secara otomatis.
-                    </p>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-xs text-stone-600 dark:text-slate-300 bg-stone-100 dark:bg-slate-800 px-3 py-1 rounded-full w-fit">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    Role-Based Access Control
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {(Object.keys(roleCardMeta) as UserRole[]).map((roleKey) => {
-                    const meta = roleCardMeta[roleKey];
-                    const roleUsers = users.filter((u) => u.role === roleKey);
-
-                    return (
-                      <div
-                        key={roleKey}
-                        className={`bg-stone-50/70 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 border-2 border-stone-200 dark:border-slate-800 ${meta.color} rounded-3xl p-5 transition-all flex flex-col justify-between shadow-xs`}
-                      >
-                        <div>
-                          <div className="flex items-start justify-between gap-2 mb-3">
-                            <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-700 shadow-xs border border-stone-200 dark:border-slate-600 flex items-center justify-center">
-                              {meta.icon}
-                            </div>
-                            <span
-                              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${meta.badgeColor}`}
-                            >
-                              {meta.tier}
-                            </span>
-                          </div>
-
-                          <h3 className="text-sm font-extrabold text-stone-900 dark:text-white">
-                            {meta.title}
-                          </h3>
-                          <p className="text-[11px] text-stone-500 dark:text-slate-400 leading-relaxed mt-1 mb-3">
-                            {meta.duty}
-                          </p>
-
-                          {/* Accounts List */}
-                          <div className="space-y-1.5 mb-3 max-h-48 overflow-y-auto pr-0.5">
-                            {roleUsers.map((u) => (
-                              <div
-                                key={u.id}
-                                className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700/80 flex items-center justify-between gap-2 text-xs hover:border-amber-400 transition-colors"
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <div className="font-bold text-stone-900 dark:text-white truncate">
-                                    {u.name}
-                                  </div>
-                                  <div className="text-[10px] text-stone-500 dark:text-slate-400 truncate">
-                                    {u.email || u.organization}
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => loginAsUser(u.id)}
-                                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-stone-900 dark:bg-slate-700 hover:bg-amber-700 text-white transition-colors shrink-0"
-                                >
-                                  Masuk
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="text-[10.5px] font-medium text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 rounded-xl p-2">
-                          <span className="font-bold block">Tugas Utama:</span>
-                          {meta.marketplaceAction}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+              <div className="flex items-center gap-1.5">
+                <Warehouse className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span>2. Gudang &amp; QA</span>
               </div>
-            )}
+              <div className="flex items-center gap-1.5">
+                <Flame className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                <span>3. Roaster (Roastery)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Coffee className="w-3.5 h-3.5 text-stone-700 shrink-0" />
+                <span>4. Coffee Shop (Kafe)</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-stone-500 pt-1 leading-relaxed border-t border-stone-200/60">
+              Hak akses dan dasbor kerja Anda akan otomatis disesuaikan dengan peran organisasi terverifikasi.
+            </p>
+
+            {/* Registered demo accounts helper */}
+            <div className="pt-2 border-t border-stone-200/60 text-[10px] space-y-1.5">
+              <span className="font-bold text-stone-700 block">Kredensial Akun Pengguna Terdaftar (Sandi: password123):</span>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 font-mono text-stone-600">
+                <button
+                  type="button"
+                  onClick={() => { setEmail('admin.gapoktan@sangrai.id'); setPassword('password123'); }}
+                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                  title="Klik untuk mengisi formulir login sebagai Admin Kelompok Tani"
+                >
+                  • Admin: admin.gapoktan@sangrai.id
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('reza@roaster.id'); setPassword('password123'); }}
+                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                  title="Klik untuk mengisi formulir login sebagai Roaster"
+                >
+                  • Roaster: reza@roaster.id
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('gudang.bandung@gudang.id'); setPassword('password123'); }}
+                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                  title="Klik untuk mengisi formulir login sebagai Gudang & QA"
+                >
+                  • Gudang: gudang.bandung@gudang.id
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('budi@pengolah.id'); setPassword('password123'); }}
+                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                  title="Klik untuk mengisi formulir login sebagai Stasiun Pengolah"
+                >
+                  • Pengolah: budi@pengolah.id
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('asep@petani.id'); setPassword('password123'); }}
+                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                  title="Klik untuk mengisi formulir login sebagai Petani"
+                >
+                  • Petani: asep@petani.id
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('maya@cafe.id'); setPassword('password123'); }}
+                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                  title="Klik untuk mengisi formulir login sebagai Coffee Shop"
+                >
+                  • Cafe: maya@cafe.id
+                </button>
+              </div>
+              <p className="text-[9px] text-stone-400 italic">Klik salah satu akun di atas untuk mengisi formulir, lalu klik Masuk ke Sistem.</p>
+            </div>
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="pt-6 border-t border-stone-200 text-center text-xs text-stone-500">
+          <p>&copy; 2026 sangrAI • Rantai Pasok Kopi Terintegrasi Farm-to-Cup</p>
         </div>
       </div>
 
-      {/* FORGOT PASSWORD MULTI-STEP MODAL */}
+      {/* ============================================================== */}
+      {/* FORGOT PASSWORD MODAL (MULTI-STEP OTP)                         */}
+      {/* ============================================================== */}
       {forgotModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
           onClick={closeForgotModal}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-stone-200 dark:border-slate-800 max-w-md w-full p-6 sm:p-8 space-y-6"
+            className="bg-white rounded-3xl shadow-2xl border border-stone-200 max-w-md w-full p-6 sm:p-8 space-y-6"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="text-center space-y-1">
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 flex items-center justify-center mx-auto mb-2 border border-amber-200">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-2 border border-amber-200">
                 <KeyRound className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-stone-900 dark:text-white">
+              <h3 className="text-lg font-bold text-stone-900">
                 Pemulihan Kata Sandi
               </h3>
-              <p className="text-xs text-stone-500 dark:text-slate-400">
+              <p className="text-xs text-stone-600">
                 {forgotStep === 'email' && 'Masukkan alamat email Anda untuk menerima kode verifikasi OTP.'}
                 {forgotStep === 'otp' && 'Masukkan 6-digit kode OTP yang telah dikirim ke email Anda.'}
                 {forgotStep === 'new_password' && 'Buat kata sandi baru yang kuat untuk akun Anda.'}
@@ -500,17 +656,17 @@ export const LoginPage: React.FC = () => {
 
             {/* Error Message */}
             {forgotError && (
-              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{forgotError}</span>
               </div>
             )}
 
-            {/* Simulated OTP Notification for Demo Ease */}
+            {/* Simulated OTP Notice */}
             {simulatedOtpNotice && (
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
                 <span>{simulatedOtpNotice}</span>
-                <span className="font-mono font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded border">
+                <span className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-emerald-300">
                   {forgotOtp}
                 </span>
               </div>
@@ -520,7 +676,7 @@ export const LoginPage: React.FC = () => {
             {forgotStep === 'email' && (
               <form onSubmit={handleRequestOtp} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
                     Email Akun Terdaftar
                   </label>
                   <div className="relative">
@@ -530,8 +686,8 @@ export const LoginPage: React.FC = () => {
                       required
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="contoh: jessica.qgrader@cuppinglab.id"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm text-stone-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+                      placeholder="contoh: akun@organisasi.id"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
@@ -540,13 +696,13 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={closeForgotModal}
-                    className="flex-1 py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 text-xs font-bold text-stone-600 dark:text-slate-300 hover:bg-stone-100"
+                    className="flex-1 py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-600 hover:bg-stone-100 cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>Kirim Kode OTP</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -559,7 +715,7 @@ export const LoginPage: React.FC = () => {
             {forgotStep === 'otp' && (
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
                     Kode 6-Digit OTP
                   </label>
                   <input
@@ -569,7 +725,7 @@ export const LoginPage: React.FC = () => {
                     value={forgotOtp}
                     onChange={(e) => setForgotOtp(e.target.value)}
                     placeholder="123456"
-                    className="w-full text-center tracking-widest text-lg font-mono font-bold py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-stone-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+                    className="w-full text-center tracking-widest text-lg font-mono font-bold py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
 
@@ -577,13 +733,13 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setForgotStep('email')}
-                    className="flex-1 py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 text-xs font-bold text-stone-600 dark:text-slate-300 hover:bg-stone-100"
+                    className="flex-1 py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-600 hover:bg-stone-100 cursor-pointer"
                   >
                     Kembali
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>Verifikasi Kode</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -596,7 +752,7 @@ export const LoginPage: React.FC = () => {
             {forgotStep === 'new_password' && (
               <form onSubmit={handleSetNewPassword} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
                     Kata Sandi Baru
                   </label>
                   <div className="relative">
@@ -607,12 +763,12 @@ export const LoginPage: React.FC = () => {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Minimal 6 karakter"
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm text-stone-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-amber-500"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 cursor-pointer"
                     >
                       {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -620,7 +776,7 @@ export const LoginPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
                     Konfirmasi Kata Sandi Baru
                   </label>
                   <input
@@ -630,14 +786,14 @@ export const LoginPage: React.FC = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Ulangi kata sandi baru"
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm text-stone-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
 
                 <div className="flex gap-2 pt-2">
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>Simpan Kata Sandi Baru</span>
                     <Check className="w-4 h-4" />
@@ -652,26 +808,21 @@ export const LoginPage: React.FC = () => {
                 <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <p className="text-xs text-stone-600 dark:text-slate-400">
-                  Kata sandi Anda telah berhasil diubah. Formulir masuk telah diisi dengan kredensial baru Anda.
+                <p className="text-xs text-stone-600">
+                  Kata sandi Anda telah berhasil diubah. Formulir masuk telah siap dengan kata sandi baru Anda.
                 </p>
                 <button
                   type="button"
                   onClick={closeForgotModal}
-                  className="w-full py-3 rounded-xl bg-stone-900 hover:bg-amber-700 text-white text-xs font-bold shadow-md transition-colors"
+                  className="w-full py-3 rounded-xl bg-stone-900 hover:bg-amber-700 text-white text-xs font-bold shadow-md transition-colors cursor-pointer"
                 >
-                  Kembali & Masuk Sekarang
+                  Masuk Sekarang
                 </button>
               </div>
             )}
           </div>
         </div>
       )}
-
-      {/* Footer */}
-      <footer className="text-center text-xs text-stone-500 dark:text-slate-500 pb-2">
-        <p>Circular Coffee Trace • End-to-End Traceability & Multi-Stage Quality Certification System</p>
-      </footer>
     </div>
   );
 };

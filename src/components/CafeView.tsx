@@ -492,17 +492,17 @@ export const CafeView: React.FC = () => {
           {viewMode === 'table' && (
             <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs min-w-[1000px]">
                   <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
                     <tr>
-                      <th className="py-3.5 px-4">Nama Biji Kopi</th>
-                      <th className="py-3.5 px-4">Penyangrai (Roaster)</th>
-                      <th className="py-3.5 px-4">Profil Sangrai</th>
-                      <th className="py-3.5 px-4">Skor SCA</th>
-                      <th className="py-3.5 px-4">Tasting Notes</th>
-                      <th className="py-3.5 px-4">Stok di Bar</th>
-                      <th className="py-3.5 px-4">HPP / Pack</th>
-                      <th className="py-3.5 px-4 text-right">Tindakan</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Nama Biji Kopi</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Penyangrai (Roaster)</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Profil Sangrai</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Skor SCA</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Tasting Notes</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Stok di Bar</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">HPP / Pack</th>
+                      <th className="py-3.5 px-4 text-right whitespace-nowrap">Tindakan</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
@@ -512,50 +512,50 @@ export const CafeView: React.FC = () => {
                         onClick={() => setSelectedItemDetail(item)}
                         className="hover:bg-amber-50/40 cursor-pointer transition-colors"
                       >
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           <div className="font-bold text-stone-900">{item.beanName}</div>
                           <div className="text-[11px] text-stone-500 font-mono">{item.id} • {item.variety}</div>
                         </td>
-                        <td className="py-3 px-4 font-medium text-stone-700">
+                        <td className="py-3 px-4 font-medium text-stone-700 whitespace-nowrap">
                           {item.roasterName}
                         </td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200 whitespace-nowrap shrink-0">
                             {item.roastLevel}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
-                          <span className="font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 inline-block whitespace-nowrap shrink-0">
                             {item.scaScore}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="flex flex-wrap gap-1 max-w-xs">
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="flex flex-nowrap items-center gap-1">
                             {item.tastingNotes.slice(0, 3).map((note, i) => (
-                              <span key={i} className="text-[10px] bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded">
+                              <span key={i} className="text-[10px] bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded whitespace-nowrap shrink-0">
                                 {note}
                               </span>
                             ))}
                           </div>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           <span className="font-bold text-stone-900">{item.packsInStock} pack</span>
                           <span className="text-stone-400 text-[11px]"> ({((item.packsInStock * item.packWeightGrams) / 1000).toFixed(1)} kg)</span>
                         </td>
-                        <td className="py-3 px-4 font-bold text-stone-900">
+                        <td className="py-3 px-4 font-bold text-stone-900 whitespace-nowrap">
                           Rp {item.costPerPack.toLocaleString()}
                         </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="inline-flex items-center gap-1">
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1 whitespace-nowrap shrink-0">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setCupBarcodeItem(item);
                               }}
-                              className="px-2 py-1 rounded-lg bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 text-[11px] font-bold transition-colors inline-flex items-center gap-1"
+                              className="px-2 py-1 rounded-lg bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 text-[11px] font-bold transition-colors inline-flex items-center gap-1 whitespace-nowrap shrink-0"
                             >
-                              <QrCode className="w-3 h-3" />
+                              <QrCode className="w-3 h-3 shrink-0" />
                               QR Gelas
                             </button>
                             <button
@@ -564,9 +564,9 @@ export const CafeView: React.FC = () => {
                                 e.stopPropagation();
                                 setTableCardItem(item);
                               }}
-                              className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1"
+                              className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-bold transition-colors inline-flex items-center gap-1 whitespace-nowrap shrink-0"
                             >
-                              <Printer className="w-3 h-3" />
+                              <Printer className="w-3 h-3 shrink-0" />
                               Kartu Meja
                             </button>
                           </div>

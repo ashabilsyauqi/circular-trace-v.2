@@ -490,17 +490,17 @@ export const InventoryModule: React.FC = () => {
                   {viewMode === 'table' && (
                     <div className="o_form_sheet overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="o_list_table">
+                        <table className="o_list_table min-w-[950px]">
                           <thead>
                             <tr>
-                              <th className="!pl-5">ID Stok</th>
-                              <th>Varietas & Petani</th>
-                              <th>Origin & Elevasi</th>
-                              <th>Brix Kemanisan</th>
-                              <th>Stok Tersedia (kg)</th>
-                              <th>HPP Modal (Rp/kg)</th>
-                              <th>Total Nilai Aset</th>
-                              <th className="!pr-5 text-right">Aksi</th>
+                              <th className="!pl-5 whitespace-nowrap">ID Stok</th>
+                              <th className="whitespace-nowrap">Varietas &amp; Petani</th>
+                              <th className="whitespace-nowrap">Origin &amp; Elevasi</th>
+                              <th className="whitespace-nowrap">Brix Kemanisan</th>
+                              <th className="whitespace-nowrap">Stok Tersedia (kg)</th>
+                              <th className="whitespace-nowrap">HPP Modal (Rp/kg)</th>
+                              <th className="whitespace-nowrap">Total Nilai Aset</th>
+                              <th className="!pr-5 text-right whitespace-nowrap">Aksi</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -509,30 +509,30 @@ export const InventoryModule: React.FC = () => {
                                 key={item.id}
                                 onClick={() => handleOpenDetailCherry(item)}
                               >
-                                <td className="!pl-5 font-mono font-bold text-slate-900">{item.id}</td>
-                                <td>
+                                <td className="!pl-5 font-mono font-bold text-slate-900 whitespace-nowrap">{item.id}</td>
+                                <td className="whitespace-nowrap">
                                   <div className="font-bold text-slate-900">{item.variety}</div>
                                   <div className="text-[10px] text-slate-400">Petani: {item.farmerName}</div>
                                 </td>
-                                <td>
+                                <td className="whitespace-nowrap">
                                   <div className="font-semibold text-slate-800">{item.origin}</div>
                                   <div className="text-[10px] text-slate-400">{item.altitude}</div>
                                 </td>
-                                <td>
-                                  <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-xs">
+                                <td className="whitespace-nowrap">
+                                  <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-xs inline-block whitespace-nowrap shrink-0">
                                     {item.brix}° Brix
                                   </span>
                                 </td>
-                                <td className="font-mono font-black text-slate-900 text-sm">
+                                <td className="font-mono font-black text-slate-900 text-sm whitespace-nowrap">
                                   {item.availableWeightKg} kg
                                 </td>
-                                <td className="text-slate-800 font-mono">
+                                <td className="text-slate-800 font-mono whitespace-nowrap">
                                   Rp {item.purchasePricePerKg.toLocaleString()}
                                 </td>
-                                <td className="font-mono font-bold text-slate-900">
+                                <td className="font-mono font-bold text-slate-900 whitespace-nowrap">
                                   Rp {(item.availableWeightKg * item.purchasePricePerKg).toLocaleString()}
                                 </td>
-                                <td className="!pr-5 text-right">
+                                <td className="!pr-5 text-right whitespace-nowrap">
                                   {item.availableWeightKg > 0 ? (
                                     <button
                                       type="button"
@@ -540,12 +540,12 @@ export const InventoryModule: React.FC = () => {
                                         e.stopPropagation();
                                         handleDirectStart7StageFromStock(item);
                                       }}
-                                      className="btn-odoo-primary !py-1 !px-2.5 !text-[11px] inline-flex items-center gap-1.5 ml-auto"
+                                      className="btn-odoo-primary !py-1 !px-2.5 !text-[11px] inline-flex items-center gap-1.5 ml-auto whitespace-nowrap shrink-0"
                                     >
-                                      <Flame className="w-3.5 h-3.5" /> Mulai Olah →
+                                      <Flame className="w-3.5 h-3.5 shrink-0" /> Mulai Olah →
                                     </button>
                                   ) : (
-                                    <span className="text-slate-400 text-[11px]">Habis</span>
+                                    <span className="text-slate-400 text-[11px] whitespace-nowrap shrink-0">Habis</span>
                                   )}
                                 </td>
                               </tr>
@@ -727,17 +727,17 @@ export const InventoryModule: React.FC = () => {
                   {viewMode === 'table' && (
                     <div className="o_form_sheet overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="o_list_table">
+                        <table className="o_list_table min-w-[1050px]">
                           <thead>
                             <tr>
-                              <th className="!pl-5">ID Green Bean</th>
-                              <th>Varietas & Metode Olah</th>
-                              <th>Petani & Origin</th>
-                              <th>Kadar Air & aW</th>
-                              <th>Stok Tersedia</th>
-                              <th>Grade & Eco</th>
-                              <th>Harga / kg</th>
-                              <th className="!pr-5 text-right">Tindakan</th>
+                              <th className="!pl-5 whitespace-nowrap">ID Green Bean</th>
+                              <th className="whitespace-nowrap">Varietas &amp; Metode Olah</th>
+                              <th className="whitespace-nowrap">Petani &amp; Origin</th>
+                              <th className="whitespace-nowrap">Kadar Air &amp; aW</th>
+                              <th className="whitespace-nowrap">Stok Tersedia</th>
+                              <th className="whitespace-nowrap">Grade &amp; Eco</th>
+                              <th className="whitespace-nowrap">Harga / kg</th>
+                              <th className="!pr-5 text-right whitespace-nowrap">Tindakan</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -746,42 +746,42 @@ export const InventoryModule: React.FC = () => {
                                 key={gb.id}
                                 onClick={() => setDetailGreenBeanLot(gb)}
                               >
-                                <td className="!pl-5 font-mono font-bold text-slate-900">{gb.id}</td>
-                                <td>
+                                <td className="!pl-5 font-mono font-bold text-slate-900 whitespace-nowrap">{gb.id}</td>
+                                <td className="whitespace-nowrap">
                                   <div className="font-bold text-slate-900">{gb.variety}</div>
-                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                                  <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 whitespace-nowrap shrink-0">
                                     {gb.processMethod}
                                   </span>
                                 </td>
-                                <td>
+                                <td className="whitespace-nowrap">
                                   <div className="font-medium text-slate-800">{gb.sourceFarmerName}</div>
                                   <div className="text-[11px] text-slate-400">{gb.sourceOrigin}</div>
                                 </td>
-                                <td>
+                                <td className="whitespace-nowrap">
                                   <div className="font-bold text-slate-900">{gb.moistureContentPercent}%</div>
                                   <div className="text-[11px] text-slate-500">{gb.waterActivityAw} aW</div>
                                 </td>
-                                <td className="font-mono font-bold text-slate-900">
+                                <td className="font-mono font-bold text-slate-900 whitespace-nowrap">
                                   {gb.availableWeightKg} / {gb.greenBeanWeightKg} kg
                                 </td>
-                                <td>
+                                <td className="whitespace-nowrap">
                                   <div className="font-bold text-slate-900">{gb.grade}</div>
                                   <div className="text-[11px] text-teal-700 font-semibold">Zero Waste Eco</div>
                                 </td>
-                                <td className="font-mono font-bold text-slate-900">
+                                <td className="font-mono font-bold text-slate-900 whitespace-nowrap">
                                   Rp {gb.pricePerKg.toLocaleString()}
                                 </td>
-                                <td className="!pr-5 text-right">
-                                  <div className="flex items-center justify-end gap-1.5">
+                                <td className="!pr-5 text-right whitespace-nowrap">
+                                  <div className="flex items-center justify-end gap-1.5 whitespace-nowrap shrink-0">
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setSelectedLotForBarcode(gb);
                                         setBarcodeModalOpen(true);
                                       }}
-                                      className="btn-odoo-secondary !py-1 !px-2.5 !text-[11px] inline-flex items-center gap-1"
+                                      className="btn-odoo-secondary !py-1 !px-2.5 !text-[11px] inline-flex items-center gap-1 whitespace-nowrap shrink-0"
                                     >
-                                      <Printer className="w-3 h-3" /> Barcode
+                                      <Printer className="w-3 h-3 shrink-0" /> Barcode
                                     </button>
                                   </div>
                                 </td>

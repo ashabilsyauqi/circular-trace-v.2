@@ -376,10 +376,14 @@ export const ProductDetailPage: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row items-center gap-5">
               {miniQrUrl && (
-                <div className="p-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl shrink-0 text-center shadow-2xs">
-                  <img src={miniQrUrl} alt="QR Code Lot" className="w-28 h-28 mx-auto rounded-lg" />
-                  <span className="text-[10px] font-mono text-stone-500 dark:text-stone-400 block mt-1.5 font-bold">
-                    Scan via Kamera HP
+                <div
+                  onClick={() => navigate({ view: 'scan', lotId: item.id })}
+                  className="p-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl shrink-0 text-center shadow-2xs cursor-pointer hover:border-[#00AA5B] hover:shadow-md transition-all group"
+                  title="Klik untuk buka paspor digital silsilah langsung"
+                >
+                  <img src={miniQrUrl} alt="QR Code Lot" className="w-28 h-28 mx-auto rounded-lg group-hover:scale-105 transition-transform" />
+                  <span className="text-[10px] font-mono text-stone-500 dark:text-stone-400 block mt-1.5 font-bold group-hover:text-[#00AA5B] transition-colors">
+                    Scan / Klik Buka Paspor
                   </span>
                 </div>
               )}

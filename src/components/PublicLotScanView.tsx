@@ -41,7 +41,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
   lotId,
   onContinue,
 }) => {
-  const { farmerLots, processedLots, warehouseLots, cafeInventory, navigate } = useCoffee();
+  const { farmerLots, processedLots, warehouseLots, roastedLots, cafeInventory, navigate } = useCoffee();
   const [activeLotId, setActiveLotId] = useState<string>(lotId || 'LOT-PTN-001');
   const [searchInput, setSearchInput] = useState<string>('');
   const [activeEcoTab, setActiveEcoTab] = useState<'overview' | 'scientific' | 'material' | 'compliance'>('overview');
@@ -59,38 +59,62 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
     }
   };
 
+  const targetId = (activeLotId || lotId || 'GB-MLB-001').trim();
+  const targetIdUpper = targetId.toUpperCase();
+  const paramId = (lotId || '').trim();
+
   // 1. Check if the scanned ID is a Cafe cup item
   const cafeItem = cafeInventory.find(
     (c) =>
-      c.id.toLowerCase() === lotId.toLowerCase() ||
-      c.sourceRoastedBeanId.toLowerCase() === lotId.toLowerCase()
+      (c?.id && targetId && c.id.toLowerCase() === targetId.toLowerCase()) ||
+      (c?.sourceRoastedBeanId && targetId && c.sourceRoastedBeanId.toLowerCase() === targetId.toLowerCase()) ||
+      (c?.id && paramId && c.id.toLowerCase() === paramId.toLowerCase()) ||
+      (c?.sourceRoastedBeanId && paramId && c.sourceRoastedBeanId.toLowerCase() === paramId.toLowerCase())
+  );
+
+  // 1b. Check if matched roasted lot
+  const matchedRoastedLot = roastedLots?.find(
+    (r) =>
+      (r?.id && targetId && r.id.toLowerCase() === targetId.toLowerCase()) ||
+      (r?.id && paramId && r.id.toLowerCase() === paramId.toLowerCase())
   );
 
   // 2. Check if the scanned ID is a warehouse lot
   const warehouseLot = warehouseLots.find(
-    (w) => w.id.toLowerCase() === activeLotId.toLowerCase()
+    (w) =>
+      (w?.id && targetId && w.id.toLowerCase() === targetId.toLowerCase()) ||
+      (w?.id && paramId && w.id.toLowerCase() === paramId.toLowerCase()) ||
+      (matchedRoastedLot?.sourceWarehouseLotId && w?.id && w.id.toLowerCase() === matchedRoastedLot.sourceWarehouseLotId.toLowerCase())
   );
 
   // 3. Check if the scanned ID is a processed green bean lot
   const processedLot = processedLots.find(
-    (p) => p.id.toLowerCase() === activeLotId.toLowerCase()
+    (p) =>
+      (p?.id && targetId && p.id.toLowerCase() === targetId.toLowerCase()) ||
+      (p?.id && paramId && p.id.toLowerCase() === paramId.toLowerCase()) ||
+      (warehouseLot?.sourceGreenBeanId && p?.id && p.id.toLowerCase() === warehouseLot.sourceGreenBeanId.toLowerCase())
   );
 
   // 4. Check if the scanned ID is a farmer harvest lot
   const farmerLot = farmerLots.find(
-    (l) => l.id.toLowerCase() === activeLotId.toLowerCase()
+    (l) =>
+      (l?.id && targetId && l.id.toLowerCase() === targetId.toLowerCase()) ||
+      (l?.id && paramId && l.id.toLowerCase() === paramId.toLowerCase()) ||
+      (processedLot?.sourceFarmerLotId && l?.id && l.id.toLowerCase() === processedLot.sourceFarmerLotId.toLowerCase())
   );
 
   const isCafeCup =
     Boolean(cafeItem) ||
-    lotId.toUpperCase().startsWith('CAFE-') ||
-    lotId.toUpperCase().startsWith('CUP-');
+    Boolean(matchedRoastedLot) ||
+    targetIdUpper.startsWith('RST-') ||
+    targetIdUpper.startsWith('CAFE-') ||
+    targetIdUpper.startsWith('CUP-');
   const isWarehouse =
-    !isCafeCup && (Boolean(warehouseLot) || activeLotId.toUpperCase().startsWith('WH-'));
+    !isCafeCup && (Boolean(warehouseLot) || targetIdUpper.startsWith('WH-'));
   const isProcessed =
     !isCafeCup &&
     !isWarehouse &&
-    (Boolean(processedLot) || lotId.toUpperCase().startsWith('GB-'));
+    (Boolean(processedLot) || targetIdUpper.startsWith('GB-') || targetIdUpper.startsWith('PROC-'));
 
   // Fallback data for Cafe cup item
   const currentCafeItem: CafeInventoryItem = cafeItem || {
@@ -649,7 +673,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
               type="button"
               onClick={() => handleSelectLot(sample.id)}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                activeLotId.toLowerCase() === sample.id.toLowerCase()
+                (activeLotId || '').toLowerCase() === (sample.id || '').toLowerCase()
                   ? 'bg-emerald-600 text-white shadow-2xs font-bold'
                   : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
               }`}
@@ -1323,7 +1347,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                     Karakter Rasa Awal (Cupping Notes Pengolah):
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {currentProcessedLot.cuppingNotes.map((note, idx) => (
+                    {(currentProcessedLot.cuppingNotes || []).map((note, idx) => (
                       <span
                         key={idx}
                         className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white text-stone-800 border border-amber-200 shadow-2xs"

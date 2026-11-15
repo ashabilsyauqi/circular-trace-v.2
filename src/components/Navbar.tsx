@@ -47,7 +47,7 @@ export const Navbar: React.FC = () => {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-black tracking-tight text-base sm:text-lg text-stone-900 truncate">
-                  sangrAI
+                  CircularCoffee
                 </span>
                 <span className="hidden sm:inline-flex text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-stone-950 shadow-2xs shrink-0">
                   Circular Trace

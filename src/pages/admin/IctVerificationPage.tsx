@@ -171,15 +171,15 @@ export const IctVerificationPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-stone-900 tracking-tight">
-                Pusat Audit &amp; Verifikasi ICT Kelompok Tani
+                Pusat Audit &amp; Verifikasi ICS (Internal Control System)
               </h1>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-900 border border-blue-300">
                 <BadgeCheck className="w-3.5 h-3.5 text-blue-700" />
-                <span>Petugas ICT</span>
+                <span>Petugas ICS</span>
               </span>
             </div>
             <p className="text-xs text-stone-500 mt-0.5">
-              Tanggung jawab Tim ICT: Verifikasi keabsahan identitas petani, validasi koordinat GPS &amp; batas patok kebun (EUDR), serta uji mutu kadar brix panen ceri segar.
+              Tanggung jawab Petugas ICS: Verifikasi keabsahan identitas petani, validasi koordinat GPS &amp; batas patok kebun (EUDR), serta inspeksi mutu kadar brix panen ceri segar.
             </p>
           </div>
         </div>
@@ -213,14 +213,14 @@ export const IctVerificationPage: React.FC = () => {
 
           <div className="text-right hidden sm:block">
             <div className="text-xs font-bold text-stone-800">
-              {currentUser?.name || 'Petugas ICT'}
+              {currentUser?.name || 'Petugas ICS'}
             </div>
             <div className="text-[11px] text-stone-500">
               {currentUser?.organization || 'Kelompok Tani Kopi Mandiri'}
             </div>
           </div>
           <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center border border-blue-200">
-            ICT
+            ICS
           </div>
         </div>
       </div>
@@ -1189,9 +1189,9 @@ export const IctVerificationPage: React.FC = () => {
               <div className="bg-stone-50 rounded-lg p-3 text-[11px] text-stone-600 border border-stone-200 space-y-1">
                 <div className="font-bold text-stone-800 flex items-center gap-1">
                   <Info className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Informasi Auditor ICT</span>
+                  <span>Informasi Auditor ICS</span>
                 </div>
-                <div>Auditor: <strong>{currentUser?.name || 'Petugas ICT'}</strong></div>
+                <div>Auditor: <strong>{currentUser?.name || 'Petugas ICS'}</strong></div>
                 <div>Status yang akan diterapkan: <strong className={actionModal.type === 'verify' ? 'text-emerald-700' : 'text-red-700'}>
                   {actionModal.type === 'verify' ? 'Terverifikasi (Verified)' : 'Ditolak / Revisi (Rejected)'}
                 </strong></div>

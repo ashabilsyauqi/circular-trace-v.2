@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCoffee } from '../context/CoffeeContext';
 import {
   Sprout,
@@ -43,7 +43,13 @@ import {
   Sliders,
   AlertCircle,
   Users,
+  Camera,
+  Upload,
 } from 'lucide-react';
+import {
+  DEFAULT_FARM_PHOTO_URL,
+  COFFEE_FARM_PHOTO_PRESETS,
+} from '../data/mockData';
 import { FarmerHarvestLot, CoffeeFarm, FarmWeatherData, FarmPatok } from '../types/coffee';
 import { FarmerBarcodeModal } from './FarmerBarcodeModal';
 import { MetricCard } from './admin/MetricCard';
@@ -137,11 +143,27 @@ export const FarmerView: React.FC = () => {
   const [newFarmLatitude, setNewFarmLatitude] = useState<number>(-7.1724);
   const [newFarmLongitude, setNewFarmLongitude] = useState<number>(107.5681);
   const [newFarmEstYear, setNewFarmEstYear] = useState<number>(2016);
-  const [newFarmPhotoUrl, setNewFarmPhotoUrl] = useState(
-    'https://images.unsplash.com/photo-1524350876685-274059332603?w=800&auto=format&fit=crop&q=80'
-  );
+  const [newFarmPhotoUrl, setNewFarmPhotoUrl] = useState(DEFAULT_FARM_PHOTO_URL);
   const [newFarmNotes, setNewFarmNotes] = useState('');
   const [newFarmPatoks, setNewFarmPatoks] = useState<FarmPatok[]>([]);
+  const farmFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleNewFarmPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        alert('Ukuran file foto maksimal 8 MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setNewFarmPhotoUrl(reader.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // New Farm Weather State
   const [newFarmWeatherCondition, setNewFarmWeatherCondition] = useState<FarmWeatherData['currentCondition']>(
@@ -407,7 +429,7 @@ export const FarmerView: React.FC = () => {
       notes: notes || `Hasil panen ceri merah matang pohon dari ${selectedFarm?.farmName || farmLocation}.`,
       photoUrl:
         selectedFarm?.photoUrl ||
-        'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1663125365404-e274869480f6?w=800&auto=format&fit=crop&q=80',
     });
 
     setSuccessMessage(`Berhasil mendaftarkan Lot Panen Baru (${totalWeightKg} kg)! Lembar kerja dan barcode telah dibuat.`);
@@ -2995,6 +3017,109 @@ export const FarmerView: React.FC = () => {
                       onChange={(e) => setNewFarmLongitude(Number(e.target.value))}
                       className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm font-mono bg-white"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 4: FOTO DOKUMENTASI LANSKAP KEBUN KOPI */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900 flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-emerald-600" />
+                    4. Foto Lanskap Kebun Kopi &amp; Dokumentasi Lapangan
+                  </h4>
+                  <span className="text-[10px] text-stone-500">Maks. 8 MB (JPG, PNG, WebP)</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                  {/* Live Preview */}
+                  <div className="md:col-span-5 space-y-1.5">
+                    <div className="relative h-36 rounded-xl overflow-hidden border border-stone-300 shadow-xs bg-stone-100">
+                      <img
+                        src={newFarmPhotoUrl || DEFAULT_FARM_PHOTO_URL}
+                        alt="Preview Kebun"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                      <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white">
+                        <span className="font-bold text-xs block truncate drop-shadow-xs">
+                          {newFarmName || 'Kebun Kopi Baru'}
+                        </span>
+                        <span className="text-[10px] text-emerald-200 block drop-shadow-xs">
+                          {newFarmAltitudeDisplay} • {newFarmAreaHa} Ha
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions & Presets */}
+                  <div className="md:col-span-7 space-y-3">
+                    <input
+                      ref={farmFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleNewFarmPhotoUpload}
+                      className="hidden"
+                    />
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => farmFileInputRef.current?.click()}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Foto dari HP / Komputer</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setNewFarmPhotoUrl(DEFAULT_FARM_PHOTO_URL)}
+                        className="px-3 py-2 rounded-xl border border-stone-300 hover:bg-stone-100 text-stone-700 font-semibold text-xs cursor-pointer"
+                      >
+                        Reset Default
+                      </button>
+                    </div>
+
+                    {/* Presets */}
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-emerald-600" />
+                        Pilihan Cepat Foto Lanskap Kebun Kopi
+                      </span>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {COFFEE_FARM_PHOTO_PRESETS.slice(0, 4).map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setNewFarmPhotoUrl(p.url)}
+                            className={`relative h-14 rounded-lg overflow-hidden border-2 text-left cursor-pointer transition-all ${
+                              newFarmPhotoUrl === p.url
+                                ? 'border-emerald-600 ring-2 ring-emerald-400'
+                                : 'border-stone-200 hover:border-emerald-400'
+                            }`}
+                            title={p.title}
+                          >
+                            <img src={p.url} alt={p.title} className="w-full h-full object-cover" />
+                            {newFarmPhotoUrl === p.url && (
+                              <span className="absolute top-0.5 right-0.5 p-0.5 bg-emerald-600 text-white rounded-full">
+                                <Check className="w-2.5 h-2.5" />
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <input
+                        type="url"
+                        value={newFarmPhotoUrl}
+                        onChange={(e) => setNewFarmPhotoUrl(e.target.value)}
+                        placeholder="Atau tautan URL foto kebun..."
+                        className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-mono text-stone-900 bg-white"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

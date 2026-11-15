@@ -978,7 +978,7 @@ export const BukuTransaksiPage: React.FC = () => {
               <div className="border-b-2 border-stone-900 pb-4 flex justify-between items-start">
                 <div>
                   <h2 className="text-xl font-black tracking-tight text-stone-950 uppercase">
-                    sangrAI CircularTrace • Ekosistem Kopi
+                    CircularCoffee • Ekosistem Kopi
                   </h2>
                   <p className="text-xs text-stone-600 mt-0.5">
                     Laporan Rekapitulasi Perdagangan &amp; Penjualan Marketplace Terpadu

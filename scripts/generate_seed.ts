@@ -31,7 +31,7 @@ function esc(val: any): string {
 
 const lines: string[] = [
   '-- ==============================================================================',
-  '-- Circular Coffee Trace (sangrAI) - Initial Seed Data',
+  '-- Circular Coffee Trace (CircularCoffee) - Initial Seed Data',
   '-- Populates relational tables with realistic specialty coffee supply chain data',
   '-- ==============================================================================',
   '',

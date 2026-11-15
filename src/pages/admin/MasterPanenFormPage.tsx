@@ -117,7 +117,7 @@ export const MasterPanenFormPage: React.FC = () => {
         }).`,
       photoUrl:
         selectedFarm?.photoUrl ||
-        'https://images.unsplash.com/photo-1524350876685-274059332603?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1663125365404-e274869480f6?w=800&auto=format&fit=crop&q=80',
     });
 
     navigate('/admin/panen');

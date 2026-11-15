@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Circular Coffee Trace (sangrAI) - Database Schema DDL
+-- Circular Coffee Trace (CircularCoffee) - Database Schema DDL
 -- Target Engine: MySQL 8.0+ / MariaDB 10.5+ (cPanel Compatible)
 -- Charset: utf8mb4 / Collation: utf8mb4_unicode_ci
 -- ==============================================================================

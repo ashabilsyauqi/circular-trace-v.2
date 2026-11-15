@@ -1,5 +1,5 @@
 /**
- * Circular Coffee Trace (sangrAI)
+ * Circular Coffee Trace (CircularCoffee)
  * Central API Service Layer for MySQL Database Integration
  */
 

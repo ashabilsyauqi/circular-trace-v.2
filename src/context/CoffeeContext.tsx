@@ -415,13 +415,19 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const [users, setUsers] = useState<AppUser[]>(() => {
+    let deletedIds: string[] = [];
+    try {
+      deletedIds = JSON.parse(localStorage.getItem('cct_deleted_user_ids') || '[]');
+    } catch (_) {}
+
     const saved = localStorage.getItem('cct_users');
     if (saved) {
       try {
         const parsed: AppUser[] = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const merged = [...parsed];
+          const merged = [...parsed.filter((u) => !deletedIds.includes(u.id))];
           MOCK_USERS.forEach((mockUser) => {
+            if (deletedIds.includes(mockUser.id)) return;
             const idx = merged.findIndex((u) => u.id === mockUser.id);
             if (idx >= 0) {
               merged[idx] = {
@@ -441,7 +447,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.error('Failed to parse cct_users', e);
       }
     }
-    return MOCK_USERS;
+    return MOCK_USERS.filter((u) => !deletedIds.includes(u.id));
   });
 
   const navigate = useNavigate();
@@ -502,6 +508,11 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       localStorage.setItem('cct_users', JSON.stringify(updated));
       return updated;
     });
+    try {
+      const deletedIds: string[] = JSON.parse(localStorage.getItem('cct_deleted_user_ids') || '[]');
+      const filtered = deletedIds.filter((id) => id !== newUser.id);
+      localStorage.setItem('cct_deleted_user_ids', JSON.stringify(filtered));
+    } catch (_) {}
     return newUser;
   };
 
@@ -515,6 +526,16 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const deleteUser = (id: string) => {
+    try {
+      const deletedIds: string[] = JSON.parse(localStorage.getItem('cct_deleted_user_ids') || '[]');
+      if (!deletedIds.includes(id)) {
+        deletedIds.push(id);
+        localStorage.setItem('cct_deleted_user_ids', JSON.stringify(deletedIds));
+      }
+    } catch (e) {
+      console.error('Failed to update cct_deleted_user_ids', e);
+    }
+
     setUsers((prev) => {
       const updated = prev.filter((u) => u.id !== id);
       localStorage.setItem('cct_users', JSON.stringify(updated));
@@ -995,6 +1016,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     if (!matched) {
       if (
+        cleanEmail === 'admin@circularcoffee.id' ||
         cleanEmail === 'admin@circulartrace.id' ||
         cleanEmail === 'admin@sangrai.id' ||
         cleanEmail === 'admin' ||
@@ -1186,8 +1208,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       title: params.title,
       certificateNumber: certNumber,
       verifierId: currentUser?.id || 'user-ict-1',
-      verifierName: currentUser?.name || 'Petugas ICT Kelompok Tani',
-      verifierTitle: currentUser?.organization || 'Unit ICT & Verifikasi Mutu',
+      verifierName: currentUser?.name || 'Petugas ICS Kelompok Tani',
+      verifierTitle: currentUser?.organization || 'Unit ICS & Verifikasi Mutu',
       verifierOrg: currentUser?.organization || 'Gapoktan Kopi Mandiri Nusantara',
       verifiedAt: new Date().toISOString().split('T')[0],
       status: 'verified',
@@ -1274,10 +1296,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id: `TX-AUDIT-${Date.now().toString().slice(-4)}`,
       date: new Date().toISOString().split('T')[0],
       fromRole: 'ict',
-      fromName: currentUser?.name || 'Petugas ICT',
+      fromName: currentUser?.name || 'Petugas ICS',
       toRole: (params.targetType === 'farmer' ? 'petani' : params.targetType === 'harvest' ? 'petani' : params.targetType === 'processed' ? 'pengolah' : 'gudang') as UserRole,
       toName: `Verifikasi ${params.targetId}`,
-      itemName: `Stempel ICT: ${params.title} (${certNumber})`,
+      itemName: `Stempel ICS: ${params.title} (${certNumber})`,
       quantity: '1 Sertifikat',
       totalAmount: 0,
       status: 'Selesai',
@@ -1750,7 +1772,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           weightKgOrLiters: Math.round(boughtKg * 0.45),
           recipientOrLocation: 'Kelompok Tani Lestari & Rumah Olah Kompos',
           processingMethod: 'Solar Dryer Raised Bed & Kompos Aerobik 30 Hari',
-          ecoCertificate: 'sangrAI Zero-Waste Circular Standard',
+          ecoCertificate: 'CircularCoffee Zero-Waste Circular Standard',
           notes: 'Pulp ceri dialokasikan untuk teh cascara dan pupuk organik.',
         };
         const ratingCalc = calculateProcessorEcoRating(rawWaste, boughtKg, processData.greenBeanWeightKg);
@@ -1933,7 +1955,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       weightKgOrLiters: Math.round(boughtKg * 0.45),
       recipientOrLocation: 'Kelompok Tani Petani Asal & Rumah Kompos Organik',
       processingMethod: 'Solar Dryer Raised Bed (Food Grade) & Kompos Aerobik 30 Hari',
-      ecoCertificate: 'sangrAI Zero-Waste Circular Standard',
+      ecoCertificate: 'CircularCoffee Zero-Waste Circular Standard',
       notes: 'Kulit ceri disortir higienis untuk teh cascara dan ampas dikomposkan.',
     };
 

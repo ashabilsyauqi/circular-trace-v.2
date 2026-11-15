@@ -282,7 +282,7 @@ export const LoginPage: React.FC = () => {
             </div>
             <div>
               <div className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-                <span>sangrAI</span>
+                <span>CircularCoffee</span>
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500 text-stone-950 uppercase tracking-wider">
                   Supply Chain
                 </span>
@@ -656,7 +656,7 @@ export const LoginPage: React.FC = () => {
 
         {/* Footer */}
         <div className="pt-6 border-t border-stone-200 text-center text-xs text-stone-500">
-          <p>&copy; 2026 sangrAI • Rantai Pasok Kopi Terintegrasi Farm-to-Cup</p>
+          <p>&copy; 2026 CircularCoffee • Rantai Pasok Kopi Terintegrasi Farm-to-Cup</p>
         </div>
       </div>
 

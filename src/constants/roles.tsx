@@ -18,6 +18,14 @@ export const ACTIVE_OPERATIONAL_SERVICES: OperationalService[] = [
   'cafe',
 ];
 
+export const KELOMPOK_TANI_SERVICES = [
+  'petani',
+  'pengolah',
+  'ict',
+] as const;
+
+export type KelompokTaniService = (typeof KELOMPOK_TANI_SERVICES)[number];
+
 export const ROLE_DETAILS: Record<
   UserRole,
   { label: string; badgeClass: string; icon: React.ReactNode; description: string }
@@ -26,19 +34,19 @@ export const ROLE_DETAILS: Record<
     label: 'Admin Kelompok Tani',
     badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
     icon: <Building2 className="w-4 h-4 text-amber-700" />,
-    description: 'Control Tower pengelola ekosistem terpadu 5 layanan & penugasan akun anggota',
+    description: 'Control Tower pengelola ekosistem terpadu 3 layanan (Petani, Pengolah, Petugas ICS) & penugasan akun',
   },
   petani: {
     label: 'Petani Kopi',
     badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
     icon: <Sprout className="w-4 h-4 text-emerald-600" />,
-    description: 'Upload hasil panen cherry & jual ke Pengolah',
+    description: 'Pencatatan kebun, panen ceri matang, & jual eksklusif ke Pengolah',
   },
   pengolah: {
     label: 'Pengolah (Mill Station)',
     badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
     icon: <Cog className="w-4 h-4 text-amber-600" />,
-    description: 'Beli cherry, olah jadi Green Bean, & jual ke Gudang',
+    description: 'Beli ceri petani, olah jadi Green Bean 7 metode, & pasarkan global',
   },
   gudang: {
     label: 'Gudang (Warehouse QA)',
@@ -62,12 +70,12 @@ export const ROLE_DETAILS: Record<
     label: 'Verifikator & Auditor Mutu',
     badgeClass: 'bg-emerald-100 text-emerald-900 border-emerald-300',
     icon: <ShieldCheck className="w-4 h-4 text-emerald-600" />,
-    description: 'Auditor Mutu & Verifikator: Audit CT-4CI, sertifikasi kebun, uji brix ceri, cupping, & audit EUDR',
+    description: 'Auditor Mutu Eksternal: Audit CT-4CI, sertifikasi kebun, uji brix ceri, cupping, & audit EUDR',
   },
   ict: {
-    label: 'Petugas ICT (Verifikator)',
+    label: 'Petugas ICS (Internal Control System)',
     badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
     icon: <ShieldCheck className="w-4 h-4 text-blue-600" />,
-    description: 'Tim ICT Kelompok Tani: Verifikasi data petani, peta lahan kebun EUDR, & hasil panen ceri',
+    description: 'Petugas ICS Kelompok Tani: Verifikasi data NIK/KTA petani, peta poligon EUDR kebun, & inspeksi mutu ceri',
   },
 };

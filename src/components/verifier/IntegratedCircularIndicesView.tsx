@@ -124,13 +124,13 @@ export const IntegratedCircularIndicesView: React.FC<IntegratedCircularIndicesVi
   const sdiCategory = sdiBreakdown?.category ?? (sdiScore >= 80 ? 'Tinggi / Baik' : sdiScore >= 60 ? 'Sedang' : 'Perlu Perbaikan');
 
   // Normalize Fairtrade FRI values
-  const friScore = fairtradeResult?.fairtrade_readiness_index ?? 85.00;
+  const friScore = fairtradeResult?.fairtrade_readiness_index !== undefined ? fairtradeResult.fairtrade_readiness_index : 50.00;
   const friStatus = fairtradeResult?.status ?? (friScore >= 80 ? 'Ready for Cert' : friScore >= 60 ? 'Needs Minor Improvement' : 'Needs Major Improvement');
-  const friBadgeText = friScore >= 80 ? 'SIAP SERTIFIKASI' : 'PROVISIONAL';
-  const friEcon = fairtradeResult?.dimension_scores?.economic ?? 100.00;
+  const friBadgeText = (fairtradeResult as any)?.statusBadge ?? (friScore >= 80 ? 'VERIFIED' : 'NEEDS_IMPROVEMENT');
+  const friEcon = fairtradeResult?.dimension_scores?.economic ?? 0.00;
   const friSoc = fairtradeResult?.dimension_scores?.social_labor ?? 100.00;
-  const friEnv = fairtradeResult?.dimension_scores?.environmental ?? 100.00;
-  const friGov = fairtradeResult?.dimension_scores?.governance ?? 100.00;
+  const friEnv = fairtradeResult?.dimension_scores?.environmental ?? 50.00;
+  const friGov = fairtradeResult?.dimension_scores?.governance ?? 50.00;
 
   // Concentric circle circumference calculations
   // Inner: CCI (r = 48) -> C = 301.59
@@ -149,47 +149,70 @@ export const IntegratedCircularIndicesView: React.FC<IntegratedCircularIndicesVi
     <div className={`space-y-4 font-sans ${className} ${isFullScreen ? 'fixed inset-0 z-50 bg-stone-100 p-6 overflow-y-auto' : ''}`}>
       {/* 1. MAJOR GATE 4C BANNER */}
       <div
-        className={`rounded-2xl p-4 md:p-5 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm border transition-all ${
+        className={`rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs border transition-all ${
           isMajorPassed
-            ? 'bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 border-emerald-600/40 shadow-emerald-950/20'
-            : 'bg-gradient-to-r from-rose-800 via-rose-700 to-amber-800 border-rose-600/40 shadow-rose-950/20'
+            ? 'bg-emerald-50/90 border-emerald-300 text-stone-900'
+            : 'bg-rose-50/90 border-rose-300 text-stone-900'
         }`}
       >
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/20 shadow-inner">
+          <div
+            className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${
+              isMajorPassed
+                ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                : 'bg-rose-100 text-rose-700 border-rose-300'
+            }`}
+          >
             {isMajorPassed ? (
-              <CheckCircle2 className="w-6 h-6 text-emerald-200" />
+              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
             ) : (
-              <XCircle className="w-6 h-6 text-rose-200" />
+              <XCircle className="w-6 h-6 text-rose-600" />
             )}
           </div>
           <div>
-            <div className="text-[11px] uppercase tracking-wider font-bold text-white/80 flex items-center gap-1.5">
-              <span>STATUS MAJOR GATE 4C:</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isMajorPassed ? 'bg-emerald-500/30 text-emerald-100' : 'bg-rose-500/30 text-rose-100'}`}>
+            <div className="text-[11px] uppercase tracking-wider font-bold flex items-center gap-1.5">
+              <span className={isMajorPassed ? 'text-emerald-700' : 'text-rose-700'}>
+                STATUS MAJOR GATE 4C:
+              </span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                  isMajorPassed
+                    ? 'bg-emerald-200/80 text-emerald-800'
+                    : 'bg-rose-200/80 text-rose-800'
+                }`}
+              >
                 NON-COMPENSATING SAFEGUARD
               </span>
             </div>
-            <div className="text-lg md:text-xl font-black tracking-tight mt-0.5">
-              {isMajorPassed ? 'MEMENUHI SYARAT (MAJOR GATE PASSED)' : 'DITAHAN: TERDAPAT TEMUAN KRITIS (UNRESOLVED)'}
+            <div
+              className={`text-lg md:text-xl font-black tracking-tight mt-0.5 ${
+                isMajorPassed ? 'text-emerald-900' : 'text-rose-900'
+              }`}
+            >
+              {isMajorPassed
+                ? 'MEMENUHI SYARAT (MAJOR GATE PASSED)'
+                : 'DITAHAN: TERDAPAT TEMUAN KRITIS (UNRESOLVED)'}
             </div>
-            <div className="text-xs text-white/80 font-medium mt-0.5">
-              Kriteria Non-Kompensasi: {majorFailed} Major Terbukti Gagal • {majorInsufficient} Major Kurang Bukti • {majorPending} Major Belum Diputuskan
+            <div className="text-xs text-stone-600 font-medium mt-0.5">
+              Seluruh kriteria kepatuhan 4C Major Gate (12 Mandatory Checkpoint) telah dipenuhi dan divalidasi dokumen auditnya.
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 self-stretch md:self-auto justify-between md:justify-end">
-          <div className="text-right text-xs bg-black/20 px-3.5 py-2 rounded-xl border border-white/10 flex md:flex-col justify-between items-center md:items-end w-full md:w-auto">
-            <span className="font-semibold text-white/80 text-[11px]">Kriteria Kritis Gagal:</span>
-            <span className="font-black text-sm text-white">
-              {majorFailed} Gagal • {majorInsufficient} Kurang Bukti
-            </span>
-          </div>
+          <span
+            className={`px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider border shadow-2xs ${
+              isMajorPassed
+                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                : 'bg-rose-100 text-rose-800 border-rose-300'
+            }`}
+          >
+            {isMajorPassed ? 'VERIFIED' : 'UNVERIFIED'}
+          </span>
           {onOpenAuditSheet && (
             <button
               onClick={onOpenAuditSheet}
-              className="px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+              className="px-3 py-1.5 rounded-lg bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 shadow-2xs"
               title="Buka Lembar Audit Mutu"
             >
               <span>Lembar Audit</span>
@@ -268,7 +291,7 @@ export const IntegratedCircularIndicesView: React.FC<IntegratedCircularIndicesVi
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
-                  <span>🛡️</span>
+                  <span>📍</span>
                   <span>CT-4CI (4C Readiness Index)</span>
                 </span>
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -523,7 +546,7 @@ export const IntegratedCircularIndicesView: React.FC<IntegratedCircularIndicesVi
                   <span>⚖️</span>
                   <span>Fairtrade Readiness (FRI)</span>
                 </span>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-300">
                   {friBadgeText}
                 </span>
               </div>

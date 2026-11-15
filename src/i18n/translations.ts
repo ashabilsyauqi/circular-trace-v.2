@@ -7,7 +7,7 @@ export type Language = 'id' | 'en';
 export const translations: Record<Language, Record<string, string>> = {
   id: {
     // Brand / shell
-    'brand.name': 'sangrAI',
+    'brand.name': 'CircularCoffee',
     'brand.tagline': 'Ekosistem Kopi Specialty • Hulu ke Hilir & Traceability',
     'brand.badge': 'Circular Trace',
     'brand.enterprise': 'Enterprise Coffee ERP',
@@ -86,7 +86,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'module.history.subtitle': 'Riwayat transaksi roastery',
   },
   en: {
-    'brand.name': 'sangrAI',
+    'brand.name': 'CircularCoffee',
     'brand.tagline': 'Specialty Coffee Ecosystem • Farm to Cup & Traceability',
     'brand.badge': 'Circular Trace',
     'brand.enterprise': 'Enterprise Coffee ERP',

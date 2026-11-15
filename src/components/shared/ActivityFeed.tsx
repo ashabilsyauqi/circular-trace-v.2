@@ -28,7 +28,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
   initialMessages = [
     {
       id: 'msg-1',
-      author: 'Sistem Ledger sangrAI',
+      author: 'Sistem Ledger CircularCoffee',
       type: 'system',
       content: 'Dokumen berhasil diverifikasi dan disinkronkan ke buku besar rantai pasok.',
       timestamp: 'Hari ini, 09:15',

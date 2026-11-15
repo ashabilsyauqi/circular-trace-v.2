@@ -128,13 +128,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       defaultLocExample: 'e.g. Jakarta / Bandung',
     },
     ict: {
-      title: 'Petugas ICT (Verifikator)',
+      title: 'Petugas ICS (Internal Control System)',
       tier: 'Internal Kelompok Tani',
-      desc: 'Verifikasi NIK/KTA data petani, validasi koordinat GPS & patok batas poligon EUDR lahan kebun, serta uji mutu brix panen ceri.',
+      desc: 'Verifikasi NIK/KTA data petani, validasi koordinat GPS & patok batas poligon EUDR lahan kebun, serta inspeksi mutu brix panen ceri.',
       icon: <ShieldCheck className="w-5 h-5 text-blue-600" />,
       color: 'border-blue-500 ring-blue-500/20',
       bgBadge: 'bg-blue-50 text-blue-700 border-blue-200',
-      defaultOrgExample: 'e.g. Tim ICT Gapoktan Kopi Mandiri',
+      defaultOrgExample: 'e.g. Tim ICS Gapoktan Kopi Mandiri',
       defaultLocExample: 'e.g. Pangalengan, Jawa Barat',
     },
   };
@@ -153,7 +153,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         organization: org.trim(),
         location: location.trim() || roleConfigs[selectedRole].defaultLocExample.replace('e.g. ', ''),
         phone: phone.trim() || '0812-3456-7890',
-        bio: bio.trim() || `Akun ${ROLE_DETAILS[selectedRole].label} baru terdaftar di platform sangrAI.`,
+        bio: bio.trim() || `Akun ${ROLE_DETAILS[selectedRole].label} baru terdaftar di platform CircularCoffee.`,
       });
     }
 
@@ -183,7 +183,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
           <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-bold mb-3">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            Aktivasi Instan Ekosistem sangrAI
+            Aktivasi Instan Ekosistem CircularCoffee
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Registrasi & Akses Platform

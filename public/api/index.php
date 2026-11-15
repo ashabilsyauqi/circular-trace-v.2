@@ -31,7 +31,7 @@ foreach ($tables as $t) {
 }
 
 sendResponse([
-    'service'   => 'Circular Coffee Trace (sangrAI) REST API',
+    'service'   => 'Circular Coffee Trace (CircularCoffee) REST API',
     'status'    => 'online',
     'engine'    => 'MySQL PDO',
     'timestamp' => date('Y-m-d H:i:s'),

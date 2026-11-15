@@ -305,7 +305,7 @@ export interface CoffeeWasteManagement {
   weightKgOrLiters: number; // Volume / berat limbah yang terkelola
   recipientOrLocation: string; // Penerima / lokasi pemanfaatan limbah
   processingMethod: string; // Metode olah ramah lingkungan
-  ecoCertificate?: string; // e.g. 'sangrAI Zero-Waste Circular Standard'
+  ecoCertificate?: string; // e.g. 'CircularCoffee Zero-Waste Circular Standard'
   notes?: string;
   ecoRating?: number; // Rating bintang 1.0 - 5.0 ⭐
   ecoScore?: number; // Skor total 0 - 100

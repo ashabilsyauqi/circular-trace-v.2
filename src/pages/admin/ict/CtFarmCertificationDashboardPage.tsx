@@ -379,50 +379,58 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-16">
       {/* 1. Header & Navigation Controls */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <Link
-                to="/admin/ict"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-800 transition"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Pusat Verifikasi ICT</span>
-              </Link>
-              <span className="text-stone-300">•</span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
-                <ShieldCheck className="w-3 h-3 text-blue-600" />
-                CircularTrace Integrated Index Engine (CT-4CI / CCI / SDI)
-              </span>
-            </div>
-            <h1 className="text-2xl font-black text-stone-900 tracking-tight flex items-center gap-2.5">
-              <span>Audit &amp; Sertifikasi Kesiapan Kebun Kopi</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200">
-                4C Code of Conduct v4.1
-              </span>
-            </h1>
-            <p className="text-xs text-stone-500 mt-1 max-w-3xl">
-              Panel verifikator independen untuk menilai kepatuhan 108 checkpoint kebun kopi, menguji 5 kriteria pengaman non-kompensasi, dan menerbitkan stempel sertifikasi kesiapan digital.
-            </p>
+      <div className="bg-white rounded-2xl border border-stone-200 p-5 sm:p-6 shadow-xs space-y-5">
+        {/* Top bar: Back link, Engine badge, and Print blanko */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-100">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              to="/admin/ict"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 hover:text-stone-900 transition-colors whitespace-nowrap shrink-0"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Pusat Verifikasi ICT</span>
+            </Link>
+            <span className="text-stone-300 hidden sm:inline">•</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200 whitespace-nowrap">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span>CircularTrace Integrated Index Engine (CT-4CI / CCI / SDI)</span>
+            </span>
           </div>
 
-          {/* Farm Selector & Blanko Action */}
-          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <button
-              type="button"
-              onClick={() => openBlankoModal('petani')}
-              className="bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl px-3.5 py-2.5 flex items-center justify-center gap-2 font-bold text-xs shadow-2xs transition-colors cursor-pointer shrink-0"
-              title="Download / Cetak Blanko Lembar Verifikasi Lapangan (A4)"
-            >
-              <Printer className="w-4 h-4 text-stone-600" />
-              <span>Blanko Form (A4)</span>
-            </button>
+          <button
+            type="button"
+            onClick={() => openBlankoModal('petani')}
+            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-xl px-3.5 py-1.5 font-bold text-xs shadow-2xs transition-colors cursor-pointer whitespace-nowrap shrink-0 self-start sm:self-auto"
+            title="Download / Cetak Blanko Lembar Verifikasi Lapangan (A4)"
+          >
+            <Printer className="w-4 h-4 text-stone-600 shrink-0" />
+            <span>Blanko Form (A4)</span>
+          </button>
+        </div>
 
-            <div className="bg-stone-50 border border-stone-200 rounded-xl p-2.5 flex items-center gap-3">
-              <TreePine className="w-5 h-5 text-emerald-600 shrink-0" />
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-stone-500 tracking-wider">
+        {/* Title & Description row */}
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
+              Audit &amp; Sertifikasi Kesiapan Kebun Kopi
+            </h1>
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-stone-100 text-stone-700 border border-stone-200 whitespace-nowrap shrink-0">
+              4C Code of Conduct v4.1
+            </span>
+          </div>
+          <p className="text-xs text-stone-500 max-w-4xl leading-relaxed">
+            Panel verifikator independen untuk menilai kepatuhan 108 checkpoint kebun kopi, menguji 5 kriteria pengaman non-kompensasi, dan menerbitkan stempel sertifikasi kesiapan digital.
+          </p>
+        </div>
+
+        {/* Farm & Season Selector Toolbar (Dedicated Bar) */}
+        <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 min-w-0">
+            {/* Kebun Selector */}
+            <div className="flex-1 min-w-0 bg-white border border-stone-200 rounded-lg px-3 py-2 flex items-center gap-2.5 shadow-2xs">
+              <TreePine className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <label className="block text-[10px] uppercase font-bold text-stone-400 tracking-wider leading-none mb-1">
                   Pilih Kebun yang Diaudit:
                 </label>
                 <select
@@ -431,7 +439,7 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
                     setSelectedFarmId(e.target.value);
                     navigate(`/admin/ict/ct-dashboard/${e.target.value}`);
                   }}
-                  className="bg-transparent font-bold text-sm text-stone-900 focus:outline-none cursor-pointer"
+                  className="w-full bg-transparent font-bold text-xs sm:text-sm text-stone-900 focus:outline-none cursor-pointer truncate"
                 >
                   {coffeeFarms.map((farm) => (
                     <option key={farm.id} value={farm.id}>
@@ -442,16 +450,17 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-stone-50 border border-stone-200 rounded-xl p-2.5 flex items-center gap-2.5">
+            {/* Musim Panen Selector */}
+            <div className="w-full sm:w-auto sm:min-w-[210px] bg-white border border-stone-200 rounded-lg px-3 py-2 flex items-center gap-2.5 shadow-2xs">
               <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-stone-500 tracking-wider">
+              <div className="min-w-0 flex-1">
+                <label className="block text-[10px] uppercase font-bold text-stone-400 tracking-wider leading-none mb-1">
                   Musim Panen:
                 </label>
                 <select
                   value={auditPeriod}
                   onChange={(e) => setAuditPeriod(e.target.value)}
-                  className="bg-transparent font-bold text-xs text-stone-800 focus:outline-none cursor-pointer"
+                  className="w-full bg-transparent font-bold text-xs sm:text-sm text-stone-800 focus:outline-none cursor-pointer truncate"
                 >
                   <option value="2026-PANEN-RAYA">Musim Panen Raya 2026</option>
                   <option value="2026-SEMESTER-1">Semester 1 - 2026</option>
@@ -464,32 +473,36 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
 
         {/* Selected Farm Quick Meta Bar */}
         {selectedFarm && (
-          <div className="mt-4 pt-4 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-600">
-            <div className="flex flex-wrap items-center gap-4">
-              <span className="inline-flex items-center gap-1.5 font-semibold text-stone-900">
-                <Sprout className="w-4 h-4 text-emerald-600" />
-                {selectedFarm.farmerName}
+          <div className="pt-3 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-600">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <span className="inline-flex items-center gap-1.5 font-bold text-stone-900">
+                <Sprout className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{selectedFarm.farmerName}</span>
               </span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                {selectedFarm.location}
+              <span className="text-stone-300">•</span>
+              <span className="inline-flex items-center gap-1.5 text-stone-600">
+                <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                <span>{selectedFarm.location || 'Lokasi Terdaftar'}</span>
               </span>
-              <span>•</span>
-              <span>Elevasi: <strong>{selectedFarm.altitudeMeters} mdpl</strong></span>
-              <span>•</span>
-              <span>Varietas: <strong>{selectedFarm.primaryVarieties.join(', ')}</strong></span>
+              <span className="text-stone-300">•</span>
+              <span className="inline-flex items-center gap-1.5 text-stone-600">
+                <span>Elevasi: <strong className="text-stone-800">{selectedFarm.altitudeMeters} mdpl</strong></span>
+              </span>
+              <span className="text-stone-300 hidden sm:inline">•</span>
+              <span className="inline-flex items-center gap-1.5 text-stone-600">
+                <span>Varietas: <strong className="text-stone-800">{selectedFarm.primaryVarieties.join(', ')}</strong></span>
+              </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {selectedFarm.ctCertificationSnapshot ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   Sertifikat Terbit: {selectedFarm.ctCertificationSnapshot.ct4ciScore}% ({selectedFarm.ctCertificationSnapshot.majorGateStatus})
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                  <Clock className="w-3 h-3 text-amber-600" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                   Menunggu Audit Lapangan
                 </span>
               )}

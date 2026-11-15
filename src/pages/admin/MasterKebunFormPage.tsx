@@ -839,23 +839,194 @@ export const MasterKebunFormPage: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block font-semibold text-stone-700 mb-1">Foto URL / Banner Lahan</label>
-              <input
-                type="text"
-                value={formData.photoUrl}
-                onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full border border-stone-300 rounded-md px-3 py-2 text-xs font-mono"
-              />
+              <div>
+                <label className="block font-semibold text-stone-700 mb-1">Catatan Iklim Mikro</label>
+                <input
+                  type="text"
+                  value={formData.microclimateNote}
+                  onChange={(e) => setFormData({ ...formData, microclimateNote: e.target.value })}
+                  placeholder="Zona sejuk berangin lereng selatan dengan kabut harian optimal..."
+                  className="w-full border border-stone-300 rounded-md px-3 py-2 text-xs"
+                />
+              </div>
+          </div>
+
+          {/* SECTION 6: FOTO DOKUMENTASI LANSKAP KEBUN KOPI */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200 pb-2">
+              <h3 className="font-bold text-stone-900 flex items-center gap-2">
+                <Camera className="w-4 h-4 text-amber-600" />
+                <span>6. Foto Dokumentasi Lanskap Kebun Kopi &amp; Banner Kartu</span>
+              </h3>
+              <span className="text-[11px] text-stone-500">
+                Pilih foto kebun kopi asli atau upload dokumentasi survei lapangan
+              </span>
             </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+              {/* Live Preview Card */}
+              <div className="lg:col-span-5 space-y-2">
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider">
+                  Live Preview Tampilan Kartu Kebun
+                </label>
+                <div className="relative h-48 rounded-lg overflow-hidden border border-stone-300 shadow-xs bg-stone-100 group">
+                  <img
+                    src={formData.photoUrl || DEFAULT_FARM_PHOTO_URL}
+                    alt={formData.farmName || 'Preview Kebun Kopi'}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+                  {/* Altitude Badge */}
+                  <div className="absolute top-2.5 left-2.5">
+                    <span className="px-2 py-0.5 rounded bg-emerald-600/90 text-white font-mono text-[10px] font-bold shadow-xs backdrop-blur-xs flex items-center gap-1">
+                      <Mountain className="w-3 h-3" />
+                      <span>{formData.altitudeDisplay || `${formData.altitudeMeters} mdpl`}</span>
+                    </span>
+                  </div>
+
+                  {/* EUDR Badge */}
+                  <div className="absolute top-2.5 right-2.5">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold shadow-xs backdrop-blur-xs flex items-center gap-1 bg-teal-600/90 text-white">
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>EUDR Verified</span>
+                    </span>
+                  </div>
+
+                  {/* Farm Title & Farmer Name Overlay */}
+                  <div className="absolute bottom-2.5 left-3 right-3 text-white">
+                    <h4 className="font-bold text-sm leading-tight drop-shadow-sm truncate">
+                      {formData.farmName || 'Nama Blok Lahan Kebun'}
+                    </h4>
+                    <p className="text-[11px] text-amber-200 flex items-center gap-1 mt-0.5 drop-shadow-xs truncate">
+                      <Users className="w-3 h-3 shrink-0" />
+                      <span>
+                        {allFarmers.find((f) => f.id === formData.farmerId)?.name || 'Petani Anggota'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-stone-500">
+                  Foto ini tampil di kartu blok lahan Master Kebun, lembar kerja ICS, dan jejak traceability QR-code digital.
+                </p>
+              </div>
+
+              {/* Upload Action & Presets */}
+              <div className="lg:col-span-7 space-y-4">
+                {/* Upload File Box */}
+                <div className="p-4 bg-amber-50/70 rounded-lg border border-amber-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-stone-800 text-xs flex items-center gap-1.5">
+                      <Upload className="w-4 h-4 text-amber-600" />
+                      Upload Foto Lahan dari Komputer / HP
+                    </span>
+                    <span className="text-[10px] text-stone-500">Maks. 8 MB (JPG, PNG, WebP)</span>
+                  </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-md shadow-xs flex items-center gap-2 transition-all cursor-pointer active:scale-95 text-xs"
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span>Pilih Foto dari Perangkat</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, photoUrl: DEFAULT_FARM_PHOTO_URL }))}
+                      className="px-3 py-2 bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 font-semibold rounded-md text-xs transition-colors cursor-pointer"
+                    >
+                      Reset Foto Default
+                    </button>
+                  </div>
+                </div>
+
+                {/* Preset Galeri Foto Kebun Kopi */}
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    Pilihan Foto Lanskap Kebun Kopi Indonesia
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {COFFEE_FARM_PHOTO_PRESETS.map((preset) => {
+                      const isSelected = formData.photoUrl === preset.url;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, photoUrl: preset.url }))}
+                          className={`relative h-20 rounded-md overflow-hidden border-2 text-left transition-all cursor-pointer group ${
+                            isSelected
+                              ? 'border-amber-600 ring-2 ring-amber-400'
+                              : 'border-stone-200 hover:border-amber-400 opacity-90 hover:opacity-100'
+                          }`}
+                          title={`${preset.title} (${preset.region})`}
+                        >
+                          <img
+                            src={preset.url}
+                            alt={preset.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                          {isSelected && (
+                            <span className="absolute top-1 right-1 p-0.5 rounded-full bg-amber-600 text-white shadow-xs">
+                              <Check className="w-3 h-3" />
+                            </span>
+                          )}
+                          <div className="absolute bottom-1 left-1.5 right-1.5">
+                            <span className="text-[10px] font-bold text-white leading-tight block truncate">
+                              {preset.title}
+                            </span>
+                            <span className="text-[9px] text-amber-200 block truncate">
+                              {preset.region.split('•')[0]}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Direct URL Input */}
+                <div>
+                  <label className="block font-semibold text-stone-700 mb-1 text-xs">
+                    Atau Masukkan Tautan URL Gambar Eksternal
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.photoUrl}
+                    onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
+                    placeholder="https://images.unsplash.com/... atau tautan foto kebun lainnya"
+                    className="w-full border border-stone-300 rounded-md px-3 py-2 text-xs font-mono bg-white focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 7: CATATAN LAHAN KEBUN */}
+          <div className="space-y-4">
+            <h3 className="font-bold text-stone-900 border-b border-stone-200 pb-2 flex items-center gap-2">
+              <TreePine className="w-4 h-4 text-amber-600" />
+              <span>7. Catatan Lahan Kebun &amp; Rekomendasi Agronomi</span>
+            </h3>
+
             <div>
-              <label className="block font-semibold text-stone-700 mb-1">Catatan Lahan Kebun</label>
               <textarea
                 rows={3}
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Catatan kontur lereng bukit, arah sinar matahari, kebiasaan pemupukan organik, riwayat sertifikasi dsb."
                 className="w-full border border-stone-300 rounded-md p-3 text-xs"
               />
             </div>

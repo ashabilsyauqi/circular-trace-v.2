@@ -26,6 +26,7 @@ import {
   Award,
   Printer,
 } from 'lucide-react';
+import { DEFAULT_FARM_PHOTO_URL } from '../../data/mockData';
 
 export const MasterKebunPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -264,8 +265,11 @@ export const MasterKebunPage: React.FC = () => {
                   {/* Photo & Altitude Badge */}
                   <div className="relative h-44 bg-stone-100 overflow-hidden">
                     <img
-                      src={farm.photoUrl}
+                      src={farm.photoUrl || DEFAULT_FARM_PHOTO_URL}
                       alt={farm.farmName}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_FARM_PHOTO_URL;
+                      }}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

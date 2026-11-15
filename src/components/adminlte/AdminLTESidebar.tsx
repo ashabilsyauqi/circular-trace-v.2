@@ -64,6 +64,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   const [pengolahOpen, setPengolahOpen] = useState<boolean>(true);
   const [gudangOpen, setGudangOpen] = useState<boolean>(true);
   const [roasterOpen, setRoasterOpen] = useState<boolean>(true);
+  const [icsOpen, setIcsOpen] = useState<boolean>(true);
 
   const currentRoleInfo = currentUser ? ROLE_DETAILS[currentUser.role] : null;
   const userRole = currentUser?.role;
@@ -71,14 +72,15 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   const isVerifikator = userRole === 'verifikator';
 
   // Role-based visibility gates: outside Kelompok Tani only see their specific service
+  // Scope Kelompok Tani HANYA terdiri dari: 1. Petani, 2. Pengolah, 3. Petugas ICS
   const canSeePusatKendali = isAdminKelompok;
   const canSeePetani = (isAdminKelompok || userRole === 'petani' || userRole === 'ict') && !isVerifikator;
   const canSeePengolah = (isAdminKelompok || userRole === 'pengolah') && !isVerifikator;
-  const canSeeGudang = (isAdminKelompok || userRole === 'gudang') && !isVerifikator;
-  const canSeeRoaster = (isAdminKelompok || userRole === 'roaster') && !isVerifikator;
-  const canSeeCafe = (isAdminKelompok || userRole === 'cafe') && !isVerifikator;
+  const canSeeGudang = userRole === 'gudang';
+  const canSeeRoaster = userRole === 'roaster';
+  const canSeeCafe = userRole === 'cafe';
   const canSeeIct = (isAdminKelompok || userRole === 'ict') && !isVerifikator;
-  const canSeeVerifikator = isVerifikator || isAdminKelompok;
+  const canSeeVerifikator = isVerifikator;
   const canSeeSeller = (isAdminKelompok || userRole === 'roaster' || userRole === 'gudang' || userRole === 'pengolah' || userRole === 'petani') && !isVerifikator;
 
   const getHomePath = () => {
@@ -106,7 +108,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
     if (isAdminKelompok) {
       return 'Admin Kelompok Tani';
     }
-    return currentUser?.organization || currentRoleInfo?.label || 'sangrAI Platform';
+    return currentUser?.organization || currentRoleInfo?.label || 'CircularCoffee Platform';
   };
 
   const getBrandIcon = () => {
@@ -142,7 +144,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
       case 'petani':
         return 'Layanan Petani Kopi';
       case 'ict':
-        return 'Verifikasi Internal ICT';
+        return 'Petugas ICS (Internal Control)';
       case 'verifikator':
         return 'Verifikasi Mutu & Sertifikasi CT';
       default:
@@ -167,7 +169,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
         {!isCollapsed && (
           <div className="leading-tight truncate">
             <span className="font-extrabold text-sm tracking-wide text-white block">
-              sangr<span className="text-amber-400">AI</span>
+              Circular<span className="text-amber-400">Coffee</span>
             </span>
             <span className="text-[10px] text-stone-400 font-normal block truncate">
               {getBrandSubtitle()}
@@ -241,7 +243,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 {!isCollapsed && <span className="flex-1 truncate">Control Tower</span>}
                 {!isCollapsed && (
                   <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-stone-900/40 text-amber-200">
-                    5 Stasiun
+                    3 Layanan
                   </span>
                 )}
               </NavLink>
@@ -792,85 +794,114 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               </div>
             )}
 
-            {/* 6. VERIFIKASI INTERNAL ICT & AUDIT ICS */}
+            {/* 3. PETUGAS ICS (INTERNAL CONTROL SYSTEM) */}
             {canSeeIct && (
-              <div className="space-y-1">
-                <NavLink
-                  to="/admin/ict"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                      isActive
-                        ? 'bg-blue-600 text-white font-bold shadow-xs'
-                        : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
-                    }`
-                  }
-                  title="Pusat Verifikasi ICT (Petani, Kebun, Panen)"
+              <div>
+                <div
+                  onClick={() => setIcsOpen(!icsOpen)}
+                  className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer select-none ${
+                    location.pathname.startsWith('/admin/ict')
+                      ? 'bg-blue-600 text-white font-bold shadow-xs'
+                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                  }`}
                 >
-                  <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" />
-                  {!isCollapsed && <span className="flex-1 truncate">Verifikasi ICT</span>}
-                  {!isCollapsed && (
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-blue-700 text-white font-bold">
-                      Audit
-                    </span>
-                  )}
-                </NavLink>
+                  <Link
+                    to="/admin/ict"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIcsOpen(true);
+                    }}
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" />
+                    {!isCollapsed && (
+                      <span className="truncate">
+                        {isAdminKelompok ? '3. Petugas ICS' : 'Petugas ICS (Verifikator)'}
+                      </span>
+                    )}
+                  </Link>
 
-                <NavLink
-                  to="/admin/ict/ct-dashboard"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
-                      isActive
-                        ? 'bg-amber-600 text-white font-bold shadow-xs'
-                        : 'text-[#869099] hover:bg-[#494e53] hover:text-white'
-                    }`
-                  }
-                  title="Sertifikasi Kebun (CircularTrace Index Engine: CT-4CI / CCI / SDI)"
-                >
-                  <Award className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  {!isCollapsed && <span className="flex-1 truncate">Sertifikasi Kebun (CT)</span>}
                   {!isCollapsed && (
-                    <span className="text-[8px] px-1 py-0.2 rounded-full bg-amber-700 text-white font-bold">
-                      4C
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[9px] px-1.5 py-0.2 rounded-full text-white font-bold bg-blue-700">
+                        ICS
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIcsOpen(!icsOpen);
+                        }}
+                        className="p-0.5 hover:text-white"
+                      >
+                        {icsOpen ? (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
                   )}
-                </NavLink>
+                </div>
 
-                <NavLink
-                  to="/admin/ict/audit"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
-                      isActive
-                        ? 'bg-blue-700 text-white font-bold shadow-xs'
-                        : 'text-[#869099] hover:bg-[#494e53] hover:text-white'
-                    }`
-                  }
-                  title="Lembar Kerja Audit ICS"
-                >
-                  <ClipboardCheck className="w-3.5 h-3.5 text-blue-300 shrink-0" />
-                  {!isCollapsed && <span className="flex-1 truncate">Lembar Kerja ICS</span>}
-                </NavLink>
-
-                <NavLink
-                  to="/admin/ict/blanko"
-                  className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
-                      isActive
-                        ? 'bg-amber-600 text-white font-bold shadow-xs'
-                        : 'text-amber-300 hover:bg-[#494e53] hover:text-white'
-                    }`
-                  }
-                  title="Formulir Blanko Fisik Audit Lapangan (A4)"
-                >
-                  <span className="flex items-center gap-2 truncate">
-                    <Printer className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    {!isCollapsed && <span className="truncate">Form Blanko ICS (A4)</span>}
-                  </span>
-                  {!isCollapsed && (
-                    <span className="text-[8px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
-                      Cetak
-                    </span>
-                  )}
-                </NavLink>
+                {/* Sub-menu Dropdown Items */}
+                {icsOpen && !isCollapsed && (
+                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-600 ml-4">
+                    {[
+                      {
+                        to: '/admin/ict',
+                        label: 'Dashboard Verifikasi ICS',
+                        icon: ShieldCheck,
+                        isActive: location.pathname === '/admin/ict',
+                      },
+                      {
+                        to: '/admin/ict/ct-dashboard',
+                        label: 'Sertifikasi Kebun (CT)',
+                        icon: Award,
+                        badge: '4C',
+                        badgeClass: 'bg-amber-700 text-white font-bold',
+                        isActive: location.pathname === '/admin/ict/ct-dashboard',
+                      },
+                      {
+                        to: '/admin/ict/audit',
+                        label: 'Lembar Kerja Audit Lapangan',
+                        icon: ClipboardCheck,
+                        isActive: location.pathname === '/admin/ict/audit',
+                      },
+                      {
+                        to: '/admin/ict/blanko',
+                        label: 'Form Blanko ICS (A4)',
+                        icon: Printer,
+                        badge: 'Cetak',
+                        badgeClass: 'bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30',
+                        isActive: location.pathname === '/admin/ict/blanko',
+                      },
+                    ].map((sub: any) => {
+                      const SubIcon = sub.icon;
+                      return (
+                        <Link
+                          key={sub.to}
+                          to={sub.to}
+                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] transition-colors ${
+                            sub.isActive
+                              ? 'bg-blue-600 text-white font-bold'
+                              : 'text-[#869099] hover:bg-[#3f474e] hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 truncate">
+                            <SubIcon className={`w-3.5 h-3.5 shrink-0 ${sub.to.includes('blanko') ? 'text-amber-400' : ''}`} />
+                            <span className="truncate">{sub.label}</span>
+                          </span>
+                          {sub.badge && (
+                            <span className={`text-[9px] px-1 py-0.2 rounded ${sub.badgeClass || 'opacity-75'}`}>
+                              {sub.badge}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1049,7 +1080,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
       {/* 5. Bottom Brand Footnote */}
       {!isCollapsed && (
         <div className="p-3 border-t border-[#4f5962] text-[10px] text-[#869099] text-center">
-          AdminLTE v3.2 • sangrAI System
+          AdminLTE v3.2 • CircularCoffee System
         </div>
       )}
     </aside>

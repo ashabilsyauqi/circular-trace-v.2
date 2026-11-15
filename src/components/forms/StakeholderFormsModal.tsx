@@ -728,7 +728,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-black text-sm tracking-widest text-stone-900 uppercase">
-                      CIRCULAR COFFEE TRACE • sangrAI
+                      CIRCULAR COFFEE TRACE • CircularCoffee
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
                       Tier 1: Hulu Perkebunan
@@ -1182,7 +1182,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-black text-sm tracking-widest text-stone-900 uppercase">
-                      CIRCULAR COFFEE TRACE • sangrAI
+                      CIRCULAR COFFEE TRACE • CircularCoffee
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
                       Tier 2: Stasiun Pengolah (Mill)
@@ -1648,7 +1648,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-black text-sm tracking-widest text-stone-900 uppercase">
-                      CIRCULAR COFFEE TRACE • sangrAI
+                      CIRCULAR COFFEE TRACE • CircularCoffee
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-blue-100 text-blue-900 border border-blue-300">
                       Tier 3: Gudang &amp; Eksportir
@@ -2000,7 +2000,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-black text-sm tracking-widest text-stone-900 uppercase">
-                      CIRCULAR COFFEE TRACE • sangrAI
+                      CIRCULAR COFFEE TRACE • CircularCoffee
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-rose-100 text-rose-900 border border-rose-300">
                       Tier 4: Roastery &amp; Cupping Lab

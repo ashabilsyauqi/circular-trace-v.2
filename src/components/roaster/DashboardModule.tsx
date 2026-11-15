@@ -18,7 +18,7 @@ interface DashboardModuleProps {
   onNavigate: (tab: 'work_orders' | 'purchasing' | 'selling' | 'inventory') => void;
 }
 
-// Flat, sangrAI-style overview dashboard: a handful of honest numbers pulled straight from
+// Flat, CircularCoffee-style overview dashboard: a handful of honest numbers pulled straight from
 // context state (no decorative gradients, no invented metrics) plus quick-action shortcuts.
 export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) => {
   const { currentUser, transactions, roastedLots, workOrders, purchaseOrders } = useCoffee();

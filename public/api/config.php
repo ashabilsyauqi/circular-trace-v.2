@@ -1,6 +1,6 @@
 <?php
 /**
- * Circular Coffee Trace (sangrAI)
+ * Circular Coffee Trace (CircularCoffee)
  * Database Connection & Global API Utilities
  * Supports Auto-Configured SQLite (Default, Zero-Setup) & Optional MySQL
  */

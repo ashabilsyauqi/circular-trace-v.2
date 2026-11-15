@@ -337,8 +337,8 @@ const idServicePanels: Record<UserRole, ServicePanel> = {
   },
   roaster: {
     badge: 'Pilar 4: Artisan Roastery ERP',
-    title: 'Presisi Profil Sangrai, Spider Radar, & sangrAI',
-    desc: 'Roastery dapat mengelola jadwal Work Order sangrai, menautkan nomor warna Agtron, rasio DTR, sensory spider radar 8 dimensi, serta mendapatkan bantuan formulasi rasa dari asisten cerdas sangrAI.',
+    title: 'Presisi Profil Sangrai, Spider Radar, & CircularCoffee',
+    desc: 'Roastery dapat mengelola jadwal Work Order sangrai, menautkan nomor warna Agtron, rasio DTR, sensory spider radar 8 dimensi, serta mendapatkan bantuan formulasi rasa dari asisten cerdas CircularCoffee.',
     bullets: [
       'Simulator kurva sangrai interaktif (Rate of Rise / RoR & First Crack).',
       'Spider radar sensoris 8 aspek (Fragrance, Flavor, Acidity, Body, dll).',
@@ -500,8 +500,8 @@ const enServicePanels: Record<UserRole, ServicePanel> = {
   },
   roaster: {
     badge: 'Pillar 4: Artisan Roastery ERP',
-    title: 'Precision Roast Profiling, Spider Radar & sangrAI',
-    desc: 'Roasteries can manage roasting Work Order schedules, log Agtron color numbers, DTR ratios, an 8-dimension sensory spider radar, and get flavor formulation help from the sangrAI smart assistant.',
+    title: 'Precision Roast Profiling, Spider Radar & CircularCoffee',
+    desc: 'Roasteries can manage roasting Work Order schedules, log Agtron color numbers, DTR ratios, an 8-dimension sensory spider radar, and get flavor formulation help from the CircularCoffee smart assistant.',
     bullets: [
       'Interactive roast curve simulator (Rate of Rise / RoR & First Crack).',
       '8-aspect sensory spider radar (Fragrance, Flavor, Acidity, Body, and more).',
@@ -607,7 +607,7 @@ const idAdvantageCards: AdvantageCard[] = [
     footer: 'Zero mold & zero moisture defect',
   },
   {
-    title: '6. sangrAI & Roaster Intelligence',
+    title: '6. CircularCoffee & Roaster Intelligence',
     desc: 'Asisten AI cerdas untuk menghitung rasio susut (shrinkage), rekomendasi waktu resting beans, formulasi Agtron roast profile, serta panduan seduh presisi.',
     footer: 'Otomatisasi konsistensi batch sangrai',
   },
@@ -640,7 +640,7 @@ const enAdvantageCards: AdvantageCard[] = [
     footer: 'Zero mold & zero moisture defects',
   },
   {
-    title: '6. sangrAI & Roaster Intelligence',
+    title: '6. CircularCoffee & Roaster Intelligence',
     desc: 'A smart AI assistant that calculates shrinkage ratios, recommends bean resting time, formulates Agtron roast profiles, and offers precision brewing guidance.',
     footer: 'Automated consistency across roast batches',
   },
@@ -650,7 +650,7 @@ const idCtaRoleCards: CtaRoleCard[] = [
   { role: 'petani', name: 'Petani Kopi', desc: 'Upload panen ceri & jual langsung ke mill', registerLabel: 'Daftar Petani' },
   { role: 'pengolah', name: 'Pengolah Mill', desc: 'Fermentasi, uji mutu & kelola limbah sirkular', registerLabel: 'Daftar Pengolah' },
   { role: 'gudang', name: 'Gudang & QA', desc: 'Kelola stok gudang GrainPro & sertifikasi SCA', registerLabel: 'Daftar Gudang' },
-  { role: 'roaster', name: 'Artisan Roastery', desc: 'Work order, kurva Agtron & sangrAI', registerLabel: 'Daftar Artisan' },
+  { role: 'roaster', name: 'Artisan Roastery', desc: 'Work order, kurva Agtron & CircularCoffee', registerLabel: 'Daftar Artisan' },
   { role: 'cafe', name: 'Pemilik Cafe', desc: 'Beli roasted beans & cetak QR cup seduh', registerLabel: 'Daftar Pemilik' },
 ];
 
@@ -658,14 +658,14 @@ const enCtaRoleCards: CtaRoleCard[] = [
   { role: 'petani', name: 'Coffee Farmer', desc: 'Upload cherry harvests & sell directly to the mill', registerLabel: 'Register as Farmer' },
   { role: 'pengolah', name: 'Mill Processor', desc: 'Fermentation, quality testing & circular waste management', registerLabel: 'Register as Processor' },
   { role: 'gudang', name: 'Warehouse & QA', desc: 'Manage GrainPro warehouse stock & SCA certification', registerLabel: 'Register Warehouse' },
-  { role: 'roaster', name: 'Artisan Roastery', desc: 'Work orders, Agtron curves & sangrAI', registerLabel: 'Register as Roastery' },
+  { role: 'roaster', name: 'Artisan Roastery', desc: 'Work orders, Agtron curves & CircularCoffee', registerLabel: 'Register as Roastery' },
   { role: 'cafe', name: 'Cafe Owner', desc: 'Buy roasted beans & print QR brew cups', registerLabel: 'Register as Owner' },
 ];
 
 const idFaqs: Faq[] = [
   {
-    q: 'Apa itu sangrAI?',
-    a: 'sangrAI adalah platform sistem informasi rantai pasok kopi hulu-ke-hilir yang mengintegrasikan perdagangan B2B, pelacakan lot digital (Lot Traceability), standarisasi sensoris SCA, hingga manajemen limbah sirkular (Zero-Waste Eco-Processing).',
+    q: 'Apa itu CircularCoffee?',
+    a: 'CircularCoffee adalah platform sistem informasi rantai pasok kopi hulu-ke-hilir yang mengintegrasikan perdagangan B2B, pelacakan lot digital (Lot Traceability), standarisasi sensoris SCA, hingga manajemen limbah sirkular (Zero-Waste Eco-Processing).',
   },
   {
     q: 'Bagaimana cara kerja QR Traceability untuk konsumen cafe?',
@@ -677,7 +677,7 @@ const idFaqs: Faq[] = [
   },
   {
     q: 'Apakah roastery dapat menggunakan simulator kurva dan formulasi rasa AI?',
-    a: 'Ya, modul Roaster ERP kami dilengkapi simulator profil sangrai (Agtron, DTR, RoR), radar sensori 8 parameter SCA, Work Order produksi, serta asisten cerdas sangrAI untuk rekomendasi seduh dan resting.',
+    a: 'Ya, modul Roaster ERP kami dilengkapi simulator profil sangrai (Agtron, DTR, RoR), radar sensori 8 parameter SCA, Work Order produksi, serta asisten cerdas CircularCoffee untuk rekomendasi seduh dan resting.',
   },
   {
     q: 'Bagaimana cara memulai dan mendaftarkan entitas bisnis kopi saya?',
@@ -687,8 +687,8 @@ const idFaqs: Faq[] = [
 
 const enFaqs: Faq[] = [
   {
-    q: 'What is sangrAI?',
-    a: 'sangrAI is an end-to-end coffee supply chain information platform that integrates B2B trading, digital lot traceability, SCA sensory standardization, and circular waste management (Zero-Waste Eco-Processing).',
+    q: 'What is CircularCoffee?',
+    a: 'CircularCoffee is an end-to-end coffee supply chain information platform that integrates B2B trading, digital lot traceability, SCA sensory standardization, and circular waste management (Zero-Waste Eco-Processing).',
   },
   {
     q: 'How does QR Traceability work for cafe consumers?',
@@ -700,7 +700,7 @@ const enFaqs: Faq[] = [
   },
   {
     q: 'Can roasteries use the AI curve simulator and flavor formulation tools?',
-    a: 'Yes. Our Roaster ERP module includes a roast profile simulator (Agtron, DTR, RoR), an 8-parameter SCA sensory radar, production Work Orders, and the sangrAI smart assistant for brewing and resting recommendations.',
+    a: 'Yes. Our Roaster ERP module includes a roast profile simulator (Agtron, DTR, RoR), an 8-parameter SCA sensory radar, production Work Orders, and the CircularCoffee smart assistant for brewing and resting recommendations.',
   },
   {
     q: 'How do I get started and register my coffee business?',
@@ -749,7 +749,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
     pipelineStages: idPipelineStages,
     servicesHeader: {
       badge: 'Layanan & Fitur Komprehensif',
-      title: '5 Pilar Ekosistem Kopi sangrAI',
+      title: '5 Pilar Ekosistem Kopi CircularCoffee',
       subtitle:
         'Setiap pemangku kepentingan memiliki modul khusus yang saling tersambung secara otomatis dalam satu basis data terdesentralisasi.',
     },
@@ -763,7 +763,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
     servicePanels: idServicePanels,
     advantages: {
       badge: 'Keunggulan Kompetitif Kami',
-      title: 'Mengapa Industri Kopi Memilih sangrAI?',
+      title: 'Mengapa Industri Kopi Memilih CircularCoffee?',
       subtitle:
         'Menyatukan presisi data teknis, transparansi harga yang adil, serta kepedulian lingkungan hidup dalam satu platform modern.',
       cards: idAdvantageCards,
@@ -777,7 +777,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
         'rantai pasok yang terfragmentasi, asimetri harga di tingkat petani, hilangnya riwayat terroir saat sampai ke barista',
       para1Post: ', serta timbunan limbah pengolahan basah yang belum terkelola optimal.',
       para2Rest:
-        ' — gabungan "Sangrai" (proses roasting kopi) dan "AI" — lahir sebagai jawaban: sebuah platform yang mengembalikan kehormatan dan transparansi kepada para penanam kopi, memberikan kepastian mutu dan data kepada roaster, serta menyuguhkan integritas cerita kepada setiap penikmat kopi di kedai.',
+        ' — ekosistem terpadu rantai pasok dan sirkularitas kopi modern — lahir sebagai jawaban: sebuah platform yang mengembalikan kehormatan dan transparansi kepada para penanam kopi, memberikan kepastian mutu dan data kepada roaster, serta menyuguhkan integritas cerita kepada setiap penikmat kopi di kedai.',
       pillars: [
         {
           title: 'Keadilan Nilai (Direct Equity)',
@@ -799,7 +799,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
     },
     cta: {
       badge: 'Mulai Transformasi Digital Sekarang',
-      title: 'Siap Mengembangkan Usaha Kopi Anda Bersama sangrAI?',
+      title: 'Siap Mengembangkan Usaha Kopi Anda Bersama CircularCoffee?',
       subtitle:
         'Bergabunglah dengan ribuan petani, pengolah mill, pengelola gudang, artisan roastery, dan barista cafe di seluruh Indonesia. Gratis tanpa biaya aktivasi awal.',
       roleCards: idCtaRoleCards,
@@ -851,7 +851,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
     pipelineStages: enPipelineStages,
     servicesHeader: {
       badge: 'Comprehensive Services & Features',
-      title: "sangrAI's 5-Pillar Coffee Ecosystem",
+      title: "CircularCoffee's 5-Pillar Coffee Ecosystem",
       subtitle:
         'Every stakeholder gets a dedicated module, automatically connected within a single decentralized database.',
     },
@@ -865,7 +865,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
     servicePanels: enServicePanels,
     advantages: {
       badge: 'Our Competitive Edge',
-      title: 'Why the Coffee Industry Chooses sangrAI',
+      title: 'Why the Coffee Industry Chooses CircularCoffee',
       subtitle:
         'Bringing together technical data precision, fair price transparency, and environmental stewardship in one modern platform.',
       cards: enAdvantageCards,
@@ -879,7 +879,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
         'a fragmented supply chain, price asymmetry at the farmer level, and lost terroir history by the time coffee reaches the barista',
       para1Post: ', along with untreated wet-processing waste piling up.',
       para2Rest:
-        ' — a combination of "Sangrai" (the Indonesian word for coffee roasting) and "AI" — was born as the answer: a platform that restores dignity and transparency to coffee growers, gives roasters quality assurance and data, and brings storytelling integrity to every coffee lover at the counter.',
+        ' — an integrated modern coffee supply chain and circularity ecosystem — was born as the answer: a platform that restores dignity and transparency to coffee growers, gives roasters quality assurance and data, and brings storytelling integrity to every coffee lover at the counter.',
       pillars: [
         {
           title: 'Value Equity (Direct Equity)',
@@ -901,7 +901,7 @@ export const landingContent: Record<LandingLanguage, LandingContent> = {
     },
     cta: {
       badge: 'Start Your Digital Transformation Now',
-      title: 'Ready to Grow Your Coffee Business with sangrAI?',
+      title: 'Ready to Grow Your Coffee Business with CircularCoffee?',
       subtitle:
         'Join thousands of farmers, mill processors, warehouse managers, artisan roasteries, and cafe baristas across Indonesia. Free, with no activation fee.',
       roleCards: enCtaRoleCards,

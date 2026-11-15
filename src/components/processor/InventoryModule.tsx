@@ -178,7 +178,7 @@ export const InventoryModule: React.FC = () => {
       weightKgOrLiters: Number(editWasteWeight),
       recipientOrLocation: editWasteRecipient,
       processingMethod: editWasteProcessingMethod,
-      ecoCertificate: 'sangrAI Zero-Waste Circular Standard',
+      ecoCertificate: 'CircularCoffee Zero-Waste Circular Standard',
       notes: editWasteNotes,
     };
 

@@ -46,10 +46,8 @@ export const KelompokTaniDashboard: React.FC = () => {
   // Metrics calculations
   const totalFarmers = users.filter((u) => u.assignedService === 'petani' || u.role === 'petani').length;
   const totalProcessors = users.filter((u) => u.assignedService === 'pengolah' || u.role === 'pengolah').length;
-  const totalWarehouseStaff = users.filter((u) => u.assignedService === 'gudang' || u.role === 'gudang').length;
-  const totalRoasters = users.filter((u) => u.assignedService === 'roaster' || u.role === 'roaster').length;
-  const totalBaristas = users.filter((u) => u.assignedService === 'cafe' || u.role === 'cafe').length;
-  const totalActiveStaff = totalFarmers + totalProcessors + totalWarehouseStaff + totalRoasters + totalBaristas;
+  const totalIcsOfficers = users.filter((u) => u.role === 'ict' || (u.assignedService as unknown) === 'ict').length;
+  const totalActiveStaff = totalFarmers + totalProcessors + totalIcsOfficers;
 
   const totalCherryKg = farmerLots.reduce((acc, l) => acc + (l.totalWeightKg || 0), 0);
   const totalGreenBeanKg = processedLots.reduce((acc, l) => acc + (l.greenBeanWeightKg || 0), 0);
@@ -74,7 +72,7 @@ export const KelompokTaniDashboard: React.FC = () => {
               {currentUser?.organization || 'Gapoktan Kopi Mandiri Nusantara'}
             </h2>
             <p className="text-xs text-stone-500 max-w-2xl leading-relaxed">
-              Lingkup inti Kelompok Tani terdiri dari <strong>1. Petani</strong> (memproduksi ceri kopi segar) dan <strong>2. Pengolah</strong> (mengolah ceri menjadi green bean). Ceri dipasarkan secara eksklusif bagi sesama kelompok tani &amp; pengolah, sedangkan Green Bean dipasarkan secara global di marketplace.
+              Lingkup inti Kelompok Tani terdiri dari <strong>1. Petani</strong> (memproduksi ceri kopi segar), <strong>2. Pengolah</strong> (mengolah ceri menjadi green bean), dan <strong>3. Petugas ICS</strong> (audit internal kebun, poligon EUDR, &amp; mutu panen ceri). Ceri dipasarkan secara eksklusif bagi sesama kelompok tani &amp; pengolah, sedangkan Green Bean dipasarkan secara global di marketplace.
             </p>
           </div>
 
@@ -95,7 +93,7 @@ export const KelompokTaniDashboard: React.FC = () => {
               <Users className="w-4 h-4 text-emerald-400" />
               <span>Kelola Master Users</span>
               <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-white font-bold text-[10px]">
-                {totalFarmers + totalProcessors}
+                {totalActiveStaff}
               </span>
             </Link>
           </div>
@@ -104,9 +102,9 @@ export const KelompokTaniDashboard: React.FC = () => {
         {/* 1.1 Alur Rantai Nilai Eksklusif vs Global Scope Kelompok Tani */}
         <div className="mt-5 pt-4 border-t border-stone-200">
           <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-2">
-            Struktur Rantai Pasok Lingkup Kelompok Tani (B2B Eksklusif &rarr; Global):
+            Struktur Rantai Pasok Lingkup Kelompok Tani (3 Pilar Inti):
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Pilar 1: Petani -> Ceri */}
             <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 flex items-start gap-3">
               <div className="w-8 h-8 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5">
@@ -114,14 +112,14 @@ export const KelompokTaniDashboard: React.FC = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-emerald-950">1. Petani &bull; Produksi Ceri Kopi</span>
+                  <span className="text-xs font-bold text-emerald-950">1. Petani &bull; Ceri Kopi</span>
                   <span className="px-2 py-0.2 rounded-full text-[9px] font-black bg-amber-200 text-amber-900 border border-amber-300 flex items-center gap-1">
                     <Lock className="w-2.5 h-2.5" />
-                    <span>Pasar Eksklusif</span>
+                    <span>Eksklusif KT</span>
                   </span>
                 </div>
                 <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
-                  Petani anggota memanen ceri merah matang (Brix 19°–24°). Ceri bersifat <strong>sangat eksklusif</strong>: hanya dipasarkan ke sesama Kelompok Tani &amp; Stasiun Pengolah untuk diserap sebagai bahan baku olah.
+                  Panen ceri petik merah matang. Ceri bersifat <strong>sangat eksklusif</strong> bagi sesama Kelompok Tani &amp; Pengolah.
                 </p>
               </div>
             </div>
@@ -133,14 +131,33 @@ export const KelompokTaniDashboard: React.FC = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-amber-950">2. Pengolah &bull; Produksi Green Bean</span>
+                  <span className="text-xs font-bold text-amber-950">2. Pengolah &bull; Green Bean</span>
                   <span className="px-2 py-0.2 rounded-full text-[9px] font-black bg-blue-100 text-blue-900 border border-blue-300 flex items-center gap-1">
                     <Globe className="w-2.5 h-2.5" />
                     <span>Pasar Global</span>
                   </span>
                 </div>
                 <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
-                  Pengolah menyerap ceri petani (lintas kelompok tani) &amp; memprosesnya melalui 7 metode pasca-panen menjadi <strong>Green Bean</strong> bermutu tinggi yang <strong>dipasarkan global</strong> ke Roastery, Gudang, &amp; Konsumen.
+                  Menyerap ceri petani &amp; memprosesnya 7 metode menjadi <strong>Green Bean</strong> yang <strong>dipasarkan global</strong>.
+                </p>
+              </div>
+            </div>
+
+            {/* Pilar 3: Petugas ICS -> Audit Mutu & EUDR */}
+            <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-blue-950">3. Petugas ICS &bull; Verifikasi</span>
+                  <span className="px-2 py-0.2 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
+                    <ShieldCheck className="w-2.5 h-2.5" />
+                    <span>Audit Internal</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-blue-800 mt-0.5 leading-relaxed">
+                  Audit internal data petani (NIK/KTA), peta poligon kebun EUDR, &amp; validasi mutu brix panen ceri.
                 </p>
               </div>
             </div>
@@ -155,7 +172,7 @@ export const KelompokTaniDashboard: React.FC = () => {
             <Activity className="w-4 h-4 text-emerald-600" />
             <span>Scope Operasional Kelompok Tani</span>
           </h3>
-          <span className="text-[11px] text-stone-500">2 Pilar Inti: Petani (Ceri) &amp; Pengolah (Green Bean)</span>
+          <span className="text-[11px] text-stone-500">3 Pilar Inti: Petani (Ceri), Pengolah (Green Bean), &amp; Petugas ICS (Audit)</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -264,7 +281,7 @@ export const KelompokTaniDashboard: React.FC = () => {
           <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
             <h3 className="font-bold text-sm text-stone-900 flex items-center gap-2">
               <Users className="w-4 h-4 text-emerald-700" />
-              <span>Distribusi Staf Kelompok Tani (Scope Petani &amp; Pengolah)</span>
+              <span>Distribusi Staf Kelompok Tani (3 Pilar Layanan)</span>
             </h3>
             <Link
               to="/admin/users"
@@ -280,7 +297,7 @@ export const KelompokTaniDashboard: React.FC = () => {
               {
                 label: 'Layanan 1: Petani (Kebun & Panen Ceri)',
                 count: totalFarmers,
-                desc: 'Petani anggota pengelola plot lahan kebun kopi',
+                desc: 'Petani anggota pengelola plot lahan kebun kopi & panen ceri',
                 color: 'bg-emerald-500',
                 path: '/admin/petani',
               },
@@ -290,6 +307,13 @@ export const KelompokTaniDashboard: React.FC = () => {
                 desc: 'Operator stasiun fermentasi, penjemuran, dan hulling 7 metode',
                 color: 'bg-amber-500',
                 path: '/admin/pengolah',
+              },
+              {
+                label: 'Layanan 3: Petugas ICS (Internal Control System)',
+                count: totalIcsOfficers,
+                desc: 'Auditor internal verifikasi NIK/KTA petani, poligon EUDR, & inspeksi mutu ceri',
+                color: 'bg-blue-500',
+                path: '/admin/ict',
               },
             ].map((item, idx) => (
               <div
@@ -345,8 +369,8 @@ export const KelompokTaniDashboard: React.FC = () => {
                 <span className="font-bold text-emerald-700">Aktif &amp; Terbaca</span>
               </div>
               <div className="flex justify-between py-1.5">
-                <span className="text-stone-500">Role Verifikator:</span>
-                <span className="font-semibold text-stone-400 italic">Non-aktif Sementara</span>
+                <span className="text-stone-500">Petugas ICS:</span>
+                <span className="font-bold text-blue-700">{totalIcsOfficers} Personil Internal</span>
               </div>
             </div>
           </div>

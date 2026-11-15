@@ -112,11 +112,11 @@ export const FarmerBarcodeModal: React.FC<FarmerBarcodeModalProps> = ({
             <div className="flex items-center justify-between border-b-2 border-stone-800 pb-3 mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black text-sm">
-                  sAI
+                  CC
                 </div>
                 <div>
                   <span className="font-black text-xs uppercase tracking-wider block">
-                    sangrAI Traceability
+                    CircularCoffee Traceability
                   </span>
                   <span className="text-[10px] text-stone-600 font-bold">
                     LOT SACK LABEL • TAHAP 1 (FARM HARVEST)
@@ -301,7 +301,7 @@ export const FarmerBarcodeModal: React.FC<FarmerBarcodeModalProps> = ({
         {/* Modal Footer */}
         <div className="bg-stone-50 border-t border-stone-200 p-4 sm:p-5 flex items-center justify-between print:hidden">
           <span className="text-xs text-stone-500">
-            Sistem Barcode & Label Karung Petani Kopi sangrAI.
+            Sistem Barcode & Label Karung Petani Kopi CircularCoffee.
           </span>
           <button
             onClick={onClose}

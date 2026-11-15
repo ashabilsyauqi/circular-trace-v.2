@@ -47,6 +47,7 @@ import { RoasterCuppingSheetPage } from './pages/admin/roaster/RoasterCuppingShe
 import { RoasterSourcingPage } from './pages/admin/roaster/RoasterSourcingPage';
 import { MarketplaceSellerPanelPage } from './pages/admin/seller/MarketplaceSellerPanelPage';
 import { StakeholderFormsPage } from './pages/admin/forms/StakeholderFormsPage';
+import { BukuTransaksiPage } from './pages/admin/transaksi/BukuTransaksiPage';
 
 /**
  * Public Layout holding top Navbar + Outlet + bottom Footer
@@ -166,11 +167,7 @@ export const AppRoutes: React.FC = () => {
         />
         <Route
           path="/transactions"
-          element={
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <TransactionHistoryView />
-            </main>
-          }
+          element={<Navigate to="/admin/transaksi" replace />}
         />
       </Route>
 
@@ -183,6 +180,10 @@ export const AppRoutes: React.FC = () => {
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<KelompokTaniDashboard />} />
         <Route path="users" element={<MasterUsersView />} />
+
+        {/* Buku Transaksi: Rekapitulasi Penjualan Berhasil Marketplace */}
+        <Route path="transaksi" element={<BukuTransaksiPage />} />
+        <Route path="buku-transaksi" element={<Navigate to="/admin/transaksi" replace />} />
 
         {/* Layanan Petani: Standalone Pages & Dedicated Routes */}
         <Route path="petani" element={<MasterPetaniPage />} />

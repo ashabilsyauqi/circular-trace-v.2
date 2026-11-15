@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
 import {
@@ -27,6 +27,10 @@ import {
   ShieldCheck,
   Building2,
   Users,
+  Camera,
+  Upload,
+  Sparkles,
+  Check,
 } from 'lucide-react';
 import {
   FarmLocationMap,
@@ -34,6 +38,10 @@ import {
   PATOK_CONDITIONS,
   INDONESIAN_COFFEE_ORIGINS,
 } from '../../components/shared/FarmLocationMap';
+import {
+  DEFAULT_FARM_PHOTO_URL,
+  COFFEE_FARM_PHOTO_PRESETS,
+} from '../../data/mockData';
 
 export const MasterKebunFormPage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,13 +75,32 @@ export const MasterKebunFormPage: React.FC = () => {
     latitude: -7.1824,
     longitude: 107.5612,
     establishedYear: 2017,
-    photoUrl: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=800&auto=format&fit=crop&q=80',
+    photoUrl: DEFAULT_FARM_PHOTO_URL,
     temperatureCelsius: 19.5,
     humidityPercent: 78,
     annualRainfallMm: 2200,
     microclimateNote: 'Zona sejuk berangin lereng selatan dengan kabut harian optimal untuk pematangan ceri lambat.',
     notes: 'Lahan kebun kopi anggota terdaftar resmi dengan pemetaan koordinat polygon EUDR Deforestation-Free.',
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        alert('Ukuran file foto maksimal 8 MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setFormData((prev) => ({ ...prev, photoUrl: reader.result as string }));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Dynamic Corner Patoks (Patok Sudut BPN)
   const [patokList, setPatokList] = useState<FarmPatok[]>([
@@ -142,7 +169,7 @@ export const MasterKebunFormPage: React.FC = () => {
         latitude: existingFarm.coordinates?.latitude || -7.1824,
         longitude: existingFarm.coordinates?.longitude || 107.5612,
         establishedYear: existingFarm.establishedYear || 2017,
-        photoUrl: existingFarm.photoUrl || '',
+        photoUrl: existingFarm.photoUrl || DEFAULT_FARM_PHOTO_URL,
         temperatureCelsius: existingFarm.weatherData?.temperatureCelsius || 19.5,
         humidityPercent: existingFarm.weatherData?.humidityPercent || 78,
         annualRainfallMm: existingFarm.weatherData?.annualRainfallMm || 2200,
@@ -319,9 +346,9 @@ export const MasterKebunFormPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <Link
           to="/admin/kebun"
-          className="inline-flex items-center gap-2 text-xs font-bold text-stone-600 hover:text-amber-700 bg-white px-3 py-2 rounded-md border border-[#d2d6de] shadow-2xs transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-bold text-stone-600 hover:text-amber-700 bg-white px-3 py-2 rounded-md border border-[#d2d6de] shadow-2xs transition-colors whitespace-nowrap shrink-0"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 shrink-0" />
           <span>Kembali ke Daftar Lahan Kebun</span>
         </Link>
 

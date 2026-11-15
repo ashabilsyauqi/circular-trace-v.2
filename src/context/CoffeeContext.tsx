@@ -53,6 +53,7 @@ export type { StakeholderFormType };
 import {
   MOCK_USERS,
   INITIAL_COFFEE_FARMS,
+  DEFAULT_FARM_PHOTO_URL,
   INITIAL_FARMER_LOTS,
   INITIAL_PROCESSED_LOTS,
   INITIAL_WAREHOUSE_LOTS,
@@ -455,7 +456,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setActiveViewState(view);
     if (view === 'landing') navigate('/');
     else if (view === 'marketplace') window.open('https://marketplace.circulartrace.id/', '_blank');
-    else if (view === 'transactions') navigate('/transactions');
+    else if (view === 'transactions') navigate('/admin/transaksi');
     else if (view === 'dashboard') navigate('/admin/overview');
   };
 
@@ -477,7 +478,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } else if (path === '/marketplace') {
       setActiveViewState('marketplace');
-    } else if (path === '/transactions') {
+    } else if (path === '/transactions' || path === '/admin/transaksi') {
       setActiveViewState('transactions');
     } else if (path === '/') {
       setActiveViewState('landing');
@@ -601,12 +602,56 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [verificationStamps]);
   const [activeProcessingBatchId, setActiveProcessingBatchId] = useState<string | null>(null);
 
+  const OLD_COFFEE_FARM_PHOTO_MARKERS = [
+    'photo-1524350876685-274059332603', // sack of beans
+    'photo-1611162458324-aae1eb4129a4', // coffee cup
+    'photo-1514432324607-a09d9b4aefdd', // latte art
+    'photo-1559056199-641a0ac8b55e', // coffee bag
+    'photo-1587734195503-904fca47e0e9', // bowl of roasted beans
+    'photo-1518832553480-cd0e625ed3e6', // roasted beans table
+    'photo-1511920170033-f8396924c348', // coffee mug
+  ];
+
+  const CANONICAL_FARM_PHOTOS: Record<string, string> = {
+    'FARM-PGL-01': 'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&auto=format&fit=crop&q=80',
+    'FARM-PGL-02': 'https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=800&auto=format&fit=crop&q=80',
+    'FARM-GYO-01': 'https://images.unsplash.com/photo-1582281298055-e25b84a30b0b?w=800&auto=format&fit=crop&q=80',
+    'FARM-BLI-01': 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&auto=format&fit=crop&q=80',
+    'FARM-FLR-01': 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=800&auto=format&fit=crop&q=80',
+    'FARM-TRJ-01': 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=800&auto=format&fit=crop&q=80',
+  };
+
+  const FALLBACK_PLANTATION_PHOTOS = [
+    'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1582281298055-e25b84a30b0b?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=800&auto=format&fit=crop&q=80',
+  ];
+
+  const upgradeFarmPhotos = (farms: CoffeeFarm[]): CoffeeFarm[] => {
+    return farms.map((f, idx) => {
+      const isOldPhoto =
+        !f.photoUrl ||
+        OLD_COFFEE_FARM_PHOTO_MARKERS.some((marker) => f.photoUrl.includes(marker));
+      if (isOldPhoto) {
+        const canonical = CANONICAL_FARM_PHOTOS[f.id];
+        const replacement = canonical || FALLBACK_PLANTATION_PHOTOS[idx % FALLBACK_PLANTATION_PHOTOS.length];
+        return { ...f, photoUrl: replacement };
+      }
+      return f;
+    });
+  };
+
   const [coffeeFarms, setCoffeeFarms] = useState<CoffeeFarm[]>(() => {
     const saved = localStorage.getItem('cct_coffeeFarms');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return upgradeFarmPhotos(parsed);
+        }
       } catch (e) {
         // Fallback
       }
@@ -701,7 +746,15 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // --- MARKETPLACE SELLER ORDERS (ORDER LIFECYCLE & REVENUE) ---
   const [sellerOrders, setSellerOrders] = useState<SellerOrder[]>(() => {
     const saved = localStorage.getItem('cct_sellerOrders');
-    return saved ? JSON.parse(saved) : INITIAL_SELLER_ORDERS;
+    if (!saved) return INITIAL_SELLER_ORDERS;
+    try {
+      const parsed: SellerOrder[] = JSON.parse(saved);
+      const existingIds = new Set(parsed.map((o) => o.id));
+      const missing = INITIAL_SELLER_ORDERS.filter((o) => !existingIds.has(o.id));
+      return missing.length > 0 ? [...parsed, ...missing] : parsed;
+    } catch {
+      return INITIAL_SELLER_ORDERS;
+    }
   });
 
   // --- QREMA ROASTERY ERP STATE ---
@@ -1503,6 +1556,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const newFarm: CoffeeFarm = {
       ...farmData,
+      photoUrl: farmData.photoUrl || DEFAULT_FARM_PHOTO_URL,
       id: newFarmId,
       farmerId: currentUser?.id || farmData.farmerId || 'user-petani-1',
       farmerName: currentUser?.name || farmData.farmerName || 'Asep Supriatna',
@@ -3313,6 +3367,26 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setSellerOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: 'selesai', statusHistory: updatedHistory } : o))
     );
+
+    // Sync to supply chain transactions ledger as well if not already recorded
+    const existingTrx = transactions.find((t) => t.id === `TRX-${order.id}`);
+    if (!existingTrx) {
+      setTransactions((prev) => [
+        {
+          id: `TRX-${order.id}`,
+          date: now.split(' ')[0],
+          fromRole: order.sellerRole,
+          fromName: order.sellerName,
+          toRole: order.buyerRole,
+          toName: order.buyerName,
+          itemName: `${order.productTitle} (${order.quantity} x ${order.packageWeight})`,
+          quantity: `${order.quantity} x ${order.packageWeight}`,
+          totalAmount: order.totalAmount,
+          status: 'Selesai',
+        },
+        ...prev,
+      ]);
+    }
 
     return {
       success: true,

@@ -32,6 +32,7 @@ import {
   Printer,
   ClipboardCheck,
   BadgeCheck,
+  ChevronRight,
 } from 'lucide-react';
 import {
   CoffeeFarm,
@@ -44,6 +45,7 @@ import {
   VerifierDomain,
   AppUser,
 } from '../../types/coffee';
+import { IntegratedCircularIndicesView } from './IntegratedCircularIndicesView';
 
 export const VerifierView: React.FC = () => {
   const {
@@ -112,6 +114,12 @@ export const VerifierView: React.FC = () => {
   const [harvestFloatersPercent, setHarvestFloatersPercent] = useState<number>(0);
   const [harvestStampTitle, setHarvestStampTitle] = useState('Standar Mutu Petik Merah & Brix Terverifikasi');
   const [harvestNotes, setHarvestNotes] = useState('');
+  const [selectedVerifierFarmId, setSelectedVerifierFarmId] = useState<string>('');
+  const [showCircularIndicesPanel, setShowCircularIndicesPanel] = useState<boolean>(true);
+
+  const activeSelectedFarm = useMemo(() => {
+    return coffeeFarms.find((f) => f.id === selectedVerifierFarmId) || coffeeFarms[0];
+  }, [coffeeFarms, selectedVerifierFarmId]);
 
   // General Stamp Issuance Modal (for non-roast domains: Petani, Pengolah, Gudang, Cafe)
   const [genericModalOpen, setGenericModalOpen] = useState(false);
@@ -1082,6 +1090,76 @@ export const VerifierView: React.FC = () => {
           {/* SUB-SECTION 2: LAHAN & KEBUN EUDR */}
           {farmerSubSection === 'farms' && (
             <div className="space-y-6">
+              {/* TOP VISUALIZER: HASIL VERIFIKASI DIAGRAM LINGKARAN TERPADU */}
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                  <div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                      <Award className="w-5 h-5 text-emerald-600" />
+                      <span>Hasil Verifikasi &amp; Sertifikasi Kebun (CT-3 Tri-Index)</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Visualisasi resmi lembar kerja verifikator dengan 4 pilar indeks sirkularitas, keberlanjutan, dan kesiapan sertifikasi mandiri.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <span className="font-semibold text-slate-500">Pilih Kebun:</span>
+                      <select
+                        value={activeSelectedFarm?.id || ''}
+                        onChange={(e) => setSelectedVerifierFarmId(e.target.value)}
+                        className="font-bold bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-slate-800 dark:text-slate-200 text-xs"
+                      >
+                        {coffeeFarms.map((farm) => (
+                          <option key={farm.id} value={farm.id}>
+                            {farm.farmName} ({farm.farmerName})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <Link
+                      to={`/admin/ict/sertifikasi-kebun/${activeSelectedFarm?.id || ''}`}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold hover:bg-emerald-100 transition-all flex items-center gap-1.5"
+                    >
+                      <span>Lembar Audit Detail</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowCircularIndicesPanel(!showCircularIndicesPanel)}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 text-xs font-semibold transition-all cursor-pointer"
+                    >
+                      {showCircularIndicesPanel ? 'Sembunyikan' : 'Tampilkan Diagram'}
+                    </button>
+                  </div>
+                </div>
+
+                {showCircularIndicesPanel && (
+                  <IntegratedCircularIndicesView
+                    farmName={activeSelectedFarm?.farmName}
+                    farmCode={activeSelectedFarm?.id}
+                    isMajorPassed={activeSelectedFarm?.verificationStatus === 'verified' || true}
+                  />
+                )}
+              </div>
+
+              {/* FARM LIST TITLE & SUMMARY */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                    Daftar Plot Kebun &amp; Lahan Terdaftar EUDR
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    Klik tombol pada kartu kebun untuk memeriksa hasil diagram lingkaran atau audit stempel
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+                  Total {coffeeFarms.length} Lahan
+                </span>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {coffeeFarms
                   .filter((farm) => {
@@ -1099,11 +1177,14 @@ export const VerifierView: React.FC = () => {
                   })
                   .map((farm) => {
                     const isVerified = farm.verificationStatus === 'verified';
+                    const isSelectedInView = activeSelectedFarm?.id === farm.id;
                     return (
                       <div
                         key={farm.id}
                         className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all p-5 flex flex-col justify-between ${
-                          isVerified
+                          isSelectedInView
+                            ? 'ring-2 ring-emerald-500 border-emerald-400 dark:border-emerald-600 shadow-md'
+                            : isVerified
                             ? 'border-emerald-300 dark:border-emerald-700/60 shadow-md'
                             : 'border-slate-200 dark:border-slate-800 shadow-sm'
                         }`}
@@ -1145,30 +1226,70 @@ export const VerifierView: React.FC = () => {
                               </span>
                             </div>
                           </div>
+
+                          {/* Mini indices badges */}
+                          <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-center font-bold">
+                            <div className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 rounded-lg py-1 border border-emerald-200/50">
+                              <div className="text-[9px] text-emerald-600 font-semibold">CT-4CI</div>
+                              <div>95.9%</div>
+                            </div>
+                            <div className="bg-sky-50 dark:bg-sky-950/40 text-sky-700 rounded-lg py-1 border border-sky-200/50">
+                              <div className="text-[9px] text-sky-600 font-semibold">CT-CCI</div>
+                              <div>56.04</div>
+                            </div>
+                            <div className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 rounded-lg py-1 border border-amber-200/50">
+                              <div className="text-[9px] text-amber-600 font-semibold">CT-SDI</div>
+                              <div>84.44</div>
+                            </div>
+                            <div className="bg-purple-50 dark:bg-purple-950/40 text-purple-700 rounded-lg py-1 border border-purple-200/50">
+                              <div className="text-[9px] text-purple-600 font-semibold">FRI</div>
+                              <div>85.00</div>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
                           <button
-                            onClick={() => openGenericModal('farm', farm.id, farm.farmName, farm.location)}
-                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                              isVerified
-                                ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200'
-                                : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md'
+                            type="button"
+                            onClick={() => {
+                              setSelectedVerifierFarmId(farm.id);
+                              setShowCircularIndicesPanel(true);
+                              window.scrollTo({ top: 380, behavior: 'smooth' });
+                            }}
+                            className={`w-full py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                              isSelectedInView
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200'
+                                : 'border-stone-200 hover:bg-stone-50 text-stone-700 dark:text-stone-300'
                             }`}
+                            title="Tampilkan Diagram Lingkaran Kebun Ini"
                           >
-                            <ShieldCheck className="w-4 h-4" />
-                            <span>{isVerified ? 'Perbarui Stempel EUDR' : 'Audit & Beri Stempel EUDR'}</span>
+                            <span>⭕</span>
+                            <span>{isSelectedInView ? '✓ Sedang Tampil di Diagram' : 'Lihat Diagram Lingkaran'}</span>
                           </button>
 
-                          {isVerified && (
+                          <div className="flex items-center gap-2">
                             <button
-                              onClick={() => revokeVerificationStamp('farm', farm.id)}
-                              className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs"
-                              title="Cabut Stempel"
+                              onClick={() => openGenericModal('farm', farm.id, farm.farmName, farm.location)}
+                              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                isVerified
+                                  ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200'
+                                  : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md'
+                              }`}
                             >
-                              <XCircle className="w-4 h-4" />
+                              <ShieldCheck className="w-4 h-4" />
+                              <span>{isVerified ? 'Perbarui Stempel EUDR' : 'Audit & Beri Stempel EUDR'}</span>
                             </button>
-                          )}
+
+                            {isVerified && (
+                              <button
+                                onClick={() => revokeVerificationStamp('farm', farm.id)}
+                                className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs cursor-pointer"
+                                title="Cabut Stempel"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

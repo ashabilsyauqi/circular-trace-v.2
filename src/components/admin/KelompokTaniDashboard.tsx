@@ -247,7 +247,7 @@ export const KelompokTaniDashboard: React.FC = () => {
             </div>
             <TrendingUp className="w-16 h-16 text-white/20 absolute top-2 right-2 z-0 pointer-events-none" />
             <Link
-              to="/transactions"
+              to="/admin/transaksi"
               className="bg-black/20 hover:bg-black/35 text-white/95 text-xs py-1.5 px-4 flex items-center justify-between transition-colors z-10 font-bold"
             >
               <span>Buka Ledger Transaksi</span>
@@ -352,7 +352,7 @@ export const KelompokTaniDashboard: React.FC = () => {
           </div>
 
           <Link
-            to="/transactions"
+            to="/admin/transaksi"
             className="w-full mt-4 py-2 px-3 rounded-md bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold text-xs text-center block transition-colors border border-stone-200"
           >
             Buka Riwayat Transaksi Lengkap &rarr;

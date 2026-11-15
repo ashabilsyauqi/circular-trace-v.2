@@ -967,15 +967,6 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
           )}
 
           <div className="space-y-1 mt-1">
-            <Link
-              to="/"
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-[#c2c7d0] hover:bg-[#494e53] hover:text-white transition-colors"
-              title="Landing Page"
-            >
-              <Globe className="w-4 h-4 shrink-0" />
-              {!isCollapsed && <span className="flex-1 truncate">Landing Page Publik</span>}
-            </Link>
-
             <a
               href="https://marketplace.circulartrace.id/"
               target="_blank"
@@ -1014,14 +1005,25 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               </NavLink>
             )}
 
-            <Link
-              to="/transactions"
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-[#c2c7d0] hover:bg-[#494e53] hover:text-white transition-colors"
-              title="Buku Besar Transaksi"
+            <NavLink
+              to="/admin/transaksi"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  isActive
+                    ? 'bg-[#007bff] text-white font-bold shadow-xs'
+                    : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                }`
+              }
+              title="Buku Transaksi & Rekapitulasi Penjualan Marketplace"
             >
-              <History className="w-4 h-4 shrink-0" />
+              <History className="w-4 h-4 text-emerald-400 shrink-0" />
               {!isCollapsed && <span className="flex-1 truncate">Buku Transaksi</span>}
-            </Link>
+              {!isCollapsed && (
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-600 text-white font-bold">
+                  Rekap
+                </span>
+              )}
+            </NavLink>
 
             {/* Blanko Formulir Fisik Lapangan A4 */}
             <button

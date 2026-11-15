@@ -9,8 +9,10 @@ export type VerifierDomain = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'caf
 export type MarketplaceCategory =
   | 'cherry'               // 1. Ceri Kopi Segar / Panen Petani
   | 'green_bean_processor' // 2. Green Bean Hasil Olahan (Mill)
+  | 'green_bean_wetmill'   // Green Bean Wetmill
   | 'green_bean_warehouse' // 3. Green Bean Pergudangan & Ekspor (Gudang QA)
-  | 'roasted_bean';        // 4. Biji Kopi Sangrai Artisan (Roaster)
+  | 'roasted_bean'         // 4. Biji Kopi Sangrai Artisan (Roaster)
+  | 'cafe_retail';         // 5. Produk Kemasan / Retail Cafe
 
 export interface AppUser {
   id: string;

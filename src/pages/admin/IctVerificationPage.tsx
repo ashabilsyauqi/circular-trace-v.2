@@ -188,26 +188,26 @@ export const IctVerificationPage: React.FC = () => {
           <button
             type="button"
             onClick={() => openBlankoModal('petani')}
-            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer whitespace-nowrap shrink-0"
             title="Download / Cetak Blanko Formulir Fisik Lapangan (A4) untuk ICS"
           >
-            <Printer className="w-4 h-4 text-amber-600" />
+            <Printer className="w-4 h-4 text-amber-600 shrink-0" />
             <span>Blanko Form ICS (A4)</span>
           </button>
 
           <Link
             to="/admin/ict/ct-dashboard"
-            className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
+            className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors whitespace-nowrap shrink-0"
           >
-            <Award className="w-4 h-4 text-amber-200" />
+            <Award className="w-4 h-4 text-amber-200 shrink-0" />
             <span>Sertifikasi Kebun (CT Index)</span>
           </Link>
 
           <Link
             to="/admin/ict/audit"
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
+            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors whitespace-nowrap shrink-0"
           >
-            <ClipboardCheck className="w-4 h-4" />
+            <ClipboardCheck className="w-4 h-4 shrink-0" />
             <span>Lembar Kerja Audit ICS</span>
           </Link>
 

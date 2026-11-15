@@ -41,6 +41,8 @@ export const AdminLTELayout: React.FC = () => {
 
   const isPathAllowed = (path: string): boolean => {
     if (!userRole || userRole === 'admin_kelompok_tani') return true;
+    if (path.startsWith('/admin/transaksi')) return true;
+    if (path.startsWith('/admin/forms') || path.includes('/blanko')) return true;
     if (path.startsWith('/admin/seller')) {
       return ['roaster', 'gudang', 'pengolah', 'petani', 'admin_kelompok_tani'].includes(userRole);
     }
@@ -362,6 +364,28 @@ export const AdminLTELayout: React.FC = () => {
       };
     }
 
+    if (path.startsWith('/admin/transaksi')) {
+      return {
+        title: 'Buku Transaksi & Rekapitulasi Marketplace',
+        subtitle: 'Buku besar pencatatan riwayat transaksi dan rekapitulasi penjualan yang berhasil diselesaikan di marketplace kopi.',
+        breadcrumbs: [rootBreadcrumb, { label: 'Buku Transaksi' }],
+      };
+    }
+    if (path.startsWith('/admin/seller')) {
+      return {
+        title: 'Seller Panel & Monitoring Penjualan',
+        subtitle: 'Pusat manajemen pesanan marketplace, margin laba kotor, dan integrasi lot terverifikasi.',
+        breadcrumbs: [rootBreadcrumb, { label: 'Seller Panel' }],
+      };
+    }
+    if (path.startsWith('/admin/forms')) {
+      return {
+        title: 'Formulir Blanko Fisik Lapangan (A4)',
+        subtitle: 'Unduh dan cetak formulir standar A4 untuk pencatatan manual petani, pengolah, gudang, roastery, dan audit ICS.',
+        breadcrumbs: [rootBreadcrumb, { label: 'Blanko Formulir (A4)' }],
+      };
+    }
+
     // Default: Overview for Admin Kelompok Tani
     return {
       title: 'Control Tower Kelompok Tani',
@@ -373,7 +397,28 @@ export const AdminLTELayout: React.FC = () => {
     };
   };
 
-  const headerMeta = getHeaderMeta();
+  const sanitizeBreadcrumbs = (items: { label: string; path?: string }[]) => {
+    const sanitized: { label: string; path?: string }[] = [];
+    for (const item of items) {
+      if (!item || !item.label) continue;
+      const prev = sanitized[sanitized.length - 1];
+      if (
+        prev &&
+        ((prev.path && item.path && prev.path === item.path) ||
+          prev.label.trim().toLowerCase() === item.label.trim().toLowerCase())
+      ) {
+        continue;
+      }
+      sanitized.push(item);
+    }
+    return sanitized;
+  };
+
+  const rawHeaderMeta = getHeaderMeta();
+  const headerMeta = {
+    ...rawHeaderMeta,
+    breadcrumbs: sanitizeBreadcrumbs(rawHeaderMeta.breadcrumbs),
+  };
 
   return (
     <div className="min-h-screen flex bg-[#f4f6f9] font-sans antialiased text-[#212529]">

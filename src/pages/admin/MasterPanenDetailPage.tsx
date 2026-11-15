@@ -51,9 +51,9 @@ export const MasterPanenDetailPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link
           to="/admin/panen"
-          className="inline-flex items-center gap-2 text-xs font-bold text-stone-600 hover:text-emerald-700 bg-white px-3 py-2 rounded-md border border-[#d2d6de] shadow-2xs transition-colors self-start"
+          className="inline-flex items-center gap-2 text-xs font-bold text-stone-600 hover:text-emerald-700 bg-white px-3 py-2 rounded-md border border-[#d2d6de] shadow-2xs transition-colors self-start whitespace-nowrap shrink-0"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 shrink-0" />
           <span>Kembali ke Data Hasil Panen</span>
         </Link>
 

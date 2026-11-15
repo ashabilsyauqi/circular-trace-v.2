@@ -733,13 +733,13 @@ export const IcsAuditSheetPage: React.FC = () => {
 
   // Synchronize URL and states
   useEffect(() => {
-    const urlType = routeTargetType || searchParams.get('type');
+    const urlType = (routeTargetType as 'farmer' | 'farm' | 'harvest') || (searchParams.get('type') as 'farmer' | 'farm' | 'harvest');
     const urlId = routeTargetId || searchParams.get('id');
     if (urlType === 'farmer' || urlType === 'farm' || urlType === 'harvest') {
-      setTargetType(urlType);
-    }
-    if (urlId) {
-      setTargetId(urlId);
+      setTargetType((prev) => (prev !== urlType ? urlType : prev));
+      if (urlId) {
+        setTargetId((prev) => (prev !== urlId ? urlId : prev));
+      }
     }
   }, [routeTargetType, routeTargetId, searchParams]);
 
@@ -749,18 +749,34 @@ export const IcsAuditSheetPage: React.FC = () => {
     [users]
   );
 
-  // Set default target ID if none selected
+  // Validate target ID and ensure it corresponds to the current targetType
   useEffect(() => {
-    if (!targetId) {
-      if (targetType === 'farmer' && farmersList.length > 0) {
-        setTargetId(farmersList[0].id);
-      } else if (targetType === 'farm' && coffeeFarms.length > 0) {
-        setTargetId(coffeeFarms[0].id);
-      } else if (targetType === 'harvest' && farmerLots.length > 0) {
-        setTargetId(farmerLots[0].id);
+    if (targetType === 'farmer') {
+      if (!targetId || !farmersList.some((f) => f.id === targetId)) {
+        if (farmersList.length > 0) {
+          const fallback = farmersList[0].id;
+          setTargetId(fallback);
+          navigate(`/admin/ict/audit/farmer/${fallback}`, { replace: true });
+        }
+      }
+    } else if (targetType === 'farm') {
+      if (!targetId || !coffeeFarms.some((f) => f.id === targetId)) {
+        if (coffeeFarms.length > 0) {
+          const fallback = coffeeFarms[0].id;
+          setTargetId(fallback);
+          navigate(`/admin/ict/audit/farm/${fallback}`, { replace: true });
+        }
+      }
+    } else if (targetType === 'harvest') {
+      if (!targetId || !farmerLots.some((l) => l.id === targetId)) {
+        if (farmerLots.length > 0) {
+          const fallback = farmerLots[0].id;
+          setTargetId(fallback);
+          navigate(`/admin/ict/audit/harvest/${fallback}`, { replace: true });
+        }
       }
     }
-  }, [targetType, targetId, farmersList, coffeeFarms, farmerLots]);
+  }, [targetType, targetId, farmersList, coffeeFarms, farmerLots, navigate]);
 
   // Current object being audited
   const selectedFarmer = useMemo(
@@ -910,19 +926,47 @@ export const IcsAuditSheetPage: React.FC = () => {
     return `Objek Audit ${targetType.toUpperCase()}`;
   }, [targetType, selectedFarmer, selectedFarm, selectedLot]);
 
-  // Handle switching target type
+  // Handle switching target type with intelligent cross-entity association
   const handleSwitchTargetType = (newType: 'farmer' | 'farm' | 'harvest') => {
-    setTargetType(newType);
-    let newId = '';
-    if (newType === 'farmer' && farmersList.length > 0) {
-      newId = farmersList[0].id;
-    } else if (newType === 'farm' && coffeeFarms.length > 0) {
-      newId = coffeeFarms[0].id;
-    } else if (newType === 'harvest' && farmerLots.length > 0) {
-      newId = farmerLots[0].id;
+    let nextId = '';
+    if (newType === 'farmer') {
+      if (targetType === 'farm' && selectedFarm) {
+        const owner = farmersList.find((f) => f.id === selectedFarm.farmerId || f.name === selectedFarm.farmerName);
+        if (owner) nextId = owner.id;
+      } else if (targetType === 'harvest' && selectedLot) {
+        const owner = farmersList.find((f) => f.id === selectedLot.farmerId || f.name === selectedLot.farmerName);
+        if (owner) nextId = owner.id;
+      }
+      if (!nextId) nextId = farmersList[0]?.id || '';
+    } else if (newType === 'farm') {
+      if (targetType === 'farmer' && selectedFarmer) {
+        const farm = coffeeFarms.find((f) => f.farmerId === selectedFarmer.id);
+        if (farm) nextId = farm.id;
+      } else if (targetType === 'harvest' && selectedLot) {
+        const farm = coffeeFarms.find((f) => f.id === selectedLot.farmId || f.farmName === selectedLot.farmName);
+        if (farm) nextId = farm.id;
+      }
+      if (!nextId) nextId = coffeeFarms[0]?.id || '';
+    } else if (newType === 'harvest') {
+      if (targetType === 'farmer' && selectedFarmer) {
+        const lot = farmerLots.find((l) => l.farmerId === selectedFarmer.id || l.farmerName === selectedFarmer.name);
+        if (lot) nextId = lot.id;
+      } else if (targetType === 'farm' && selectedFarm) {
+        const lot = farmerLots.find((l) => l.farmId === selectedFarm.id || l.farmerId === selectedFarm.farmerId);
+        if (lot) nextId = lot.id;
+      }
+      if (!nextId) nextId = farmerLots[0]?.id || '';
     }
+
+    setTargetType(newType);
+    setTargetId(nextId);
+    navigate(`/admin/ict/audit/${newType}/${nextId}`, { replace: true });
+  };
+
+  // Handle dropdown selection change
+  const handleTargetChange = (newId: string) => {
     setTargetId(newId);
-    setSearchParams({ type: newType, id: newId });
+    navigate(`/admin/ict/audit/${targetType}/${newId}`, { replace: true });
   };
 
   // Handle saving the audit worksheet
@@ -964,13 +1008,13 @@ export const IcsAuditSheetPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <Link
             to="/admin/ict"
-            className="p-2 rounded-md hover:bg-stone-100 text-stone-600 transition-colors flex items-center gap-1.5 text-xs font-bold"
+            className="p-2 rounded-md hover:bg-stone-100 text-stone-600 transition-colors flex items-center gap-1.5 text-xs font-bold whitespace-nowrap shrink-0"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 shrink-0" />
             <span>Kembali ke Pusat Verifikasi</span>
           </Link>
-          <div className="h-4 w-px bg-stone-300 hidden sm:block" />
-          <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded border border-blue-200">
+          <div className="h-4 w-px bg-stone-300 hidden sm:block shrink-0" />
+          <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded border border-blue-200 whitespace-nowrap shrink-0">
             FRM-ICS-KOPTAN-2026/REV-03
           </span>
         </div>
@@ -979,25 +1023,25 @@ export const IcsAuditSheetPage: React.FC = () => {
           <button
             type="button"
             onClick={() => openBlankoModal('petani')}
-            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-md text-xs font-bold flex items-center gap-2 transition-all cursor-pointer border border-amber-300 shadow-2xs"
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-md text-xs font-bold flex items-center gap-2 transition-all cursor-pointer border border-amber-300 shadow-2xs whitespace-nowrap shrink-0"
             title="Download / Cetak Blanko Formulir Fisik Petani & Kebun (A4) untuk Pengisian Lapangan"
           >
-            <Printer className="w-4 h-4 text-amber-600" />
+            <Printer className="w-4 h-4 text-amber-600 shrink-0" />
             <span>Blanko Form Petani (A4)</span>
           </button>
           <button
             type="button"
             onClick={handlePrint}
-            className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-md text-xs font-bold flex items-center gap-2 transition-all cursor-pointer border border-stone-300"
+            className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-md text-xs font-bold flex items-center gap-2 transition-all cursor-pointer border border-stone-300 whitespace-nowrap shrink-0"
           >
-            <Printer className="w-4 h-4" />
+            <Printer className="w-4 h-4 text-stone-600 shrink-0" />
             <span>Cetak Lembar Kerja (Print)</span>
           </button>
           <Link
             to="/admin/ict"
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-bold flex items-center gap-2 transition-all shadow-xs"
+            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-bold flex items-center gap-2 transition-all shadow-xs whitespace-nowrap shrink-0"
           >
-            <ShieldCheck className="w-4 h-4" />
+            <ShieldCheck className="w-4 h-4 shrink-0" />
             <span>Lihat Antrean Audit</span>
           </Link>
         </div>
@@ -1172,7 +1216,7 @@ export const IcsAuditSheetPage: React.FC = () => {
               {targetType === 'farmer' && (
                 <select
                   value={targetId}
-                  onChange={(e) => setTargetId(e.target.value)}
+                  onChange={(e) => handleTargetChange(e.target.value)}
                   className="w-full bg-white border border-stone-300 rounded-md px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
                   {farmersList.map((f) => (
@@ -1186,7 +1230,7 @@ export const IcsAuditSheetPage: React.FC = () => {
               {targetType === 'farm' && (
                 <select
                   value={targetId}
-                  onChange={(e) => setTargetId(e.target.value)}
+                  onChange={(e) => handleTargetChange(e.target.value)}
                   className="w-full bg-white border border-stone-300 rounded-md px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
                   {coffeeFarms.map((farm) => (
@@ -1200,7 +1244,7 @@ export const IcsAuditSheetPage: React.FC = () => {
               {targetType === 'harvest' && (
                 <select
                   value={targetId}
-                  onChange={(e) => setTargetId(e.target.value)}
+                  onChange={(e) => handleTargetChange(e.target.value)}
                   className="w-full bg-white border border-stone-300 rounded-md px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
                   {farmerLots.map((lot) => (

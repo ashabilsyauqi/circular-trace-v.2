@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
@@ -25,6 +25,7 @@ import {
   Award,
   Scale,
   Zap,
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
   ChevronUp,
@@ -64,108 +65,157 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] text-stone-900 overflow-x-hidden selection:bg-amber-500 selection:text-stone-950 font-sans">
       {/* ------------------------------------------------------------- */}
-      {/* SECTION 1: HERO SECTION (homesections)                         */}
+      {/* SECTION 1: HERO SECTION (Farm-to-Cup Custom Artwork Banner)    */}
       {/* ------------------------------------------------------------- */}
-      <section className="relative pt-12 pb-20 md:pt-20 md:pb-32 overflow-hidden border-b border-stone-200/80">
-        {/* Background Subtle Gradient Blobs */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-amber-200/40 via-orange-100/20 to-transparent blur-3xl -z-10 pointer-events-none"></div>
-        <div className="absolute top-40 right-10 w-80 h-80 bg-emerald-200/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+      <section
+        className="relative pt-10 pb-20 md:pt-14 md:pb-24 overflow-hidden bg-[#0a160f] text-white border-b border-stone-800 select-none"
+      >
+        {/* Farm-to-Cup Coffee Traceability Artwork Background */}
+        <div
+          className="absolute inset-0 bg-cover bg-no-repeat bg-[center_right] sm:bg-[right_center]"
+          style={{
+            backgroundImage: "url('/hero-coffee-trace.jpg')",
+          }}
+        />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Top Pill Tag */}
-          <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-stone-300/80 shadow-xs backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-xs font-bold text-stone-800 tracking-tight">
-                {content.hero.pillLabel}
-              </span>
-              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500 text-stone-950">
-                {content.hero.circularTag}
-              </span>
+        {/* Layered Gradient Overlays for Supreme Left Contrast */}
+        {/* 1. Deep moody forest-green/espresso shadow on the left to perfectly match the artwork */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#07130c]/98 via-[#07130c]/90 md:via-[#07130c]/75 lg:via-[#07130c]/45 to-transparent pointer-events-none" />
+
+        {/* 2. Top and bottom soft vignettes */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#07130c]/80 via-transparent to-[#07130c]/95 pointer-events-none" />
+
+        {/* 3. Subtle ambient warm glow on headline */}
+        <div className="absolute top-1/4 left-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-2 sm:pt-4">
+            {/* Left Column: Left-aligned Text, Headlines, Actions, and Trust (Col 1-8) */}
+            <div className="lg:col-span-7 xl:col-span-8 text-left space-y-6">
+              {/* Top Pill Tag */}
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-stone-900/80 border border-amber-500/40 shadow-lg backdrop-blur-md">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-xs font-bold text-stone-200 tracking-tight">
+                    {content.hero.pillLabel}
+                  </span>
+                  <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500 text-stone-950">
+                    {content.hero.circularTag}
+                  </span>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/30 backdrop-blur-md text-xs text-emerald-300">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="font-semibold">Farm-to-Cup Traceability</span>
+                </div>
+              </div>
+
+              {/* Main Headline */}
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-black text-white tracking-tight leading-[1.1] drop-shadow-lg">
+                {content.hero.titlePart1}{' '}
+                <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-200 bg-clip-text text-transparent">
+                  {content.hero.titleHighlight}
+                </span>{' '}
+                {content.hero.titlePart2}
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-sm sm:text-base lg:text-lg text-stone-200 max-w-xl leading-relaxed drop-shadow-md">
+                {content.hero.subtitlePre}<strong className="text-white font-semibold">{content.hero.subtitleStrong1}</strong>{content.hero.subtitleMid}<strong className="text-amber-300 font-semibold">{content.hero.subtitleStrong2}</strong>{content.hero.subtitleEnd}
+              </p>
+
+              {/* Main Action Buttons (Left Aligned) */}
+              <div className="pt-1 flex flex-wrap items-center gap-3 sm:gap-4">
+                <button
+                  onClick={() => openRegister('roaster')}
+                  className="px-6 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-sm sm:text-base shadow-xl shadow-amber-500/25 hover:shadow-2xl hover:scale-102 transition-all flex items-center gap-2.5 border border-amber-400 group cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-stone-950 group-hover:scale-110 transition-transform" />
+                  <span>{content.hero.ctaRegister}</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                  onClick={() => setActiveView('marketplace')}
+                  className="px-5 sm:px-6 py-3.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm sm:text-base shadow-lg border border-white/25 backdrop-blur-md hover:scale-102 transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Store className="w-4 h-4 text-amber-400" />
+                  <span>{content.hero.ctaMarketplace}</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveView('transactions')}
+                  className="px-4 sm:px-5 py-3.5 rounded-2xl bg-black/40 hover:bg-black/60 text-stone-200 hover:text-white font-semibold text-sm border border-white/15 backdrop-blur-md transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <History className="w-4 h-4 text-stone-400" />
+                  <span>{content.hero.ctaLedger}</span>
+                </button>
+              </div>
+
+              {/* Trust Ticker Microcopy (Left Aligned) */}
+              <div className="pt-2 flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs text-stone-300">
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-white/10 backdrop-blur-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  {content.hero.trust1}
+                </span>
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-white/10 backdrop-blur-xs">
+                  <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                  {content.hero.trust2}
+                </span>
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-white/10 backdrop-blur-xs">
+                  <CheckCircle2 className="w-4 h-4 text-sky-400" />
+                  {content.hero.trust3}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Main Headline & Subtitle */}
-          <div className="text-center max-w-4xl mx-auto space-y-6">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-stone-950 tracking-tight leading-[1.1]">
-              {content.hero.titlePart1}{' '}
-              <span className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 bg-clip-text text-transparent">
-                {content.hero.titleHighlight}
-              </span>{' '}
-              {content.hero.titlePart2}
-            </h1>
-            <p className="text-base sm:text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-              {content.hero.subtitlePre}<strong>{content.hero.subtitleStrong1}</strong>{content.hero.subtitleMid}<strong>{content.hero.subtitleStrong2}</strong>{content.hero.subtitleEnd}
-            </p>
+            {/* Right Column: Clean Negative Space allowing the Farm-to-Cup artwork to shine */}
+            <div className="lg:col-span-5 xl:col-span-4 hidden lg:flex flex-col items-end justify-between self-stretch py-2 min-h-[360px]">
+              {/* Top Right Live Route Indicator */}
+              <div className="p-4 rounded-2xl bg-black/40 backdrop-blur-md border border-white/15 text-right shadow-2xl max-w-xs space-y-1">
+                <div className="inline-flex items-center gap-1.5 text-[10px] uppercase font-black tracking-wider text-amber-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span>Rantai Pasok Terpadu</span>
+                </div>
+                <div className="text-xs font-bold text-white leading-tight">
+                  Kebun &bull; Pengolah &bull; Silo &bull; Roastery &bull; Kafe
+                </div>
+                <p className="text-[11px] text-stone-300 leading-snug">
+                  Jalur ketertelusuran 100% transparan berstandar SCA Specialty &amp; EUDR.
+                </p>
+              </div>
 
-            {/* Main Action Buttons */}
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-              <button
-                onClick={() => openRegister('roaster')}
-                className="px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-stone-950 hover:bg-stone-800 text-amber-400 hover:text-amber-300 font-black text-sm sm:text-base shadow-xl hover:shadow-2xl transition-all flex items-center gap-2.5 border border-stone-800 group cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-                <span>{content.hero.ctaRegister}</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                onClick={() => setActiveView('marketplace')}
-                className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm sm:text-base shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <Store className="w-4 h-4 text-stone-950" />
-                <span>{content.hero.ctaMarketplace}</span>
-              </button>
-
-              <button
-                onClick={() => setActiveView('transactions')}
-                className="px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-white hover:bg-stone-100 text-stone-700 font-bold text-sm border border-stone-300 shadow-xs transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <History className="w-4 h-4 text-stone-500" />
-                <span>{content.hero.ctaLedger}</span>
-              </button>
-            </div>
-
-            {/* Trust Ticker Microcopy */}
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-stone-500">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                {content.hero.trust1}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-amber-600" />
-                {content.hero.trust2}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                {content.hero.trust3}
-              </span>
+              {/* Bottom Right Floating Badge near the coffee cup */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-md border border-amber-400/30 text-amber-300 text-xs font-semibold shadow-lg">
+                <Coffee className="w-4 h-4 text-amber-400" />
+                <span>100% Farm-to-Cup QR Traceability</span>
+              </div>
             </div>
           </div>
 
           {/* Key Metrics Stats Grid */}
-          <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
-            <div className="bg-white/80 backdrop-blur-md p-5 rounded-2xl border border-stone-200/80 shadow-xs text-center">
-              <div className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">{content.hero.stats[0].value}</div>
-              <p className="text-xs text-stone-500 font-medium mt-1">
+          <div className="mt-12 sm:mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl">
+            <div className="bg-stone-950/70 hover:bg-stone-950/90 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 shadow-xl text-left transition-all group">
+              <div className="text-3xl sm:text-4xl font-black text-white tracking-tight group-hover:scale-105 transition-transform">{content.hero.stats[0].value}</div>
+              <p className="text-xs text-stone-300 font-medium mt-1">
                 {content.hero.stats[0].label}
               </p>
             </div>
-            <div className="bg-white/80 backdrop-blur-md p-5 rounded-2xl border border-stone-200/80 shadow-xs text-center">
-              <div className="text-3xl sm:text-4xl font-black text-amber-600 tracking-tight">{content.hero.stats[1].value}</div>
-              <p className="text-xs text-stone-500 font-medium mt-1">
+            <div className="bg-stone-950/70 hover:bg-stone-950/90 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 shadow-xl text-left transition-all group">
+              <div className="text-3xl sm:text-4xl font-black text-amber-400 tracking-tight group-hover:scale-105 transition-transform">{content.hero.stats[1].value}</div>
+              <p className="text-xs text-stone-300 font-medium mt-1">
                 {content.hero.stats[1].label}
               </p>
             </div>
-            <div className="bg-white/80 backdrop-blur-md p-5 rounded-2xl border border-stone-200/80 shadow-xs text-center">
-              <div className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight">{content.hero.stats[2].value}</div>
-              <p className="text-xs text-stone-500 font-medium mt-1">
+            <div className="bg-stone-950/70 hover:bg-stone-950/90 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 shadow-xl text-left transition-all group">
+              <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight group-hover:scale-105 transition-transform">{content.hero.stats[2].value}</div>
+              <p className="text-xs text-stone-300 font-medium mt-1">
                 {content.hero.stats[2].label}
               </p>
             </div>
-            <div className="bg-white/80 backdrop-blur-md p-5 rounded-2xl border border-stone-200/80 shadow-xs text-center">
-              <div className="text-3xl sm:text-4xl font-black text-blue-600 tracking-tight">{content.hero.stats[3].value}</div>
-              <p className="text-xs text-stone-500 font-medium mt-1">
+            <div className="bg-stone-950/70 hover:bg-stone-950/90 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 shadow-xl text-left transition-all group">
+              <div className="text-3xl sm:text-4xl font-black text-sky-400 tracking-tight group-hover:scale-105 transition-transform">{content.hero.stats[3].value}</div>
+              <p className="text-xs text-stone-300 font-medium mt-1">
                 {content.hero.stats[3].label}
               </p>
             </div>
@@ -816,7 +866,7 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 6: AI Roasting & sangrAI Assistant */}
+            {/* Card 6: AI Roasting & CircularCoffee Assistant */}
             <div className="bg-white p-7 rounded-3xl border border-stone-200 shadow-xs hover:shadow-md transition-all space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center font-black">
                 <Zap className="w-6 h-6 text-rose-700" />
@@ -855,7 +905,7 @@ export const LandingPage: React.FC = () => {
                 {content.background.para1Pre}<strong>{content.background.para1Strong}</strong>{content.background.para1Post}
               </p>
               <p className="text-stone-600 text-sm leading-relaxed">
-                <strong>sangrAI</strong>{content.background.para2Rest}
+                <strong>CircularCoffee</strong>{content.background.para2Rest}
               </p>
 
               {/* Core Mission Pillars */}

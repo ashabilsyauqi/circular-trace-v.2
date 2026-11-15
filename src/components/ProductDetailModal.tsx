@@ -21,6 +21,8 @@ import {
   Star,
   ListChecks,
   Check,
+  Lock,
+  Globe,
 } from 'lucide-react';
 import {
   UnifiedMarketplaceItem,
@@ -140,17 +142,29 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </span>
 
             {item.category === 'cherry' && (
-              <span className="bg-emerald-600/90 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg flex items-center gap-1.5 border border-emerald-400/40">
-                <Sprout className="w-3.5 h-3.5" />
-                Ceri Segar Petani
-              </span>
+              <>
+                <span className="bg-amber-600/90 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg flex items-center gap-1.5 border border-amber-400/40">
+                  <Sprout className="w-3.5 h-3.5" />
+                  Ceri Segar Petani
+                </span>
+                <span className="bg-black/75 text-amber-300 text-xs font-bold px-3 py-1 rounded-lg flex items-center gap-1.5 border border-amber-400/30">
+                  <Lock className="w-3.5 h-3.5" />
+                  Eksklusif KT &amp; Pengolah
+                </span>
+              </>
             )}
 
             {item.category === 'green_bean_processor' && (
-              <span className="bg-amber-600/90 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg flex items-center gap-1.5 border border-amber-400/40">
-                <Cog className="w-3.5 h-3.5" />
-                Green Bean Stasiun Olah
-              </span>
+              <>
+                <span className="bg-emerald-600/90 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg flex items-center gap-1.5 border border-emerald-400/40">
+                  <Cog className="w-3.5 h-3.5" />
+                  Green Bean Stasiun Olah
+                </span>
+                <span className="bg-black/75 text-emerald-300 text-xs font-bold px-3 py-1 rounded-lg flex items-center gap-1.5 border border-emerald-400/30">
+                  <Globe className="w-3.5 h-3.5" />
+                  Pasar Global
+                </span>
+              </>
             )}
 
             {item.category === 'green_bean_warehouse' && (
@@ -231,6 +245,29 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
             )}
           </div>
+
+          {/* Audience Scope Notice */}
+          {item.category === 'cherry' ? (
+            <div className="bg-amber-50 rounded-2xl p-4 border border-amber-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-amber-900 font-medium">
+                <Lock className="w-4 h-4 text-amber-700 shrink-0" />
+                <span><strong>Pasar Tertutup:</strong> Ceri Kopi Segar hanya untuk Kelompok Tani &amp; Pengolah (sourcing bahan baku hulu).</span>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-amber-200/90 text-amber-950 font-bold shrink-0 text-[11px] border border-amber-300">
+                🔒 Eksklusif KT &amp; Pengolah
+              </span>
+            </div>
+          ) : item.category === 'green_bean_processor' ? (
+            <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-emerald-900 font-medium">
+                <Globe className="w-4 h-4 text-emerald-700 shrink-0" />
+                <span><strong>Pasar Global Terbuka:</strong> Green Bean Olahan Mill dapat dibeli oleh Roastery, Cafe, Gudang &amp; Ekspor.</span>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-emerald-200/90 text-emerald-950 font-bold shrink-0 text-[11px] border border-emerald-300">
+                🌐 Pasar Global Terbuka
+              </span>
+            </div>
+          ) : null}
 
           {/* Verification Status & Checked List Card (Hanya muncul jika sudah verified) */}
           {isItemVerified && (
@@ -854,10 +891,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 onClose();
                 onBuy(item!);
               }}
-              className="px-6 py-3 rounded-xl bg-stone-900 hover:bg-amber-800 text-white text-xs font-bold transition-colors shadow-md flex items-center gap-2 whitespace-nowrap cursor-pointer"
+              className={`px-6 py-3 rounded-xl text-white text-xs font-bold transition-colors shadow-md flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                item.category === 'cherry'
+                  ? 'bg-amber-600 hover:bg-amber-700'
+                  : 'bg-stone-900 hover:bg-amber-800'
+              }`}
             >
-              <ShoppingCart className="w-4 h-4 text-amber-400" />
-              Beli Komoditas Ini
+              {item.category === 'cherry' ? (
+                <>
+                  <Lock className="w-4 h-4 text-amber-200" />
+                  Sourcing Ceri Ini
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4 text-amber-400" />
+                  Beli Komoditas Ini
+                </>
+              )}
             </button>
           </div>
         </div>

@@ -90,6 +90,7 @@ import {
   INITIAL_SUBSCRIPTIONS,
   calculateDaysRemaining,
 } from '../data/mockSubscriptions';
+import { getSharedLotsFromCookie } from '../utils/crossDomainSync';
 
 interface CoffeeContextType {
   currentUser: AppUser | null;
@@ -1297,7 +1298,15 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [roastedLots, setRoastedLots] = useState<RoastedBeanLot[]>(() => {
     const saved = localStorage.getItem('cct_v3_roastedLots');
-    return saved ? JSON.parse(saved) : INITIAL_ROASTED_LOTS;
+    if (!saved) return INITIAL_ROASTED_LOTS;
+    try {
+      const parsed: RoastedBeanLot[] = JSON.parse(saved);
+      const existingIds = new Set(parsed.map((r) => r.id));
+      const missingInitial = INITIAL_ROASTED_LOTS.filter((r) => !existingIds.has(r.id));
+      return [...missingInitial, ...parsed];
+    } catch {
+      return INITIAL_ROASTED_LOTS;
+    }
   });
 
   const [cafeInventory, setCafeInventory] = useState<CafeInventoryItem[]>(() => {
@@ -1436,6 +1445,135 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     localStorage.setItem('cct_v3_roasterMachines', JSON.stringify(roasterMachines));
   }, [roasterMachines]);
+
+  // Cross-domain Storage Bridge with circularcoffee.circulartrace.id (ERP)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const erpOrigin = window.location.hostname.includes('circulartrace.id')
+      ? 'https://circularcoffee.circulartrace.id'
+      : window.location.origin;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `${erpOrigin}/marketplace-bridge.html`;
+    iframe.id = 'cct-storage-bridge';
+
+    const handleMessage = (event: MessageEvent) => {
+      if (!event.origin.includes('circulartrace.id') && !event.origin.includes('localhost') && !event.origin.includes('127.0.0.1')) return;
+      const data = event.data;
+      if (!data || typeof data !== 'object') return;
+
+      if (data.type === 'CCT_BRIDGE_READY' && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'CCT_SYNC_REQUEST' }, '*');
+      }
+
+      if (data.type === 'CCT_SYNC_RESPONSE' && data.payload) {
+        const payload = data.payload;
+        if (Array.isArray(payload.cct_farmerLots) && payload.cct_farmerLots.length > 0) {
+          setFarmerLots(payload.cct_farmerLots);
+        }
+        if (Array.isArray(payload.cct_processedLots) && payload.cct_processedLots.length > 0) {
+          setProcessedLots(payload.cct_processedLots);
+        }
+        if (Array.isArray(payload.cct_warehouseLots) && payload.cct_warehouseLots.length > 0) {
+          setWarehouseLots(payload.cct_warehouseLots);
+        }
+        if (Array.isArray(payload.cct_roastedLots) && payload.cct_roastedLots.length > 0) {
+          setRoastedLots(payload.cct_roastedLots);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    document.body.appendChild(iframe);
+
+    iframe.onload = () => {
+      try {
+        iframe.contentWindow?.postMessage({ type: 'CCT_SYNC_REQUEST' }, '*');
+      } catch (e) {}
+    };
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    };
+  }, []);
+
+  // Cross-domain Cookie Sync (.circulartrace.id) for instant zero-dependency lot sharing
+  useEffect(() => {
+    const sharedLots = getSharedLotsFromCookie();
+    if (sharedLots && sharedLots.length > 0) {
+      sharedLots.forEach((entry) => {
+        if (entry.category === 'roasted_bean') {
+          setRoastedLots((prev) =>
+            prev.map((l) =>
+              l.id === entry.id
+                ? {
+                    ...l,
+                    marketplaceTitle: entry.marketplaceTitle || (l as any).marketplaceTitle,
+                    marketplaceDescription: entry.marketplaceDescription || (l as any).marketplaceDescription,
+                    pricePerPack: entry.price ?? l.pricePerPack,
+                    availablePacks: entry.availableStock ?? l.availablePacks,
+                    photoUrl: entry.photoUrl || l.photoUrl,
+                    isReleasedToMarketplace: true,
+                  }
+                : l
+            )
+          );
+        } else if (entry.category === 'green_bean_warehouse') {
+          setWarehouseLots((prev) =>
+            prev.map((l) =>
+              l.id === entry.id
+                ? {
+                    ...l,
+                    marketplaceTitle: entry.marketplaceTitle || (l as any).marketplaceTitle,
+                    marketplaceDescription: entry.marketplaceDescription || (l as any).marketplaceDescription,
+                    pricePerKg: entry.price ?? l.pricePerKg,
+                    availableWeightKg: entry.availableStock ?? l.availableWeightKg,
+                    photoUrl: entry.photoUrl || l.photoUrl,
+                    isReleasedToMarketplace: true,
+                  }
+                : l
+            )
+          );
+        } else if (entry.category === 'green_bean_processor') {
+          setProcessedLots((prev) =>
+            prev.map((l) =>
+              l.id === entry.id
+                ? {
+                    ...l,
+                    marketplaceTitle: entry.marketplaceTitle || (l as any).marketplaceTitle,
+                    marketplaceDescription: entry.marketplaceDescription || (l as any).marketplaceDescription,
+                    pricePerKg: entry.price ?? l.pricePerKg,
+                    availableWeightKg: entry.availableStock ?? l.availableWeightKg,
+                    photoUrl: entry.photoUrl || l.photoUrl,
+                  }
+                : l
+            )
+          );
+        } else if (entry.category === 'cherry') {
+          setFarmerLots((prev) =>
+            prev.map((l) =>
+              l.id === entry.id
+                ? {
+                    ...l,
+                    marketplaceTitle: entry.marketplaceTitle || l.marketplaceTitle,
+                    marketplaceDescription: entry.marketplaceDescription || (l as any).marketplaceDescription,
+                    marketplacePrice: entry.price ?? l.marketplacePrice,
+                    availableWeightKg: entry.availableStock ?? l.availableWeightKg,
+                    photoUrl: entry.photoUrl || l.photoUrl,
+                    isMarketplaceReady: true,
+                  }
+                : l
+            )
+          );
+        }
+      });
+    }
+  }, []);
 
 
   const [tenantActiveService, setTenantActiveServiceState] = useState<TenantOperationalService>(() => {
@@ -3507,6 +3645,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
         verificationStamp: lot.verificationStamp,
         canTrace: false,
+        isExclusiveKelompokTani: true,
+        exclusiveKelompokTaniName: lot.farmLocation,
+        sourceKelompokTaniName: lot.farmLocation,
+        exclusiveAudience: 'kelompok_tani_dan_pengolah' as const,
         rawItem: lot,
       })),
 
@@ -3515,7 +3657,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .filter((lot) => lot.availableWeightKg > 0)
       .map((lot) => ({
         id: lot.id,
-        title: `Green Bean: ${lot.variety} (${lot.processMethod})`,
+        title: (lot as any).marketplaceTitle || `Green Bean: ${lot.variety} (${lot.processMethod})`,
         category: 'green_bean_processor' as MarketplaceCategory,
         categoryLabel: 'Green Bean Olahan (Mill)',
         sellerRole: 'pengolah' as UserRole,
@@ -3542,7 +3684,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
         verificationStamp: lot.verificationStamp,
         canTrace: true,
+        isExclusiveKelompokTani: false,
+        exclusiveAudience: 'global_marketplace' as const,
         rawItem: lot,
+        description: (lot as any).marketplaceDescription,
       })),
 
     // C. Green Bean Gudang & Ekspor
@@ -3550,7 +3695,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .filter((lot) => lot.availableWeightKg > 0)
       .map((lot) => ({
         id: lot.id,
-        title: `[${lot.gradeTier ? lot.gradeTier.split(' - ')[1] : 'Grade 1'}] Green Bean ${lot.variety}`,
+        title: (lot as any).marketplaceTitle || `[${lot.gradeTier ? lot.gradeTier.split(' - ')[1] : 'Grade 1'}] Green Bean ${lot.variety}`,
         category: 'green_bean_warehouse' as MarketplaceCategory,
         categoryLabel: 'Green Bean Gudang & Ekspor',
         sellerRole: 'gudang' as UserRole,
@@ -3583,7 +3728,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
         verificationStamp: lot.verificationStamp,
         canTrace: true,
+        isExclusiveKelompokTani: false,
+        exclusiveAudience: 'global_marketplace' as const,
         rawItem: lot,
+        description: (lot as any).marketplaceDescription,
       })),
 
     // D. Roasted Beans Roaster
@@ -3591,7 +3739,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .filter((lot) => lot.availablePacks > 0)
       .map((lot) => ({
         id: lot.id,
-        title: `Biji Sangrai: ${lot.origin} - ${lot.variety}`,
+        title: (lot as any).marketplaceTitle || `Biji Sangrai: ${lot.origin} - ${lot.variety}`,
         category: 'roasted_bean' as MarketplaceCategory,
         categoryLabel: 'Biji Sangrai Artisan (Roaster)',
         sellerRole: 'roaster' as UserRole,
@@ -3620,7 +3768,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
         verificationStamp: lot.verificationStamp,
         canTrace: true,
+        isExclusiveKelompokTani: false,
+        exclusiveAudience: 'global_marketplace' as const,
         rawItem: lot,
+        description: (lot as any).marketplaceDescription,
       })),
   ];
 

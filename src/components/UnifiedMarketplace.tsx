@@ -29,6 +29,8 @@ import {
   PackagePlus,
   ShieldCheck,
   RotateCcw,
+  Lock,
+  Globe,
 } from 'lucide-react';
 import { TraceabilityModal } from './TraceabilityModal';
 import { FarmerBarcodeModal } from './FarmerBarcodeModal';
@@ -146,7 +148,24 @@ export const UnifiedMarketplace: React.FC = () => {
   // Product Detail Modal State
   const [selectedDetailItem, setSelectedDetailItem] = useState<UnifiedMarketplaceItem | null>(null);
 
-  const isBuyerMember = !!currentUser && (currentUser.role === 'buyer' || currentUser.isSuperAdmin);
+  const canAccessCherry = !!currentUser && (
+    (currentUser.role as string) === 'admin_kelompok_tani' ||
+    currentUser.role === 'pengolah' ||
+    currentUser.role === 'petani' ||
+    currentUser.role === 'superadmin' ||
+    !!currentUser.isSuperAdmin
+  );
+
+  const isBuyerMember = !!currentUser && (
+    currentUser.role === 'buyer' ||
+    currentUser.role === 'pengolah' ||
+    currentUser.role === 'roaster' ||
+    currentUser.role === 'cafe' ||
+    currentUser.role === 'gudang' ||
+    currentUser.role === 'petani' ||
+    (currentUser.role as string) === 'admin_kelompok_tani' ||
+    currentUser.isSuperAdmin
+  );
 
   // Selected Origin Label for Display
   const selectedOriginLabel = useMemo(() => {
@@ -158,6 +177,10 @@ export const UnifiedMarketplace: React.FC = () => {
   // Faceted counts: items matching other filters excluding Category
   const itemsMatchingNonCategory = useMemo(() => {
     return unifiedMarketplaceItems.filter((item) => {
+      // Exclude cherry from general public listings if user is not KT or Pengolah
+      if (!canAccessCherry && item.category === 'cherry' && selectedCategory === 'all') {
+        return false;
+      }
       const matchOrigin = selectedOrigin === 'all' || itemMatchesRegion(item.origin, selectedOrigin);
       const matchRole = selectedRole === 'all' || item.sellerRole === selectedRole;
       const isItemVerified = item.verificationStatus === 'verified' || !!item.verificationStamp;
@@ -167,19 +190,27 @@ export const UnifiedMarketplace: React.FC = () => {
       const matchMaxPrice = maxPrice === null || item.price <= maxPrice;
       const q = searchQuery.toLowerCase().trim();
       const matchSearch = !q || (
+        item.id.toLowerCase().includes(q) ||
+        ((item.rawItem as any)?.id && String((item.rawItem as any).id).toLowerCase().includes(q)) ||
         item.title.toLowerCase().includes(q) ||
         item.origin.toLowerCase().includes(q) ||
         item.variety.toLowerCase().includes(q) ||
         item.sellerName.toLowerCase().includes(q) ||
+        (item.categoryLabel && item.categoryLabel.toLowerCase().includes(q)) ||
+        (item.processMethod && item.processMethod.toLowerCase().includes(q)) ||
+        ((item as any).description && String((item as any).description).toLowerCase().includes(q)) ||
         item.tastingNotes.some((t) => t.toLowerCase().includes(q))
       );
       return matchOrigin && matchRole && matchVerified && matchSca && matchMinPrice && matchMaxPrice && matchSearch;
     });
-  }, [unifiedMarketplaceItems, selectedOrigin, selectedRole, onlyVerified, minScaScore, minPrice, maxPrice, searchQuery]);
+  }, [unifiedMarketplaceItems, canAccessCherry, selectedCategory, selectedOrigin, selectedRole, onlyVerified, minScaScore, minPrice, maxPrice, searchQuery]);
 
   // Faceted counts: items matching other filters excluding Origin
   const itemsMatchingNonOrigin = useMemo(() => {
     return unifiedMarketplaceItems.filter((item) => {
+      if (!canAccessCherry && item.category === 'cherry' && selectedCategory === 'all') {
+        return false;
+      }
       const matchCategory = selectedCategory === 'all' || item.category === selectedCategory;
       const matchRole = selectedRole === 'all' || item.sellerRole === selectedRole;
       const isItemVerified = item.verificationStatus === 'verified' || !!item.verificationStamp;
@@ -189,43 +220,56 @@ export const UnifiedMarketplace: React.FC = () => {
       const matchMaxPrice = maxPrice === null || item.price <= maxPrice;
       const q = searchQuery.toLowerCase().trim();
       const matchSearch = !q || (
+        item.id.toLowerCase().includes(q) ||
+        ((item.rawItem as any)?.id && String((item.rawItem as any).id).toLowerCase().includes(q)) ||
         item.title.toLowerCase().includes(q) ||
         item.origin.toLowerCase().includes(q) ||
         item.variety.toLowerCase().includes(q) ||
         item.sellerName.toLowerCase().includes(q) ||
+        (item.categoryLabel && item.categoryLabel.toLowerCase().includes(q)) ||
+        (item.processMethod && item.processMethod.toLowerCase().includes(q)) ||
+        ((item as any).description && String((item as any).description).toLowerCase().includes(q)) ||
         item.tastingNotes.some((t) => t.toLowerCase().includes(q))
       );
       return matchCategory && matchRole && matchVerified && matchSca && matchMinPrice && matchMaxPrice && matchSearch;
     });
-  }, [unifiedMarketplaceItems, selectedCategory, selectedRole, onlyVerified, minScaScore, minPrice, maxPrice, searchQuery]);
+  }, [unifiedMarketplaceItems, canAccessCherry, selectedCategory, selectedRole, onlyVerified, minScaScore, minPrice, maxPrice, searchQuery]);
 
   const categoryMeta: Record<
     MarketplaceCategory,
-    { label: string; icon: React.ReactNode; color: string; badgeClass: string }
+    { label: string; icon: React.ReactNode; color: string; badgeClass: string; audienceTag: string; isExclusive?: boolean }
   > = {
     cherry: {
       label: 'Ceri Kopi Segar (Panen)',
       icon: <Sprout className="w-4 h-4 text-orange-600" />,
       color: 'border-orange-200 bg-orange-50 text-orange-700',
       badgeClass: 'bg-orange-50 text-orange-700 border-orange-200',
+      audienceTag: 'Eksklusif KT & Pengolah',
+      isExclusive: true,
     },
     green_bean_processor: {
       label: 'Green Bean Olahan (Mill)',
       icon: <Cog className="w-4 h-4 text-emerald-700" />,
       color: 'border-emerald-200 bg-emerald-50 text-emerald-700',
       badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      audienceTag: 'Pasar Global',
+      isExclusive: false,
     },
     green_bean_warehouse: {
       label: 'Green Bean Gudang Ekspor',
       icon: <Warehouse className="w-4 h-4 text-emerald-700" />,
       color: 'border-emerald-200 bg-emerald-50 text-emerald-700',
       badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      audienceTag: 'Pasar Global',
+      isExclusive: false,
     },
     roasted_bean: {
       label: 'Biji Kopi Sangrai (Roasted)',
       icon: <Flame className="w-4 h-4 text-amber-700" />,
       color: 'border-amber-200 bg-amber-50 text-amber-700',
       badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+      audienceTag: 'Pasar Global',
+      isExclusive: false,
     },
   };
 
@@ -236,6 +280,13 @@ export const UnifiedMarketplace: React.FC = () => {
   };
 
   const handleAddToCart = (item: UnifiedMarketplaceItem) => {
+    if (item.category === 'cherry' && !canAccessCherry) {
+      setActionNotice({
+        type: 'error',
+        message: 'Akses terbatas: Ceri Kopi Segar hanya dapat disourcing oleh Pengolah (Mill) dan Kelompok Tani.',
+      });
+      return;
+    }
     if (!isBuyerMember) {
       setPendingItem(item);
       setGateModalOpen(true);
@@ -281,6 +332,10 @@ export const UnifiedMarketplace: React.FC = () => {
 
   // Filter items
   const filteredItems = unifiedMarketplaceItems.filter((item) => {
+    // Sesuai aturan: Ceri bersifat eksklusif untuk Kelompok Tani & Pengolah (sembunyikan dari listing umum jika bukan KT/Pengolah)
+    if (!canAccessCherry && item.category === 'cherry' && selectedCategory === 'all') {
+      return false;
+    }
     const matchCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const matchRole = selectedRole === 'all' || item.sellerRole === selectedRole;
     const isItemVerified = item.verificationStatus === 'verified' || !!item.verificationStamp;
@@ -290,12 +345,18 @@ export const UnifiedMarketplace: React.FC = () => {
     const matchMinPrice = minPrice === null || item.price >= minPrice;
     const matchMaxPrice = maxPrice === null || item.price <= maxPrice;
 
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
     const matchSearch =
+      !q ||
+      item.id.toLowerCase().includes(q) ||
+      ((item.rawItem as any)?.id && String((item.rawItem as any).id).toLowerCase().includes(q)) ||
       item.title.toLowerCase().includes(q) ||
       item.origin.toLowerCase().includes(q) ||
       item.variety.toLowerCase().includes(q) ||
       item.sellerName.toLowerCase().includes(q) ||
+      (item.categoryLabel && item.categoryLabel.toLowerCase().includes(q)) ||
+      (item.processMethod && item.processMethod.toLowerCase().includes(q)) ||
+      ((item as any).description && String((item as any).description).toLowerCase().includes(q)) ||
       item.tastingNotes.some((t) => t.toLowerCase().includes(q));
 
     return matchCategory && matchRole && matchVerified && matchOrigin && matchSca && matchMinPrice && matchMaxPrice && matchSearch;
@@ -311,6 +372,13 @@ export const UnifiedMarketplace: React.FC = () => {
   });
 
   const handleOpenBuy = (item: UnifiedMarketplaceItem) => {
+    if (item.category === 'cherry' && !canAccessCherry) {
+      setActionNotice({
+        type: 'error',
+        message: 'Akses terbatas: Ceri Kopi Segar hanya dapat disourcing & dibeli oleh Pengolah (Mill) dan Kelompok Tani.',
+      });
+      return;
+    }
     if (!isBuyerMember) {
       setPendingItem(item);
       setGateModalOpen(true);
@@ -545,30 +613,41 @@ export const UnifiedMarketplace: React.FC = () => {
 
               {(Object.keys(categoryMeta) as MarketplaceCategory[]).map((catKey) => {
                 const meta = categoryMeta[catKey];
-                const count = itemsMatchingNonCategory.filter((i) => i.category === catKey).length;
+                const count = unifiedMarketplaceItems.filter((i) => i.category === catKey).length;
                 const isSelected = selectedCategory === catKey;
+                const isCherryLocked = catKey === 'cherry' && !canAccessCherry;
                 return (
                   <button
                     key={catKey}
                     type="button"
-                    disabled={count === 0}
+                    disabled={count === 0 && !isCherryLocked}
                     onClick={() => setSelectedCategory(isSelected ? 'all' : catKey)}
                     className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex items-center justify-between border-l-4 ${
-                      count === 0
+                      count === 0 && !isCherryLocked
                         ? 'border-transparent text-slate-400 opacity-40 cursor-not-allowed'
                         : isSelected
                         ? 'bg-emerald-50 border-emerald-600 text-emerald-900 font-semibold cursor-pointer'
+                        : isCherryLocked
+                        ? 'border-transparent text-amber-900 bg-amber-50/70 hover:bg-amber-100/70 font-medium cursor-pointer'
                         : 'border-transparent text-slate-700 hover:bg-slate-50 font-normal cursor-pointer'
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      {meta.icon}
+                      {isCherryLocked ? (
+                        <Lock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                      ) : (
+                        meta.icon
+                      )}
                       <span className="truncate">{meta.label}</span>
                     </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                      isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold shrink-0 ${
+                      isSelected
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : isCherryLocked
+                        ? 'bg-amber-200 text-amber-900 border border-amber-300'
+                        : 'bg-slate-100 text-slate-600'
                     }`}>
-                      {count}
+                      {isCherryLocked ? '🔒 Terkunci' : count}
                     </span>
                   </button>
                 );
@@ -752,220 +831,342 @@ export const UnifiedMarketplace: React.FC = () => {
         {/* RIGHT COLUMN: Products Grid */}
         <section className="flex-1 min-w-0 space-y-4">
 
-      {/* Items Grid */}
-      {sortedItems.length === 0 ? (
-        <div className="bg-white rounded-3xl p-10 sm:p-14 text-center border border-stone-200 shadow-2xs space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-[#00AA5B] flex items-center justify-center mx-auto shadow-2xs">
-            <Search className="w-8 h-8 text-[#00AA5B]" />
-          </div>
-          <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="text-lg font-extrabold text-stone-900 tracking-tight">
-              {t('market.empty.title')}
-            </h3>
-            <p className="text-xs text-stone-500 leading-relaxed">
-              {t('market.empty.desc')}
-            </p>
-          </div>
-
-          {/* Quick Recovery Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-            {selectedOrigin !== 'all' && (
-              <button
-                type="button"
-                onClick={() => setSelectedOrigin('all')}
-                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#00AA5B] text-xs font-bold border border-emerald-300/80 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
-              >
-                <span>Hapus Filter Origin ({selectedOriginLabel})</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {selectedCategory !== 'all' && (
-              <button
-                type="button"
-                onClick={() => setSelectedCategory('all')}
-                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#00AA5B] text-xs font-bold border border-emerald-300/80 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
-              >
-                <span>Tampilkan Semua Kategori</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="px-4 py-2 rounded-xl bg-[#00AA5B] hover:bg-[#03AC0E] text-white text-xs font-extrabold transition-all cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-95"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Semua Filter</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
-          {sortedItems.map((item, index) => {
-            const meta = categoryMeta[item.category];
-            return (
-              <div
-                id={index === 0 ? 'tour-first-product-card' : undefined}
-                key={`${item.category}-${item.id}`}
-                onClick={(e) => {
-                  if ((e.target as HTMLElement).closest('button')) return;
-                  navigate({ view: 'product', lotId: item.id });
-                }}
-                className="group relative bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden h-full cursor-pointer"
-              >
-                <div>
-                  {/* Photo Banner (Aspect Ratio 16:9 Standar Design System) */}
-                  <div
-                    onClick={() => navigate({ view: 'product', lotId: item.id })}
-                    className="relative aspect-video w-full bg-slate-100 overflow-hidden cursor-pointer"
-                  >
-                    <img
-                      src={item.photoUrl}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                    />
-
-                    {/* Top-Left: Commodity Category Pill (Spec Semantic Tokens) */}
-                    <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
-                      <span
-                        className={`text-xs font-medium px-2.5 py-1 rounded-lg shadow-xs backdrop-blur-xs border flex items-center gap-1.5 ${meta.badgeClass}`}
-                      >
-                        {meta.icon}
-                        <span>{meta.label.split(' ')[0]} {meta.label.split(' ')[1] || ''}</span>
-                      </span>
-                    </div>
-
-                    {/* Top-Right: Verified Stamp */}
-                    {(item.verificationStamp || item.verificationStatus === 'verified') && (
-                      <div className="absolute top-2.5 right-2.5 z-10">
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full shadow-xs backdrop-blur-xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>Verified</span>
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Card Body */}
-                  <div className="p-4 space-y-2">
-                    {/* Row 1: Origin Location & Seller */}
-                    <div className="flex items-center justify-between text-xs font-medium text-slate-500">
-                      <div className="flex items-center gap-1 truncate">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{item.origin.split(',')[0]}</span>
-                      </div>
-                      <div className="flex items-center gap-1 truncate max-w-[130px]" title={item.sellerName}>
-                        <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
-                        <span className="truncate text-xs font-medium">{item.sellerName}</span>
-                      </div>
-                    </div>
-
-                    {/* Row 2: Product Title (text-card-title: 16px, Semibold 600) */}
-                    <h3
-                      onClick={() => navigate({ view: 'product', lotId: item.id })}
-                      className="text-base font-semibold text-slate-900 group-hover:text-emerald-700 leading-snug line-clamp-2 cursor-pointer transition-colors"
-                      title={item.title}
-                    >
-                      {item.title}
-                    </h3>
-
-                    {/* Row 3: Metadata Inline (Varietas • Elevasi mdpl Ringkas) */}
-                    <div className="flex items-center gap-2 text-xs font-medium text-slate-500 pt-0.5">
-                      <span className="truncate">
-                        {[
-                          item.variety,
-                          item.altitude || (item.specsSummary && item.specsSummary[0]?.value)
-                        ].filter(Boolean).join(' • ')}
-                      </span>
-                      {item.scaScore && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md shrink-0 ml-auto">
-                          <Award className="w-3 h-3 text-amber-600" />
-                          <span>SCA {item.scaScore}</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
+          {/* LOCKED STATE: Bila pengunjung umum/non-KT mengakses kategori Ceri Kopi Segar */}
+          {selectedCategory === 'cherry' && !canAccessCherry ? (
+            <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-amber-300 shadow-sm space-y-6 max-w-2xl mx-auto my-4 animate-in fade-in">
+              <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto shadow-xs border border-amber-300">
+                <Lock className="w-8 h-8 text-amber-700" />
+              </div>
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300">
+                  <Lock className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Pasar Tertutup &bull; Eksklusif Kelompok Tani &amp; Pengolah</span>
                 </div>
-
-                {/* Card Footer: Clear Price/Stock & Simplified CTA Architecture */}
-                <div className="p-4 bg-slate-50/70 border-t border-slate-100 space-y-3">
-                  {/* Price & Stock Row */}
-                  <div className="flex items-baseline justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block mb-0.5">
-                        Harga Penawaran
-                      </span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-lg font-bold text-slate-900 tracking-tight">
-                          Rp {item.price.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')}
-                        </span>
-                        <span className="text-xs font-normal text-slate-500">
-                          {formatUnitDisplay(item.priceUnit)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg shadow-2xs whitespace-nowrap">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                        Stok: {item.availableStock.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} {(item.stockUnit || 'kg').replace(/^\/+/, '').trim()}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions Row (CTA Architecture: Single wide Beli Langsung + Secondary Cart & WA Icons) */}
-                  <div className="flex items-center gap-2 pt-0.5">
-                    {/* Secondary WhatsApp */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!isBuyerMember) {
-                          setPendingItem(item);
-                          setGateModalOpen(true);
-                          return;
-                        }
-                        openOrderWhatsApp({
-                          item,
-                          quantity: 1,
-                          buyerName: currentUser?.name,
-                          buyerOrg: currentUser?.organization,
-                          buyerRole: currentUser?.role,
-                        });
-                      }}
-                      className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-emerald-700 transition-colors shadow-2xs shrink-0 cursor-pointer"
-                      title="Hubungi Penjual via WhatsApp"
-                    >
-                      <WhatsAppIcon className="w-4 h-4 fill-emerald-600 text-emerald-600" />
-                    </button>
-
-                    {/* Secondary Add to Cart */}
-                    <button
-                      type="button"
-                      onClick={() => handleAddToCart(item)}
-                      className="p-2.5 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 hover:border-emerald-300 transition-colors shadow-2xs shrink-0 cursor-pointer"
-                      title="Tambah ke Keranjang Belanja"
-                    >
-                      <ShoppingCart className="w-4 h-4 text-emerald-600" />
-                    </button>
-
-                    {/* Primary Wide Action: Beli Langsung */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenBuy(item)}
-                      className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-semibold text-sm transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
-                      title="Beli Langsung Komoditas Ini"
-                    >
-                      <span>Beli Langsung</span>
-                    </button>
-                  </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  Katalog Ceri Kopi Segar (Hulu) Dibatasi
+                </h3>
+                <div className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto space-y-2">
+                  <p>
+                    Lingkup kerja Kelompok Tani terbagi atas dua pilar utama: <strong>1. Petani</strong> (memproduksi Ceri Kopi Segar) dan <strong>2. Pengolah</strong> (mengolah ceri menjadi Green Bean).
+                  </p>
+                  <p>
+                    <strong>Ceri Kopi Segar</strong> bersifat sangat eksklusif dan hanya dapat diperjualbelikan kepada sesama <strong>Kelompok Tani</strong> dan <strong>Pengolah (Processor/Mill)</strong> baik internal maupun lintas kelompok tani untuk menjaga standarisasi pasca-panen.
+                  </p>
+                  <p className="text-slate-500 font-medium">
+                    Untuk pembeli umum, cafe, roastery, dan gudang ekspor, komoditas <strong>Green Bean Olahan</strong> hasil produksi pengolah kami dipasarkan secara <strong>Global Terbuka</strong> di marketplace ini.
+                  </p>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              {/* Quick Action Buttons */}
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('green_bean_processor')}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>Jelajahi Green Bean Olahan (Pasar Global)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('all')}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Kembali ke Semua Produk
+                </button>
+                {!currentUser && (
+                  <button
+                    type="button"
+                    onClick={() => navigate({ view: 'login' })}
+                    className="px-4 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Masuk sebagai Pengolah / Kelompok Tani</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Banner Sourcing Ceri Eksklusif bila user memiliki akses (Pengolah / Kelompok Tani) */}
+              {selectedCategory === 'cherry' && canAccessCherry && (
+                <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-amber-200/80 text-amber-900 shrink-0">
+                      <Lock className="w-5 h-5 text-amber-800" />
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-900">
+                          Pasar Ceri Eksklusif Kelompok Tani &amp; Pengolah
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
+                          Akses Terbuka ({currentUser?.role === 'pengolah' ? 'Pengolah / Mill' : currentUser?.role === 'petani' ? 'Petani' : 'Kelompok Tani'})
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-800/90 mt-0.5 leading-relaxed">
+                        Anda memiliki hak sourcing bahan baku ceri kopi petik merah segar dari petani anggota kelompok tani Anda maupun lintas kelompok tani mitra.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Items Grid */}
+              {sortedItems.length === 0 ? (
+                <div className="bg-white rounded-3xl p-10 sm:p-14 text-center border border-stone-200 shadow-2xs space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-[#00AA5B] flex items-center justify-center mx-auto shadow-2xs">
+                    <Search className="w-8 h-8 text-[#00AA5B]" />
+                  </div>
+                  <div className="space-y-1.5 max-w-md mx-auto">
+                    <h3 className="text-lg font-extrabold text-stone-900 tracking-tight">
+                      {t('market.empty.title')}
+                    </h3>
+                    <p className="text-xs text-stone-500 leading-relaxed">
+                      {t('market.empty.desc')}
+                    </p>
+                  </div>
+
+                  {/* Quick Recovery Action Buttons */}
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                    {selectedOrigin !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrigin('all')}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#00AA5B] text-xs font-bold border border-emerald-300/80 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                      >
+                        <span>Hapus Filter Origin ({selectedOriginLabel})</span>
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
+                    {selectedCategory !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategory('all')}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#00AA5B] text-xs font-bold border border-emerald-300/80 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                      >
+                        <span>Tampilkan Semua Kategori</span>
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="px-4 py-2 rounded-xl bg-[#00AA5B] hover:bg-[#03AC0E] text-white text-xs font-extrabold transition-all cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-95"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Reset Semua Filter</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {sortedItems.map((item, index) => {
+                    const meta = categoryMeta[item.category];
+                    return (
+                      <div
+                        id={index === 0 ? 'tour-first-product-card' : undefined}
+                        key={`${item.category}-${item.id}`}
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest('button')) return;
+                          navigate({ view: 'product', lotId: item.id });
+                        }}
+                        className="group relative bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden h-full cursor-pointer"
+                      >
+                        <div>
+                          {/* Photo Banner (Aspect Ratio 16:9 Standar Design System) */}
+                          <div
+                            onClick={() => navigate({ view: 'product', lotId: item.id })}
+                            className="relative aspect-video w-full bg-slate-100 overflow-hidden cursor-pointer"
+                          >
+                            <img
+                              src={item.photoUrl}
+                              alt={item.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                            />
+
+                            {/* Top-Left: Commodity Category Pill (Spec Semantic Tokens) */}
+                            <div className="absolute top-2.5 left-2.5 z-10 flex flex-wrap items-center gap-1.5">
+                              <span
+                                className={`text-xs font-medium px-2.5 py-1 rounded-lg shadow-xs backdrop-blur-xs border flex items-center gap-1.5 ${meta.badgeClass}`}
+                              >
+                                {meta.icon}
+                                <span>{meta.label.split(' ')[0]} {meta.label.split(' ')[1] || ''}</span>
+                              </span>
+                              {item.category === 'cherry' && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-900/90 text-amber-200 border border-amber-500/50 backdrop-blur-xs flex items-center gap-1 shadow-xs">
+                                  <Lock className="w-2.5 h-2.5" />
+                                  <span>Eksklusif KT &amp; Pengolah</span>
+                                </span>
+                              )}
+                              {item.category === 'green_bean_processor' && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-900/90 text-emerald-200 border border-emerald-500/50 backdrop-blur-xs flex items-center gap-1 shadow-xs">
+                                  <Globe className="w-2.5 h-2.5" />
+                                  <span>Pasar Global</span>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Top-Right: Verified Stamp */}
+                            {(item.verificationStamp || item.verificationStatus === 'verified') && (
+                              <div className="absolute top-2.5 right-2.5 z-10">
+                                <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full shadow-xs backdrop-blur-xs">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                                  <span>Verified</span>
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Card Body */}
+                          <div className="p-4 space-y-2">
+                            {/* Row 1: Origin Location & Seller */}
+                            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+                              <div className="flex items-center gap-1 truncate">
+                                <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate">{item.origin.split(',')[0]}</span>
+                              </div>
+                              <div className="flex items-center gap-1 truncate max-w-[130px]" title={item.sellerName}>
+                                <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span className="truncate text-xs font-medium">{item.sellerName}</span>
+                              </div>
+                            </div>
+
+                            {/* Row 2: Product Title (text-card-title: 16px, Semibold 600) */}
+                            <h3
+                              onClick={() => navigate({ view: 'product', lotId: item.id })}
+                              className="text-base font-semibold text-slate-900 group-hover:text-emerald-700 leading-snug line-clamp-2 cursor-pointer transition-colors"
+                              title={item.title}
+                            >
+                              {item.title}
+                            </h3>
+
+                            {/* Row 3: Metadata Inline (Varietas • Elevasi mdpl Ringkas) */}
+                            <div className="flex items-center gap-2 text-xs font-medium text-slate-500 pt-0.5">
+                              <span className="truncate">
+                                {[
+                                  item.variety,
+                                  item.altitude || (item.specsSummary && item.specsSummary[0]?.value)
+                                ].filter(Boolean).join(' • ')}
+                              </span>
+                              {item.scaScore && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md shrink-0 ml-auto">
+                                  <Award className="w-3 h-3 text-amber-600" />
+                                  <span>SCA {item.scaScore}</span>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Row 4: Audience Exclusivity Tag */}
+                            <div className="pt-1">
+                              {item.category === 'cherry' ? (
+                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-semibold">
+                                  <Lock className="w-3 h-3 text-amber-600 shrink-0" />
+                                  <span className="truncate">Audience: Kelompok Tani &amp; Pengolah</span>
+                                </div>
+                              ) : item.category === 'green_bean_processor' ? (
+                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-semibold">
+                                  <Globe className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <span className="truncate">Audience: Pasar Global Terbuka</span>
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Card Footer: Clear Price/Stock & Simplified CTA Architecture */}
+                        <div className="p-4 bg-slate-50/70 border-t border-slate-100 space-y-3">
+                          {/* Price & Stock Row */}
+                          <div className="flex items-baseline justify-between gap-2">
+                            <div>
+                              <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block mb-0.5">
+                                Harga Penawaran
+                              </span>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-lg font-bold text-slate-900 tracking-tight">
+                                  Rp {item.price.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')}
+                                </span>
+                                <span className="text-xs font-normal text-slate-500">
+                                  {formatUnitDisplay(item.priceUnit)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg shadow-2xs whitespace-nowrap">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                Stok: {item.availableStock.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} {(item.stockUnit || 'kg').replace(/^\/+/, '').trim()}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Actions Row (CTA Architecture: Single wide Beli Langsung + Secondary Cart & WA Icons) */}
+                          <div className="flex items-center gap-2 pt-0.5">
+                            {/* Secondary WhatsApp */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!isBuyerMember) {
+                                  setPendingItem(item);
+                                  setGateModalOpen(true);
+                                  return;
+                                }
+                                openOrderWhatsApp({
+                                  item,
+                                  quantity: 1,
+                                  buyerName: currentUser?.name,
+                                  buyerOrg: currentUser?.organization,
+                                  buyerRole: currentUser?.role,
+                                });
+                              }}
+                              className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-emerald-700 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                              title="Hubungi Penjual via WhatsApp"
+                            >
+                              <WhatsAppIcon className="w-4 h-4 fill-emerald-600 text-emerald-600" />
+                            </button>
+
+                            {/* Secondary Add to Cart */}
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item)}
+                              className="p-2.5 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 hover:border-emerald-300 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                              title="Tambah ke Keranjang Belanja"
+                            >
+                              <ShoppingCart className="w-4 h-4 text-emerald-600" />
+                            </button>
+
+                            {/* Primary Action Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenBuy(item)}
+                              className={`flex-1 py-2.5 px-4 rounded-xl text-white font-semibold text-sm transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                                item.category === 'cherry'
+                                  ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.98]'
+                                  : 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98]'
+                              }`}
+                              title={item.category === 'cherry' ? 'Sourcing Ceri Segar dari Petani' : 'Beli Langsung Komoditas Ini'}
+                            >
+                              {item.category === 'cherry' ? (
+                                <>
+                                  <Lock className="w-4 h-4 text-amber-200" />
+                                  <span>Sourcing Ceri</span>
+                                </>
+                              ) : (
+                                <span>Beli Langsung</span>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
 
         </section>
       </div>

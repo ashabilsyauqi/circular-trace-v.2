@@ -463,6 +463,10 @@ export interface UnifiedMarketplaceItem {
   specsSummary: { label: string; value: string }[];
   gradeTier?: WarehouseGradeTier | string;
   canTrace: boolean;
+  isExclusiveKelompokTani?: boolean;
+  exclusiveKelompokTaniName?: string;
+  sourceKelompokTaniName?: string;
+  exclusiveAudience?: 'kelompok_tani_dan_pengolah' | 'global_marketplace';
   rawItem: FarmerHarvestLot | ProcessedGreenBeanLot | WarehouseLot | RoastedBeanLot | CafeRetailProduct;
 }
 

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const FarmerLedgerPage: React.FC = () => {
-  const { transactions, currentUser, users } = useCoffee();
+  const { transactions, currentUser, users, openBlankoModal } = useCoffee();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -65,13 +65,26 @@ export const FarmerLedgerPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="text-right">
-          <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">
-            Total Perputaran Kas
-          </span>
-          <span className="text-2xl font-black text-emerald-700 font-mono">
-            Rp {totalRevenue.toLocaleString()}
-          </span>
+        <div className="flex items-center gap-4">
+          {/* Tombol Blanko Form Petani A4 */}
+          <button
+            type="button"
+            onClick={() => openBlankoModal('petani')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-md shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Cetak & Download Blanko Formulir Petani (A4) untuk Pengisian Manual ICS"
+          >
+            <Printer className="w-4 h-4 text-amber-600" />
+            <span>Blanko Form Petani (A4)</span>
+          </button>
+
+          <div className="text-right">
+            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">
+              Total Perputaran Kas
+            </span>
+            <span className="text-2xl font-black text-emerald-700 font-mono">
+              Rp {totalRevenue.toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
 

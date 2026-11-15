@@ -28,6 +28,7 @@ import {
   Thermometer,
   QrCode,
   Tag,
+  Printer,
 } from 'lucide-react';
 import { WarehouseBarcodeModal } from '../../../components/WarehouseBarcodeModal';
 
@@ -39,6 +40,7 @@ export const RoasterSourcingPage: React.FC = () => {
     greenBeanSamples,
     buyWarehouseBeanAndRoast,
     createPurchaseOrder,
+    openBlankoModal,
   } = useCoffee();
   const navigate = useNavigate();
 
@@ -123,6 +125,15 @@ export const RoasterSourcingPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openBlankoModal('roastery')}
+            className="px-3.5 py-2.5 rounded-xl border border-stone-300 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title="Download / Cetak Blanko Lembar Roastery (A4)"
+          >
+            <Printer className="w-4 h-4 text-stone-600" />
+            <span>Blanko Form Roastery (A4)</span>
+          </button>
           <Link
             to="/admin/roaster/production"
             className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-600/20 transition-all flex items-center gap-1.5"

@@ -9,7 +9,8 @@ import {
   useNavigate,
   Outlet,
 } from 'react-router-dom';
-import { CoffeeProvider } from './context/CoffeeContext';
+import { CoffeeProvider, useCoffee } from './context/CoffeeContext';
+import { StakeholderFormsModal } from './components/forms/StakeholderFormsModal';
 import { LoginPage } from './components/LoginPage';
 import { Navbar } from './components/Navbar';
 import { AdminLTELayout } from './components/adminlte/AdminLTELayout';
@@ -237,11 +238,23 @@ export const AppRoutes: React.FC = () => {
   );
 };
 
+const GlobalBlankoModalHost: React.FC = () => {
+  const { blankoModalOpen, blankoModalInitialTab, closeBlankoModal } = useCoffee();
+  return (
+    <StakeholderFormsModal
+      isOpen={blankoModalOpen}
+      onClose={closeBlankoModal}
+      initialForm={blankoModalInitialTab}
+    />
+  );
+};
+
 export function App() {
   return (
     <BrowserRouter>
       <CoffeeProvider>
         <AppRoutes />
+        <GlobalBlankoModalHost />
       </CoffeeProvider>
     </BrowserRouter>
   );

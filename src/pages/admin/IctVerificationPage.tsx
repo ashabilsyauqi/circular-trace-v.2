@@ -42,6 +42,7 @@ export const IctVerificationPage: React.FC = () => {
     rejectVerification,
     revokeVerificationStamp,
     currentUser,
+    openBlankoModal,
   } = useCoffee();
 
   // Active Tab: 'petani' | 'kebun' | 'panen' | 'stamps'
@@ -184,6 +185,16 @@ export const IctVerificationPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => openBlankoModal('petani')}
+            className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+            title="Download / Cetak Blanko Formulir Fisik Lapangan (A4) untuk ICS"
+          >
+            <Printer className="w-4 h-4 text-stone-600" />
+            <span>Blanko Form (A4)</span>
+          </button>
+
           <Link
             to="/admin/ict/ct-dashboard"
             className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"

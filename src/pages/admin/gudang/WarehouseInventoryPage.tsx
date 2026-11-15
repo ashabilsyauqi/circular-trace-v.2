@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Crown,
   Award,
+  Printer,
 } from 'lucide-react';
 import { WarehouseBarcodeModal } from '../../../components/WarehouseBarcodeModal';
 import { GRADE_TIERS_CONFIG } from '../../../components/WarehouseView';
@@ -33,6 +34,7 @@ export const WarehouseInventoryPage: React.FC = () => {
     warehouseLots,
     currentUser,
     toggleReleaseWarehouseLotToMarketplace,
+    openBlankoModal,
   } = useCoffee();
   const navigate = useNavigate();
 
@@ -107,7 +109,18 @@ export const WarehouseInventoryPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Tombol Blanko Form Gudang A4 */}
+          <button
+            type="button"
+            onClick={() => openBlankoModal('gudang')}
+            className="px-3.5 py-2 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+            title="Cetak & Download Blanko Formulir Gudang & QA (A4) untuk Pengisian Manual Lapangan"
+          >
+            <Printer className="w-4 h-4 text-amber-600" />
+            <span>Blanko Form Gudang (A4)</span>
+          </button>
+
           <Link
             to="/admin/gudang/pengadaan"
             className="px-3.5 py-2 rounded-md bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors"

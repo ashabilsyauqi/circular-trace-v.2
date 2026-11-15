@@ -25,6 +25,7 @@ import {
   ShoppingCart,
   Award,
   ExternalLink,
+  Printer,
 } from 'lucide-react';
 import { ROLE_DETAILS } from '../../constants/roles';
 
@@ -45,6 +46,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
     setFarmerActiveTab,
     processorActiveTab,
     setProcessorActiveTab,
+    openBlankoModal,
   } = useCoffee();
   const location = useLocation();
   const [filterQuery, setFilterQuery] = useState('');
@@ -846,6 +848,24 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               <History className="w-4 h-4 shrink-0" />
               {!isCollapsed && <span className="flex-1 truncate">Buku Transaksi</span>}
             </Link>
+
+            {/* Blanko Formulir Fisik Lapangan A4 */}
+            <button
+              type="button"
+              onClick={() => openBlankoModal()}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-amber-300 hover:bg-[#494e53] hover:text-white transition-colors cursor-pointer text-left"
+              title="Cetak & Download Blanko Formulir Fisik Lapangan (Petani, Pengolah, Gudang, Roastery)"
+            >
+              <Printer className="w-4 h-4 text-amber-400 shrink-0" />
+              {!isCollapsed && (
+                <div className="flex items-center justify-between flex-1 truncate">
+                  <span>Blanko Form (A4)</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
+                    Cetak
+                  </span>
+                </div>
+              )}
+            </button>
           </div>
         </div>
       </div>

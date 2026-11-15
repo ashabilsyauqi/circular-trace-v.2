@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
 import {
   Menu,
@@ -14,6 +14,8 @@ import {
   Building2,
   ExternalLink,
   Store,
+  Printer,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { ROLE_DETAILS } from '../../constants/roles';
 
@@ -26,8 +28,20 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
   onToggleSidebar,
   isSidebarCollapsed,
 }) => {
-  const { currentUser, logout, transactions, users } = useCoffee();
+  const { currentUser, logout, transactions, users, openBlankoModal } = useCoffee();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const getContextFormTab = (): 'petani' | 'pengolah' | 'gudang' | 'roastery' => {
+    const p = location.pathname;
+    if (p.includes('/roaster')) return 'roastery';
+    if (p.includes('/gudang')) return 'gudang';
+    if (p.includes('/pengolah')) return 'pengolah';
+    if (currentUser?.role === 'roaster') return 'roastery';
+    if (currentUser?.role === 'gudang') return 'gudang';
+    if (currentUser?.role === 'pengolah') return 'pengolah';
+    return 'petani';
+  };
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -234,6 +248,18 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
 
       {/* Right nav items */}
       <div className="flex items-center gap-2">
+        {/* Tombol Cetak & Download Blanko Formulir Fisik Lapangan */}
+        <button
+          onClick={() => openBlankoModal(getContextFormTab())}
+          type="button"
+          className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer shrink-0"
+          title="Cetak & Download Blanko Formulir Fisik A4 (Petani, Pengolah, Gudang, Roastery) untuk Pengisian Manual ICS"
+        >
+          <Printer className="w-4 h-4 text-amber-600" />
+          <span className="hidden sm:inline">Blanko Form (A4)</span>
+          <span className="sm:hidden">Blanko</span>
+        </button>
+
         {/* Fullscreen Button */}
         <button
           onClick={toggleFullscreen}

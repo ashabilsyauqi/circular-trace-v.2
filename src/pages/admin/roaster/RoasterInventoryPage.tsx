@@ -31,6 +31,7 @@ import {
   Sliders,
   Play,
   RotateCcw,
+  Printer,
 } from 'lucide-react';
 import { RoasterBarcodeModal } from '../../../components/roaster/RoasterBarcodeModal';
 import { TraceabilityModal } from '../../../components/TraceabilityModal';
@@ -41,6 +42,7 @@ export const RoasterInventoryPage: React.FC = () => {
     warehouseLots,
     currentUser,
     toggleReleaseRoastedLotToMarketplace,
+    openBlankoModal,
   } = useCoffee();
   const navigate = useNavigate();
 
@@ -135,7 +137,17 @@ export const RoasterInventoryPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => openBlankoModal('roastery')}
+            className="px-3.5 py-2 rounded-md bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
+            title="Download / Cetak Blanko Lembar Roastery & Cupping (A4)"
+          >
+            <Printer className="w-4 h-4 text-stone-600" />
+            <span>Blanko Form Roastery (A4)</span>
+          </button>
+
           <Link
             to="/admin/roaster/pengadaan"
             className="px-3.5 py-2 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors"

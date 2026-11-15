@@ -40,6 +40,7 @@ export const WarehouseSortingSheetPage: React.FC = () => {
     warehouseLots,
     currentUser,
     completeWarehouseSorting,
+    openBlankoModal,
   } = useCoffee();
 
   // Find lot from URL param or default to first pending sorting lot
@@ -254,7 +255,17 @@ export const WarehouseSortingSheetPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openBlankoModal('gudang')}
+            className="px-3.5 py-1.5 rounded-md border border-stone-300 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            title="Download / Cetak Blanko Lembar Gudang & Sortir (A4)"
+          >
+            <Printer className="w-4 h-4 text-stone-600" />
+            <span>Blanko Form Gudang (A4)</span>
+          </button>
+
           <Link
             to="/admin/gudang/inventory"
             className="px-3 py-1.5 rounded-md border border-stone-300 text-stone-700 hover:bg-stone-100 font-bold text-xs flex items-center gap-1.5 transition-colors"

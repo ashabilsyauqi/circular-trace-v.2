@@ -24,13 +24,14 @@ import {
   Package,
   ExternalLink,
   Award,
+  Printer,
 } from 'lucide-react';
 
 export const MasterKebunPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialFarmerId = searchParams.get('farmerId') || 'all';
 
-  const { users, coffeeFarms, deleteCoffeeFarm, farmerLots } = useCoffee();
+  const { users, coffeeFarms, deleteCoffeeFarm, farmerLots, openBlankoModal } = useCoffee();
 
   const allFarmers = users.filter((u) => u.role === 'petani' || u.assignedService === 'petani');
 
@@ -86,7 +87,18 @@ export const MasterKebunPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Tombol Blanko Form Petani & Kebun A4 */}
+          <button
+            type="button"
+            onClick={() => openBlankoModal('petani')}
+            className="px-3.5 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-md shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Cetak & Download Blanko Formulir Petani & Kebun (A4) untuk Pengisian Manual ICS"
+          >
+            <Printer className="w-4 h-4 text-amber-600" />
+            <span>Blanko Form Petani (A4)</span>
+          </button>
+
           <Link
             to="/admin/kebun/tambah"
             className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-md shadow-xs flex items-center gap-2 transition-all active:scale-95"

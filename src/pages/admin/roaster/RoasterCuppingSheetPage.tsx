@@ -27,6 +27,7 @@ import {
   DollarSign,
   Rocket,
   Save,
+  Printer,
 } from 'lucide-react';
 import { RoasterBarcodeModal } from '../../../components/roaster/RoasterBarcodeModal';
 import { TraceabilityModal } from '../../../components/TraceabilityModal';
@@ -47,6 +48,7 @@ export const RoasterCuppingSheetPage: React.FC = () => {
     roastedLots,
     currentUser,
     completeRoastCupping,
+    openBlankoModal,
   } = useCoffee();
 
   // Find lot from URL or default to first cupping_pending lot, or first available lot
@@ -339,6 +341,15 @@ export const RoasterCuppingSheetPage: React.FC = () => {
 
         {/* BREADCRUMB / ACTIONS */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openBlankoModal('roastery')}
+            className="px-3.5 py-2 rounded-xl border border-stone-300 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+            title="Download / Cetak Blanko Lembar Roastery & Cupping SCA (A4)"
+          >
+            <Printer className="w-4 h-4 text-stone-600" />
+            <span>Blanko Form Roastery (A4)</span>
+          </button>
           <Link
             to="/admin/roaster/inventory"
             className="px-3.5 py-2 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-50 text-xs font-bold transition-all flex items-center gap-1.5"

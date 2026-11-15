@@ -2,10 +2,17 @@
 # Circular Coffee Trace (sangrAI) - cPanel / Apache / LiteSpeed Configuration
 # ==============================================================================
 
-# 1. SPA Routing Fallback (Direct All Non-File Requests to index.html)
+# 1. Force HTTPS & SPA Routing Fallback (Direct All Non-File Requests to index.html)
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # 1a. Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 1b. SPA Fallback
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

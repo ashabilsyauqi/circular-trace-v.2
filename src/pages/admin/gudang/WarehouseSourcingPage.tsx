@@ -21,6 +21,7 @@ import {
   DollarSign,
   AlertCircle,
   X,
+  Printer,
 } from 'lucide-react';
 
 export const WarehouseSourcingPage: React.FC = () => {
@@ -28,6 +29,7 @@ export const WarehouseSourcingPage: React.FC = () => {
     processedLots,
     currentUser,
     buyGreenBeanAndStoreWarehouse,
+    openBlankoModal,
   } = useCoffee();
   const navigate = useNavigate();
 
@@ -110,7 +112,17 @@ export const WarehouseSourcingPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openBlankoModal('gudang')}
+            className="px-3.5 py-2 rounded-md bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs flex items-center gap-1.5 transition-colors border border-stone-300 shadow-2xs cursor-pointer"
+            title="Download / Cetak Blanko Lembar Gudang & Sourcing (A4)"
+          >
+            <Printer className="w-4 h-4 text-stone-600" />
+            <span>Blanko Form Gudang (A4)</span>
+          </button>
+
           <Link
             to="/admin/gudang/inventory"
             className="px-3.5 py-2 rounded-md bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs flex items-center gap-1.5 transition-colors border border-stone-300"

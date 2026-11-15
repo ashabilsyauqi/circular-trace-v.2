@@ -47,6 +47,9 @@ import {
   ProcessorCherryStockItem,
 } from '../types/processorErp';
 import type { CtCertificationSnapshot } from '../services/ct4ci/types';
+import type { StakeholderFormType } from '../components/forms/StakeholderFormsModal';
+
+export type { StakeholderFormType };
 import {
   MOCK_USERS,
   INITIAL_COFFEE_FARMS,
@@ -128,6 +131,10 @@ interface CoffeeContextType {
   setCafeActiveTab: (tab: 'inventory' | 'calculator' | 'my_products' | 'create_product' | 'history') => void;
   verifierActiveTab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history';
   setVerifierActiveTab: (tab: 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history') => void;
+  blankoModalOpen: boolean;
+  blankoModalInitialTab: StakeholderFormType;
+  openBlankoModal: (tab?: StakeholderFormType) => void;
+  closeBlankoModal: () => void;
   verificationStamps: VerificationStamp[];
   issueVerificationStamp: (params: {
     targetType: 'farmer' | 'farm' | 'harvest' | 'processed' | 'warehouse' | 'roasted' | 'cafe';
@@ -535,6 +542,18 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'history'
   >('petani');
 
+  const [blankoModalOpen, setBlankoModalOpen] = useState(false);
+  const [blankoModalInitialTab, setBlankoModalInitialTab] = useState<StakeholderFormType>('petani');
+
+  const openBlankoModal = (tab: StakeholderFormType = 'petani') => {
+    setBlankoModalInitialTab(tab);
+    setBlankoModalOpen(true);
+  };
+
+  const closeBlankoModal = () => {
+    setBlankoModalOpen(false);
+  };
+
   const [verificationStamps, setVerificationStamps] = useState<VerificationStamp[]>(() => {
     const saved = localStorage.getItem('cct_verificationStamps');
     if (saved) {
@@ -922,7 +941,14 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       MOCK_USERS.find((u) => (u.email && u.email.toLowerCase() === cleanEmail) || u.id === email.trim());
 
     if (!matched) {
-      if (cleanEmail === 'admin@circulartrace.id' || cleanEmail === 'admin@sangrai.id' || cleanEmail === 'admin') {
+      if (
+        cleanEmail === 'admin@circulartrace.id' ||
+        cleanEmail === 'admin@sangrai.id' ||
+        cleanEmail === 'admin' ||
+        cleanEmail === 'kelompoktani' ||
+        cleanEmail === 'kelompok tani' ||
+        cleanEmail === 'koptan'
+      ) {
         matched = users.find((u) => u.role === 'admin_kelompok_tani') || MOCK_USERS[0];
       } else if (cleanEmail === 'roaster@circulartrace.id' || cleanEmail === 'roaster') {
         matched = users.find((u) => u.role === 'roaster') || MOCK_USERS.find((u) => u.role === 'roaster');
@@ -932,7 +958,18 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         matched = users.find((u) => u.role === 'pengolah') || MOCK_USERS.find((u) => u.role === 'pengolah');
       } else if (cleanEmail === 'petani@circulartrace.id' || cleanEmail === 'petani') {
         matched = users.find((u) => u.role === 'petani') || MOCK_USERS.find((u) => u.role === 'petani');
-      } else if (cleanEmail === 'cafe@circulartrace.id' || cleanEmail === 'cafe') {
+      } else if (
+        cleanEmail === 'cafe@circulartrace.id' ||
+        cleanEmail === 'cafe' ||
+        cleanEmail === 'coffeeshop' ||
+        cleanEmail === 'coffee shop'
+      ) {
+        matched = users.find((u) => u.role === 'cafe') || MOCK_USERS.find((u) => u.role === 'cafe');
+      } else if (
+        cleanEmail === 'buyer@circulartrace.id' ||
+        cleanEmail === 'buyer' ||
+        cleanEmail === 'pembeli'
+      ) {
         matched = users.find((u) => u.role === 'cafe') || MOCK_USERS.find((u) => u.role === 'cafe');
       } else if (cleanEmail === 'ict@circulartrace.id' || cleanEmail === 'ict') {
         matched = users.find((u) => u.role === 'ict') || MOCK_USERS.find((u) => u.role === 'ict');
@@ -3953,6 +3990,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setCafeActiveTab,
         verifierActiveTab,
         setVerifierActiveTab,
+        blankoModalOpen,
+        blankoModalInitialTab,
+        openBlankoModal,
+        closeBlankoModal,
         verificationStamps,
         issueVerificationStamp,
         revokeVerificationStamp,

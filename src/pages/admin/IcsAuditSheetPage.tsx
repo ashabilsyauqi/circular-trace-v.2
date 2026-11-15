@@ -711,6 +711,7 @@ export const IcsAuditSheetPage: React.FC = () => {
     farmerLots,
     currentUser,
     submitIcsAuditReport,
+    openBlankoModal,
   } = useCoffee();
 
   // Active target type: 'farmer' | 'farm' | 'harvest'
@@ -974,7 +975,16 @@ export const IcsAuditSheetPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openBlankoModal('petani')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-md text-xs font-bold flex items-center gap-2 transition-all cursor-pointer border border-amber-300 shadow-2xs"
+            title="Download / Cetak Blanko Formulir Fisik Petani & Kebun (A4) untuk Pengisian Lapangan"
+          >
+            <Printer className="w-4 h-4 text-amber-600" />
+            <span>Blanko Form Petani (A4)</span>
+          </button>
           <button
             type="button"
             onClick={handlePrint}

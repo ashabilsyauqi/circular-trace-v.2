@@ -61,7 +61,7 @@ import { LiteEngine } from '../../../services/ct4ci/liteEngine';
 export const CtFarmCertificationDashboardPage: React.FC = () => {
   const { farmId: routeFarmId } = useParams<{ farmId?: string }>();
   const navigate = useNavigate();
-  const { coffeeFarms, users, currentUser, certifyFarmWithCtIndex } = useCoffee();
+  const { coffeeFarms, users, currentUser, certifyFarmWithCtIndex, openBlankoModal } = useCoffee();
 
   // Selected farm selection
   const [selectedFarmId, setSelectedFarmId] = useState<string>(
@@ -344,8 +344,18 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Farm Selector */}
+          {/* Farm Selector & Blanko Action */}
           <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <button
+              type="button"
+              onClick={() => openBlankoModal('petani')}
+              className="bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl px-3.5 py-2.5 flex items-center justify-center gap-2 font-bold text-xs shadow-2xs transition-colors cursor-pointer shrink-0"
+              title="Download / Cetak Blanko Lembar Verifikasi Lapangan (A4)"
+            >
+              <Printer className="w-4 h-4 text-stone-600" />
+              <span>Blanko Form (A4)</span>
+            </button>
+
             <div className="bg-stone-50 border border-stone-200 rounded-xl p-2.5 flex items-center gap-3">
               <TreePine className="w-5 h-5 text-emerald-600 shrink-0" />
               <div>

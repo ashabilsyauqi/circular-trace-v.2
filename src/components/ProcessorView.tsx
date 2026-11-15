@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Droplets,
   Layers,
+  Printer,
 } from 'lucide-react';
 
 import { DashboardModule } from './processor/DashboardModule';
@@ -28,6 +29,7 @@ export const ProcessorView: React.FC = () => {
     processingBatches,
     processedLots,
     transactions,
+    openBlankoModal,
   } = useCoffee();
 
   const availableCherryIntake = farmerLots.filter((l) => l.availableWeightKg > 0);
@@ -117,9 +119,22 @@ export const ProcessorView: React.FC = () => {
           })}
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 px-3 text-[11px] text-stone-500 font-medium">
-          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span>Stasiun Wet Mill Aktif</span>
+        <div className="flex items-center gap-2">
+          {/* Tombol Blanko Form Pengolah (A4) */}
+          <button
+            type="button"
+            onClick={() => openBlankoModal('pengolah')}
+            className="py-1.5 px-3 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
+            title="Cetak & Download Blanko Formulir Pengolah / Wet Mill (A4) untuk Pengisian Lapangan"
+          >
+            <Printer className="w-3.5 h-3.5 text-amber-600" />
+            <span>Blanko Form Pengolah (A4)</span>
+          </button>
+
+          <div className="hidden lg:flex items-center gap-2 px-3 text-[11px] text-stone-500 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Stasiun Wet Mill Aktif</span>
+          </div>
         </div>
       </div>
 

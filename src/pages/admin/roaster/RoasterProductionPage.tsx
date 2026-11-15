@@ -31,6 +31,7 @@ import {
   Calendar,
   Coffee,
   CheckSquare,
+  Printer,
 } from 'lucide-react';
 import { ArtisanRoastSimulatorModal } from '../../../components/roaster/ArtisanRoastSimulatorModal';
 import { RoasterBarcodeModal } from '../../../components/roaster/RoasterBarcodeModal';
@@ -46,6 +47,7 @@ export const RoasterProductionPage: React.FC = () => {
     roastedLots,
     createWorkOrder,
     updateWorkOrderStatus,
+    openBlankoModal,
   } = useCoffee();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -173,6 +175,15 @@ export const RoasterProductionPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openBlankoModal('roastery')}
+            className="px-3.5 py-2.5 rounded-xl border border-stone-300 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+            title="Download / Cetak Blanko Lembar Roastery & Cupping (A4)"
+          >
+            <Printer className="w-4 h-4 text-stone-600" />
+            <span>Blanko Form Roastery (A4)</span>
+          </button>
           <button
             type="button"
             onClick={() => setIsCreateWOOpen(true)}

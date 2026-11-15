@@ -119,6 +119,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
       case 'petani':
         return <Sprout className="w-5 h-5 text-stone-950" />;
       case 'ict':
+      case 'verifikator':
         return <ShieldCheck className="w-5 h-5 text-stone-950" />;
       default:
         return <Building2 className="w-5 h-5 text-stone-950" />;
@@ -139,6 +140,8 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
         return 'Layanan Petani Kopi';
       case 'ict':
         return 'Verifikasi Internal ICT';
+      case 'verifikator':
+        return 'Verifikasi Mutu & Sertifikasi CT';
       default:
         return 'Scope Kelompok Tani';
     }
@@ -255,7 +258,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 {!isCollapsed && <span className="flex-1 truncate">Master Users</span>}
                 {!isCollapsed && (
                   <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-700 text-white font-bold">
-                    {users.filter((u) => u.role !== 'verifikator').length}
+                    {users.length}
                   </span>
                 )}
               </NavLink>

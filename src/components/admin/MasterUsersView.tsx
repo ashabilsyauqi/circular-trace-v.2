@@ -18,6 +18,7 @@ import {
   Edit2,
   Trash2,
   Shield,
+  ShieldCheck,
   Phone,
   Mail,
   MapPin,
@@ -34,7 +35,7 @@ export const MasterUsersView: React.FC = () => {
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedServiceFilter, setSelectedServiceFilter] = useState<'all' | OperationalService | 'ict'>('all');
+  const [selectedServiceFilter, setSelectedServiceFilter] = useState<'all' | OperationalService | 'ict' | 'verifikator'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
@@ -61,13 +62,13 @@ export const MasterUsersView: React.FC = () => {
 
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Filtered users list (exclude verifikator as requested)
+  // Filtered users list
   const filteredUsers = users
-    .filter((u) => u.role !== 'verifikator') // Verifikator disembunyikan/nonaktif sementara
     .filter((u) => {
       // Exclude the admin itself from the regular operator list or show at top
       if (selectedServiceFilter === 'all') return true;
       if (selectedServiceFilter === 'ict') return u.role === 'ict';
+      if (selectedServiceFilter === 'verifikator') return u.role === 'verifikator';
       const effectiveService = u.assignedService || (u.role as OperationalService);
       return effectiveService === selectedServiceFilter;
     })
@@ -97,6 +98,15 @@ export const MasterUsersView: React.FC = () => {
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-blue-900 border border-blue-300">
           <Shield className="w-3.5 h-3.5 text-blue-700" />
           <span>Petugas ICT (Verifikator)</span>
+        </span>
+      );
+    }
+
+    if (user.role === 'verifikator') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+          <span>Verifikator &amp; Auditor Mutu</span>
         </span>
       );
     }
@@ -279,7 +289,7 @@ export const MasterUsersView: React.FC = () => {
                 : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             }`}
           >
-            Semua ({users.filter((u) => u.role !== 'verifikator').length})
+            Semua ({users.length})
           </button>
 
           {ACTIVE_OPERATIONAL_SERVICES.map((srv) => {
@@ -320,6 +330,27 @@ export const MasterUsersView: React.FC = () => {
               >
                 <span>Petugas ICT</span>
                 <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? 'bg-blue-800 text-white' : 'bg-stone-200 text-stone-700'}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })()}
+
+          {/* Filter Verifikator Mutu */}
+          {(() => {
+            const count = users.filter((u) => u.role === 'verifikator').length;
+            const isSelected = selectedServiceFilter === 'verifikator';
+            return (
+              <button
+                onClick={() => setSelectedServiceFilter('verifikator')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-emerald-700 text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
+              >
+                <span>Verifikator Mutu</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? 'bg-emerald-900 text-white' : 'bg-stone-200 text-stone-700'}`}>
                   {count}
                 </span>
               </button>

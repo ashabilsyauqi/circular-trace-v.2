@@ -474,8 +474,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
       label: 'Master Users',
       subtitle: 'Kelola Akun Anggota & Penugasan Layanan',
       icon: Users,
-      badge: users.filter((u) => u.role !== 'verifikator').length,
-      badgeLabel: `${users.filter((u) => u.role !== 'verifikator').length} Akun`,
+      badge: users.length,
+      badgeLabel: `${users.length} Akun`,
     },
     {
       id: 'petani',

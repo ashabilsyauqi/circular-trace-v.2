@@ -41,6 +41,8 @@ import {
   Tag,
   ShieldCheck,
   Boxes,
+  Lock,
+  Globe,
 } from 'lucide-react';
 import { UploadProductModal } from '../../../components/seller/UploadProductModal';
 
@@ -758,8 +760,21 @@ export const MarketplaceSellerPanelPage: React.FC = () => {
                         <Tag className="w-3 h-3 text-amber-400" />
                         <span>{item.categoryLabel}</span>
                       </div>
-                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold">
-                        🟢 Live
+                      <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                        {item.category === 'cherry' ? (
+                          <span className="px-2 py-0.5 rounded-md bg-amber-500 text-stone-950 text-[10px] font-black shadow-xs flex items-center gap-1">
+                            <Lock className="w-2.5 h-2.5" />
+                            <span>Eksklusif KT &amp; Pengolah</span>
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-bold shadow-xs flex items-center gap-1">
+                            <Globe className="w-2.5 h-2.5" />
+                            <span>Pasar Global</span>
+                          </span>
+                        )}
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-xs">
+                          🟢 Live
+                        </span>
                       </div>
                     </div>
 
@@ -887,6 +902,17 @@ export const MarketplaceSellerPanelPage: React.FC = () => {
                             <Clock className="w-3 h-3 text-blue-600 shrink-0" />
                             <span>Deploy Ready (Draft)</span>
                           </span>
+                        )}
+                        {lot.category === 'cherry' ? (
+                          <div className="text-[10px] text-amber-800 font-bold flex items-center gap-1 mt-1">
+                            <Lock className="w-3 h-3 text-amber-600 shrink-0" />
+                            <span>Audience: Eksklusif Kelompok Tani &amp; Pengolah</span>
+                          </div>
+                        ) : (
+                          <div className="text-[10px] text-blue-800 font-bold flex items-center gap-1 mt-1">
+                            <Globe className="w-3 h-3 text-blue-600 shrink-0" />
+                            <span>Audience: Marketplace Global Terbuka</span>
+                          </div>
                         )}
                       </td>
 

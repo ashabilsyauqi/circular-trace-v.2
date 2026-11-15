@@ -21,6 +21,7 @@ import {
   Cloud,
   Thermometer,
   Droplets,
+  Lock,
 } from 'lucide-react';
 import { FarmerBarcodeModal } from '../../components/FarmerBarcodeModal';
 

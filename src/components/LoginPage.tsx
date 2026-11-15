@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Check,
   RotateCcw,
+  ShoppingBag,
 } from 'lucide-react';
 
 interface CoffeeSlide {
@@ -107,6 +108,8 @@ export const LoginPage: React.FC = () => {
           ? '/admin/roaster/inventory'
           : currentUser.role === 'gudang'
           ? '/admin/gudang/inventory'
+          : currentUser.role === 'ict' || currentUser.role === 'verifikator'
+          ? '/admin/ict'
           : `/admin/${currentUser.role}`;
         navigate(dest, { replace: true });
       }
@@ -536,9 +539,14 @@ export const LoginPage: React.FC = () => {
 
           {/* Supported Stakeholder Scope Card */}
           <div className="mt-8 p-4 rounded-2xl bg-stone-100/80 border border-stone-200/80 text-[11px] text-stone-600 space-y-2">
-            <div className="font-bold text-stone-800 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Lingkup Pengguna Sistem Terdaftar:</span>
+            <div className="font-bold text-stone-800 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Lingkup Pengguna Sistem Terdaftar:</span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                6 Peran Terintegrasi
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1 text-stone-700 font-medium">
               <div className="flex items-center gap-1.5">
@@ -557,6 +565,14 @@ export const LoginPage: React.FC = () => {
                 <Coffee className="w-3.5 h-3.5 text-stone-700 shrink-0" />
                 <span>4. Coffee Shop (Kafe)</span>
               </div>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span className="font-semibold text-indigo-900">5. Verifikator (Mutu/ICT)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ShoppingBag className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <span>6. Buyer (Marketplace)</span>
+              </div>
             </div>
             <p className="text-[10px] text-stone-500 pt-1 leading-relaxed border-t border-stone-200/60">
               Hak akses dan dasbor kerja Anda akan otomatis disesuaikan dengan peran organisasi terverifikasi.
@@ -565,7 +581,7 @@ export const LoginPage: React.FC = () => {
             {/* Registered demo accounts helper */}
             <div className="pt-2 border-t border-stone-200/60 text-[10px] space-y-1.5">
               <span className="font-bold text-stone-700 block">Kredensial Akun Pengguna Terdaftar (Sandi: password123):</span>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1 font-mono text-stone-600">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 font-mono text-stone-600">
                 <button
                   type="button"
                   onClick={() => { setEmail('admin.gapoktan@sangrai.id'); setPassword('password123'); }}
@@ -573,6 +589,14 @@ export const LoginPage: React.FC = () => {
                   title="Klik untuk mengisi formulir login sebagai Admin Kelompok Tani"
                 >
                   • Admin: admin.gapoktan@sangrai.id
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('verifikator@kelompoktani.id'); setPassword('password123'); }}
+                  className="text-left hover:text-indigo-900 font-bold text-indigo-700 transition-colors cursor-pointer truncate bg-indigo-50/90 px-1 py-0.5 rounded border border-indigo-200"
+                  title="Klik untuk mengisi formulir login sebagai Lead Auditor & Verifikator Mutu CT"
+                >
+                  • Verifikator: verifikator@kelompoktani.id
                 </button>
                 <button
                   type="button"
@@ -613,6 +637,14 @@ export const LoginPage: React.FC = () => {
                   title="Klik untuk mengisi formulir login sebagai Coffee Shop"
                 >
                   • Cafe: maya@cafe.id
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('buyer@circulartrace.id'); setPassword('password123'); }}
+                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                  title="Klik untuk mengisi formulir login sebagai Buyer (Marketplace)"
+                >
+                  • Buyer: buyer@circulartrace.id
                 </button>
               </div>
               <p className="text-[9px] text-stone-400 italic">Klik salah satu akun di atas untuk mengisi formulir, lalu klik Masuk ke Sistem.</p>

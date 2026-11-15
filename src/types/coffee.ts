@@ -528,6 +528,8 @@ export interface UnifiedMarketplaceItem {
   canTrace: boolean;
   isExclusiveKelompokTani?: boolean;
   exclusiveKelompokTaniName?: string;
+  exclusiveAudience?: 'kelompok_tani_dan_pengolah' | 'global_marketplace';
+  sourceKelompokTaniName?: string;
   rawItem: FarmerHarvestLot | ProcessedGreenBeanLot | WarehouseLot | RoastedBeanLot | CafeRetailProduct;
   description?: string;
 }

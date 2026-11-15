@@ -970,7 +970,11 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         cleanEmail === 'buyer' ||
         cleanEmail === 'pembeli'
       ) {
-        matched = users.find((u) => u.role === 'cafe') || MOCK_USERS.find((u) => u.role === 'cafe');
+        matched =
+          users.find((u) => u.email?.toLowerCase() === 'buyer@circulartrace.id') ||
+          users.find((u) => u.role === 'cafe') ||
+          MOCK_USERS.find((u) => u.email?.toLowerCase() === 'buyer@circulartrace.id') ||
+          MOCK_USERS.find((u) => u.role === 'cafe');
       } else if (cleanEmail === 'ict@circulartrace.id' || cleanEmail === 'ict') {
         matched = users.find((u) => u.role === 'ict') || MOCK_USERS.find((u) => u.role === 'ict');
       } else if (
@@ -979,7 +983,11 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         cleanEmail === 'verifikator' ||
         cleanEmail === 'auditor'
       ) {
-        matched = users.find((u) => u.role === 'verifikator') || MOCK_USERS.find((u) => u.role === 'verifikator');
+        matched =
+          users.find((u) => u.email?.toLowerCase() === 'verifikator@kelompoktani.id') ||
+          users.find((u) => u.role === 'verifikator') ||
+          MOCK_USERS.find((u) => u.email?.toLowerCase() === 'verifikator@kelompoktani.id') ||
+          MOCK_USERS.find((u) => u.role === 'verifikator');
       }
     }
 
@@ -2701,11 +2709,13 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         canTrace: false,
         isExclusiveKelompokTani: true,
         exclusiveKelompokTaniName: lot.farmLocation,
+        exclusiveAudience: 'kelompok_tani_dan_pengolah' as const,
+        sourceKelompokTaniName: lot.farmLocation,
         rawItem: lot,
         description: lot.marketplaceDescription,
       })),
 
-    // B. Green Bean Pengolah
+    // B. Green Bean Pengolah (Pasar Global Terbuka)
     ...processedLots
       .filter((lot) => lot.availableWeightKg > 0)
       .map((lot) => ({
@@ -2737,6 +2747,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
         verificationStamp: lot.verificationStamp,
         canTrace: true,
+        isExclusiveKelompokTani: false,
+        exclusiveAudience: 'global_marketplace' as const,
         rawItem: lot,
         description: lot.marketplaceDescription,
       })),
@@ -2784,6 +2796,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
         verificationStamp: lot.verificationStamp,
         canTrace: true,
+        isExclusiveKelompokTani: false,
+        exclusiveAudience: 'global_marketplace' as const,
         rawItem: lot,
         description: lot.marketplaceDescription,
       })),
@@ -2827,6 +2841,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         verificationStatus: lot.verificationStatus || (lot.verificationStamp ? 'verified' : 'unverified'),
         verificationStamp: lot.verificationStamp,
         canTrace: true,
+        isExclusiveKelompokTani: false,
+        exclusiveAudience: 'global_marketplace' as const,
         rawItem: lot,
         description: lot.marketplaceDescription,
       })),

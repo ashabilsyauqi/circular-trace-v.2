@@ -25,6 +25,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Warehouse,
+  Lock,
 } from 'lucide-react';
 import { FarmerBarcodeModal } from '../../components/FarmerBarcodeModal';
 
@@ -368,9 +369,12 @@ export const MasterPanenPage: React.FC = () => {
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         <div className="inline-flex items-center justify-center gap-1.5 flex-nowrap whitespace-nowrap">
                           {isReleased ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap shrink-0">
-                              <Store className="w-3 h-3 text-amber-600 shrink-0" />
-                              <span>Rilis Marketplace</span>
+                            <span
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-950 border border-amber-300 whitespace-nowrap shrink-0"
+                              title="Ceri tayang di Pasar Eksklusif Kelompok Tani & Pengolah (Sourcing Internal & Lintas KT)"
+                            >
+                              <Lock className="w-3 h-3 text-amber-700 shrink-0" />
+                              <span>Eksklusif KT &amp; Pengolah</span>
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700 border border-stone-300 whitespace-nowrap shrink-0">
@@ -384,8 +388,9 @@ export const MasterPanenPage: React.FC = () => {
                             type="button"
                             onClick={() => toggleReleaseHarvestLotToMarketplace(lot.id)}
                             className="px-2 py-0.5 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 text-[10px] font-bold border border-stone-300 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                            title={isReleased ? 'Tarik kembali ke gudang internal petani' : 'Rilis ceri ke Pasar Eksklusif Kelompok Tani & Pengolah'}
                           >
-                            {isReleased ? '← Tarik ke Gudang' : '→ Rilis ke Pasar'}
+                            {isReleased ? '← Tarik ke Gudang' : '→ Rilis ke Pasar Eksklusif'}
                           </button>
                         </div>
                       </td>

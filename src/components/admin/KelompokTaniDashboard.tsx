@@ -22,6 +22,8 @@ import {
   Activity,
   UserPlus,
   Printer,
+  Lock,
+  Globe,
 } from 'lucide-react';
 import { OperationalService } from '../../types/coffee';
 
@@ -72,7 +74,7 @@ export const KelompokTaniDashboard: React.FC = () => {
               {currentUser?.organization || 'Gapoktan Kopi Mandiri Nusantara'}
             </h2>
             <p className="text-xs text-stone-500 max-w-2xl leading-relaxed">
-              Supervisi terpadu scope hulu &amp; pengolahan kopi kelompok tani: Kebun &amp; Panen Ceri Petani &rarr; Stasiun Pengolah Wet Mill Green Bean &rarr; Rilis ke Marketplace.
+              Lingkup inti Kelompok Tani terdiri dari <strong>1. Petani</strong> (memproduksi ceri kopi segar) dan <strong>2. Pengolah</strong> (mengolah ceri menjadi green bean). Ceri dipasarkan secara eksklusif bagi sesama kelompok tani &amp; pengolah, sedangkan Green Bean dipasarkan secara global di marketplace.
             </p>
           </div>
 
@@ -98,6 +100,52 @@ export const KelompokTaniDashboard: React.FC = () => {
             </Link>
           </div>
         </div>
+
+        {/* 1.1 Alur Rantai Nilai Eksklusif vs Global Scope Kelompok Tani */}
+        <div className="mt-5 pt-4 border-t border-stone-200">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-2">
+            Struktur Rantai Pasok Lingkup Kelompok Tani (B2B Eksklusif &rarr; Global):
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Pilar 1: Petani -> Ceri */}
+            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                <Sprout className="w-4 h-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-emerald-950">1. Petani &bull; Produksi Ceri Kopi</span>
+                  <span className="px-2 py-0.2 rounded-full text-[9px] font-black bg-amber-200 text-amber-900 border border-amber-300 flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>Pasar Eksklusif</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
+                  Petani anggota memanen ceri merah matang (Brix 19°–24°). Ceri bersifat <strong>sangat eksklusif</strong>: hanya dipasarkan ke sesama Kelompok Tani &amp; Stasiun Pengolah untuk diserap sebagai bahan baku olah.
+                </p>
+              </div>
+            </div>
+
+            {/* Pilar 2: Pengolah -> Green Bean */}
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-md bg-amber-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                <Cog className="w-4 h-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-amber-950">2. Pengolah &bull; Produksi Green Bean</span>
+                  <span className="px-2 py-0.2 rounded-full text-[9px] font-black bg-blue-100 text-blue-900 border border-blue-300 flex items-center gap-1">
+                    <Globe className="w-2.5 h-2.5" />
+                    <span>Pasar Global</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                  Pengolah menyerap ceri petani (lintas kelompok tani) &amp; memprosesnya melalui 7 metode pasca-panen menjadi <strong>Green Bean</strong> bermutu tinggi yang <strong>dipasarkan global</strong> ke Roastery, Gudang, &amp; Konsumen.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 2. AdminLTE Classic Small-Boxes (Scope Kelompok Tani: Petani, Pengolah & Saluran Distribusi) */}
@@ -107,7 +155,7 @@ export const KelompokTaniDashboard: React.FC = () => {
             <Activity className="w-4 h-4 text-emerald-600" />
             <span>Scope Operasional Kelompok Tani</span>
           </h3>
-          <span className="text-[11px] text-stone-500">2 Unit Layanan + Saluran Distribusi Pasar</span>
+          <span className="text-[11px] text-stone-500">2 Pilar Inti: Petani (Ceri) &amp; Pengolah (Green Bean)</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -118,6 +166,10 @@ export const KelompokTaniDashboard: React.FC = () => {
               <p className="text-xs text-emerald-100 font-semibold mt-0.5">1. Layanan Petani (Hulu Ceri)</p>
               <div className="text-[10px] text-emerald-200 mt-2 font-medium">
                 {totalFarmers} Petani Anggota • {coffeeFarms.length} Lahan Kebun
+              </div>
+              <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-800/80 text-[9px] text-amber-200 font-bold">
+                <Lock className="w-2.5 h-2.5" />
+                <span>Audience: Eksklusif Kelompok Tani &amp; Pengolah</span>
               </div>
             </div>
             <Sprout className="w-16 h-16 text-white/20 absolute top-2 right-2 z-0 pointer-events-none" />
@@ -138,6 +190,10 @@ export const KelompokTaniDashboard: React.FC = () => {
               <div className="text-[10px] text-amber-200 mt-2 font-medium">
                 {totalProcessors} Operator • {processingBatches.length} Batch Olah (7 Metode)
               </div>
+              <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-800/80 text-[9px] text-blue-100 font-bold">
+                <Globe className="w-2.5 h-2.5" />
+                <span>Green Bean: Pasar Global Terbuka</span>
+              </div>
             </div>
             <Cog className="w-16 h-16 text-white/20 absolute top-2 right-2 z-0 pointer-events-none" />
             <Link
@@ -157,9 +213,9 @@ export const KelompokTaniDashboard: React.FC = () => {
                   processedLots.filter((l) => l.availableWeightKg > 0).length}{' '}
                 <span className="text-xs font-normal">Lot Live</span>
               </h4>
-              <p className="text-xs text-blue-100 font-semibold mt-0.5">3. Rilis Marketplace</p>
+              <p className="text-xs text-blue-100 font-semibold mt-0.5">3. Rilis Marketplace Terpadu</p>
               <div className="text-[10px] text-blue-200 mt-2 font-medium">
-                Produk Ceri &amp; Green Bean Kelompok Tani
+                Ceri (Eksklusif KT) &bull; Green Bean (Global)
               </div>
             </div>
             <Package className="w-16 h-16 text-white/20 absolute top-2 right-2 z-0 pointer-events-none" />

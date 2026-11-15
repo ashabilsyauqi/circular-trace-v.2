@@ -59,10 +59,10 @@ export const ROLE_DETAILS: Record<
     description: 'Beli roasted beans & sajikan dengan Farm-to-Cup Traceability',
   },
   verifikator: {
-    label: 'Verifikator (Non-aktif)',
-    badgeClass: 'bg-slate-100 text-slate-500 border-slate-300 opacity-60',
-    icon: <ShieldCheck className="w-4 h-4 text-slate-400" />,
-    description: 'Layanan audit & sertifikasi mutu eksternal (sementara dinonaktifkan)',
+    label: 'Verifikator & Auditor Mutu',
+    badgeClass: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    icon: <ShieldCheck className="w-4 h-4 text-emerald-600" />,
+    description: 'Auditor Mutu & Verifikator: Audit CT-4CI, sertifikasi kebun, uji brix ceri, cupping, & audit EUDR',
   },
   ict: {
     label: 'Petugas ICT (Verifikator)',

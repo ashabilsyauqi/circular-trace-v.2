@@ -275,8 +275,41 @@ export const MOCK_USERS: AppUser[] = [
     balance: 41000000,
     bio: 'Cafe asri di jantung Ubud yang menyajikan kopi Kintamani & Flores dengan konsep sustainability dan local community.',
   },
+  // --- 5.1 BUYER & MARKETPLACE AGGREGATOR ---
+  {
+    id: 'user-buyer-1',
+    name: 'PT Artha Mandiri Ekspor (Buyer Specialty Coffee)',
+    email: 'buyer@circulartrace.id',
+    password: 'password123',
+    role: 'cafe',
+    assignedService: 'cafe',
+    organization: 'PT Artha Mandiri Kopi Ekspor (Marketplace Buyer)',
+    location: 'Jakarta Pusat',
+    avatar: 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=150&auto=format&fit=crop&q=80',
+    phone: '0812-9900-1122',
+    balance: 150000000,
+    status: 'active',
+    registeredAt: '2026-02-01',
+    bio: 'Perusahaan pembeli & agregator kopi specialty internasional untuk pasar domestik dan ekspor via Circular Trace B2B Marketplace.',
+  },
 
-  // --- 6. AKUN VERIFIKATOR SPESIALIS (Auditor QA & Q-Grader per Tahap Rantai Pasok) ---
+  // --- 6. AKUN VERIFIKATOR RESMI & SPESIALIS (Auditor Mutu, CT-4CI, & Q-Grader) ---
+  {
+    id: 'user-verifikator-utama',
+    name: 'Ir. Novizar Nazir (Lead Auditor & Verifikator Mutu CT)',
+    email: 'verifikator@kelompoktani.id',
+    password: 'password123',
+    role: 'verifikator',
+    verifierDomain: 'all',
+    organization: 'Komite Verifikasi & Sertifikasi Kebun Circular Trace (CT-4CI)',
+    location: 'Bandung & Padang',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+    phone: '0812-8899-0011',
+    balance: 50000000,
+    status: 'active',
+    registeredAt: '2026-01-10',
+    bio: 'Lead Auditor & Verifikator Mutu Circular Trace. Memverifikasi kelayakan sertifikasi kebun CT-4CI, audit kepatuhan Fairtrade/EUDR, uji brix ceri panen, cupping score kopi, dan keabsahan data rantai pasok.',
+  },
   {
     id: 'user-verifikator-petani',
     name: 'Hendra Gunawan, S.P.',

@@ -20,7 +20,7 @@ import { CoffeeSensorySpiderChart } from './CoffeeSensorySpiderChart';
 interface TraceabilityModalProps {
   isOpen: boolean;
   onClose: () => void;
-  data: RoastedBeanLot | CafeInventoryItem | null;
+  data: any | null;
 }
 
 export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
@@ -32,36 +32,65 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
 
   if (!isOpen || !data) return null;
 
-  // Check whether it's CafeInventoryItem or RoastedBeanLot
-  const isCafeItem = 'lineage' in data;
-  const beanName = isCafeItem ? data.beanName : `${data.origin} - ${data.variety}`;
-  const variety = data.variety;
-  const processMethod = data.processMethod;
-  const roastLevel = data.roastLevel;
-  const tastingNotes = data.tastingNotes;
-  const scaScore = isCafeItem ? data.scaScore : data.scaCuppingScore;
-  const agtronNumber = (data as any).agtronNumber || 68;
-  const developmentTimeRatio = (data as any).developmentTimeRatio || 14.5;
-  const roasterName = (data as any).roasterName || 'Karsa Craft Roastery';
+  const anyData = data as any;
+  const isCafeItem = 'lineage' in anyData && Boolean(anyData.lineage);
+
+  const origin =
+    anyData.origin ||
+    anyData.sourceOrigin ||
+    anyData.farmLocation ||
+    'Pangalengan, Jawa Barat';
+
+  const variety = anyData.variety || 'Arabica Specialty';
+
+  const beanName =
+    anyData.beanName ||
+    anyData.title ||
+    `${origin} - ${variety}`;
+
+  const processMethod = anyData.processMethod || anyData.processingMethod || 'Specialty Process';
+  const roastLevel = anyData.roastLevel || 'Medium Roast (Rekomendasi)';
+
+  // Safely extract tastingNotes from any lot type (green bean cuppingNotes, warehouse gradingNotes, etc.)
+  const tastingNotes: string[] =
+    Array.isArray(anyData.tastingNotes) && anyData.tastingNotes.length > 0
+      ? anyData.tastingNotes
+      : Array.isArray(anyData.cuppingNotes) && anyData.cuppingNotes.length > 0
+      ? anyData.cuppingNotes
+      : anyData.gradingNotes
+      ? [anyData.gradingNotes]
+      : ['Blackberry', 'Winey', 'Dark Cherry', 'Brown Sugar Sweetness'];
+
+  const scaScore =
+    anyData.scaScore ||
+    anyData.scaCuppingScore ||
+    anyData.cuppingScore ||
+    anyData.verifiedScaScore ||
+    anyData.qualityScore ||
+    86.5;
+
+  const agtronNumber = anyData.agtronNumber || 68;
+  const developmentTimeRatio = anyData.developmentTimeRatio || 14.5;
+  const roasterName = anyData.roasterName || 'Karsa Craft Roastery';
 
   // Silsilah lineage fallback data
   const lineage = isCafeItem
-    ? data.lineage
+    ? anyData.lineage
     : {
-        farmerName: data.farmerName || 'Kelompok Tani Mitra Unggulan',
-        farmLocation: `${data.origin} (${data.altitude})`,
-        altitude: data.altitude,
-        harvestDate: '2026-09-08',
-        brix: 21.8,
-        processorName: 'CV Malabar Wet & Dry Mill Station',
-        fermentationTime: '36 - 72 Jam Fermentasi Terkontrol',
-        moisturePercent: 11.0,
-        warehouseName: 'PT Nusantara Green Bean Warehouse (Gudang A-03)',
-        storageConditions: 'Suhu 20.4°C, RH 54%, Kemasan GrainPro Hermetik',
-        warehouseScaScore: 86.5,
-        roasterName: `${roasterName} (${(data as any).roasterMachine || 'Giesen W6A'})`,
-        roastProfile: `${roastLevel} (Agtron #${agtronNumber}, DTR ${developmentTimeRatio}%)`,
-        roastDate: (data as any).roastDate || '2026-09-12',
+        farmerName: anyData.farmerName || anyData.sourceFarmerName || 'Asep Supriatna (Kelompok Tani Gn. Tilu)',
+        farmLocation: anyData.farmLocation || anyData.sourceOrigin || `${origin} (${anyData.altitude || '1.550 mdpl'})`,
+        altitude: anyData.altitude || '1.550 mdpl',
+        harvestDate: anyData.harvestDate || anyData.sourceHarvestDate || '2026-09-02',
+        brix: anyData.brix || anyData.sourceBrix || 22.4,
+        processorName: anyData.processorName || anyData.sourceProcessorName || 'CV Malabar Wet & Dry Mill Station',
+        fermentationTime: anyData.fermentationTime || (anyData.fermentationTimeHours ? `${anyData.fermentationTimeHours} Jam Fermentasi Terkontrol` : '36 - 72 Jam Fermentasi Terkontrol'),
+        moisturePercent: anyData.moisturePercent || anyData.moistureContentPercent || anyData.moisturePercentage || 11.2,
+        warehouseName: anyData.warehouseName || 'PT Nusantara Green Bean Warehouse (Gudang A-03)',
+        storageConditions: anyData.storageConditions || 'Suhu 20.4°C, RH 54%, Kemasan GrainPro Hermetik',
+        warehouseScaScore: anyData.warehouseScaScore || (scaScore ? Number(scaScore) : 86.5),
+        roasterName: anyData.roasterName ? `${anyData.roasterName} (${anyData.roasterMachine || 'Giesen W6A'})` : `${roasterName} (Giesen W6A Artisan)`,
+        roastProfile: anyData.roastProfile || `${roastLevel} (Agtron #${agtronNumber}, DTR ${developmentTimeRatio}%)`,
+        roastDate: anyData.roastDate || '2026-09-14',
       };
 
   return (
@@ -143,7 +172,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
         {/* Tasting Notes Chips */}
         <div className="bg-amber-50/80 border-b border-amber-200/60 px-6 py-3 flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-amber-900">Karakter Rasa (Tasting Notes):</span>
-          {tastingNotes.map((note, i) => (
+          {(tastingNotes || []).map((note, i) => (
             <span
               key={i}
               className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-white text-stone-800 border border-amber-300/80 shadow-xs"
@@ -315,7 +344,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
         <div className="bg-stone-50 border-t border-stone-200 p-4 sm:p-5 flex items-center justify-between">
           <div className="text-xs text-stone-500 flex items-center gap-1">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            Data silsilah tercatat permanen di jaringan rantai pasok sangrAI.
+            Data silsilah tercatat permanen di jaringan rantai pasok CircularCoffee.
           </div>
           <button
             onClick={onClose}

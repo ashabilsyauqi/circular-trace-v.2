@@ -217,6 +217,50 @@ export interface CapaItem {
   createdAt: string;
 }
 
+export interface RemedialActionItem {
+  id: string;
+  title: string;
+  domain: 'PEST_CHEMICAL' | 'WATER_WASTE_ENV' | 'LABOR_SAFETY' | 'SOIL_PLANT';
+  domainName: string;
+  checkpoints: string[];
+  isMajor: boolean;
+  currentProblem: string;
+  actionSteps: string[];
+  requiredEvidence: string[];
+  estimatedCostIdr: number;
+  completionProofTemplate: string;
+  expectedImpact: string;
+}
+
+export interface FairtradeCoopData {
+  democratic_premium_mgmt?: boolean;
+  transparent_pricing?: boolean;
+  no_child_forced_labor?: boolean;
+  ohs_ppe_compliance?: boolean;
+  fair_wages_contracts?: boolean;
+  waste_valorization_cci?: boolean;
+  no_forest_conversion?: boolean;
+  reduced_chemical_use?: boolean;
+  plot_mapping_complete?: boolean;
+  physical_segregation?: boolean;
+}
+
+export type FairtradeStatusBadge = 'READY' | 'PROGRESSING' | 'NEEDS_IMPROVEMENT';
+
+export interface FairtradeReadinessResult {
+  fairtrade_readiness_index: number;
+  status: string;
+  statusBadge: FairtradeStatusBadge;
+  pillar_scores: {
+    economic: number;
+    social: number;
+    environmental: number;
+    governance: number;
+  };
+  raw_inputs: FairtradeCoopData;
+  identified_gaps: string[];
+}
+
 export interface IdsmEvaluationRuleResult {
   ruleId: IdsmRuleId;
   ruleName: string;
@@ -238,6 +282,7 @@ export interface CtCertificationSnapshot {
   calculationStatus: CalculationResultStatus;
   cciScore?: number;
   sdiScore?: number;
+  fairtradeReadiness?: FairtradeReadinessResult;
   totalCheckpoints: number;
   applicableCount: number;
   compliantCount: number;

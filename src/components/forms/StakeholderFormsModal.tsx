@@ -16,9 +16,10 @@ import {
 export type StakeholderFormType = 'petani' | 'pengolah' | 'gudang' | 'roastery';
 
 interface StakeholderFormsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   initialForm?: StakeholderFormType;
+  embedded?: boolean;
 }
 
 // ============================================================================
@@ -494,9 +495,10 @@ const sampleRoastery: FormRoasteryState = {
 // ============================================================================
 
 export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
-  isOpen,
+  isOpen = false,
   onClose,
   initialForm = 'petani',
+  embedded = false,
 }) => {
   const [activeForm, setActiveForm] = useState<StakeholderFormType>(initialForm);
   const [printBlankMode, setPrintBlankMode] = useState<boolean>(false);
@@ -509,12 +511,12 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
   const [fRoastery, setFRoastery] = useState<FormRoasteryState>(emptyRoastery);
 
   useEffect(() => {
-    if (isOpen && initialForm) {
+    if ((isOpen || embedded) && initialForm) {
       setActiveForm(initialForm);
     }
-  }, [isOpen, initialForm]);
+  }, [isOpen, embedded, initialForm]);
 
-  if (!isOpen) return null;
+  if (!isOpen && !embedded) return null;
 
   // Print with current filled values
   const handlePrintFilled = () => {
@@ -557,10 +559,8 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
     setTimeout(() => setNotification(''), 2500);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200 print:p-0 print:bg-white print:static print:inset-auto">
-      {/* Modal Container */}
-      <div className="relative bg-stone-100 rounded-3xl max-w-5xl w-full shadow-2xl border border-stone-300 overflow-hidden my-4 print:my-0 print:border-none print:shadow-none print:w-full print:max-w-none print:rounded-none">
+  const modalContent = (
+    <div className={`relative bg-stone-100 rounded-3xl max-w-5xl w-full border border-stone-300 overflow-hidden print:my-0 print:border-none print:shadow-none print:w-full print:max-w-none print:rounded-none ${embedded ? 'my-0 shadow-md border-stone-200' : 'my-4 shadow-2xl'}`}>
         
         {/* Top Control Bar (Hidden on Print) */}
         <div className="bg-stone-900 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-b border-stone-800 print:hidden sticky top-0 z-20">
@@ -632,14 +632,16 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
             </button>
 
             {/* Close button */}
-            <button
-              onClick={onClose}
-              type="button"
-              className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-              title="Tutup Modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                type="button"
+                className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Tutup Modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -2377,17 +2379,32 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
               <Printer className="w-4 h-4 text-amber-400" />
               <span>Cetak Form Terisi (A4)</span>
             </button>
-            <button
-              onClick={onClose}
-              type="button"
-              className="px-4 py-2 border border-stone-300 bg-white hover:bg-stone-50 font-bold rounded-xl cursor-pointer"
-            >
-              Tutup
-            </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                type="button"
+                className="px-4 py-2 border border-stone-300 bg-white hover:bg-stone-50 font-bold rounded-xl cursor-pointer"
+              >
+                Tutup
+              </button>
+            )}
           </div>
         </div>
 
       </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className="w-full flex justify-center py-2 print:p-0 print:m-0">
+        {modalContent}
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200 print:p-0 print:bg-white print:static print:inset-auto">
+      {modalContent}
     </div>
   );
 };

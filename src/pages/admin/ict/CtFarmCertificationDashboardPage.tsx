@@ -32,6 +32,14 @@ import {
   HelpCircle,
   ArrowLeft,
   Upload,
+  BookOpen,
+  BookMarked,
+  CheckSquare,
+  DollarSign,
+  Users,
+  Globe,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import {
   ApplicabilityDecision,
@@ -46,6 +54,9 @@ import {
   Ct4ciCalculationResult,
   CapaItem,
   CtCertificationSnapshot,
+  FairtradeReadinessResult,
+  FairtradeCoopData,
+  RemedialActionItem,
 } from '../../../services/ct4ci/types';
 import { globalCheckpointRegistry } from '../../../services/ct4ci/checkpointRegistry';
 import { Ct4ciEngine } from '../../../services/ct4ci/ct4ciEngine';
@@ -57,6 +68,14 @@ import {
 import { CtIdsmEngine } from '../../../services/ct4ci/idsmEngine';
 import { globalCapaManager } from '../../../services/ct4ci/capaManager';
 import { LiteEngine } from '../../../services/ct4ci/liteEngine';
+import {
+  calculateFairtradeReadiness,
+  deriveCoopDataFromPractices,
+} from '../../../services/ct4ci/fairtradeEngine';
+import {
+  REMEDIAL_ACTION_PLAYBOOK,
+  getRemedialActionForCheckpoint,
+} from '../../../services/ct4ci/remedialActions';
 
 export const CtFarmCertificationDashboardPage: React.FC = () => {
   const { farmId: routeFarmId } = useParams<{ farmId?: string }>();
@@ -78,10 +97,15 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
   }, [users, selectedFarm]);
 
   // Active Main Tab
-  const [activeTab, setActiveTab] = useState<'overview' | 'practices' | 'checkpoints' | 'capa' | 'certificate'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'practices' | 'checkpoints' | 'fairtrade' | 'capa' | 'certificate'>('overview');
 
   // Audit Period
   const [auditPeriod, setAuditPeriod] = useState('2026-PANEN-RAYA');
+
+  // Playbook Modal / Inspection states
+  const [selectedPlaybookItem, setSelectedPlaybookItem] = useState<RemedialActionItem | null>(null);
+  const [showPlaybookCatalog, setShowPlaybookCatalog] = useState(false);
+  const [customCoopDataOverride, setCustomCoopDataOverride] = useState<Partial<FairtradeCoopData> | null>(null);
 
   // Answers State
   const [answers, setAnswers] = useState<Record<string, unknown>>({ ...PRESET_FARMER_ANSWERS.screenshot });
@@ -168,6 +192,44 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
   const sdiBreakdown = useMemo(() => {
     return LiteEngine.calculateSdi();
   }, []);
+
+  // Fairtrade Readiness Calculation (FRI Engine - 4 Pilar Asesmen)
+  const fairtradeResult: FairtradeReadinessResult = useMemo(() => {
+    const derived = deriveCoopDataFromPractices(answers, {
+      hasCoordinates: Boolean(selectedFarm?.coordinates?.latitude && selectedFarm?.coordinates?.longitude),
+      eudrCompliant: selectedFarm?.eudrCompliant,
+    });
+    const combinedData = customCoopDataOverride ? { ...derived, ...customCoopDataOverride } : derived;
+    return calculateFairtradeReadiness(combinedData);
+  }, [answers, selectedFarm, customCoopDataOverride]);
+
+  // Fairtrade Badge Helper
+  const friBadge = useMemo(() => {
+    switch (fairtradeResult.statusBadge) {
+      case 'READY':
+        return {
+          label: 'SIAP SERTIFIKASI',
+          badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+          barColor: 'bg-emerald-600',
+          desc: 'Koperasi / Kebun siap diaudit sertifikasi Fairtrade.',
+        };
+      case 'PROGRESSING':
+        return {
+          label: 'DALAM PROSES',
+          badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+          barColor: 'bg-amber-500',
+          desc: 'Memerlukan perbaikan minor pada beberapa parameter.',
+        };
+      case 'NEEDS_IMPROVEMENT':
+      default:
+        return {
+          label: 'PERLU PERBAIKAN',
+          badgeClass: 'bg-rose-100 text-rose-800 border-rose-300',
+          barColor: 'bg-rose-500',
+          desc: 'Terdapat temuan mayor yang membutuhkan pendampingan.',
+        };
+    }
+  }, [fairtradeResult.statusBadge]);
 
   // IDSM 8 Rules Evaluation
   const idsmRules = useMemo(() => {
@@ -266,6 +328,7 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
       calculationStatus: ct4ciResult.calculationStatus,
       cciScore: cciBreakdown.totalScore,
       sdiScore: sdiBreakdown.totalScore,
+      fairtradeReadiness: fairtradeResult,
       totalCheckpoints: ct4ciResult.totalInventory,
       applicableCount: ct4ciResult.applicableCount,
       compliantCount: ct4ciResult.compliantWithSufficientEvidenceCount,
@@ -536,8 +599,8 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. The 4 Big Gauge Cards (CT-4CI, Evidence Coverage, CT-CCI, CT-SDI) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 3. The 5 Big Gauge Cards (CT-4CI, Evidence Coverage, CT-CCI, CT-SDI, CT-FRI) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Card 1: CT-4CI Readiness */}
         <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
@@ -653,6 +716,36 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
             <span className="text-teal-700 font-bold">25% Bobot Rata</span>
           </div>
         </div>
+
+        {/* Card 5: CT-FRI Fairtrade Readiness */}
+        <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+              Kesiapan Fairtrade (CT-FRI)
+            </span>
+            <span className="p-1.5 rounded-lg bg-indigo-50 text-indigo-700">
+              <Building2 className="w-4 h-4" />
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-black text-indigo-900 tracking-tight">
+              {fairtradeResult.fairtrade_readiness_index}%
+            </span>
+            <span className="text-xs font-bold text-stone-400">/ 100</span>
+          </div>
+          <div className="w-full bg-stone-100 h-2 rounded-full mt-3 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${friBadge.barColor}`}
+              style={{ width: `${Math.min(100, fairtradeResult.fairtrade_readiness_index)}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-[11px] text-stone-500 mt-2 font-medium">
+            <span className="font-semibold text-indigo-900 truncate max-w-[140px]" title={friBadge.label}>
+              {friBadge.label}
+            </span>
+            <span className="text-stone-400 shrink-0">4 Pilar</span>
+          </div>
+        </div>
       </div>
 
       {/* 4. Tab Navigation Menu */}
@@ -697,6 +790,23 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setActiveTab('fairtrade')}
+          className={`px-4 py-3 font-bold text-xs border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'fairtrade'
+              ? 'border-indigo-600 text-indigo-700'
+              : 'border-transparent text-stone-500 hover:text-stone-800'
+          }`}
+        >
+          <Building2 className="w-4 h-4" />
+          <span>4. Kesiapan Fairtrade (CT-FRI 4 Pilar)</span>
+          <span
+            className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold border ${friBadge.badgeClass}`}
+          >
+            {fairtradeResult.fairtrade_readiness_index}%
+          </span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('capa')}
           className={`px-4 py-3 font-bold text-xs border-b-2 transition flex items-center gap-2 ${
             activeTab === 'capa'
@@ -705,7 +815,7 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
           }`}
         >
           <AlertTriangle className="w-4 h-4" />
-          <span>4. Temuan &amp; CAPA</span>
+          <span>5. Temuan &amp; CAPA</span>
           {capasList.length > 0 && (
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-800 font-bold">
               {capasList.length}
@@ -722,7 +832,7 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
           }`}
         >
           <Award className="w-4 h-4" />
-          <span>5. Terbitkan Sertifikat &amp; Stempel Digital</span>
+          <span>6. Terbitkan Sertifikat &amp; Stempel Digital</span>
         </button>
       </div>
 
@@ -1182,7 +1292,416 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 4: TEMUAN & CAPA */}
+      {/* TAB 4: KESIAPAN FAIRTRADE (CT-FRI 4 PILAR) */}
+      {activeTab === 'fairtrade' && (
+        <div className="space-y-6">
+          {/* Hero Banner Fairtrade */}
+          <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-indigo-200 border border-white/20">
+                <Building2 className="w-3.5 h-3.5 text-indigo-300" />
+                <span>Fairtrade Readiness Index (CT-FRI) • 4 Pilar Standar Koperasi</span>
+              </div>
+              <h2 className="text-xl md:text-2xl font-black tracking-tight">
+                Asesmen Kesiapan Sertifikasi Fairtrade
+              </h2>
+              <p className="text-xs text-indigo-200 leading-relaxed">
+                Evaluasi komprehensif kepatuhan kelompok tani/koperasi terhadap 4 pilar utama Fairtrade Internasional: Ekonomi (25%), Sosial &amp; K3 (25%), Lingkungan &amp; Sirkularitas (25%), serta Tata Kelola &amp; Traceability (25%). Skor dievaluasi independen tanpa kompensasi silang.
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 text-center shrink-0 w-full md:w-56">
+              <div className="text-[11px] uppercase tracking-wider text-indigo-200 font-bold">Skor CT-FRI</div>
+              <div className="text-4xl font-black text-white mt-1">
+                {fairtradeResult.fairtrade_readiness_index}%
+              </div>
+              <div className="mt-2">
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-black border ${friBadge.badgeClass}`}
+                >
+                  {friBadge.label}
+                </span>
+              </div>
+              <div className="text-[10px] text-indigo-200/80 mt-2 font-medium">
+                {friBadge.desc}
+              </div>
+            </div>
+          </div>
+
+          {/* 4 Pillar Breakdown Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Pilar 1: Ekonomi */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-amber-50 text-amber-700">
+                    <DollarSign className="w-4 h-4" />
+                  </span>
+                  <span className="text-xs font-black text-stone-900">1. Pilar Ekonomi</span>
+                </div>
+                <span className="text-xs font-bold text-amber-700">Bobot 25%</span>
+              </div>
+              <div className="flex items-baseline justify-between mt-3">
+                <span className="text-2xl font-black text-stone-900">
+                  {Math.round((fairtradeResult.pillar_scores.economic / 100) * 25 * 10) / 10} <span className="text-xs font-normal text-stone-400">/ 25</span>
+                </span>
+                <span className="text-xs font-bold text-stone-500">
+                  {fairtradeResult.pillar_scores.economic}%
+                </span>
+              </div>
+              <div className="w-full bg-stone-100 h-2 rounded-full mt-2 overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 rounded-full transition-all"
+                  style={{ width: `${fairtradeResult.pillar_scores.economic}%` }}
+                />
+              </div>
+              <ul className="mt-3 pt-3 border-t border-stone-100 text-[11px] space-y-1.5 text-stone-600">
+                <li className="flex items-center justify-between">
+                  <span>Kelola Premium Demokratis:</span>
+                  <span className={fairtradeResult.raw_inputs.democratic_premium_mgmt ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.democratic_premium_mgmt ? '✓ Sesuai (12.5)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Transparansi Harga Petani:</span>
+                  <span className={fairtradeResult.raw_inputs.transparent_pricing ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.transparent_pricing ? '✓ Sesuai (12.5)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Pilar 2: Sosial & K3 */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-rose-50 text-rose-700">
+                    <Users className="w-4 h-4" />
+                  </span>
+                  <span className="text-xs font-black text-stone-900">2. Sosial &amp; K3</span>
+                </div>
+                <span className="text-xs font-bold text-rose-700">Bobot 25%</span>
+              </div>
+              <div className="flex items-baseline justify-between mt-3">
+                <span className="text-2xl font-black text-stone-900">
+                  {Math.round((fairtradeResult.pillar_scores.social / 100) * 25 * 10) / 10} <span className="text-xs font-normal text-stone-400">/ 25</span>
+                </span>
+                <span className="text-xs font-bold text-stone-500">
+                  {fairtradeResult.pillar_scores.social}%
+                </span>
+              </div>
+              <div className="w-full bg-stone-100 h-2 rounded-full mt-2 overflow-hidden">
+                <div
+                  className="h-full bg-rose-500 rounded-full transition-all"
+                  style={{ width: `${fairtradeResult.pillar_scores.social}%` }}
+                />
+              </div>
+              <ul className="mt-3 pt-3 border-t border-stone-100 text-[11px] space-y-1.5 text-stone-600">
+                <li className="flex items-center justify-between">
+                  <span>Bebas Pekerja Anak/Paksa:</span>
+                  <span className={fairtradeResult.raw_inputs.no_child_forced_labor ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.no_child_forced_labor ? '✓ Sesuai (10)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Kepatuhan K3 &amp; APD:</span>
+                  <span className={fairtradeResult.raw_inputs.ohs_ppe_compliance ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.ohs_ppe_compliance ? '✓ Sesuai (7.5)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Upah Layak &amp; Kontrak:</span>
+                  <span className={fairtradeResult.raw_inputs.fair_wages_contracts ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.fair_wages_contracts ? '✓ Sesuai (7.5)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Pilar 3: Lingkungan & Sirkularitas */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700">
+                    <Recycle className="w-4 h-4" />
+                  </span>
+                  <span className="text-xs font-black text-stone-900">3. Lingkungan &amp; Sirkuler</span>
+                </div>
+                <span className="text-xs font-bold text-emerald-700">Bobot 25%</span>
+              </div>
+              <div className="flex items-baseline justify-between mt-3">
+                <span className="text-2xl font-black text-stone-900">
+                  {Math.round((fairtradeResult.pillar_scores.environmental / 100) * 25 * 10) / 10} <span className="text-xs font-normal text-stone-400">/ 25</span>
+                </span>
+                <span className="text-xs font-bold text-stone-500">
+                  {fairtradeResult.pillar_scores.environmental}%
+                </span>
+              </div>
+              <div className="w-full bg-stone-100 h-2 rounded-full mt-2 overflow-hidden">
+                <div
+                  className="h-full bg-emerald-600 rounded-full transition-all"
+                  style={{ width: `${fairtradeResult.pillar_scores.environmental}%` }}
+                />
+              </div>
+              <ul className="mt-3 pt-3 border-t border-stone-100 text-[11px] space-y-1.5 text-stone-600">
+                <li className="flex items-center justify-between">
+                  <span>Sirkularitas Limbah (CCI):</span>
+                  <span className={fairtradeResult.raw_inputs.waste_valorization_cci ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.waste_valorization_cci ? '✓ Sesuai (12.5)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Anti-Deforestasi (EUDR):</span>
+                  <span className={fairtradeResult.raw_inputs.no_forest_conversion ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.no_forest_conversion ? '✓ Sesuai (7.5)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Bebas Kimia Terlarang:</span>
+                  <span className={fairtradeResult.raw_inputs.reduced_chemical_use ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.reduced_chemical_use ? '✓ Sesuai (5)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Pilar 4: Tata Kelola & Traceability */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-blue-50 text-blue-700">
+                    <Globe className="w-4 h-4" />
+                  </span>
+                  <span className="text-xs font-black text-stone-900">4. Tata Kelola</span>
+                </div>
+                <span className="text-xs font-bold text-blue-700">Bobot 25%</span>
+              </div>
+              <div className="flex items-baseline justify-between mt-3">
+                <span className="text-2xl font-black text-stone-900">
+                  {Math.round((fairtradeResult.pillar_scores.governance / 100) * 25 * 10) / 10} <span className="text-xs font-normal text-stone-400">/ 25</span>
+                </span>
+                <span className="text-xs font-bold text-stone-500">
+                  {fairtradeResult.pillar_scores.governance}%
+                </span>
+              </div>
+              <div className="w-full bg-stone-100 h-2 rounded-full mt-2 overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 rounded-full transition-all"
+                  style={{ width: `${fairtradeResult.pillar_scores.governance}%` }}
+                />
+              </div>
+              <ul className="mt-3 pt-3 border-t border-stone-100 text-[11px] space-y-1.5 text-stone-600">
+                <li className="flex items-center justify-between">
+                  <span>Pemetaan Poligon Koordinat:</span>
+                  <span className={fairtradeResult.raw_inputs.plot_mapping_complete ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.plot_mapping_complete ? '✓ Sesuai (12.5)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Pemisahan Fisik Lot Kopi:</span>
+                  <span className={fairtradeResult.raw_inputs.physical_segregation ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                    {fairtradeResult.raw_inputs.physical_segregation ? '✓ Sesuai (12.5)' : '✗ Belum (0)'}
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Identified Gaps & Remedial Action Recommendations */}
+          <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-xs">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+                <h3 className="text-base font-black text-stone-900">
+                  Analisis Kesenjangan &amp; Rekomendasi Solusi Fairtrade
+                </h3>
+              </div>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-stone-100 text-stone-700">
+                {fairtradeResult.identified_gaps.length} Kesenjangan Ditemukan
+              </span>
+            </div>
+
+            {fairtradeResult.identified_gaps.length === 0 ? (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 text-emerald-900 flex items-center gap-3">
+                <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                <div className="text-xs">
+                  <div className="font-bold text-sm text-emerald-950">Kesiapan Sempurna: Bebas Kesenjangan Fairtrade!</div>
+                  <p className="mt-0.5 text-emerald-800">
+                    Kebun dan kelompok tani telah memenuhi seluruh 10 parameter 4 Pilar Fairtrade. Siap untuk proses audit sertifikasi resmi pihak ketiga.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-stone-600">
+                  Berikut adalah gap kepatuhan yang harus diselesaikan untuk menaikkan skor kesiapan menuju ambang batas sertifikasi Fairtrade (≥ 85%):
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {fairtradeResult.identified_gaps.map((gap, idx) => {
+                    let matchedAction: RemedialActionItem | undefined;
+                    if (gap.includes('kimia') || gap.includes('pestisida') || gap.includes('resiko tinggi')) {
+                      matchedAction = REMEDIAL_ACTION_PLAYBOOK.find((a) => a.id === 'ACT-01-BANNED-CHEMICALS');
+                    } else if (gap.includes('limbah') || gap.includes('sirkularitas')) {
+                      matchedAction = REMEDIAL_ACTION_PLAYBOOK.find((a) => a.id === 'ACT-06-WATER-BUFFER-WASTEWATER');
+                    } else if (gap.includes('hutan') || gap.includes('deforestasi') || gap.includes('EUDR')) {
+                      matchedAction = REMEDIAL_ACTION_PLAYBOOK.find((a) => a.id === 'ACT-02-DEFORESTATION-BOUNDARY');
+                    } else if (gap.includes('pekerja anak') || gap.includes('kerja paksa')) {
+                      matchedAction = REMEDIAL_ACTION_PLAYBOOK.find((a) => a.id === 'ACT-03-CHILD-LABOR-PROTECTION');
+                    } else if (gap.includes('K3') || gap.includes('APD')) {
+                      matchedAction = REMEDIAL_ACTION_PLAYBOOK.find((a) => a.id === 'ACT-05-CHEMICAL-STORAGE-PPE');
+                    } else if (gap.includes('upah') || gap.includes('kontrak')) {
+                      matchedAction = REMEDIAL_ACTION_PLAYBOOK.find((a) => a.id === 'ACT-07-WATER-FIRST-AID');
+                    } else if (gap.includes('koordinat') || gap.includes('Pemetaan')) {
+                      matchedAction = REMEDIAL_ACTION_PLAYBOOK.find((a) => a.id === 'ACT-02-DEFORESTATION-BOUNDARY');
+                    } else if (gap.includes('pemisahan fisik') || gap.includes('segregasi')) {
+                      matchedAction = REMEDIAL_ACTION_PLAYBOOK.find((a) => a.id === 'ACT-09-LOT-SEPARATION');
+                    }
+
+                    return (
+                      <div
+                        key={idx}
+                        className="p-3.5 rounded-xl border border-rose-200 bg-rose-50/50 flex flex-col justify-between gap-2"
+                      >
+                        <div className="flex items-start gap-2">
+                          <XCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                          <div className="text-xs">
+                            <span className="font-bold text-rose-950 block">{gap}</span>
+                          </div>
+                        </div>
+                        {matchedAction && (
+                          <div className="pt-2 border-t border-rose-100 flex items-center justify-between">
+                            <span className="text-[10px] font-mono text-stone-500">
+                              Solusi: <strong>{matchedAction.id}</strong>
+                            </span>
+                            <button
+                              onClick={() => setSelectedPlaybookItem(matchedAction!)}
+                              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                            >
+                              <BookOpen className="w-3 h-3" />
+                              <span>Buka Playbook</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Interactive Simulation Switch Matrix for Verifier */}
+          <div className="bg-stone-50 rounded-2xl border border-stone-200 p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-sm font-black text-stone-900 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-600" />
+                  <span>Matriks Parameter Kesiapan Fairtrade (Simulasi &amp; Override Verifikator)</span>
+                </h3>
+                <p className="text-[11px] text-stone-500 mt-0.5">
+                  Verifikator dapat menguji pengaruh masing-masing parameter terhadap skor kesiapan akhir kelompok tani secara real-time.
+                </p>
+              </div>
+
+              {customCoopDataOverride && (
+                <button
+                  onClick={() => setCustomCoopDataOverride(null)}
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 font-bold text-[11px] transition inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset ke Data Asli Kebun</span>
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[
+                {
+                  key: 'democratic_premium_mgmt' as keyof FairtradeCoopData,
+                  label: 'Pengelolaan Premium Demokratis (RAT)',
+                  pillar: 'Pilar Ekonomi (12.5%)',
+                },
+                {
+                  key: 'transparent_pricing' as keyof FairtradeCoopData,
+                  label: 'Transparansi Harga Beli & Informasi Pasar',
+                  pillar: 'Pilar Ekonomi (12.5%)',
+                },
+                {
+                  key: 'no_child_forced_labor' as keyof FairtradeCoopData,
+                  label: 'Bebas dari Pekerja Anak & Kerja Paksa',
+                  pillar: 'Pilar Sosial (10%)',
+                },
+                {
+                  key: 'ohs_ppe_compliance' as keyof FairtradeCoopData,
+                  label: 'Kepatuhan K3 & Penyediaan APD Lengkap',
+                  pillar: 'Pilar Sosial (7.5%)',
+                },
+                {
+                  key: 'fair_wages_contracts' as keyof FairtradeCoopData,
+                  label: 'Upah Minimum & Kontrak Kerja Tertulis',
+                  pillar: 'Pilar Sosial (7.5%)',
+                },
+                {
+                  key: 'waste_valorization_cci' as keyof FairtradeCoopData,
+                  label: 'Sirkularitas Limbah Kopi / Kompos (CCI)',
+                  pillar: 'Pilar Lingkungan (12.5%)',
+                },
+                {
+                  key: 'no_forest_conversion' as keyof FairtradeCoopData,
+                  label: 'Bebas Konversi Hutan & Anti Deforestasi',
+                  pillar: 'Pilar Lingkungan (7.5%)',
+                },
+                {
+                  key: 'reduced_chemical_use' as keyof FairtradeCoopData,
+                  label: 'Bebas Pestisida Terlarang (WHO 1a/1b)',
+                  pillar: 'Pilar Lingkungan (5%)',
+                },
+                {
+                  key: 'plot_mapping_complete' as keyof FairtradeCoopData,
+                  label: 'Pemetaan Poligon Koordinat Geospasial',
+                  pillar: 'Pilar Tata Kelola (12.5%)',
+                },
+                {
+                  key: 'physical_segregation' as keyof FairtradeCoopData,
+                  label: 'Pemisahan Fisik Gudang & Lot Keterlacakan',
+                  pillar: 'Pilar Tata Kelola (12.5%)',
+                },
+              ].map((item) => {
+                const isChecked = Boolean(fairtradeResult.raw_inputs[item.key]);
+                return (
+                  <div
+                    key={item.key}
+                    className="p-3 bg-white rounded-xl border border-stone-200 flex items-center justify-between gap-3"
+                  >
+                    <div>
+                      <div className="text-xs font-bold text-stone-900">{item.label}</div>
+                      <div className="text-[10px] text-stone-400 font-semibold">{item.pillar}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustomCoopDataOverride((prev) => ({
+                          ...(prev || {}),
+                          [item.key]: !isChecked,
+                        }));
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-black transition cursor-pointer ${
+                        isChecked
+                          ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                          : 'bg-stone-200 text-stone-700 hover:bg-stone-300'
+                      }`}
+                    >
+                      {isChecked ? '✓ Terpenuhi' : '✗ Belum'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: TEMUAN & CAPA */}
       {activeTab === 'capa' && (
         <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-xs">
@@ -1275,8 +1794,23 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
                         </td>
 
                         <td className="py-3 px-3 text-right whitespace-nowrap">
-                          {capa.status !== CapaStatus.CLOSED ? (
-                            <div className="inline-flex items-center gap-1">
+                          <div className="inline-flex items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                const match = capa.checkpointCode ? getRemedialActionForCheckpoint(capa.checkpointCode) : null;
+                                if (match) {
+                                  setSelectedPlaybookItem(match);
+                                } else {
+                                  setShowPlaybookCatalog(true);
+                                }
+                              }}
+                              className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                              title="Buka panduan aksi perbaikan terstandarisasi untuk temuan ini"
+                            >
+                              <BookOpen className="w-3 h-3 text-indigo-600" />
+                              <span>Solusi Playbook</span>
+                            </button>
+                            {capa.status !== CapaStatus.CLOSED ? (
                               <button
                                 onClick={() => {
                                   globalCapaManager.submitCompletionProof(capa.id, 'Bukti_Perbaikan_Lapangan_2026.jpg', capa.estimatedCostIdr);
@@ -1287,14 +1821,14 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
                                   });
                                   setCapasList([...globalCapaManager.getAll().filter((c) => c.scopeId === selectedFarm?.id)]);
                                 }}
-                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold transition shadow-2xs"
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer"
                               >
                                 Verifikasi &amp; Tutup
                               </button>
-                            </div>
-                          ) : (
-                            <span className="text-[10px] text-stone-400 font-bold">Ditutup ✓</span>
-                          )}
+                            ) : (
+                              <span className="text-[10px] text-stone-400 font-bold px-1.5 py-0.5 bg-stone-100 rounded">Ditutup ✓</span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1303,10 +1837,83 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* 4C Remedial Action Playbook Catalog Section */}
+          <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-xs">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h4 className="text-base font-black text-stone-900 flex items-center gap-2">
+                  <BookMarked className="w-5 h-5 text-indigo-600" />
+                  <span>Katalog Terstandarisasi 4C Remedial Action Playbook ({REMEDIAL_ACTION_PLAYBOOK.length} Solusi)</span>
+                </h4>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Protokol aksi perbaikan baku untuk menutup temuan audit, memulihkan status Major Gate, dan memenuhi kepatuhan regulasi EUDR &amp; Fairtrade.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowPlaybookCatalog(!showPlaybookCatalog)}
+                className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              >
+                <span>{showPlaybookCatalog ? 'Tutup Katalog' : 'Jelajahi 9 Playbook'}</span>
+                {showPlaybookCatalog ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {showPlaybookCatalog && (
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-stone-100">
+                {REMEDIAL_ACTION_PLAYBOOK.map((action) => (
+                  <div
+                    key={action.id}
+                    className="p-4 rounded-xl border border-stone-200 bg-stone-50/50 hover:bg-stone-50 hover:border-indigo-300 transition flex flex-col justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded bg-stone-200 text-stone-800">
+                          {action.id}
+                        </span>
+                        <span
+                          className={`text-[9px] font-black px-2 py-0.5 rounded ${
+                            action.isMajor
+                              ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                              : 'bg-blue-100 text-blue-800 border border-blue-300'
+                          }`}
+                        >
+                          {action.isMajor ? 'Major Blocker' : 'Minor'}
+                        </span>
+                      </div>
+                      <h5 className="font-bold text-xs text-stone-900 leading-snug">
+                        {action.title}
+                      </h5>
+                      <p className="text-[11px] text-stone-600 mt-1 line-clamp-2">
+                        {action.currentProblem}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-stone-200/60 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[10px] text-stone-400 block font-medium">Est. Biaya (RAB):</span>
+                        <strong className="text-stone-900 font-bold text-[11px]">
+                          Rp {action.estimatedCostIdr.toLocaleString('id-ID')}
+                        </strong>
+                      </div>
+                      <button
+                        onClick={() => setSelectedPlaybookItem(action)}
+                        className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>Detail &amp; Bukti</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* TAB 5: CERTIFICATE PREVIEW & DIGITAL STAMP ISSUANCE */}
+      {/* TAB 6: CERTIFICATE PREVIEW & DIGITAL STAMP ISSUANCE */}
       {activeTab === 'certificate' && (
         <div className="space-y-6">
           <div className="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm">
@@ -1323,7 +1930,7 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
                   Surat Keterangan Kesiapan Sertifikasi Kopi
                 </h2>
                 <div className="text-xs text-stone-500 font-medium">
-                  Merujuk pada Standar 4C Code of Conduct v4.1 &amp; Coffee Traceability Index
+                  Merujuk pada Standar 4C Code of Conduct v4.1 &amp; Fairtrade Readiness Index
                 </div>
               </div>
 
@@ -1356,8 +1963,8 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Score Summary Box */}
-                <div className="grid grid-cols-3 gap-3 text-center pt-2">
+                {/* Score Summary Box (4 Columns: CT-4CI, EC, CT-FRI, Major Gate) */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center pt-2">
                   <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl">
                     <div className="text-[10px] font-bold text-emerald-800 uppercase">CT-4CI Readiness</div>
                     <div className="text-2xl font-black text-emerald-900">{ct4ciResult.ct4ciScore ?? 0}%</div>
@@ -1365,6 +1972,13 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
                   <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl">
                     <div className="text-[10px] font-bold text-blue-800 uppercase">Evidence Coverage</div>
                     <div className="text-2xl font-black text-blue-900">{ct4ciResult.evidenceCoveragePct ?? 0}%</div>
+                  </div>
+                  <div className="bg-indigo-50 border border-indigo-200 p-3 rounded-xl">
+                    <div className="text-[10px] font-bold text-indigo-800 uppercase">CT-FRI Fairtrade</div>
+                    <div className="text-2xl font-black text-indigo-900">{fairtradeResult.fairtrade_readiness_index}%</div>
+                    <div className="text-[9px] font-bold text-indigo-700 truncate" title={friBadge.label}>
+                      {friBadge.label}
+                    </div>
                   </div>
                   <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl">
                     <div className="text-[10px] font-bold text-amber-800 uppercase">Major Gate</div>
@@ -1391,7 +2005,7 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
               <div className="pt-6 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <button
                   onClick={() => window.print()}
-                  className="w-full sm:w-auto px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
                   <span>Cetak Lembar Sertifikat</span>
@@ -1400,7 +2014,7 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
                 <button
                   onClick={handleIssueCertification}
                   disabled={!isMajorPassed}
-                  className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-md ${
+                  className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-md cursor-pointer ${
                     isMajorPassed
                       ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/25'
                       : 'bg-stone-300 text-stone-500 cursor-not-allowed'
@@ -1416,6 +2030,120 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
                   ⚠️ Penerbitan stempel resmi diblokir karena terdapat kriteria Major yang belum terpenuhi atau melanggar pengaman kritis.
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Playbook Detail Modal */}
+      {selectedPlaybookItem && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full border border-stone-200 shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-stone-200">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="font-mono text-xs font-black px-2.5 py-0.5 rounded-md bg-stone-100 text-stone-800 border border-stone-200">
+                    {selectedPlaybookItem.id}
+                  </span>
+                  <span
+                    className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${
+                      selectedPlaybookItem.isMajor
+                        ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                        : 'bg-blue-100 text-blue-800 border border-blue-300'
+                    }`}
+                  >
+                    {selectedPlaybookItem.isMajor ? 'Major Gate Blocker' : 'Minor'}
+                  </span>
+                  <span className="text-xs text-stone-400">•</span>
+                  <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">
+                    {selectedPlaybookItem.domainName}
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-stone-900 leading-snug">
+                  {selectedPlaybookItem.title}
+                </h3>
+                <div className="text-xs font-semibold text-stone-500 mt-1">
+                  Terkait Kriteria: <span className="font-mono text-indigo-700 font-bold">{selectedPlaybookItem.checkpoints.join(', ')}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedPlaybookItem(null)}
+                className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center font-bold text-sm transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Problem & Goal */}
+            <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 text-xs text-stone-700 leading-relaxed">
+              <strong className="block text-stone-900 font-black mb-1">Deskripsi Permasalahan:</strong>
+              {selectedPlaybookItem.currentProblem}
+            </div>
+
+            {/* Implementation Steps */}
+            <div className="space-y-3">
+              <h4 className="text-xs uppercase tracking-wider font-black text-stone-900 flex items-center gap-2">
+                <CheckSquare className="w-4 h-4 text-emerald-600" />
+                <span>Tahapan Aksi Perbaikan Terstruktur</span>
+              </h4>
+              <ol className="space-y-2 text-xs text-stone-700 pl-1">
+                {selectedPlaybookItem.actionSteps.map((step: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-800 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <span className="leading-snug">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            {/* Required Physical Proof Artifacts */}
+            <div className="space-y-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl p-4">
+              <h4 className="text-xs uppercase tracking-wider font-black text-amber-950 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-amber-700" />
+                <span>Bukti Fisik yang Wajib Dilampirkan (Audit Verifier)</span>
+              </h4>
+              <ul className="space-y-1.5 text-xs text-stone-800">
+                {selectedPlaybookItem.requiredEvidence.map((proof: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-amber-600 font-bold shrink-0">✓</span>
+                    <span>{proof}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Meta Cost & Template */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2 border-t border-stone-200">
+              <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200">
+                <span className="text-[10px] text-stone-500 uppercase tracking-wider block font-bold">
+                  Estimasi Biaya Implementasi (RAB):
+                </span>
+                <span className="text-base font-black text-stone-900 mt-0.5 block">
+                  Rp {selectedPlaybookItem.estimatedCostIdr.toLocaleString('id-ID')}
+                </span>
+              </div>
+
+              <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200">
+                <span className="text-[10px] text-stone-500 uppercase tracking-wider block font-bold">
+                  Template Dokumen Acuan:
+                </span>
+                <span className="text-xs font-bold text-indigo-700 mt-0.5 block truncate">
+                  📄 {selectedPlaybookItem.completionProofTemplate}
+                </span>
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setSelectedPlaybookItem(null)}
+                className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs transition cursor-pointer"
+              >
+                Tutup Playbook
+              </button>
             </div>
           </div>
         </div>

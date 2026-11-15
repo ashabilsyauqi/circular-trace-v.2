@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
   Activity,
   UserPlus,
+  Printer,
 } from 'lucide-react';
 import { OperationalService } from '../../types/coffee';
 
@@ -76,6 +77,15 @@ export const KelompokTaniDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
+            <Link
+              to="/admin/forms"
+              className="px-3.5 py-2 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+              title="Cetak & Download Blanko Formulir Fisik Lapangan (A4)"
+            >
+              <Printer className="w-4 h-4 text-amber-600" />
+              <span>Blanko Formulir (A4)</span>
+            </Link>
+
             <Link
               to="/admin/users"
               className="px-4 py-2 rounded-md bg-[#343a40] hover:bg-stone-900 text-white font-bold text-xs flex items-center gap-2 transition-colors shadow-xs"

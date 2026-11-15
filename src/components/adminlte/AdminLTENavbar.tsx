@@ -119,6 +119,13 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                       <Store className="w-3.5 h-3.5" />
                       <span>Seller Panel</span>
                     </Link>
+                    <Link
+                      to="/admin/roaster/blanko"
+                      className="text-amber-800 font-bold hover:text-amber-950 transition-colors flex items-center gap-1 bg-amber-100/70 hover:bg-amber-100 px-2 py-1 rounded-md border border-amber-300"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Form Roastery (A4)</span>
+                    </Link>
                   </>
                 );
               case 'gudang':
@@ -149,6 +156,13 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                       <Store className="w-3.5 h-3.5" />
                       <span>Seller Panel</span>
                     </Link>
+                    <Link
+                      to="/admin/gudang/blanko"
+                      className="text-amber-800 font-bold hover:text-amber-950 transition-colors flex items-center gap-1 bg-amber-100/70 hover:bg-amber-100 px-2 py-1 rounded-md border border-amber-300"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Form Gudang (A4)</span>
+                    </Link>
                   </>
                 );
               case 'pengolah':
@@ -160,6 +174,13 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                     >
                       Dashboard Wet Mill
                     </Link>
+                    <Link
+                      to="/admin/pengolah/blanko"
+                      className="text-amber-800 font-bold hover:text-amber-950 transition-colors flex items-center gap-1 bg-amber-100/70 hover:bg-amber-100 px-2 py-1 rounded-md border border-amber-300"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Form Pengolah (A4)</span>
+                    </Link>
                   </>
                 );
               case 'cafe':
@@ -170,6 +191,13 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                       className="hover:text-amber-800 transition-colors"
                     >
                       Coffee Shop & Barista
+                    </Link>
+                    <Link
+                      to="/admin/forms"
+                      className="text-amber-800 font-bold hover:text-amber-950 transition-colors flex items-center gap-1 bg-amber-100/70 hover:bg-amber-100 px-2 py-1 rounded-md border border-amber-300"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Blanko Form (A4)</span>
                     </Link>
                   </>
                 );
@@ -194,6 +222,13 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                     >
                       Buku Kas & Ledger
                     </Link>
+                    <Link
+                      to="/admin/petani/blanko"
+                      className="text-amber-800 font-bold hover:text-amber-950 transition-colors flex items-center gap-1 bg-amber-100/70 hover:bg-amber-100 px-2 py-1 rounded-md border border-amber-300"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Form Petani (A4)</span>
+                    </Link>
                   </>
                 );
               case 'ict':
@@ -212,6 +247,13 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                     >
                       Lembar Kerja ICS
                     </Link>
+                    <Link
+                      to="/admin/ict/blanko"
+                      className="text-amber-800 font-bold hover:text-amber-950 transition-colors flex items-center gap-1 bg-amber-100/70 hover:bg-amber-100 px-2 py-1 rounded-md border border-amber-300"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Form Blanko ICS (A4)</span>
+                    </Link>
                   </>
                 );
               case 'admin_kelompok_tani':
@@ -229,6 +271,13 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                       className="hover:text-amber-800 transition-colors"
                     >
                       Master Users
+                    </Link>
+                    <Link
+                      to="/admin/forms"
+                      className="text-amber-800 font-bold hover:text-amber-950 transition-colors flex items-center gap-1 bg-amber-100/70 hover:bg-amber-100 px-2 py-1 rounded-md border border-amber-300"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Blanko Formulir (A4)</span>
                     </Link>
                   </>
                 );

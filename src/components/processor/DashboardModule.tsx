@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   Cog,
   ShoppingCart,
@@ -14,6 +15,7 @@ import {
   Warehouse,
   Package,
   Store,
+  Printer,
 } from 'lucide-react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { calculateProcessorEcoRating } from '../../utils/ecoRating';
@@ -216,6 +218,27 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
             </button>
           );
         })}
+
+        {/* 6. Form Blanko Pengolah (A4) Quick Action Card */}
+        <Link
+          to="/admin/pengolah/blanko"
+          className="group flex items-center justify-between gap-3 p-4 rounded-xl border border-amber-300 bg-amber-50/60 hover:bg-amber-100/80 hover:border-amber-600 hover:shadow-md transition-all text-left cursor-pointer"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-lg bg-amber-200/70 text-amber-900 flex items-center justify-center border border-amber-400/50 shrink-0 group-hover:bg-amber-700 group-hover:text-white transition-colors">
+              <Printer className="w-5 h-5 text-amber-800 group-hover:text-white" />
+            </div>
+            <div className="min-w-0">
+              <span className="font-bold text-xs text-amber-950 block truncate group-hover:text-amber-900 transition-colors">
+                6. Form Blanko Pengolah (A4)
+              </span>
+              <span className="text-[11px] text-amber-800/80 block truncate font-medium">
+                Cetak fisik penerimaan &amp; batch olah
+              </span>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-amber-600 group-hover:translate-x-0.5 group-hover:text-amber-800 transition-all shrink-0" />
+        </Link>
       </div>
     </div>
   );

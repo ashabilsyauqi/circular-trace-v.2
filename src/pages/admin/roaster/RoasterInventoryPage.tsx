@@ -141,10 +141,10 @@ export const RoasterInventoryPage: React.FC = () => {
           <button
             type="button"
             onClick={() => openBlankoModal('roastery')}
-            className="px-3.5 py-2 rounded-md bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
+            className="px-3.5 py-2 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
             title="Download / Cetak Blanko Lembar Roastery & Cupping (A4)"
           >
-            <Printer className="w-4 h-4 text-stone-600" />
+            <Printer className="w-4 h-4 text-amber-600" />
             <span>Blanko Form Roastery (A4)</span>
           </button>
 

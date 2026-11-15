@@ -45,6 +45,7 @@ import { RoasterProductionPage } from './pages/admin/roaster/RoasterProductionPa
 import { RoasterCuppingSheetPage } from './pages/admin/roaster/RoasterCuppingSheetPage';
 import { RoasterSourcingPage } from './pages/admin/roaster/RoasterSourcingPage';
 import { MarketplaceSellerPanelPage } from './pages/admin/seller/MarketplaceSellerPanelPage';
+import { StakeholderFormsPage } from './pages/admin/forms/StakeholderFormsPage';
 
 /**
  * Public Layout holding top Navbar + Outlet + bottom Footer
@@ -226,6 +227,15 @@ export const AppRoutes: React.FC = () => {
 
         {/* Marketplace Seller Panel & Monitoring Penjualan */}
         <Route path="seller" element={<MarketplaceSellerPanelPage />} />
+
+        {/* Formulir Blanko Fisik A4 Terpadu & Per Service */}
+        <Route path="forms" element={<StakeholderFormsPage />} />
+        <Route path="forms/:formType" element={<StakeholderFormsPage />} />
+        <Route path="petani/blanko" element={<StakeholderFormsPage defaultForm="petani" />} />
+        <Route path="pengolah/blanko" element={<StakeholderFormsPage defaultForm="pengolah" />} />
+        <Route path="gudang/blanko" element={<StakeholderFormsPage defaultForm="gudang" />} />
+        <Route path="roaster/blanko" element={<StakeholderFormsPage defaultForm="roastery" />} />
+        <Route path="ict/blanko" element={<StakeholderFormsPage defaultForm="petani" />} />
 
         <Route path="cafe" element={<CafeView />} />
       </Route>

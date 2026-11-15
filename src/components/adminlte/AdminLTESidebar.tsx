@@ -61,7 +61,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   const isRoasterSectionActive = location.pathname.startsWith('/admin/roaster');
 
   const [petaniOpen, setPetaniOpen] = useState(true);
-  const [pengolahOpen, setPengolahOpen] = useState(location.pathname.includes('/admin/pengolah'));
+  const [pengolahOpen, setPengolahOpen] = useState<boolean>(true);
   const [gudangOpen, setGudangOpen] = useState<boolean>(true);
   const [roasterOpen, setRoasterOpen] = useState<boolean>(true);
 
@@ -259,6 +259,26 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                   </span>
                 )}
               </NavLink>
+
+              <NavLink
+                to="/admin/forms"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-amber-600 text-white font-bold shadow-xs'
+                      : 'text-amber-300 hover:bg-[#494e53] hover:text-white'
+                  }`
+                }
+                title="Blanko Formulir Fisik Lapangan (A4)"
+              >
+                <Printer className="w-4 h-4 text-amber-400 shrink-0" />
+                {!isCollapsed && <span className="flex-1 truncate">Blanko Formulir (A4)</span>}
+                {!isCollapsed && (
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
+                    4 Form
+                  </span>
+                )}
+              </NavLink>
             </div>
           </div>
         )}
@@ -354,7 +374,15 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         badge: 'Ledger',
                         isActive: location.pathname.startsWith('/admin/ledger'),
                       },
-                    ].map((sub) => {
+                      {
+                        to: '/admin/petani/blanko',
+                        label: 'Form Blanko Petani (A4)',
+                        icon: Printer,
+                        badge: 'Cetak',
+                        badgeClass: 'bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30',
+                        isActive: location.pathname === '/admin/petani/blanko',
+                      },
+                    ].map((sub: any) => {
                       const SubIcon = sub.icon;
                       return (
                         <Link
@@ -367,10 +395,12 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                           }`}
                         >
                           <span className="flex items-center gap-2 truncate">
-                            <SubIcon className="w-3.5 h-3.5 shrink-0" />
+                            <SubIcon className={`w-3.5 h-3.5 shrink-0 ${sub.to.includes('blanko') ? 'text-amber-400' : ''}`} />
                             <span className="truncate">{sub.label}</span>
                           </span>
-                          <span className="text-[9px] opacity-75">{sub.badge}</span>
+                          <span className={`text-[9px] px-1 py-0.2 rounded ${sub.badgeClass || 'opacity-75'}`}>
+                            {sub.badge}
+                          </span>
                         </Link>
                       );
                     })}
@@ -462,6 +492,24 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         </Link>
                       );
                     })}
+
+                    {/* Blanko Form Pengolah */}
+                    <Link
+                      to="/admin/pengolah/blanko"
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] transition-colors ${
+                        location.pathname === '/admin/pengolah/blanko'
+                          ? 'bg-amber-600 text-white font-bold'
+                          : 'text-[#869099] hover:bg-[#3f474e] hover:text-white'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <Printer className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                        <span className="truncate">Form Blanko Pengolah (A4)</span>
+                      </span>
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
+                        Cetak
+                      </span>
+                    </Link>
                   </div>
                 )}
               </div>
@@ -542,6 +590,14 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         badge: `${warehouseLots.filter((l) => l.sortingStatus === 'pending_sorting').length} Menunggu`,
                         badgeColor: warehouseLots.some((l) => l.sortingStatus === 'pending_sorting') ? 'bg-amber-500 text-stone-950 font-black' : '',
                         isActive: location.pathname.startsWith('/admin/gudang/sortir'),
+                      },
+                      {
+                        to: '/admin/gudang/blanko',
+                        label: 'Form Blanko Gudang (A4)',
+                        icon: Printer,
+                        badge: 'Cetak',
+                        badgeColor: 'bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30',
+                        isActive: location.pathname === '/admin/gudang/blanko',
                       },
                     ].map((sub) => {
                       const SubIcon = sub.icon;
@@ -666,6 +722,14 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         badgeColor: 'bg-orange-600 text-white font-bold',
                         isActive: location.pathname === '/admin/seller',
                       },
+                      {
+                        to: '/admin/roaster/blanko',
+                        label: 'Form Blanko Roastery (A4)',
+                        icon: Printer,
+                        badge: 'Cetak',
+                        badgeColor: 'bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30',
+                        isActive: location.pathname === '/admin/roaster/blanko',
+                      },
                     ].map((sub) => {
                       const SubIcon = sub.icon;
                       return (
@@ -778,6 +842,28 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 >
                   <ClipboardCheck className="w-3.5 h-3.5 text-blue-300 shrink-0" />
                   {!isCollapsed && <span className="flex-1 truncate">Lembar Kerja ICS</span>}
+                </NavLink>
+
+                <NavLink
+                  to="/admin/ict/blanko"
+                  className={({ isActive }) =>
+                    `flex items-center justify-between px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
+                      isActive
+                        ? 'bg-amber-600 text-white font-bold shadow-xs'
+                        : 'text-amber-300 hover:bg-[#494e53] hover:text-white'
+                    }`
+                  }
+                  title="Formulir Blanko Fisik Audit Lapangan (A4)"
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    <Printer className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    {!isCollapsed && <span className="truncate">Form Blanko ICS (A4)</span>}
+                  </span>
+                  {!isCollapsed && (
+                    <span className="text-[8px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
+                      Cetak
+                    </span>
+                  )}
                 </NavLink>
               </div>
             )}

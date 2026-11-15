@@ -188,11 +188,11 @@ export const IctVerificationPage: React.FC = () => {
           <button
             type="button"
             onClick={() => openBlankoModal('petani')}
-            className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-md text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
             title="Download / Cetak Blanko Formulir Fisik Lapangan (A4) untuk ICS"
           >
-            <Printer className="w-4 h-4 text-stone-600" />
-            <span>Blanko Form (A4)</span>
+            <Printer className="w-4 h-4 text-amber-600" />
+            <span>Blanko Form ICS (A4)</span>
           </button>
 
           <Link

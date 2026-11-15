@@ -106,20 +106,23 @@ export const SellingModule: React.FC = () => {
           {/* Marketplace Storefront & Merchant Admin Header */}
           <div className="bg-gradient-to-r from-[#18110D] via-[#291B13] to-[#1F140E] text-white rounded-2xl p-5 sm:p-6 shadow-sm border border-[#382419] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-200 border border-amber-400/30">
-                  Panel Admin Marketplace Pengolah
+                  Panel Penjualan Green Bean Pengolah
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 flex items-center gap-1">
+                  🌐 Pasar Global Terbuka (Roastery, Gudang &amp; Ekspor)
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Toko Terverifikasi &amp; Listing Aktif
+                  Listing Aktif
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight">
                 {currentUser?.organization || currentUser?.name || 'Stasiun Mill Pengolah Kopi'}
               </h2>
               <p className="text-xs text-stone-300 mt-1 max-w-xl">
-                Kelola etalase green bean specialty hasil olahan pabrik yang telah selesai dari lembar kerja. Atur harga jual, pantau pesanan dari Roastery &amp; Cafe, serta kelola lembar kerja produk marketplace.
+                Green Bean specialty bermutu tinggi hasil 7 metode olah pasca-panen siap dipasarkan secara terbuka ke pasar global marketplace (Roastery, Eksportir, Gudang, dan Cafe di seluruh Indonesia &amp; mancanegara).
               </p>
             </div>
 

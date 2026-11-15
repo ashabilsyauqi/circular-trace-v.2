@@ -62,14 +62,15 @@ export const MasterPanenDetailPage: React.FC = () => {
           <button
             type="button"
             onClick={() => toggleReleaseHarvestLotToMarketplace(lot.id)}
-            className={`px-3 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors ${
+            className={`px-3 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer ${
               isReleased
-                ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
-                : 'bg-stone-800 text-white hover:bg-stone-900'
+                ? 'bg-amber-100 text-amber-950 border border-amber-300 hover:bg-amber-200'
+                : 'bg-emerald-700 text-white hover:bg-emerald-800'
             }`}
+            title="Ceri dijual eksklusif ke stasiun pengolah & sesama kelompok tani"
           >
-            {isReleased ? <Store className="w-3.5 h-3.5" /> : <Warehouse className="w-3.5 h-3.5" />}
-            <span>{isReleased ? 'Pindahkan ke Gudang' : 'Rilis ke Marketplace'}</span>
+            {isReleased ? <Lock className="w-3.5 h-3.5 text-amber-800" /> : <Store className="w-3.5 h-3.5" />}
+            <span>{isReleased ? 'Tayang di Pasar Eksklusif KT' : 'Rilis ke Pasar Eksklusif KT'}</span>
           </button>
 
           {/* Barcode QR Print Modal */}

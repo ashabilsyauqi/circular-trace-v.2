@@ -13,6 +13,8 @@ import {
   Flame,
   FileText,
   Warehouse,
+  Lock,
+  Sprout,
 } from 'lucide-react';
 import { FarmerHarvestLot } from '../../types/coffee';
 import { ProcessingMethod } from '../../types/processorErp';
@@ -115,6 +117,31 @@ export const SourcingModule: React.FC = () => {
     <div className="space-y-4">
       {!detailLot && (
         <>
+          {/* Banner Pasar Ceri Eksklusif (Kelompok Tani & Pengolah) */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-amber-500/10 border border-amber-300 text-stone-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-amber-950 uppercase tracking-wider">
+                    Pasar Ceri Eksklusif &bull; Sourcing Bahan Baku Segar
+                  </span>
+                  <span className="px-2 py-0.2 rounded-full text-[9px] font-black bg-amber-200 text-amber-900 border border-amber-300">
+                    B2B Terbatas
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">
+                  Ceri kopi segar dari petani bersifat <strong>sangat eksklusif</strong> dan hanya dibuka untuk Stasiun Pengolah &amp; Kelompok Tani. Anda dapat menyerap ceri dari kelompok tani internal maupun lintas kelompok tani untuk diolah menjadi Green Bean bermutu tinggi.
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-2.5 py-1 rounded-md border border-emerald-200 self-start sm:self-center shrink-0">
+              ✓ Akses Sourcing Terverifikasi
+            </span>
+          </div>
+
           {/* Top Stat Buttons (Skripsi ERP Executive Header) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
             <div className="o_stat_button bg-white shadow-2xs border border-slate-200 p-3.5 rounded-2xl flex items-center gap-3">

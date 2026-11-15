@@ -1020,7 +1020,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       navigate('/admin/cafe');
     } else if (matched.role === 'petani') {
       navigate('/admin/petani');
-    } else if (matched.role === 'ict' || matched.role === 'verifikator') {
+    } else if (matched.role === 'verifikator') {
+      navigate('/admin/verifikator');
+    } else if (matched.role === 'ict') {
       navigate('/admin/ict');
     } else {
       navigate(`/admin/${matched.role}`);

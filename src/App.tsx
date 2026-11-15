@@ -21,6 +21,7 @@ import { ProcessorView } from './components/ProcessorView';
 import { WarehouseView } from './components/WarehouseView';
 import { RoasterView } from './components/RoasterView';
 import { CafeView } from './components/CafeView';
+import { VerifierView } from './components/verifier/VerifierView';
 import { PublicLotScanView } from './components/PublicLotScanView';
 import { LandingPage } from './components/LandingPage';
 import { KelompokTaniDashboard } from './components/admin/KelompokTaniDashboard';
@@ -198,6 +199,9 @@ export const AppRoutes: React.FC = () => {
         <Route path="panen/detail/:lotId" element={<MasterPanenDetailPage />} />
 
         <Route path="ledger" element={<FarmerLedgerPage />} />
+
+        {/* Lembar Kerja Verifikator & Auditor Mutu (Tab Petani, Pengolah, Gudang, Roaster, Cafe) */}
+        <Route path="verifikator" element={<VerifierView />} />
 
         {/* Pusat Audit & Verifikasi ICT Kelompok Tani */}
         <Route path="ict" element={<IctVerificationPage />} />

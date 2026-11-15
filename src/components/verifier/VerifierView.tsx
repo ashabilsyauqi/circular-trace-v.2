@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
 import { VerificationStampBadge } from '../shared/VerificationStampBadge';
 import {
@@ -27,6 +28,10 @@ import {
   Sprout,
   Droplets,
   Scale,
+  Users,
+  Printer,
+  ClipboardCheck,
+  BadgeCheck,
 } from 'lucide-react';
 import {
   CoffeeFarm,
@@ -37,6 +42,7 @@ import {
   CafeRetailProduct,
   CuppingEvaluationData,
   VerifierDomain,
+  AppUser,
 } from '../../types/coffee';
 
 export const VerifierView: React.FC = () => {
@@ -44,6 +50,7 @@ export const VerifierView: React.FC = () => {
     currentUser,
     verifierActiveTab,
     setVerifierActiveTab,
+    users,
     coffeeFarms,
     farmerLots,
     processedLots,
@@ -53,6 +60,11 @@ export const VerifierView: React.FC = () => {
     verificationStamps,
     issueVerificationStamp,
     revokeVerificationStamp,
+    verifyFarmer,
+    verifyFarm,
+    verifyHarvestLot,
+    rejectVerification,
+    openBlankoModal,
   } = useCoffee();
 
   // Active sub-tab inside verifier view
@@ -90,8 +102,9 @@ export const VerifierView: React.FC = () => {
   const [newNoteInput, setNewNoteInput] = useState('');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Harvest Lot Verification States (Petani Domain)
-  const [farmerSubSection, setFarmerSubSection] = useState<'harvest' | 'farms'>('harvest');
+  // Harvest & Farmer Verification States (Petani Domain)
+  const [farmerSubSection, setFarmerSubSection] = useState<'farmers' | 'harvest' | 'farms'>('farmers');
+  const farmersList = users.filter((u) => u.role === 'petani' || u.assignedService === 'petani');
   const [harvestModalOpen, setHarvestModalOpen] = useState(false);
   const [selectedHarvestLot, setSelectedHarvestLot] = useState<FarmerHarvestLot | null>(null);
   const [harvestBrix, setHarvestBrix] = useState<number>(22.0);
@@ -438,6 +451,31 @@ export const VerifierView: React.FC = () => {
                 )}
               </div>
             )}
+
+            <div className="pt-3 flex flex-wrap items-center gap-2">
+              <Link
+                to="/admin/ict/ct-dashboard"
+                className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs flex items-center gap-1.5 backdrop-blur-md border border-white/25 transition-all shadow-sm"
+              >
+                <Award className="w-3.5 h-3.5 text-amber-300" />
+                <span>Sertifikasi Kebun (CT Index)</span>
+              </Link>
+              <Link
+                to="/admin/ict/audit"
+                className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs flex items-center gap-1.5 backdrop-blur-md border border-white/25 transition-all shadow-sm"
+              >
+                <ClipboardCheck className="w-3.5 h-3.5 text-cyan-300" />
+                <span>Lembar Kerja ICS</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => openBlankoModal('petani')}
+                className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs flex items-center gap-1.5 backdrop-blur-md border border-white/25 transition-all shadow-sm cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5 text-amber-300" />
+                <span>Form Blanko (A4)</span>
+              </button>
+            </div>
           </div>
 
           {/* Key Metrics Badges */}
@@ -682,11 +720,53 @@ export const VerifierView: React.FC = () => {
       {/* TAB CONTENT: PETANI (HASIL PANEN CERI & LAHAN EUDR) */}
       {activeDomain === 'petani' && (
         <div className="space-y-6">
-          {/* Sub-tab Switcher: Panen Ceri vs Lahan Kebun */}
-          <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl max-w-md">
+          {/* Sub-tab Switcher: Master Petani vs Lahan Kebun vs Panen Ceri */}
+          <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl max-w-xl">
+            <button
+              onClick={() => setFarmerSubSection('farmers')}
+              className={`flex-1 min-w-[130px] py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                farmerSubSection === 'farmers'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Master Petani (KTA)</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  farmerSubSection === 'farmers'
+                    ? 'bg-emerald-800 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                {farmersList.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setFarmerSubSection('farms')}
+              className={`flex-1 min-w-[130px] py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                farmerSubSection === 'farms'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              <MapPin className="w-4 h-4" />
+              <span>Lahan &amp; Kebun EUDR</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  farmerSubSection === 'farms'
+                    ? 'bg-emerald-800 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                {coffeeFarms.length}
+              </span>
+            </button>
+
             <button
               onClick={() => setFarmerSubSection('harvest')}
-              className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 min-w-[130px] py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 farmerSubSection === 'harvest'
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -704,28 +784,155 @@ export const VerifierView: React.FC = () => {
                 {farmerLots.length}
               </span>
             </button>
-
-            <button
-              onClick={() => setFarmerSubSection('farms')}
-              className={`flex-1 py-2 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                farmerSubSection === 'farms'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
-            >
-              <MapPin className="w-4 h-4" />
-              <span>Lahan & Kebun EUDR</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  farmerSubSection === 'farms'
-                    ? 'bg-emerald-800 text-white'
-                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-                }`}
-              >
-                {coffeeFarms.length}
-              </span>
-            </button>
           </div>
+
+          {/* SUB-SECTION 0: MASTER DATA PETANI (IDENTITAS & KTA) */}
+          {farmerSubSection === 'farmers' && (
+            <div className="space-y-6">
+              <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 shrink-0">
+                    <Users className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                      Verifikasi Identitas Resmi &amp; Nomor KTA Petani
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100">
+                        Legalitas Kependudukan &amp; KTA Gapoktan
+                      </span>
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
+                      Audit keabsahan identitas petani anggota mencakup validasi NIK terdaftar, nomor Kartu Petani (KTA), alamat domisili desa, serta luas lahan binaan sebelum data panen dan kebun dipublikasikan ke ekosistem.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid of Farmers */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {farmersList
+                  .filter((f) => {
+                    const matchesSearch =
+                      f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (f.nik && f.nik.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                      (f.farmerCardNumber && f.farmerCardNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                      (f.village && f.village.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                      f.location.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesStatus =
+                      filterStatus === 'all' ||
+                      (filterStatus === 'verified' && f.verificationStatus === 'verified') ||
+                      (filterStatus === 'pending' && f.verificationStatus === 'pending') ||
+                      (filterStatus === 'unverified' && (!f.verificationStatus || f.verificationStatus === 'unverified'));
+                    return matchesSearch && matchesStatus;
+                  })
+                  .map((farmer) => {
+                    const isVerified = farmer.verificationStatus === 'verified';
+                    return (
+                      <div
+                        key={farmer.id}
+                        className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all p-5 flex flex-col justify-between ${
+                          isVerified
+                            ? 'border-emerald-300 dark:border-emerald-700/60 shadow-md'
+                            : 'border-slate-200 dark:border-slate-800 shadow-sm'
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={farmer.avatar}
+                              alt={farmer.name}
+                              className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                                {farmer.name}
+                              </h4>
+                              <p className="text-xs text-slate-500 truncate">{farmer.organization}</p>
+                            </div>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
+                                isVerified
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                  : 'bg-amber-100 text-amber-800 border border-amber-300'
+                              }`}
+                            >
+                              {isVerified ? 'Terverifikasi' : 'Belum Diverifikasi'}
+                            </span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">No. KTA:</span>
+                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                                {farmer.farmerCardNumber || '-'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">NIK Kependudukan:</span>
+                              <span className="font-mono text-slate-700 dark:text-slate-300">
+                                {farmer.nik || '-'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Desa / Domisili:</span>
+                              <span className="text-slate-700 dark:text-slate-300 truncate max-w-[160px]">
+                                {farmer.village || farmer.location}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Luas Lahan:</span>
+                              <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                                {farmer.totalLandAreaHa ? `${farmer.totalLandAreaHa} Ha` : 'Tersambung ke Peta'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              verifyFarmer(farmer.id, 'Data KTA & NIK terverifikasi sah oleh Auditor');
+                              setNotification({
+                                type: 'success',
+                                message: `Petani ${farmer.name} berhasil diverifikasi!`,
+                              });
+                              setTimeout(() => setNotification(null), 4000);
+                            }}
+                            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                              isVerified
+                                ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300'
+                                : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md'
+                            }`}
+                          >
+                            <BadgeCheck className="w-4 h-4" />
+                            <span>{isVerified ? 'Perbarui Verifikasi' : 'Verifikasi KTA & NIK'}</span>
+                          </button>
+
+                          {isVerified && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                rejectVerification('farmer', farmer.id, 'Status verifikasi dicabut untuk peninjauan ulang berkas.');
+                                setNotification({
+                                  type: 'error',
+                                  message: `Verifikasi petani ${farmer.name} dicabut.`,
+                                });
+                                setTimeout(() => setNotification(null), 4000);
+                              }}
+                              className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs cursor-pointer"
+                              title="Cabut Status Verifikasi Petani"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
 
           {/* SUB-SECTION 1: HASIL PANEN CERI PETANI */}
           {farmerSubSection === 'harvest' && (

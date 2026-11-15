@@ -231,8 +231,37 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                     </Link>
                   </>
                 );
-              case 'ict':
               case 'verifikator':
+                return (
+                  <>
+                    <Link
+                      to="/admin/verifikator"
+                      className="hover:text-amber-800 transition-colors font-bold text-emerald-800"
+                    >
+                      Lembar Kerja Verifikasi
+                    </Link>
+                    <Link
+                      to="/admin/ict/ct-dashboard"
+                      className="hover:text-amber-800 transition-colors"
+                    >
+                      Sertifikasi Kebun (CT)
+                    </Link>
+                    <Link
+                      to="/admin/ict/audit"
+                      className="hover:text-amber-800 transition-colors"
+                    >
+                      Lembar Kerja ICS
+                    </Link>
+                    <Link
+                      to="/admin/ict/blanko"
+                      className="text-amber-800 font-bold hover:text-amber-950 transition-colors flex items-center gap-1 bg-amber-100/70 hover:bg-amber-100 px-2 py-1 rounded-md border border-amber-300"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Form Blanko ICS (A4)</span>
+                    </Link>
+                  </>
+                );
+              case 'ict':
                 return (
                   <>
                     <Link
@@ -240,6 +269,12 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                       className="hover:text-amber-800 transition-colors"
                     >
                       Verifikasi ICT
+                    </Link>
+                    <Link
+                      to="/admin/ict/ct-dashboard"
+                      className="hover:text-amber-800 transition-colors"
+                    >
+                      Sertifikasi Kebun (CT)
                     </Link>
                     <Link
                       to="/admin/ict/audit"

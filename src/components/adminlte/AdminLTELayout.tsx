@@ -31,8 +31,9 @@ export const AdminLTELayout: React.FC = () => {
       case 'petani':
         return '/admin/petani';
       case 'ict':
-      case 'verifikator':
         return '/admin/ict';
+      case 'verifikator':
+        return '/admin/verifikator';
       default:
         return '/admin/overview';
     }
@@ -60,12 +61,16 @@ export const AdminLTELayout: React.FC = () => {
           path.startsWith('/admin/ledger')
         );
       case 'ict':
-      case 'verifikator':
         return (
           path.startsWith('/admin/ict') ||
           path.startsWith('/admin/petani') ||
           path.startsWith('/admin/kebun') ||
           path.startsWith('/admin/panen')
+        );
+      case 'verifikator':
+        return (
+          path.startsWith('/admin/verifikator') ||
+          path.startsWith('/admin/ict')
         );
       default:
         return false;
@@ -94,8 +99,9 @@ export const AdminLTELayout: React.FC = () => {
         case 'petani':
           return { label: 'Layanan Petani Kopi', path: '/admin/petani' };
         case 'ict':
-        case 'verifikator':
           return { label: 'Pusat Verifikasi ICT', path: '/admin/ict' };
+        case 'verifikator':
+          return { label: 'Lembar Kerja Verifikasi Mutu', path: '/admin/verifikator' };
         default:
           return { label: 'Kelompok Tani', path: '/admin/overview' };
       }
@@ -339,6 +345,13 @@ export const AdminLTELayout: React.FC = () => {
           { label: 'Pusat Verifikasi ICT', path: '/admin/ict' },
           { label: 'Lembar Kerja Audit ICS' },
         ],
+      };
+    }
+    if (path.startsWith('/admin/verifikator')) {
+      return {
+        title: 'Lembar Kerja Verifikasi Mutu & Auditor CT',
+        subtitle: 'Pusat verifikasi berjenjang multi-tahap: Tab master data petani & kebun EUDR, stasiun pengolah, gudang QA, uji sensori cupping roaster, dan cafe.',
+        breadcrumbs: [rootBreadcrumb, { label: 'Lembar Kerja Verifikasi' }],
       };
     }
     if (path.startsWith('/admin/ict')) {

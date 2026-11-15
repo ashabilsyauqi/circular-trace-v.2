@@ -108,7 +108,9 @@ export const LoginPage: React.FC = () => {
           ? '/admin/roaster/inventory'
           : currentUser.role === 'gudang'
           ? '/admin/gudang/inventory'
-          : currentUser.role === 'ict' || currentUser.role === 'verifikator'
+          : currentUser.role === 'verifikator'
+          ? '/admin/verifikator'
+          : currentUser.role === 'ict'
           ? '/admin/ict'
           : `/admin/${currentUser.role}`;
         navigate(dest, { replace: true });

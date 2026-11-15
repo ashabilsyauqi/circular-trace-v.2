@@ -68,16 +68,18 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   const currentRoleInfo = currentUser ? ROLE_DETAILS[currentUser.role] : null;
   const userRole = currentUser?.role;
   const isAdminKelompok = userRole === 'admin_kelompok_tani';
+  const isVerifikator = userRole === 'verifikator';
 
   // Role-based visibility gates: outside Kelompok Tani only see their specific service
   const canSeePusatKendali = isAdminKelompok;
-  const canSeePetani = isAdminKelompok || userRole === 'petani' || userRole === 'ict' || userRole === 'verifikator';
-  const canSeePengolah = isAdminKelompok || userRole === 'pengolah';
-  const canSeeGudang = isAdminKelompok || userRole === 'gudang';
-  const canSeeRoaster = isAdminKelompok || userRole === 'roaster';
-  const canSeeCafe = isAdminKelompok || userRole === 'cafe';
-  const canSeeIct = isAdminKelompok || userRole === 'ict' || userRole === 'verifikator';
-  const canSeeSeller = isAdminKelompok || userRole === 'roaster' || userRole === 'gudang' || userRole === 'pengolah' || userRole === 'petani';
+  const canSeePetani = (isAdminKelompok || userRole === 'petani' || userRole === 'ict') && !isVerifikator;
+  const canSeePengolah = (isAdminKelompok || userRole === 'pengolah') && !isVerifikator;
+  const canSeeGudang = (isAdminKelompok || userRole === 'gudang') && !isVerifikator;
+  const canSeeRoaster = (isAdminKelompok || userRole === 'roaster') && !isVerifikator;
+  const canSeeCafe = (isAdminKelompok || userRole === 'cafe') && !isVerifikator;
+  const canSeeIct = (isAdminKelompok || userRole === 'ict') && !isVerifikator;
+  const canSeeVerifikator = isVerifikator || isAdminKelompok;
+  const canSeeSeller = (isAdminKelompok || userRole === 'roaster' || userRole === 'gudang' || userRole === 'pengolah' || userRole === 'petani') && !isVerifikator;
 
   const getHomePath = () => {
     switch (userRole) {
@@ -92,8 +94,9 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
       case 'petani':
         return '/admin/petani';
       case 'ict':
-      case 'verifikator':
         return '/admin/ict';
+      case 'verifikator':
+        return '/admin/verifikator';
       default:
         return '/admin/overview';
     }
@@ -822,6 +825,88 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                     }`
                   }
                   title="Sertifikasi Kebun (CircularTrace Index Engine: CT-4CI / CCI / SDI)"
+                >
+                  <Award className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  {!isCollapsed && <span className="flex-1 truncate">Sertifikasi Kebun (CT)</span>}
+                  {!isCollapsed && (
+                    <span className="text-[8px] px-1 py-0.2 rounded-full bg-amber-700 text-white font-bold">
+                      4C
+                    </span>
+                  )}
+                </NavLink>
+
+                <NavLink
+                  to="/admin/ict/audit"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
+                      isActive
+                        ? 'bg-blue-700 text-white font-bold shadow-xs'
+                        : 'text-[#869099] hover:bg-[#494e53] hover:text-white'
+                    }`
+                  }
+                  title="Lembar Kerja Audit ICS"
+                >
+                  <ClipboardCheck className="w-3.5 h-3.5 text-blue-300 shrink-0" />
+                  {!isCollapsed && <span className="flex-1 truncate">Lembar Kerja ICS</span>}
+                </NavLink>
+
+                <NavLink
+                  to="/admin/ict/blanko"
+                  className={({ isActive }) =>
+                    `flex items-center justify-between px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
+                      isActive
+                        ? 'bg-amber-600 text-white font-bold shadow-xs'
+                        : 'text-amber-300 hover:bg-[#494e53] hover:text-white'
+                    }`
+                  }
+                  title="Formulir Blanko Fisik Audit Lapangan (A4)"
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    <Printer className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    {!isCollapsed && <span className="truncate">Form Blanko ICS (A4)</span>}
+                  </span>
+                  {!isCollapsed && (
+                    <span className="text-[8px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
+                      Cetak
+                    </span>
+                  )}
+                </NavLink>
+              </div>
+            )}
+
+            {/* 7. PORTAL LEMBAR KERJA VERIFIKATOR & AUDITOR MUTU */}
+            {canSeeVerifikator && (
+              <div className="space-y-1">
+                <NavLink
+                  to="/admin/verifikator"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                      isActive
+                        ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                        : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                    }`
+                  }
+                  title="Lembar Kerja Verifikasi Mutu (Tab Petani, Pengolah, Gudang, Roaster, Cafe, Riwayat Stempel)"
+                >
+                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  {!isCollapsed && <span className="flex-1 truncate">Lembar Kerja Verifikasi</span>}
+                  {!isCollapsed && (
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-700 text-white font-bold">
+                      Tab Mutu
+                    </span>
+                  )}
+                </NavLink>
+
+                <NavLink
+                  to="/admin/ict/ct-dashboard"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
+                      isActive
+                        ? 'bg-amber-600 text-white font-bold shadow-xs'
+                        : 'text-[#869099] hover:bg-[#494e53] hover:text-white'
+                    }`
+                  }
+                  title="Sertifikasi Kebun (CircularTrace Index Engine: CT-4CI / CCI / SDI / Fairtrade)"
                 >
                   <Award className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                   {!isCollapsed && <span className="flex-1 truncate">Sertifikasi Kebun (CT)</span>}

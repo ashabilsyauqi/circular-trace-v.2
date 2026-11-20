@@ -66,12 +66,23 @@ if ($method === 'POST') {
     $waste = json_encode($data['wasteManagement'] ?? null);
     $status = $data['status'] ?? 'in_progress';
 
-    $stmt = $pdo->prepare("INSERT INTO `processing_batches` 
-        (`id`, `processor_id`, `processor_name`, `batch_code`, `source_cherry_lots`, `process_method`, `current_stage`, `intake_log`, `fermentation_log`, `drying_log`, `conditioning_log`, `milling_log`, `grading_qc_log`, `closure_log`, `total_cherry_input_kg`, `estimated_green_bean_yield_kg`, `actual_green_bean_yield_kg`, `yield_percentage`, `waste_management`, `status`)
-        VALUES 
-        (:id, :pid, :pname, :bcode, :clots, :pmethod, :stage, :intake, :ferm, :drying, :cond, :mill, :grading, :closure, :ckg, :estkg, :actkg, :ypct, :waste, :status)
-        ON DUPLICATE KEY UPDATE 
-        `current_stage`=:stage, `drying_log`=:drying, `milling_log`=:mill, `actual_green_bean_yield_kg`=:actkg, `yield_percentage`=:ypct, `status`=:status");
+    $isMysql = isMysqlConnection($pdo);
+
+    if ($isMysql) {
+        $stmt = $pdo->prepare("INSERT INTO `processing_batches` 
+            (`id`, `processor_id`, `processor_name`, `batch_code`, `source_cherry_lots`, `process_method`, `current_stage`, `intake_log`, `fermentation_log`, `drying_log`, `conditioning_log`, `milling_log`, `grading_qc_log`, `closure_log`, `total_cherry_input_kg`, `estimated_green_bean_yield_kg`, `actual_green_bean_yield_kg`, `yield_percentage`, `waste_management`, `status`)
+            VALUES 
+            (:id, :pid, :pname, :bcode, :clots, :pmethod, :stage, :intake, :ferm, :drying, :cond, :mill, :grading, :closure, :ckg, :estkg, :actkg, :ypct, :waste, :status)
+            ON DUPLICATE KEY UPDATE 
+            `current_stage`=:stage, `drying_log`=:drying, `milling_log`=:mill, `actual_green_bean_yield_kg`=:actkg, `yield_percentage`=:ypct, `status`=:status");
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO `processing_batches` 
+            (`id`, `processor_id`, `processor_name`, `batch_code`, `source_cherry_lots`, `process_method`, `current_stage`, `intake_log`, `fermentation_log`, `drying_log`, `conditioning_log`, `milling_log`, `grading_qc_log`, `closure_log`, `total_cherry_input_kg`, `estimated_green_bean_yield_kg`, `actual_green_bean_yield_kg`, `yield_percentage`, `waste_management`, `status`)
+            VALUES 
+            (:id, :pid, :pname, :bcode, :clots, :pmethod, :stage, :intake, :ferm, :drying, :cond, :mill, :grading, :closure, :ckg, :estkg, :actkg, :ypct, :waste, :status)
+            ON CONFLICT(`id`) DO UPDATE SET 
+            `current_stage`=:stage, `drying_log`=:drying, `milling_log`=:mill, `actual_green_bean_yield_kg`=:actkg, `yield_percentage`=:ypct, `status`=:status");
+    }
 
     $stmt->execute([
         'id'      => $id,

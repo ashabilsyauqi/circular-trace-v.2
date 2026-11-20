@@ -16,6 +16,8 @@ import {
   Store,
   Printer,
   FileSpreadsheet,
+  Clock,
+  CheckCircle2,
 } from 'lucide-react';
 import { ROLE_DETAILS } from '../../constants/roles';
 
@@ -395,48 +397,72 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
 
         {/* User Profile Dropdown */}
         {currentUser && (
-          <div className="relative">
-            <button
-              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              type="button"
-              className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-stone-100 transition-colors cursor-pointer"
-            >
-              <img
-                src={currentUser.avatar}
-                alt={currentUser.name}
-                className="w-8 h-8 rounded-full object-cover border border-stone-300"
-              />
-              <div className="hidden lg:block text-left text-xs">
-                <span className="font-bold text-stone-900 block leading-tight truncate max-w-[120px]">
-                  {currentUser.name}
-                </span>
-                <span className="text-[10px] text-stone-500 block leading-tight">
-                  {currentRoleInfo?.label || currentUser.role}
-                </span>
+          <div className="flex items-center gap-2">
+            {currentUser.verificationStatus === 'pending' && (
+              <div
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-100/90 text-amber-900 border border-amber-300 rounded-full text-[10px] font-bold shadow-2xs animate-pulse"
+                title="Akun Anda masih dalam status Menunggu Verifikasi oleh Pengurus Kelompok Tani / Auditor"
+              >
+                <Clock className="w-3.5 h-3.5 text-amber-700" />
+                <span>Menunggu Verifikasi</span>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-stone-400" />
-            </button>
+            )}
 
-            {userDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-stone-200 py-3 z-50 text-xs animate-in fade-in">
-                {/* Header card inside dropdown */}
-                <div className="px-4 pb-3 border-b border-stone-100 text-center">
-                  <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
-                    className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 mx-auto mb-2"
-                  />
-                  <strong className="text-stone-900 block text-sm font-bold">
+            <div className="relative">
+              <button
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                type="button"
+                className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-stone-100 transition-colors cursor-pointer"
+              >
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className="w-8 h-8 rounded-full object-cover border border-stone-300"
+                />
+                <div className="hidden lg:block text-left text-xs">
+                  <span className="font-bold text-stone-900 block leading-tight truncate max-w-[120px]">
                     {currentUser.name}
-                  </strong>
-                  <span className="text-[11px] text-stone-500 block">
-                    {currentUser.organization}
                   </span>
-                  <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                    <Building2 className="w-3 h-3 text-amber-700" />
-                    <span>{currentRoleInfo?.label}</span>
-                  </div>
+                  <span className="text-[10px] text-stone-500 block leading-tight">
+                    {currentRoleInfo?.label || currentUser.role}
+                  </span>
                 </div>
+                <ChevronDown className="w-3.5 h-3.5 text-stone-400" />
+              </button>
+
+              {userDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-stone-200 py-3 z-50 text-xs animate-in fade-in">
+                  {/* Header card inside dropdown */}
+                  <div className="px-4 pb-3 border-b border-stone-100 text-center">
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser.name}
+                      className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 mx-auto mb-2"
+                    />
+                    <strong className="text-stone-900 block text-sm font-bold">
+                      {currentUser.name}
+                    </strong>
+                    <span className="text-[11px] text-stone-500 block">
+                      {currentUser.organization}
+                    </span>
+                    <div className="mt-2 flex flex-wrap items-center justify-center gap-1">
+                      <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-800 border border-stone-300">
+                        <Building2 className="w-3 h-3 text-stone-600" />
+                        <span>{currentRoleInfo?.label}</span>
+                      </div>
+                      {currentUser.verificationStatus === 'pending' ? (
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                          <Clock className="w-3 h-3 text-amber-700" />
+                          <span>Menunggu Verifikasi</span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span>Terverifikasi</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                 <div className="p-2 space-y-1">
                   <Link
@@ -460,8 +486,9 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
               </div>
             )}
           </div>
-        )}
-      </div>
-    </nav>
-  );
+        </div>
+      )}
+    </div>
+  </nav>
+);
 };

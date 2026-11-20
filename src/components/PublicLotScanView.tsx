@@ -370,29 +370,29 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
             },
           }}
           cciBreakdown={{
-            totalScore: cci.totalScore,
-            cmi: (cci as any).cmi ?? 83.3,
-            bvc: (cci as any).bvc ?? 90.0,
-            wc: (cci as any).wc ?? 80.0,
-            re: (cci as any).re ?? 100.0,
-            category: cci.tier || 'Optimal (Very High Circularity)',
+            totalScore: snapshot?.cciScore ?? 56.04,
+            cmi: 46.67,
+            bvc: 90.00,
+            wc: 27.27,
+            re: 25.00,
+            category: 'Awal / Berkembang',
           }}
           sdiBreakdown={{
-            totalScore: csdi.totalScore,
-            environmental: csdi.envSubscore,
-            social: csdi.socSubscore,
-            economic: csdi.econSubscore,
-            governance: 92.0,
-            category: csdi.tier || 'Tinggi / Baik',
+            totalScore: snapshot?.sdiScore ?? 84.44,
+            environmental: 83.33,
+            social: 85.56,
+            economic: 78.33,
+            governance: 90.56,
+            category: 'Tinggi / Baik',
           }}
           fairtradeResult={{
-            fairtrade_readiness_index: friScore,
-            status: friStatus,
+            fairtrade_readiness_index: 50.00,
+            status: 'Needs Major Improvement',
             dimension_scores: {
-              economic: 100.0,
-              social_labor: 92.5,
-              environmental: 100.0,
-              governance: 100.0,
+              economic: 0.00,
+              social_labor: 100.00,
+              environmental: 50.00,
+              governance: 50.00,
             },
           }}
         />

@@ -38,6 +38,12 @@ CREATE TABLE IF NOT EXISTS users (
   phone TEXT DEFAULT NULL,
   balance REAL DEFAULT 0.00,
   bio TEXT DEFAULT NULL,
+  verification_status TEXT DEFAULT 'pending',
+  kelompok_tani_id TEXT DEFAULT NULL,
+  kelompok_tani_name TEXT DEFAULT NULL,
+  verified_by TEXT DEFAULT NULL,
+  verified_at DATETIME DEFAULT NULL,
+  verification_notes TEXT DEFAULT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

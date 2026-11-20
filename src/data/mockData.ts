@@ -124,6 +124,28 @@ export const MOCK_USERS: AppUser[] = [
     registeredAt: '2026-02-12',
     bio: 'Pemberdayaan petani perempuan Bajawa, membudidayakan Yellow Caturra organik di tanah abu vulkanis Gunung Inerie.',
   },
+  {
+    id: 'user-petani-pending-1',
+    name: 'Dadan Hermawan',
+    email: 'dadan.hermawan@petani.id',
+    password: 'password123',
+    role: 'petani',
+    nik: '3204312809910005',
+    farmerCardNumber: 'KPT-PGL-2026-009',
+    village: 'Desa Banjarsari, Pangalengan',
+    totalLandAreaHa: 1.5,
+    organization: 'Gapoktan Kopi Mandiri Nusantara',
+    kelompokTaniName: 'Gapoktan Kopi Mandiri Nusantara',
+    kelompokTaniId: 'user-admin-gapoktan',
+    location: 'Pangalengan, Kab. Bandung, Jawa Barat (1.520 mdpl)',
+    avatar: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&auto=format&fit=crop&q=80',
+    phone: '0812-7711-2233',
+    balance: 0,
+    status: 'active',
+    verificationStatus: 'pending',
+    registeredAt: '2026-03-01',
+    bio: 'Petani kopi baru mengajukan pendaftaran anggota ke Gapoktan Kopi Mandiri Nusantara untuk verifikasi kebun & NIK.',
+  },
 
   // --- 2. PENGOLAH / MILL (Wet & Dry Mill Station) ---
   {

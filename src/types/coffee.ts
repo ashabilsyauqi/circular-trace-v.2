@@ -22,6 +22,7 @@ export interface AppUser {
   username?: string;
   role: UserRole;
   assignedService?: OperationalService; // Tepat 1 service operasional (1 akun = 1 service)
+  kelompokTaniId?: string;
   kelompokTaniName?: string;
   status?: 'active' | 'inactive';
   registeredAt?: string;

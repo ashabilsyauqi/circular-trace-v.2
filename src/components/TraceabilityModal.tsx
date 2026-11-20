@@ -21,7 +21,11 @@ import {
   Layers,
   MapPin,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useCoffee } from '../context/CoffeeContext';
 import { CoffeeSensorySpiderChart } from './CoffeeSensorySpiderChart';
+import { getNetworkHost, getPublicBaseUrl } from '../utils/baseUrl';
+import { BarcodeSocialShare } from './shared/BarcodeSocialShare';
 import { IntegratedCircularIndicesView } from './verifier/IntegratedCircularIndicesView';
 
 interface TraceabilityModalProps {
@@ -35,6 +39,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
   onClose,
   data,
 }) => {
+  const navigate = useNavigate();
   const [activeTraceTab, setActiveTraceTab] = useState<'timeline' | 'audit4c' | 'sensory'>('timeline');
 
   if (!isOpen || !data) return null;
@@ -77,7 +82,8 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
     anyData.title ||
     `${origin} - ${variety}`;
 
-  const traceUrl = anyData.id ? `https://circularcoffee.circulartrace.id/trace?lotId=${anyData.id}` : '';
+  const resolvedBaseUrl = getPublicBaseUrl(getNetworkHost());
+  const traceUrl = anyData.id ? `${resolvedBaseUrl}/trace?lotId=${anyData.id}` : '';
   const processMethod = anyData.processMethod || anyData.processingMethod || 'Specialty Process';
   const roastLevel = anyData.roastLevel || 'Light-Medium Roast (Rekomendasi)';
 
@@ -131,8 +137,8 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
       };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-      <div className="relative bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-stone-200 overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 lg:p-6 xl:p-8 animate-in fade-in duration-200">
+      <div className="relative bg-white rounded-3xl max-w-6xl xl:max-w-7xl 2xl:max-w-[88rem] w-full shadow-2xl border border-stone-200 overflow-hidden my-4 sm:my-6 transition-all duration-300">
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 text-white p-6 sm:p-8 relative">
           <button
@@ -260,7 +266,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
 
         {/* Content Body */}
         {activeTraceTab === 'audit4c' ? (
-          <div className="p-6 sm:p-8 max-h-[65vh] overflow-y-auto space-y-6">
+          <div className="p-5 sm:p-7 lg:p-8 max-h-[75vh] sm:max-h-[78vh] xl:max-h-[82vh] overflow-y-auto space-y-6">
             <IntegratedCircularIndicesView
               farmName={lineage.farmerName}
               farmCode="FARM-PGL-01"
@@ -314,7 +320,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
             />
           </div>
         ) : activeTraceTab === 'sensory' ? (
-          <div className="p-6 sm:p-8 max-h-[65vh] overflow-y-auto">
+          <div className="p-5 sm:p-7 lg:p-8 max-h-[75vh] sm:max-h-[78vh] xl:max-h-[82vh] overflow-y-auto">
             <CoffeeSensorySpiderChart
               scaScore={scaScore}
               roastLevel={roastLevel}
@@ -327,7 +333,7 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
             />
           </div>
         ) : (
-          <div className="p-6 sm:p-8 space-y-6 max-h-[65vh] overflow-y-auto">
+          <div className="p-5 sm:p-7 lg:p-8 space-y-6 max-h-[75vh] sm:max-h-[78vh] xl:max-h-[82vh] overflow-y-auto">
             {/* Step 1: Petani (LENGKAP DENGAN NILAI PENILAIAN 4C & EUDR) */}
             <div className="relative pl-8 sm:pl-10 border-l-2 border-emerald-500 pb-6">
               <div className="absolute -left-[17px] top-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md">
@@ -594,6 +600,19 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
           </div>
         )}
 
+        {/* Social Media Share for Traceability & Barcode */}
+        {traceUrl && (
+          <div className="px-5 sm:px-8 py-3 bg-stone-50/80 border-t border-stone-200/70">
+            <BarcodeSocialShare
+              url={traceUrl}
+              title={`Silsilah & Traceability: ${beanName}`}
+              lotId={data.id}
+              variety={variety}
+              origin={origin}
+            />
+          </div>
+        )}
+
         {/* Modal Footer */}
         <div className="bg-stone-50 border-t border-stone-200 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs text-stone-500 flex items-center gap-1.5">
@@ -601,6 +620,16 @@ export const TraceabilityModal: React.FC<TraceabilityModalProps> = ({
             <span>Data silsilah &amp; audit 4C tercatat permanen di jaringan CircularTrace.</span>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onClose();
+                navigate(`/trace/${data.id}`);
+              }}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Buka Paspor Digital Penuh</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 text-xs font-bold transition-colors cursor-pointer"

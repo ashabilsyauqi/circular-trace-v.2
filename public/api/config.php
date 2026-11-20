@@ -100,3 +100,11 @@ function getJsonInput() {
     $decoded = json_decode($raw, true);
     return is_array($decoded) ? $decoded : [];
 }
+
+function isMysqlConnection($pdo) {
+    try {
+        return $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
+    } catch (Exception $e) {
+        return false;
+    }
+}

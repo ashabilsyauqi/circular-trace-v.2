@@ -85,12 +85,23 @@ if ($method === 'POST') {
     $qcStatus = $data['qcStatus'] ?? 'passed';
     $notes = $data['notes'] ?? '';
 
-    $stmt = $pdo->prepare("INSERT INTO `warehouse_lots` 
-        (`id`, `warehouse_id`, `warehouse_name`, `source_green_bean_id`, `source_processor_name`, `source_farmer_name`, `origin`, `variety`, `altitude`, `process_method`, `storage_location`, `temperature_celsius`, `humidity_percent`, `packaging_type`, `verified_sca_score`, `weight_kg`, `available_weight_kg`, `purchase_price_per_kg`, `price_per_kg`, `stored_date`, `grade_tier`, `defect_count`, `screen_size`, `moisture_content_percent`, `water_activity_aw`, `target_market`, `has_health_certificate`, `health_certificate_number`, `status`, `qc_status`, `notes`)
-        VALUES 
-        (:id, :wid, :wname, :sgb, :sproc, :sfarmer, :orig, :var, :alt, :pmethod, :storage, :temp, :hum, :pack, :sca, :wt, :awt, :buy, :price, :sdate, :grade, :def, :screen, :moist, :aw, :target, :hashc, :hcnum, :status, :qc, :notes)
-        ON DUPLICATE KEY UPDATE 
-        `available_weight_kg`=:awt, `price_per_kg`=:price, `status`=:status, `qc_status`=:qc, `has_health_certificate`=:hashc, `health_certificate_number`=:hcnum");
+    $isMysql = isMysqlConnection($pdo);
+
+    if ($isMysql) {
+        $stmt = $pdo->prepare("INSERT INTO `warehouse_lots` 
+            (`id`, `warehouse_id`, `warehouse_name`, `source_green_bean_id`, `source_processor_name`, `source_farmer_name`, `origin`, `variety`, `altitude`, `process_method`, `storage_location`, `temperature_celsius`, `humidity_percent`, `packaging_type`, `verified_sca_score`, `weight_kg`, `available_weight_kg`, `purchase_price_per_kg`, `price_per_kg`, `stored_date`, `grade_tier`, `defect_count`, `screen_size`, `moisture_content_percent`, `water_activity_aw`, `target_market`, `has_health_certificate`, `health_certificate_number`, `status`, `qc_status`, `notes`)
+            VALUES 
+            (:id, :wid, :wname, :sgb, :sproc, :sfarmer, :orig, :var, :alt, :pmethod, :storage, :temp, :hum, :pack, :sca, :wt, :awt, :buy, :price, :sdate, :grade, :def, :screen, :moist, :aw, :target, :hashc, :hcnum, :status, :qc, :notes)
+            ON DUPLICATE KEY UPDATE 
+            `available_weight_kg`=:awt, `price_per_kg`=:price, `status`=:status, `qc_status`=:qc, `has_health_certificate`=:hashc, `health_certificate_number`=:hcnum");
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO `warehouse_lots` 
+            (`id`, `warehouse_id`, `warehouse_name`, `source_green_bean_id`, `source_processor_name`, `source_farmer_name`, `origin`, `variety`, `altitude`, `process_method`, `storage_location`, `temperature_celsius`, `humidity_percent`, `packaging_type`, `verified_sca_score`, `weight_kg`, `available_weight_kg`, `purchase_price_per_kg`, `price_per_kg`, `stored_date`, `grade_tier`, `defect_count`, `screen_size`, `moisture_content_percent`, `water_activity_aw`, `target_market`, `has_health_certificate`, `health_certificate_number`, `status`, `qc_status`, `notes`)
+            VALUES 
+            (:id, :wid, :wname, :sgb, :sproc, :sfarmer, :orig, :var, :alt, :pmethod, :storage, :temp, :hum, :pack, :sca, :wt, :awt, :buy, :price, :sdate, :grade, :def, :screen, :moist, :aw, :target, :hashc, :hcnum, :status, :qc, :notes)
+            ON CONFLICT(`id`) DO UPDATE SET 
+            `available_weight_kg`=:awt, `price_per_kg`=:price, `status`=:status, `qc_status`=:qc, `has_health_certificate`=:hashc, `health_certificate_number`=:hcnum");
+    }
 
     $stmt->execute([
         'id'      => $id,

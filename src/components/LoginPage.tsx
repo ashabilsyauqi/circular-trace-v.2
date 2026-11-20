@@ -184,10 +184,10 @@ export const LoginPage: React.FC = () => {
   };
 
   // Step 1: Request OTP
-  const handleRequestOtp = (e: React.FormEvent) => {
+  const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotError(null);
-    const res = requestPasswordReset(forgotEmail);
+    const res = await requestPasswordReset(forgotEmail);
     if (res.success && res.resetCode) {
       setSimulatedOtpNotice(`Kode OTP Verifikasi: ${res.resetCode}`);
       setForgotOtp(res.resetCode);
@@ -210,7 +210,7 @@ export const LoginPage: React.FC = () => {
   };
 
   // Step 3: Set New Password
-  const handleSetNewPassword = (e: React.FormEvent) => {
+  const handleSetNewPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotError(null);
     if (newPassword.length < 6) {
@@ -222,7 +222,7 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    const res = resetPassword(forgotEmail, forgotOtp, newPassword);
+    const res = await resetPassword(forgotEmail, forgotOtp, newPassword);
     if (res.success) {
       setForgotStep('success');
       setPassword(newPassword);

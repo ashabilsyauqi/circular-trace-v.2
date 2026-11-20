@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
@@ -19,6 +19,11 @@ import {
   Phone,
   User,
   Check,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
 } from 'lucide-react';
 
 interface RegisterModalProps {
@@ -33,14 +38,64 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   initialRole = 'roaster',
 }) => {
   const navigate = useNavigate();
-  const { registerUser } = useCoffee();
+  const { registerUser, users } = useCoffee();
+  const availableKelompokTani = (users || [])
+    .filter((u) => u.role === 'admin_kelompok_tani')
+    .map((u) => ({
+      id: u.id,
+      name: u.kelompokTaniName || u.organization || u.name,
+      location: u.location || 'Jawa Barat',
+    }));
+
+  const kelompokTaniList =
+    availableKelompokTani.length > 0
+      ? availableKelompokTani
+      : [
+          { id: 'user-admin-gapoktan', name: 'Gapoktan Kopi Mandiri Nusantara', location: 'Pangalengan, Jawa Barat' },
+          { id: 'kt-02', name: 'Kelompok Tani Kopi Tilu Lestari', location: 'Bandung Selatan, Jawa Barat' },
+          { id: 'kt-03', name: 'Koperasi Petani Malabar Preanger', location: 'Malabar, Jawa Barat' },
+          { id: 'kt-04', name: 'Gapoktan Priangan Lestari', location: 'Garut, Jawa Barat' },
+        ];
+
   const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole);
+  const [selectedKelompokTaniId, setSelectedKelompokTaniId] = useState(kelompokTaniList[0]?.id || '');
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [org, setOrg] = useState('');
   const [location, setLocation] = useState('');
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleClose = () => {
+    setName('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+    setErrorMsg(null);
+    setOrg('');
+    setLocation('');
+    setPhone('');
+    setBio('');
+    setSelectedKelompokTaniId(kelompokTaniList[0]?.id || '');
+    setIsSuccess(false);
+    onClose();
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -141,32 +196,64 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+
     if (!name.trim() || !org.trim()) {
-      alert('Mohon isi nama lengkap dan nama usaha/organisasi Anda.');
+      setErrorMsg('Mohon isi nama lengkap dan nama usaha/organisasi Anda.');
       return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim() || !emailRegex.test(email.trim())) {
+      setErrorMsg('Format alamat email tidak valid.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMsg('Kata sandi minimal harus 6 karakter.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Konfirmasi kata sandi tidak cocok.');
+      return;
+    }
+
+    let ktName: string | undefined = undefined;
+    if (selectedRole === 'petani') {
+      const matchedKt = kelompokTaniList.find((k) => k.id === selectedKelompokTaniId);
+      ktName = matchedKt ? matchedKt.name : kelompokTaniList[0]?.name;
     }
 
     if (registerUser) {
       registerUser({
         name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password: password,
         role: selectedRole,
         organization: org.trim(),
         location: location.trim() || roleConfigs[selectedRole].defaultLocExample.replace('e.g. ', ''),
         phone: phone.trim() || '0812-3456-7890',
         bio: bio.trim() || `Akun ${ROLE_DETAILS[selectedRole].label} baru terdaftar di platform CircularCoffee.`,
+        kelompokTaniId: selectedRole === 'petani' ? selectedKelompokTaniId : undefined,
+        kelompokTaniName: ktName,
       });
     }
 
     setIsSuccess(true);
     setTimeout(() => {
-      onClose();
-      setIsSuccess(false);
+      handleClose();
       navigate('/login');
     }, 1200);
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+    >
       <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden my-8">
         {/* Top Header Background */}
         <div className="bg-[#1C120C] text-stone-200 p-6 sm:p-8 relative overflow-hidden">
@@ -174,8 +261,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
           <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-stone-400 hover:text-white bg-stone-800/80 hover:bg-stone-700 rounded-full transition-colors"
+            type="button"
+            onClick={handleClose}
+            className="absolute top-4 right-4 z-20 p-2 text-stone-400 hover:text-white bg-stone-800/80 hover:bg-stone-700 rounded-full transition-colors cursor-pointer"
             title="Tutup"
           >
             <X className="w-5 h-5" />
@@ -202,7 +290,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               </div>
               <h3 className="text-xl font-black text-stone-900">Registrasi Berhasil!</h3>
               <p className="text-sm text-stone-600 max-w-sm mx-auto">
-                Akun bisnis Anda siap digunakan. Mengalihkan Anda langsung ke Panel Admin Operasional...
+                Akun bisnis Anda siap digunakan. Mengalihkan Anda langsung ke Panel Login Operasional...
               </p>
             </div>
           ) : (
@@ -260,10 +348,51 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               {/* Form Input Fields */}
               <div className="space-y-3.5">
                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-600">
-                  2. Informasi Profil & Usaha Kopi:
+                  2. Informasi Profil &amp; Usaha Kopi:
                 </label>
 
+                {errorMsg && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs font-semibold text-red-700 animate-in fade-in duration-150">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {selectedRole === 'petani' && (
+                    <div className="sm:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50/50 border border-amber-200 rounded-2xl p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[11px] font-bold text-amber-950 flex items-center gap-1.5">
+                          <Building2 className="w-4 h-4 text-amber-700" />
+                          Pilih Kelompok Tani / Gapoktan Penaung *
+                        </label>
+                        <span className="text-[10px] font-bold bg-amber-200/70 text-amber-900 px-2 py-0.5 rounded-md">
+                          Wajib untuk Petani
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 leading-relaxed">
+                        Akun Anda akan diverifikasi oleh Pengurus / Ketua Kelompok Tani yang Anda pilih agar hasil panen dan sertifikasi Anda tercatat resmi dalam rantai pasok.
+                      </p>
+                      <select
+                        value={selectedKelompokTaniId}
+                        onChange={(e) => {
+                          setSelectedKelompokTaniId(e.target.value);
+                          const kt = kelompokTaniList.find((k) => k.id === e.target.value);
+                          if (kt && (!org || kelompokTaniList.some((item) => item.name === org))) {
+                            setOrg(kt.name);
+                          }
+                        }}
+                        className="w-full px-3.5 py-2.5 bg-white border border-amber-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-xs cursor-pointer"
+                      >
+                        {kelompokTaniList.map((kt) => (
+                          <option key={kt.id} value={kt.id}>
+                            {kt.name} — {kt.location}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-[11px] font-bold text-stone-700 mb-1">
                       Nama Lengkap / Penanggung Jawab *
@@ -274,7 +403,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                         type="text"
                         required
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={(e) => {
+                          setName(e.target.value);
+                          if (errorMsg) setErrorMsg(null);
+                        }}
                         placeholder="e.g. Raditya Pratama"
                         className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
                       />
@@ -291,7 +423,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                         type="text"
                         required
                         value={org}
-                        onChange={(e) => setOrg(e.target.value)}
+                        onChange={(e) => {
+                          setOrg(e.target.value);
+                          if (errorMsg) setErrorMsg(null);
+                        }}
                         placeholder={roleConfigs[selectedRole].defaultOrgExample}
                         className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
                       />
@@ -300,15 +435,19 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
                   <div>
                     <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Lokasi / Domisili Operasional
+                      Alamat Email Akun *
                     </label>
                     <div className="relative">
-                      <MapPin className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                      <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                       <input
-                        type="text"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        placeholder={roleConfigs[selectedRole].defaultLocExample}
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (errorMsg) setErrorMsg(null);
+                        }}
+                        placeholder="e.g. raditya@perusahaan.com"
                         className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
                       />
                     </div>
@@ -325,6 +464,70 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="e.g. 0812-8899-0011"
+                        className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                      Kata Sandi *
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          if (errorMsg) setErrorMsg(null);
+                        }}
+                        placeholder="Minimal 6 karakter"
+                        className="w-full pl-9 pr-10 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-2.5 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer"
+                        title={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                      Konfirmasi Kata Sandi *
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          if (errorMsg) setErrorMsg(null);
+                        }}
+                        placeholder="Ulangi kata sandi"
+                        className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                      Lokasi / Domisili Operasional
+                    </label>
+                    <div className="relative">
+                      <MapPin className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                      <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder={roleConfigs[selectedRole].defaultLocExample}
                         className="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
                       />
                     </div>
@@ -346,12 +549,19 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 flex items-center justify-end">
+              <div className="pt-4 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-stone-200">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 text-xs font-bold hover:bg-stone-100 transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 text-stone-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>Daftar Akun &amp; Lanjut ke Login</span>
+                  <span>Daftar Akun Sekarang</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

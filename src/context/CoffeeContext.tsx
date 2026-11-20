@@ -98,17 +98,22 @@ interface CoffeeContextType {
   loginAsRole: (role: UserRole) => void;
   loginAsUser: (userId: string) => void;
   login: (email: string, password: string, rememberMe?: boolean) => { success: boolean; message: string; user?: AppUser };
-  requestPasswordReset: (email: string) => { success: boolean; message: string; resetCode?: string };
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; message: string; resetCode?: string }>;
   verifyResetCode: (email: string, code: string) => { success: boolean; message: string };
-  resetPassword: (email: string, code: string, newPassword: string) => { success: boolean; message: string };
+  resetPassword: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   registerUser?: (userData: {
     name: string;
+    email?: string;
+    password?: string;
     role: UserRole;
     organization: string;
     location: string;
-    phone: string;
+    phone?: string;
     bio?: string;
+    kelompokTaniId?: string;
+    kelompokTaniName?: string;
   }) => AppUser;
+  verifyUser: (userId: string, approved: boolean, notes?: string) => void;
   logout: () => void;
   activeView: 'landing' | 'dashboard' | 'marketplace' | 'transactions';
   setActiveView: (view: 'landing' | 'dashboard' | 'marketplace' | 'transactions') => void;
@@ -1118,8 +1123,41 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   };
 
-  const requestPasswordReset = (email: string): { success: boolean; message: string; resetCode?: string } => {
+  const requestPasswordReset = async (
+    email: string
+  ): Promise<{ success: boolean; message: string; resetCode?: string }> => {
     const cleanEmail = email.toLowerCase().trim();
+
+    // Coba panggil API backend forgot-password terlebih dahulu
+    try {
+      const apiRes = await fetch('/api/auth.php?action=forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail }),
+      });
+      const data = await apiRes.json();
+      if (apiRes.ok && data.resetCode) {
+        const expiresAt = Date.now() + 15 * 60 * 1000;
+        setResetCodes((prev) => ({
+          ...prev,
+          [cleanEmail]: { code: data.resetCode, expiresAt },
+        }));
+        return {
+          success: true,
+          message: data.message || `Kode pemulihan keamanan 6-digit berhasil dikirim ke ${cleanEmail}.`,
+          resetCode: data.resetCode,
+        };
+      }
+      if (!apiRes.ok && data.error && !users.some((u) => u.email?.toLowerCase() === cleanEmail)) {
+        return {
+          success: false,
+          message: data.error,
+        };
+      }
+    } catch {
+      // API gagal/offline, lanjut ke fallback state lokal
+    }
+
     const matched = users.find((u) => u.email?.toLowerCase() === cleanEmail);
     if (!matched) {
       return {
@@ -1158,15 +1196,27 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return { success: true, message: 'Kode verifikasi valid.' };
   };
 
-  const resetPassword = (
+  const resetPassword = async (
     email: string,
     code: string,
     newPassword: string
-  ): { success: boolean; message: string } => {
+  ): Promise<{ success: boolean; message: string }> => {
     const check = verifyResetCode(email, code);
     if (!check.success) return check;
 
     const cleanEmail = email.toLowerCase().trim();
+
+    // Kirim pembaruan ke backend API
+    try {
+      await fetch('/api/auth.php?action=reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, newPassword }),
+      });
+    } catch (e) {
+      console.warn('Backend reset-password call failed, continuing with local state:', e);
+    }
+
     setUsers((prev) =>
       prev.map((u) => (u.email?.toLowerCase() === cleanEmail ? { ...u, password: newPassword } : u))
     );
@@ -1476,11 +1526,15 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const registerUser = (userData: {
     name: string;
+    email?: string;
+    password?: string;
     role: UserRole;
     organization: string;
     location: string;
-    phone: string;
+    phone?: string;
     bio?: string;
+    kelompokTaniId?: string;
+    kelompokTaniName?: string;
   }): AppUser => {
     const defaultAvatars: Record<UserRole, string> = {
       admin_kelompok_tani: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
@@ -1496,19 +1550,90 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newUser: AppUser = {
       id: `user-${userData.role}-${Date.now().toString().slice(-4)}`,
       name: userData.name,
+      email: userData.email,
+      password: userData.password,
       role: userData.role,
       organization: userData.organization,
       location: userData.location,
-      phone: userData.phone,
+      phone: userData.phone || '0812-3456-7890',
       avatar: defaultAvatars[userData.role] || defaultAvatars.roaster,
       balance: 50000000,
       bio: userData.bio || `Pengguna terdaftar baru sebagai ${userData.role}`,
+      verificationStatus: 'pending',
+      kelompokTaniId: userData.kelompokTaniId,
+      kelompokTaniName: userData.kelompokTaniName || userData.organization,
+      registeredAt: new Date().toISOString().split('T')[0],
     };
+
+    // Sinkronisasi pendaftaran akun ke backend API jika email & password diisi
+    if (userData.email && userData.password) {
+      fetch('/api/auth.php?action=register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: userData.name,
+          email: userData.email,
+          password: userData.password,
+          role: userData.role,
+          organization: userData.organization,
+          location: userData.location,
+          phone: userData.phone,
+          bio: userData.bio,
+          kelompokTaniId: userData.kelompokTaniId,
+          kelompokTaniName: userData.kelompokTaniName,
+        }),
+      }).catch((err) => {
+        console.warn('Gagal mendaftarkan akun ke backend API:', err);
+      });
+    }
 
     setUsers((prev) => [newUser, ...prev]);
     setCurrentUser(newUser);
     setActiveView('dashboard');
     return newUser;
+  };
+
+  const verifyUser = (userId: string, approved: boolean, notes?: string) => {
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === userId) {
+          return {
+            ...u,
+            verificationStatus: approved ? 'verified' : 'rejected',
+            verifiedBy: currentUser?.name || 'Ketua Kelompok Tani',
+            verifiedAt: new Date().toISOString().split('T')[0],
+            verificationNotes: notes || (approved ? 'Disetujui oleh Ketua Kelompok Tani' : 'Permohonan Ditolak'),
+          };
+        }
+        return u;
+      })
+    );
+    if (currentUser?.id === userId) {
+      setCurrentUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              verificationStatus: approved ? 'verified' : 'rejected',
+              verifiedBy: currentUser?.name || 'Ketua Kelompok Tani',
+              verifiedAt: new Date().toISOString().split('T')[0],
+            }
+          : null
+      );
+    }
+
+    // Sync ke API backend
+    fetch('/api/auth.php?action=verify-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        status: approved ? 'verified' : 'rejected',
+        verifiedBy: currentUser?.name || 'Ketua Kelompok Tani',
+        notes,
+      }),
+    }).catch((err) => {
+      console.warn('Gagal sync status verifikasi user:', err);
+    });
   };
 
   const logout = () => {
@@ -1658,6 +1783,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const toggleReleaseHarvestLotToMarketplace = (lotId: string, customPrice?: number) => {
+    if (currentUser?.verificationStatus === 'pending') {
+      alert('Akun Anda sedang dalam antrean verifikasi oleh Pengurus / Ketua Kelompok Tani. Anda saat ini berada dalam mode jelajah dashboard sampai akun Anda diverifikasi.');
+      return;
+    }
     setFarmerLots((prev) =>
       prev.map((lot) => {
         if (lot.id === lotId) {
@@ -1676,6 +1805,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const sendHarvestLotToProcessor = (lotId: string, quantityKg?: number) => {
+    if (currentUser?.verificationStatus === 'pending') {
+      alert('Akun Anda sedang dalam antrean verifikasi oleh Pengurus / Ketua Kelompok Tani. Anda saat ini berada dalam mode jelajah dashboard sampai akun Anda diverifikasi.');
+      return;
+    }
     const lot = farmerLots.find((l) => l.id === lotId);
     if (!lot) return;
     const amountToSend = quantityKg || lot.availableWeightKg;
@@ -4083,6 +4216,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         verifyResetCode,
         resetPassword,
         registerUser,
+        verifyUser,
         logout,
         activeView,
         setActiveView,

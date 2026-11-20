@@ -147,8 +147,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
         return 'Petugas ICS (Internal Control)';
       case 'verifikator':
         return 'Verifikasi Mutu & Sertifikasi CT';
+      case 'admin_kelompok_tani':
+        return 'SCOPE KELOMPOK TANI / GAPOKTAN';
       default:
-        return 'Scope Kelompok Tani';
+        return 'SCOPE KELOMPOK TANI / GAPOKTAN';
     }
   };
 

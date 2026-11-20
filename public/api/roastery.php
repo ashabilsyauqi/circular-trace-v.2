@@ -128,12 +128,23 @@ if ($method === 'POST') {
 
     // Insert roasted lot
     $id = $data['id'] ?? ('LOT-RST-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT));
-    $stmt = $pdo->prepare("INSERT INTO `roasted_bean_lots` 
-        (`id`, `roaster_id`, `roaster_name`, `source_warehouse_lot_id`, `origin`, `variety`, `altitude`, `process_method`, `farmer_name`, `roaster_machine`, `roast_level`, `agtron_number`, `roast_date`, `development_time_ratio`, `tasting_notes`, `sca_cupping_score`, `package_weight_grams`, `total_packs`, `available_packs`, `price_per_pack`, `resting_recommendation_days`, `recommended_brew`, `status`, `photo_url`, `source_work_order_id`)
-        VALUES 
-        (:id, :rid, :rname, :swhid, :orig, :var, :alt, :pmethod, :farmer, :machine, :rlevel, :agtron, :rdate, :dtr, :tnotes, :sca, :pweight, :tpacks, :apacks, :price, :rest, :rbrew, :status, :photo, :workorder)
-        ON DUPLICATE KEY UPDATE 
-        `available_packs`=:apacks, `price_per_pack`=:price, `status`=:status");
+    $isMysql = isMysqlConnection($pdo);
+
+    if ($isMysql) {
+        $stmt = $pdo->prepare("INSERT INTO `roasted_bean_lots` 
+            (`id`, `roaster_id`, `roaster_name`, `source_warehouse_lot_id`, `origin`, `variety`, `altitude`, `process_method`, `farmer_name`, `roaster_machine`, `roast_level`, `agtron_number`, `roast_date`, `development_time_ratio`, `tasting_notes`, `sca_cupping_score`, `package_weight_grams`, `total_packs`, `available_packs`, `price_per_pack`, `resting_recommendation_days`, `recommended_brew`, `status`, `photo_url`, `source_work_order_id`)
+            VALUES 
+            (:id, :rid, :rname, :swhid, :orig, :var, :alt, :pmethod, :farmer, :machine, :rlevel, :agtron, :rdate, :dtr, :tnotes, :sca, :pweight, :tpacks, :apacks, :price, :rest, :rbrew, :status, :photo, :workorder)
+            ON DUPLICATE KEY UPDATE 
+            `available_packs`=:apacks, `price_per_pack`=:price, `status`=:status");
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO `roasted_bean_lots` 
+            (`id`, `roaster_id`, `roaster_name`, `source_warehouse_lot_id`, `origin`, `variety`, `altitude`, `process_method`, `farmer_name`, `roaster_machine`, `roast_level`, `agtron_number`, `roast_date`, `development_time_ratio`, `tasting_notes`, `sca_cupping_score`, `package_weight_grams`, `total_packs`, `available_packs`, `price_per_pack`, `resting_recommendation_days`, `recommended_brew`, `status`, `photo_url`, `source_work_order_id`)
+            VALUES 
+            (:id, :rid, :rname, :swhid, :orig, :var, :alt, :pmethod, :farmer, :machine, :rlevel, :agtron, :rdate, :dtr, :tnotes, :sca, :pweight, :tpacks, :apacks, :price, :rest, :rbrew, :status, :photo, :workorder)
+            ON CONFLICT(`id`) DO UPDATE SET 
+            `available_packs`=:apacks, `price_per_pack`=:price, `status`=:status");
+    }
 
     $stmt->execute([
         'id'        => $id,

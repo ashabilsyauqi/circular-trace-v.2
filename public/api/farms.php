@@ -71,12 +71,23 @@ if ($method === 'POST') {
     $year = $data['establishedYear'] ?? date('Y');
     $notes = $data['notes'] ?? '';
 
-    $stmt = $pdo->prepare("INSERT INTO `coffee_farms` 
-        (`id`, `farmer_id`, `farmer_name`, `farm_name`, `location`, `province`, `latitude`, `longitude`, `altitude_meters`, `altitude_display`, `land_area_hectares`, `total_trees_count`, `primary_varieties`, `soil_type`, `shade_trees`, `organic_status`, `eudr_compliant`, `weather_data`, `plot_boundary`, `patok_list`, `photo_url`, `established_year`, `notes`, `verification_status`)
-        VALUES 
-        (:id, :fid, :fname, :farmname, :loc, :prov, :lat, :lng, :alt, :altdisp, :area, :trees, :var, :soil, :shade, :org, :eudr, :wea, :bound, :pat, :photo, :yr, :notes, 'verified')
-        ON DUPLICATE KEY UPDATE 
-        `farm_name`=:farmname, `location`=:loc, `latitude`=:lat, `longitude`=:lng, `altitude_meters`=:alt, `land_area_hectares`=:area, `notes`=:notes");
+    $isMysql = isMysqlConnection($pdo);
+
+    if ($isMysql) {
+        $stmt = $pdo->prepare("INSERT INTO `coffee_farms` 
+            (`id`, `farmer_id`, `farmer_name`, `farm_name`, `location`, `province`, `latitude`, `longitude`, `altitude_meters`, `altitude_display`, `land_area_hectares`, `total_trees_count`, `primary_varieties`, `soil_type`, `shade_trees`, `organic_status`, `eudr_compliant`, `weather_data`, `plot_boundary`, `patok_list`, `photo_url`, `established_year`, `notes`, `verification_status`)
+            VALUES 
+            (:id, :fid, :fname, :farmname, :loc, :prov, :lat, :lng, :alt, :altdisp, :area, :trees, :var, :soil, :shade, :org, :eudr, :wea, :bound, :pat, :photo, :yr, :notes, 'verified')
+            ON DUPLICATE KEY UPDATE 
+            `farm_name`=:farmname, `location`=:loc, `latitude`=:lat, `longitude`=:lng, `altitude_meters`=:alt, `land_area_hectares`=:area, `notes`=:notes");
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO `coffee_farms` 
+            (`id`, `farmer_id`, `farmer_name`, `farm_name`, `location`, `province`, `latitude`, `longitude`, `altitude_meters`, `altitude_display`, `land_area_hectares`, `total_trees_count`, `primary_varieties`, `soil_type`, `shade_trees`, `organic_status`, `eudr_compliant`, `weather_data`, `plot_boundary`, `patok_list`, `photo_url`, `established_year`, `notes`, `verification_status`)
+            VALUES 
+            (:id, :fid, :fname, :farmname, :loc, :prov, :lat, :lng, :alt, :altdisp, :area, :trees, :var, :soil, :shade, :org, :eudr, :wea, :bound, :pat, :photo, :yr, :notes, 'verified')
+            ON CONFLICT(`id`) DO UPDATE SET 
+            `farm_name`=:farmname, `location`=:loc, `latitude`=:lat, `longitude`=:lng, `altitude_meters`=:alt, `land_area_hectares`=:area, `notes`=:notes");
+    }
 
     $stmt->execute([
         'id'       => $id,

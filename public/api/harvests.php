@@ -74,12 +74,23 @@ if ($method === 'POST') {
     $verStatus = $data['verificationStatus'] ?? 'verified';
     $stamp = json_encode($data['verificationStamp'] ?? null);
 
-    $stmt = $pdo->prepare("INSERT INTO `farmer_harvest_lots` 
-        (`id`, `farmer_id`, `farmer_name`, `farm_id`, `farm_name`, `farm_location`, `altitude`, `variety`, `harvest_date`, `picking_method`, `brix`, `total_weight_kg`, `available_weight_kg`, `price_per_kg`, `notes`, `status`, `photo_url`, `weather_snapshot`, `soil_type`, `shade_trees`, `verification_status`, `verification_stamp`)
-        VALUES 
-        (:id, :fid, :fname, :farmid, :farmname, :loc, :alt, :var, :hdate, :pick, :brix, :tw, :aw, :price, :notes, :status, :photo, :wea, :soil, :shade, :vstatus, :stamp)
-        ON DUPLICATE KEY UPDATE 
-        `available_weight_kg`=:aw, `price_per_kg`=:price, `status`=:status, `notes`=:notes");
+    $isMysql = isMysqlConnection($pdo);
+
+    if ($isMysql) {
+        $stmt = $pdo->prepare("INSERT INTO `farmer_harvest_lots` 
+            (`id`, `farmer_id`, `farmer_name`, `farm_id`, `farm_name`, `farm_location`, `altitude`, `variety`, `harvest_date`, `picking_method`, `brix`, `total_weight_kg`, `available_weight_kg`, `price_per_kg`, `notes`, `status`, `photo_url`, `weather_snapshot`, `soil_type`, `shade_trees`, `verification_status`, `verification_stamp`)
+            VALUES 
+            (:id, :fid, :fname, :farmid, :farmname, :loc, :alt, :var, :hdate, :pick, :brix, :tw, :aw, :price, :notes, :status, :photo, :wea, :soil, :shade, :vstatus, :stamp)
+            ON DUPLICATE KEY UPDATE 
+            `available_weight_kg`=:aw, `price_per_kg`=:price, `status`=:status, `notes`=:notes");
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO `farmer_harvest_lots` 
+            (`id`, `farmer_id`, `farmer_name`, `farm_id`, `farm_name`, `farm_location`, `altitude`, `variety`, `harvest_date`, `picking_method`, `brix`, `total_weight_kg`, `available_weight_kg`, `price_per_kg`, `notes`, `status`, `photo_url`, `weather_snapshot`, `soil_type`, `shade_trees`, `verification_status`, `verification_stamp`)
+            VALUES 
+            (:id, :fid, :fname, :farmid, :farmname, :loc, :alt, :var, :hdate, :pick, :brix, :tw, :aw, :price, :notes, :status, :photo, :wea, :soil, :shade, :vstatus, :stamp)
+            ON CONFLICT(`id`) DO UPDATE SET 
+            `available_weight_kg`=:aw, `price_per_kg`=:price, `status`=:status, `notes`=:notes");
+    }
 
     $stmt->execute([
         'id'       => $id,

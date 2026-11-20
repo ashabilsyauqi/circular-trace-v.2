@@ -24,6 +24,11 @@ import {
   Printer,
   Lock,
   Globe,
+  Check,
+  X,
+  Mail,
+  Phone,
+  MapPin,
 } from 'lucide-react';
 import { OperationalService } from '../../types/coffee';
 
@@ -31,6 +36,7 @@ export const KelompokTaniDashboard: React.FC = () => {
   const {
     currentUser,
     users,
+    verifyUser,
     farmerLots,
     coffeeFarms,
     processingBatches,
@@ -42,6 +48,17 @@ export const KelompokTaniDashboard: React.FC = () => {
     transactions,
   } = useCoffee();
   const navigate = useNavigate();
+
+  // Permohonan pendaftaran anggota petani baru (menunggu verifikasi)
+  const pendingFarmers = users.filter((u) => {
+    const isPending = u.verificationStatus === 'pending';
+    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
+    const belongsToThisGroup =
+      !u.kelompokTaniId ||
+      u.kelompokTaniId === currentUser?.id ||
+      u.kelompokTaniName === (currentUser?.kelompokTaniName || currentUser?.organization);
+    return isPending && isFarmer && belongsToThisGroup;
+  });
 
   // Metrics calculations
   const totalFarmers = users.filter((u) => u.assignedService === 'petani' || u.role === 'petani').length;
@@ -163,6 +180,126 @@ export const KelompokTaniDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 1.2 Permohonan Anggota Petani Baru (Menunggu Verifikasi Kelompok Tani) */}
+      <div className="bg-white rounded-lg shadow-sm border border-stone-200 border-t-4 border-t-amber-500 p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-stone-100 gap-2 mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+              <UserPlus className="w-4 h-4 text-amber-700" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                <span>Permohonan Anggota Petani Baru</span>
+                {pendingFarmers.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-stone-950 animate-pulse">
+                    {pendingFarmers.length} Menunggu Verifikasi
+                  </span>
+                )}
+              </h3>
+              <p className="text-[11px] text-stone-500">
+                Persetujuan keanggotaan petani di bawah naungan {currentUser?.organization || 'Kelompok Tani'}.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/admin/users"
+            className="text-xs font-bold text-amber-800 hover:text-amber-950 flex items-center gap-1 self-start sm:self-auto"
+          >
+            <span>Buka Semua Users</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {pendingFarmers.length === 0 ? (
+          <div className="p-6 text-center bg-stone-50 rounded-lg border border-dashed border-stone-200">
+            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+            <p className="text-xs font-bold text-stone-700">Semua Anggota Petani Telah Terverifikasi</p>
+            <p className="text-[11px] text-stone-500 mt-0.5">
+              Tidak ada permohonan pendaftaran anggota petani baru yang tertunda saat ini.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {pendingFarmers.map((farmer) => (
+              <div
+                key={farmer.id}
+                className="p-4 rounded-xl bg-amber-50/40 border border-amber-200/90 flex flex-col md:flex-row md:items-center justify-between gap-4"
+              >
+                <div className="flex items-start gap-3.5">
+                  <img
+                    src={farmer.avatar}
+                    alt={farmer.name}
+                    className="w-11 h-11 rounded-full object-cover border-2 border-amber-400 shrink-0"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-black text-stone-900">{farmer.name}</span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200/80 text-amber-900 border border-amber-300 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        <span>Menunggu Verifikasi</span>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-stone-600">
+                      <div className="flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                        <span>{farmer.email || 'Email belum diisi'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                        <span>{farmer.phone || '0812-xxxx-xxxx'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                        <span>{farmer.location || farmer.village || 'Pangalengan, Jawa Barat'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Sprout className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Lahan: {farmer.totalLandAreaHa ? `${farmer.totalLandAreaHa} Ha` : 'Estimasi 1-2 Ha'}</span>
+                      </div>
+                    </div>
+
+                    {farmer.bio && (
+                      <p className="text-[11px] text-stone-500 italic mt-1 line-clamp-1">
+                        &ldquo;{farmer.bio}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm(`Setujui & verifikasi petani ${farmer.name}?`)) {
+                        verifyUser(farmer.id, true, 'Disetujui dan diverifikasi oleh Ketua Kelompok Tani');
+                      }
+                    }}
+                    className="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>Setujui &amp; Verifikasi Petani</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const reason = prompt(`Masukkan alasan penolakan untuk ${farmer.name}:`, 'Data identitas belum lengkap');
+                      if (reason !== null) {
+                        verifyUser(farmer.id, false, reason || 'Ditolak oleh Ketua Kelompok Tani');
+                      }
+                    }}
+                    className="px-3 py-2 rounded-lg bg-stone-100 hover:bg-rose-50 text-stone-600 hover:text-rose-700 border border-stone-300 hover:border-rose-300 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Tolak</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 2. AdminLTE Classic Small-Boxes (Scope Kelompok Tani: Petani, Pengolah & Saluran Distribusi) */}

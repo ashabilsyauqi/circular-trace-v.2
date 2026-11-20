@@ -71,13 +71,23 @@ if ($method === 'GET') {
 if ($method === 'POST') {
     $data = getJsonInput();
 
+    $isMysql = isMysqlConnection($pdo);
+
     if ($type === 'inventory') {
         $id = $data['id'] ?? ('INV-CF-' . strtoupper(substr(uniqid(), -6)));
-        $stmt = $pdo->prepare("INSERT INTO `cafe_inventory` 
-            (`id`, `cafe_id`, `cafe_name`, `source_roasted_bean_id`, `bean_name`, `roaster_name`, `origin`, `variety`, `process_method`, `roast_level`, `tasting_notes`, `sca_score`, `pack_weight_grams`, `packs_in_stock`, `purchase_date`, `cost_per_pack`, `lineage`)
-            VALUES 
-            (:id, :cid, :cname, :srb, :bname, :rname, :orig, :var, :pmethod, :rlevel, :tnotes, :sca, :pwt, :packs, :pdate, :cost, :lineage)
-            ON DUPLICATE KEY UPDATE `packs_in_stock`=:packs");
+        if ($isMysql) {
+            $stmt = $pdo->prepare("INSERT INTO `cafe_inventory` 
+                (`id`, `cafe_id`, `cafe_name`, `source_roasted_bean_id`, `bean_name`, `roaster_name`, `origin`, `variety`, `process_method`, `roast_level`, `tasting_notes`, `sca_score`, `pack_weight_grams`, `packs_in_stock`, `purchase_date`, `cost_per_pack`, `lineage`)
+                VALUES 
+                (:id, :cid, :cname, :srb, :bname, :rname, :orig, :var, :pmethod, :rlevel, :tnotes, :sca, :pwt, :packs, :pdate, :cost, :lineage)
+                ON DUPLICATE KEY UPDATE `packs_in_stock`=:packs");
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO `cafe_inventory` 
+                (`id`, `cafe_id`, `cafe_name`, `source_roasted_bean_id`, `bean_name`, `roaster_name`, `origin`, `variety`, `process_method`, `roast_level`, `tasting_notes`, `sca_score`, `pack_weight_grams`, `packs_in_stock`, `purchase_date`, `cost_per_pack`, `lineage`)
+                VALUES 
+                (:id, :cid, :cname, :srb, :bname, :rname, :orig, :var, :pmethod, :rlevel, :tnotes, :sca, :pwt, :packs, :pdate, :cost, :lineage)
+                ON CONFLICT(`id`) DO UPDATE SET `packs_in_stock`=:packs");
+        }
         $stmt->execute([
             'id'      => $id,
             'cid'     => $data['cafeId'] ?? '',
@@ -102,12 +112,21 @@ if ($method === 'POST') {
 
     // Default: Add product
     $id = $data['id'] ?? ('PROD-CF-' . strtoupper(substr(uniqid(), -6)));
-    $stmt = $pdo->prepare("INSERT INTO `cafe_products` 
-        (`id`, `cafe_id`, `cafe_name`, `name`, `origin`, `variety`, `roast_level`, `tasting_notes`, `price`, `package_unit`, `total_stock`, `available_stock`, `description`, `photo_url`)
-        VALUES 
-        (:id, :cid, :cname, :name, :orig, :var, :rlevel, :tnotes, :price, :punit, :tstock, :astock, :desc, :photo)
-        ON DUPLICATE KEY UPDATE 
-        `available_stock`=:astock, `price`=:price, `description`=:desc");
+    if ($isMysql) {
+        $stmt = $pdo->prepare("INSERT INTO `cafe_products` 
+            (`id`, `cafe_id`, `cafe_name`, `name`, `origin`, `variety`, `roast_level`, `tasting_notes`, `price`, `package_unit`, `total_stock`, `available_stock`, `description`, `photo_url`)
+            VALUES 
+            (:id, :cid, :cname, :name, :orig, :var, :rlevel, :tnotes, :price, :punit, :tstock, :astock, :desc, :photo)
+            ON DUPLICATE KEY UPDATE 
+            `available_stock`=:astock, `price`=:price, `description`=:desc");
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO `cafe_products` 
+            (`id`, `cafe_id`, `cafe_name`, `name`, `origin`, `variety`, `roast_level`, `tasting_notes`, `price`, `package_unit`, `total_stock`, `available_stock`, `description`, `photo_url`)
+            VALUES 
+            (:id, :cid, :cname, :name, :orig, :var, :rlevel, :tnotes, :price, :punit, :tstock, :astock, :desc, :photo)
+            ON CONFLICT(`id`) DO UPDATE SET 
+            `available_stock`=:astock, `price`=:price, `description`=:desc");
+    }
 
     $stmt->execute([
         'id'     => $id,

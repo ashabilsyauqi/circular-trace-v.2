@@ -38,6 +38,7 @@ import { FarmerLedgerPage } from './pages/admin/FarmerLedgerPage';
 import { IctVerificationPage } from './pages/admin/IctVerificationPage';
 import { IcsAuditSheetPage } from './pages/admin/IcsAuditSheetPage';
 import { CtFarmCertificationDashboardPage } from './pages/admin/ict/CtFarmCertificationDashboardPage';
+import { IctGreenBeanAuditPage } from './pages/admin/ict/IctGreenBeanAuditPage';
 import { WarehouseInventoryPage } from './pages/admin/gudang/WarehouseInventoryPage';
 import { WarehouseSortingSheetPage } from './pages/admin/gudang/WarehouseSortingSheetPage';
 import { WarehouseSourcingPage } from './pages/admin/gudang/WarehouseSourcingPage';
@@ -48,6 +49,8 @@ import { RoasterSourcingPage } from './pages/admin/roaster/RoasterSourcingPage';
 import { MarketplaceSellerPanelPage } from './pages/admin/seller/MarketplaceSellerPanelPage';
 import { StakeholderFormsPage } from './pages/admin/forms/StakeholderFormsPage';
 import { BukuTransaksiPage } from './pages/admin/transaksi/BukuTransaksiPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
+import { PlatformPackagesPage } from './pages/admin/superadmin/PlatformPackagesPage';
 
 /**
  * Public Layout holding top Navbar + Outlet + bottom Footer
@@ -173,6 +176,7 @@ export const AppRoutes: React.FC = () => {
 
       {/* 2. Standalone Public Pages */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/trace/:lotId?" element={<PublicTraceRoute />} />
 
       {/* 3. Admin Panel (AdminLTE 3 Layout Style) */}
@@ -180,6 +184,10 @@ export const AppRoutes: React.FC = () => {
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<KelompokTaniDashboard />} />
         <Route path="users" element={<MasterUsersView />} />
+
+        {/* Modul Super Admin SaaS: Manajemen Paket Layanan & Harga Fitur */}
+        <Route path="superadmin/packages" element={<PlatformPackagesPage />} />
+        <Route path="packages" element={<Navigate to="/admin/superadmin/packages" replace />} />
 
         {/* Buku Transaksi: Rekapitulasi Penjualan Berhasil Marketplace */}
         <Route path="transaksi" element={<BukuTransaksiPage />} />
@@ -210,6 +218,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="ict/ct-dashboard/:farmId" element={<CtFarmCertificationDashboardPage />} />
         <Route path="ict/audit" element={<IcsAuditSheetPage />} />
         <Route path="ict/audit/:targetType/:targetId" element={<IcsAuditSheetPage />} />
+        <Route path="ict/audit-olahan" element={<IctGreenBeanAuditPage />} />
+        <Route path="ict/olahan" element={<IctGreenBeanAuditPage />} />
 
         {/* Layanan Stasiun Operasional Lainnya */}
         <Route path="pengolah" element={<ProcessorView />} />

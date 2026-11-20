@@ -293,6 +293,35 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                     </Link>
                   </>
                 );
+              case 'super_admin':
+                return (
+                  <>
+                    <Link
+                      to="/admin/superadmin/packages"
+                      className="hover:text-purple-800 transition-colors font-bold text-purple-900 bg-purple-100/70 px-2.5 py-1 rounded-md border border-purple-300"
+                    >
+                      Katalog Paket Layanan SaaS
+                    </Link>
+                    <Link
+                      to="/admin/users"
+                      className="hover:text-stone-900 transition-colors"
+                    >
+                      Master Users
+                    </Link>
+                    <Link
+                      to="/admin/transaksi"
+                      className="hover:text-stone-900 transition-colors"
+                    >
+                      Buku Transaksi
+                    </Link>
+                    <Link
+                      to="/admin/overview"
+                      className="hover:text-stone-900 transition-colors"
+                    >
+                      Control Tower
+                    </Link>
+                  </>
+                );
               case 'admin_kelompok_tani':
               default:
                 return (

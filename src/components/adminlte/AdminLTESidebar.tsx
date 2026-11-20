@@ -70,21 +70,24 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   const userRole = currentUser?.role;
   const isAdminKelompok = userRole === 'admin_kelompok_tani';
   const isVerifikator = userRole === 'verifikator';
+  const isSuperAdmin = userRole === 'super_admin';
 
   // Role-based visibility gates: outside Kelompok Tani only see their specific service
   // Scope Kelompok Tani HANYA terdiri dari: 1. Petani, 2. Pengolah, 3. Petugas ICS
   const canSeePusatKendali = isAdminKelompok;
-  const canSeePetani = (isAdminKelompok || userRole === 'petani' || userRole === 'ict') && !isVerifikator;
-  const canSeePengolah = (isAdminKelompok || userRole === 'pengolah') && !isVerifikator;
+  const canSeePetani = (isAdminKelompok || userRole === 'petani' || userRole === 'ict') && !isVerifikator && !isSuperAdmin;
+  const canSeePengolah = (isAdminKelompok || userRole === 'pengolah') && !isVerifikator && !isSuperAdmin;
   const canSeeGudang = userRole === 'gudang';
   const canSeeRoaster = userRole === 'roaster';
   const canSeeCafe = userRole === 'cafe';
-  const canSeeIct = (isAdminKelompok || userRole === 'ict') && !isVerifikator;
+  const canSeeIct = (isAdminKelompok || userRole === 'ict') && !isVerifikator && !isSuperAdmin;
   const canSeeVerifikator = isVerifikator;
-  const canSeeSeller = (isAdminKelompok || userRole === 'roaster' || userRole === 'gudang' || userRole === 'pengolah' || userRole === 'petani') && !isVerifikator;
+  const canSeeSeller = (isAdminKelompok || userRole === 'roaster' || userRole === 'gudang' || userRole === 'pengolah' || userRole === 'petani') && !isVerifikator && !isSuperAdmin;
 
   const getHomePath = () => {
     switch (userRole) {
+      case 'super_admin':
+        return '/admin/superadmin/packages';
       case 'roaster':
         return '/admin/roaster/inventory';
       case 'gudang':
@@ -105,6 +108,9 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   };
 
   const getBrandSubtitle = () => {
+    if (isSuperAdmin) {
+      return 'Super Admin / Platform Owner';
+    }
     if (isAdminKelompok) {
       return 'Admin Kelompok Tani';
     }
@@ -113,6 +119,8 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
   const getBrandIcon = () => {
     switch (userRole) {
+      case 'super_admin':
+        return <ShieldAlert className="w-5 h-5 text-stone-950" />;
       case 'roaster':
         return <Flame className="w-5 h-5 text-stone-950" />;
       case 'gudang':
@@ -133,6 +141,8 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
   const getSectionTitle = () => {
     switch (userRole) {
+      case 'super_admin':
+        return 'PORTAL SUPER ADMIN SAAS';
       case 'roaster':
         return 'Layanan Roastery (ERP)';
       case 'gudang':
@@ -220,6 +230,92 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
       {/* 4. Sidebar Navigation Menus */}
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-4 text-xs font-medium">
+        {/* SECTION: KHUSUS SUPER ADMIN / PLATFORM OWNER */}
+        {isSuperAdmin && (
+          <div>
+            {!isCollapsed && (
+              <div className="px-3 py-1 text-[10px] font-bold text-purple-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Platform Super Admin</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800 font-bold">
+                  SaaS Owner
+                </span>
+              </div>
+            )}
+
+            <div className="space-y-1 mt-1">
+              <NavLink
+                to="/admin/superadmin/packages"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-purple-600 text-white font-bold shadow-xs'
+                      : 'text-purple-200 hover:bg-[#494e53] hover:text-white'
+                  }`
+                }
+                title="Master Paket Layanan & Harga"
+              >
+                <Package className="w-4 h-4 text-purple-400 shrink-0" />
+                {!isCollapsed && <span className="flex-1 truncate">Paket Layanan &amp; Harga</span>}
+                {!isCollapsed && (
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-900/80 text-purple-200 font-bold border border-purple-700/60">
+                    Komersial
+                  </span>
+                )}
+              </NavLink>
+
+              <NavLink
+                to="/admin/users"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-purple-600 text-white font-bold shadow-xs'
+                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                  }`
+                }
+                title="Master Pengguna Platform"
+              >
+                <Users className="w-4 h-4 text-purple-400 shrink-0" />
+                {!isCollapsed && <span className="flex-1 truncate">Master Users</span>}
+                {!isCollapsed && (
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-700 text-white font-bold">
+                    {users.length}
+                  </span>
+                )}
+              </NavLink>
+
+              <NavLink
+                to="/admin/transaksi"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-purple-600 text-white font-bold shadow-xs'
+                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                  }`
+                }
+                title="Buku Transaksi Marketplace"
+              >
+                <History className="w-4 h-4 text-purple-400 shrink-0" />
+                {!isCollapsed && <span className="flex-1 truncate">Buku Transaksi</span>}
+              </NavLink>
+
+              <NavLink
+                to="/admin/overview"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-purple-600 text-white font-bold shadow-xs'
+                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                  }`
+                }
+                title="Control Tower Ekosistem"
+              >
+                <LayoutDashboard className="w-4 h-4 text-purple-400 shrink-0" />
+                {!isCollapsed && <span className="flex-1 truncate">Control Tower</span>}
+              </NavLink>
+            </div>
+          </div>
+        )}
+
         {/* SECTION: UTAMA (KHUSUS ADMIN KELOMPOK TANI) */}
         {canSeePusatKendali && (
           <div>
@@ -266,6 +362,26 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 {!isCollapsed && (
                   <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-700 text-white font-bold">
                     {users.length}
+                  </span>
+                )}
+              </NavLink>
+
+              <NavLink
+                to="/admin/superadmin/packages"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-amber-600 text-white font-bold shadow-xs'
+                      : 'text-purple-300 hover:bg-[#494e53] hover:text-white'
+                  }`
+                }
+                title="Paket Layanan SaaS & Lisensi Fitur"
+              >
+                <Package className="w-4 h-4 text-purple-400 shrink-0" />
+                {!isCollapsed && <span className="flex-1 truncate">Paket Layanan SaaS</span>}
+                {!isCollapsed && (
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-900/60 text-purple-200 font-bold border border-purple-700/40">
+                    Lisensi
                   </span>
                 )}
               </NavLink>
@@ -869,6 +985,14 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         label: 'Lembar Kerja Audit Lapangan',
                         icon: ClipboardCheck,
                         isActive: location.pathname === '/admin/ict/audit',
+                      },
+                      {
+                        to: '/admin/ict/audit-olahan',
+                        label: 'Verifikasi Olahan Green Bean',
+                        icon: Coffee,
+                        badge: `${processedLots.filter((p) => !p.ics_verification_status || p.ics_verification_status === 'pending' || p.ics_verification_status === 'unverified').length} Lot`,
+                        badgeClass: 'bg-teal-700 text-white font-bold',
+                        isActive: location.pathname === '/admin/ict/audit-olahan' || location.pathname === '/admin/ict/olahan',
                       },
                       {
                         to: '/admin/ict/blanko',

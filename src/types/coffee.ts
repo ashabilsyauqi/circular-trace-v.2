@@ -2,7 +2,7 @@ import type { CtCertificationSnapshot } from '../services/ct4ci/types';
 
 export type OperationalService = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe';
 
-export type UserRole = OperationalService | 'admin_kelompok_tani' | 'verifikator' | 'ict';
+export type UserRole = OperationalService | 'admin_kelompok_tani' | 'verifikator' | 'ict' | 'super_admin';
 
 export type VerifierDomain = 'petani' | 'pengolah' | 'gudang' | 'roaster' | 'cafe' | 'all';
 
@@ -49,6 +49,9 @@ export interface AppUser {
   verifiedBy?: string;
   verifiedAt?: string;
   verificationNotes?: string;
+  isEmailVerified?: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpiresAt?: string;
 }
 
 // Evaluasi Uji Sensori Cupping SCA oleh Verifikator / Q-Grader
@@ -295,8 +298,29 @@ export interface ProcessedGreenBeanLot {
   wasteManagement?: CoffeeWasteManagement;
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationStamp?: VerificationStamp;
+  // Verifikasi Mutu Olahan oleh Petugas ICS Kelompok Tani (Paket 3)
+  ics_verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  ics_verifier_id?: string;
+  ics_verified_at?: string;
+  ics_notes?: string;
+  ics_stamp_id?: string;
+  ics_inspected_moisture?: number; // % MC
+  ics_inspected_defect?: number; // Nilai defect fisik per 350g
+  ics_inspected_method_match?: boolean; // Kesesuaian metode olah
+  ics_inspected_water_activity?: number; // Aw
+  ics_inspected_yield_ratio?: number; // % Rendemen
   marketplaceTitle?: string;
   marketplaceDescription?: string;
+}
+
+// Lembar Inspeksi Mutu Olahan Green Bean oleh Petugas ICS
+export interface ProcessedLotIcsInspectionData {
+  moistureContentPercent?: number; // Kadar air % MC (standar 10-12%)
+  defectCount?: number; // Nilai defect fisik per 350g
+  processMethodMatch?: boolean; // Kesesuaian metode olah dengan standar
+  waterActivityAw?: number; // Water activity Aw (standar 0.50-0.65)
+  yieldRatioPercent?: number; // % Rendemen olahan
+  notes: string; // Catatan audit mutu lapangan
 }
 
 // Model Pengelolaan & Pemanfaatan Limbah Kopi
@@ -624,4 +648,56 @@ export interface PublishProductPayload {
   tastingNotes?: string[];
   recommendedBrew?: string[];
 }
+
+// =============================================================================
+// PAKET LAYANAN SAAS (Platform Commercial Service Packages)
+// =============================================================================
+
+export type PackageTargetRole = 'admin_kelompok_tani' | 'roaster' | 'gudang' | 'cafe' | 'all';
+
+export type PackageStatus = 'active' | 'archived';
+
+export interface PackageFeatureFlags {
+  quotaLots?: string | number;
+  quotaQrBarcodes?: string | number;
+  eudrPolygon?: boolean;
+  aiCuppingRadar?: boolean;
+  marketplaceAccess?: boolean;
+  warehouseHermeticQa?: boolean;
+  apiIntegration?: boolean;
+  customBrandingLogo?: boolean;
+  dedicatedSupport?: boolean;
+  [key: string]: any;
+}
+
+export interface PackageFeatureItem {
+  code: string;
+  name: string;
+  category: 'quota' | 'module' | 'integration' | 'support';
+  enabled: boolean;
+  value?: string | number;
+  description?: string;
+}
+
+export interface ServicePackage {
+  id: string;
+  name: string;
+  targetRole: PackageTargetRole;
+  target_role?: PackageTargetRole;
+  priceMonthly: number;
+  price_monthly?: number;
+  priceYearly: number;
+  price_yearly?: number;
+  discountPercent: number;
+  discount_percent?: number;
+  featuresJson: PackageFeatureFlags;
+  features_json?: PackageFeatureFlags;
+  isPopular: boolean;
+  is_popular?: boolean;
+  status: PackageStatus;
+  subscribersCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 

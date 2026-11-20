@@ -8,6 +8,7 @@ import {
   Coffee,
   ShieldCheck,
   Building2,
+  ShieldAlert,
 } from 'lucide-react';
 
 export const ACTIVE_OPERATIONAL_SERVICES: OperationalService[] = [
@@ -77,5 +78,11 @@ export const ROLE_DETAILS: Record<
     badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
     icon: <ShieldCheck className="w-4 h-4 text-blue-600" />,
     description: 'Petugas ICS Kelompok Tani: Verifikasi data NIK/KTA petani, peta poligon EUDR kebun, & inspeksi mutu ceri',
+  },
+  super_admin: {
+    label: 'Super Admin CircularTrace',
+    badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
+    icon: <ShieldAlert className="w-4 h-4 text-purple-700" />,
+    description: 'Pengelola Ekosistem SaaS CircularTrace: Master Paket Layanan, Konfigurasi Lisensi, & Harga Fitur',
   },
 };

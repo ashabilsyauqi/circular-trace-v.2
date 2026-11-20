@@ -5,6 +5,7 @@
 -- ==============================================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS `service_packages`;
 DROP TABLE IF EXISTS `verification_stamps`;
 DROP TABLE IF EXISTS `supply_chain_transactions`;
 DROP TABLE IF EXISTS `cafe_products`;
@@ -28,7 +29,7 @@ CREATE TABLE `users` (
   `name` VARCHAR(150) NOT NULL,
   `email` VARCHAR(191) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
-  `role` ENUM('petani', 'pengolah', 'gudang', 'roaster', 'cafe', 'verifikator') NOT NULL,
+  `role` ENUM('petani', 'pengolah', 'gudang', 'roaster', 'cafe', 'verifikator', 'admin_kelompok_tani', 'ict', 'super_admin') NOT NULL,
   `verifier_domain` VARCHAR(50) DEFAULT NULL,
   `organization` VARCHAR(200) NOT NULL,
   `location` VARCHAR(255) NOT NULL,
@@ -42,6 +43,9 @@ CREATE TABLE `users` (
   `verified_by` VARCHAR(150) DEFAULT NULL,
   `verified_at` TIMESTAMP NULL DEFAULT NULL,
   `verification_notes` TEXT DEFAULT NULL,
+  `email_verification_token` VARCHAR(64) DEFAULT NULL,
+  `email_verification_expires_at` DATETIME DEFAULT NULL,
+  `is_email_verified` TINYINT(1) DEFAULT 0,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -180,6 +184,14 @@ CREATE TABLE `processed_green_bean_lots` (
   `waste_management` JSON DEFAULT NULL,
   `verification_status` ENUM('unverified', 'pending', 'verified', 'rejected') DEFAULT 'verified',
   `verification_stamp` JSON DEFAULT NULL,
+  `ics_verification_status` ENUM('unverified', 'pending', 'verified', 'rejected') DEFAULT 'pending',
+  `ics_verifier_id` VARCHAR(64) DEFAULT NULL,
+  `ics_verified_at` DATETIME DEFAULT NULL,
+  `ics_notes` TEXT DEFAULT NULL,
+  `ics_stamp_id` VARCHAR(64) DEFAULT NULL,
+  `ics_inspected_moisture` DECIMAL(4, 1) DEFAULT NULL,
+  `ics_inspected_defect` INT DEFAULT NULL,
+  `ics_inspected_method_match` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -416,4 +428,25 @@ CREATE TABLE `verification_stamps` (
   KEY `idx_stamps_verifier_id` (`verifier_id`),
   KEY `idx_stamps_cert_num` (`certificate_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 13. SERVICE PACKAGES (Katalog Paket Layanan SaaS & Lisensi Fitur CircularTrace)
+-- -----------------------------------------------------------------------------
+CREATE TABLE `service_packages` (
+  `id` VARCHAR(64) NOT NULL,
+  `name` VARCHAR(150) NOT NULL,
+  `target_role` ENUM('admin_kelompok_tani', 'roaster', 'gudang', 'cafe', 'all') NOT NULL DEFAULT 'all',
+  `price_monthly` DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+  `price_yearly` DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+  `discount_percent` INT DEFAULT 0,
+  `features_json` JSON DEFAULT NULL,
+  `is_popular` TINYINT(1) DEFAULT 0,
+  `status` ENUM('active', 'archived') NOT NULL DEFAULT 'active',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_packages_role` (`target_role`),
+  KEY `idx_packages_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 

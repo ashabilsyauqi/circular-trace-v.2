@@ -154,6 +154,32 @@ export const cctApi = {
   trace: {
     lookup: (code: string) => request<any>(`/trace.php?code=${encodeURIComponent(code)}`),
   },
+
+  // 10. Service Packages (Super Admin SaaS Management)
+  packages: {
+    getAll: (params?: { target_role?: string; status?: string }) => {
+      const q = new URLSearchParams();
+      if (params?.target_role) q.append('target_role', params.target_role);
+      if (params?.status) q.append('status', params.status);
+      const qs = q.toString() ? `?${q.toString()}` : '';
+      return request<any[]>(`/packages.php${qs}`);
+    },
+    getById: (id: string) => request<any>(`/packages.php?id=${encodeURIComponent(id)}`),
+    save: (pkg: any) =>
+      request<{ package: any; message: string }>('/packages.php', {
+        method: 'POST',
+        body: JSON.stringify(pkg),
+      }),
+    update: (pkg: any) =>
+      request<{ package: any; message: string }>('/packages.php', {
+        method: 'PUT',
+        body: JSON.stringify(pkg),
+      }),
+    delete: (id: string, permanent: boolean = false) =>
+      request<{ message: string }>(`/packages.php?id=${encodeURIComponent(id)}${permanent ? '&permanent=1' : ''}`, {
+        method: 'DELETE',
+      }),
+  },
 };
 
 export default cctApi;

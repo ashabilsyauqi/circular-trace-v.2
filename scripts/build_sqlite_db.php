@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS users (
   verified_by TEXT DEFAULT NULL,
   verified_at DATETIME DEFAULT NULL,
   verification_notes TEXT DEFAULT NULL,
+  email_verification_token TEXT DEFAULT NULL,
+  email_verification_expires_at DATETIME DEFAULT NULL,
+  is_email_verified INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -157,6 +160,14 @@ CREATE TABLE IF NOT EXISTS processed_green_bean_lots (
   waste_management TEXT DEFAULT NULL,
   verification_status TEXT DEFAULT 'verified',
   verification_stamp TEXT DEFAULT NULL,
+  ics_verification_status TEXT DEFAULT 'pending',
+  ics_verifier_id TEXT DEFAULT NULL,
+  ics_verified_at DATETIME DEFAULT NULL,
+  ics_notes TEXT DEFAULT NULL,
+  ics_stamp_id TEXT DEFAULT NULL,
+  ics_inspected_moisture REAL DEFAULT NULL,
+  ics_inspected_defect INTEGER DEFAULT NULL,
+  ics_inspected_method_match INTEGER DEFAULT 1,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -342,6 +353,20 @@ CREATE TABLE IF NOT EXISTS verification_stamps (
   digital_signature_hash TEXT NOT NULL,
   cupping_evaluation TEXT DEFAULT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS service_packages (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  target_role TEXT NOT NULL DEFAULT 'all',
+  price_monthly REAL NOT NULL DEFAULT 0.00,
+  price_yearly REAL NOT NULL DEFAULT 0.00,
+  discount_percent INTEGER DEFAULT 0,
+  features_json TEXT DEFAULT '{}',
+  is_popular INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'active',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 SQL;
 

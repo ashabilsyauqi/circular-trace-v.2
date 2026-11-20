@@ -415,6 +415,26 @@ const idServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Format Stempel', value: 'Digital Integrity Seal Validated' },
     ],
   },
+  super_admin: {
+    badge: 'Super Admin',
+    title: 'Manajemen Layanan & Bisnis CircularTrace',
+    desc: 'Pengaturan paket langganan SaaS, kuota fitur per role, harga aktivasi, dan lisensi ekosistem komersial.',
+    bullets: [
+      'Konfigurasi paket langganan dan penetapan harga bulanan/tahunan.',
+      'Pengaturan batasan kuota fitur (EUDR, AI Sensory, Integrasi API).',
+      'Pemantauan status langganan dan analitik konversi pengguna.',
+    ],
+    ctaOpen: 'Buka Admin Panel',
+    ctaRegister: 'Hubungi Sales',
+    previewTitle: 'Super Admin Control',
+    previewRows: [
+      { label: 'Status Lisensi', value: 'Platform Master Active' },
+      { label: 'Paket Terbit', value: '4 Paket Aktif' },
+      { label: 'Tingkat Kepatuhan', value: 'EUDR & ISO 22000' },
+      { label: 'API Gateway', value: 'Production Connected' },
+      { label: 'SLA Uptime', value: '99.98%' },
+    ],
+  },
 };
 
 const enServicePanels: Record<UserRole, ServicePanel> = {
@@ -575,7 +595,27 @@ const enServicePanels: Record<UserRole, ServicePanel> = {
       { label: 'Verification Scope', value: 'Farmer Data, Farm Plots, Cherry Lots' },
       { label: 'Compliance Standard', value: 'EUDR Deforestation-Free & Organic SNI' },
       { label: 'Fresh Cherry Standard', value: 'Brix ≥ 18°Bx • Red Picked 95%+' },
-      { label: 'Stamp Format', value: 'Digital Integrity Seal Validated' },
+      { label: 'Format Stamp', value: 'Digital Integrity Seal Validated' },
+    ],
+  },
+  super_admin: {
+    badge: 'Super Admin',
+    title: 'CircularTrace SaaS & Service Packages Management',
+    desc: 'SaaS subscription package configuration, feature quotas per role, pricing tiers, and commercial ecosystem licensing.',
+    bullets: [
+      'Subscription plan setup and monthly/yearly pricing.',
+      'Feature quota control (EUDR Polygon, AI Sensory, API Integration).',
+      'Subscription monitoring and commercial conversion analytics.',
+    ],
+    ctaOpen: 'Open Admin Panel',
+    ctaRegister: 'Contact Sales',
+    previewTitle: 'Super Admin Control',
+    previewRows: [
+      { label: 'License Status', value: 'Platform Master Active' },
+      { label: 'Published Plans', value: '4 Active Packages' },
+      { label: 'Compliance Level', value: 'EUDR & ISO 22000' },
+      { label: 'API Gateway', value: 'Production Connected' },
+      { label: 'SLA Uptime', value: '99.98%' },
     ],
   },
 };

@@ -586,7 +586,16 @@ export const LoginPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 font-mono text-stone-600">
                 <button
                   type="button"
-                  onClick={() => { setEmail('admin.gapoktan@sangrai.id'); setPassword('password123'); }}
+                  onClick={() => { setEmail('superadmin@circulartrace.id'); setPassword('password123'); }}
+                  className="text-left hover:text-purple-900 font-bold text-purple-700 transition-colors cursor-pointer truncate bg-purple-50/90 px-1.5 py-1 rounded border border-purple-200 col-span-2 flex items-center justify-between"
+                  title="Klik untuk mengisi formulir login sebagai Super Admin Platform (Paket Layanan SaaS)"
+                >
+                  <span>⭐ Super Admin: superadmin@circulartrace.id</span>
+                  <span className="text-[9px] bg-purple-200/80 px-1 rounded text-purple-950 font-sans font-bold">Paket SaaS</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('admin.gapoktan@circularcoffee.id'); setPassword('password123'); }}
                   className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
                   title="Klik untuk mengisi formulir login sebagai Admin Kelompok Tani"
                 >

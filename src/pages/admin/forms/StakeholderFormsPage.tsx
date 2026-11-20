@@ -68,9 +68,9 @@ export const StakeholderFormsPage: React.FC<StakeholderFormsPageProps> = ({ defa
   const meta = FORM_META[activeFormType];
 
   return (
-    <div className="space-y-5 pb-16 print:p-0 print:m-0">
+    <div className="space-y-5 pb-16 print:p-0 print:m-0 print:space-y-0 print:pb-0">
       {/* 1. Header Banner (AdminLTE Style - Hidden on Print) */}
-      <div className="bg-white rounded-lg shadow-xs border border-[#d2d6de] p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+      <div className="bg-white rounded-lg shadow-xs border border-[#d2d6de] p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden no-print">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black shadow-xs shrink-0">
             {meta.icon}

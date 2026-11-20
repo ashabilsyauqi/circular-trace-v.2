@@ -20,6 +20,8 @@ export const AdminLTELayout: React.FC = () => {
 
   const getHomePath = () => {
     switch (userRole) {
+      case 'super_admin':
+        return '/admin/superadmin/packages';
       case 'roaster':
         return '/admin/roaster/inventory';
       case 'gudang':
@@ -40,7 +42,7 @@ export const AdminLTELayout: React.FC = () => {
   };
 
   const isPathAllowed = (path: string): boolean => {
-    if (!userRole || userRole === 'admin_kelompok_tani') return true;
+    if (!userRole || userRole === 'admin_kelompok_tani' || userRole === 'super_admin') return true;
     if (path.startsWith('/admin/transaksi')) return true;
     if (path.startsWith('/admin/forms') || path.includes('/blanko')) return true;
     if (path.startsWith('/admin/seller')) {
@@ -90,6 +92,8 @@ export const AdminLTELayout: React.FC = () => {
 
     const rootBreadcrumb = (() => {
       switch (userRole) {
+        case 'super_admin':
+          return { label: 'CircularTrace SaaS HQ', path: '/admin/superadmin/packages' };
         case 'roaster':
           return { label: currentUser.organization || 'Roastery ERP', path: '/admin/roaster/inventory' };
         case 'gudang':
@@ -385,6 +389,13 @@ export const AdminLTELayout: React.FC = () => {
         breadcrumbs: [rootBreadcrumb, { label: 'Blanko Formulir (A4)' }],
       };
     }
+    if (path.startsWith('/admin/superadmin')) {
+      return {
+        title: 'Super Admin - Manajemen Layanan SaaS & Billing',
+        subtitle: 'Konfigurasi paket tiering langganan, fitur per service, kuota, dan harga jual Circular Coffee Trace.',
+        breadcrumbs: [rootBreadcrumb, { label: 'Paket & Layanan' }],
+      };
+    }
 
     // Default: Overview for Admin Kelompok Tani
     return {
@@ -421,33 +432,41 @@ export const AdminLTELayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#f4f6f9] font-sans antialiased text-[#212529]">
-      {/* 1. AdminLTE Dark Sidebar */}
-      <AdminLTESidebar isCollapsed={isSidebarCollapsed} />
+    <div className="min-h-screen flex bg-[#f4f6f9] font-sans antialiased text-[#212529] print:bg-white print:block">
+      {/* 1. AdminLTE Dark Sidebar (Hidden on Print) */}
+      <div className="print:hidden no-print">
+        <AdminLTESidebar isCollapsed={isSidebarCollapsed} />
+      </div>
 
       {/* 2. Main Column: Navbar + Content + Footer */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Navbar */}
-        <AdminLTENavbar
-          onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          isSidebarCollapsed={isSidebarCollapsed}
-        />
+      <div className="flex-1 flex flex-col min-w-0 print:w-full print:max-w-none print:p-0 print:m-0 print:block">
+        {/* Top Navbar (Hidden on Print) */}
+        <div className="print:hidden no-print">
+          <AdminLTENavbar
+            onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            isSidebarCollapsed={isSidebarCollapsed}
+          />
+        </div>
 
-        {/* Dynamic Content Header & Breadcrumbs */}
-        <AdminLTEContentHeader
-          title={headerMeta.title}
-          subtitle={headerMeta.subtitle}
-          breadcrumbs={headerMeta.breadcrumbs}
-          homePath={getHomePath()}
-        />
+        {/* Dynamic Content Header & Breadcrumbs (Hidden on Print) */}
+        <div className="print:hidden no-print">
+          <AdminLTEContentHeader
+            title={headerMeta.title}
+            subtitle={headerMeta.subtitle}
+            breadcrumbs={headerMeta.breadcrumbs}
+            homePath={getHomePath()}
+          />
+        </div>
 
         {/* Content Body (AdminLTE #f4f6f9 Canvas) */}
-        <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto print:p-0 print:m-0 print:max-w-none print:w-full print:bg-white print:block">
           <Outlet />
         </main>
 
-        {/* Bottom Footer */}
-        <AdminLTEFooter />
+        {/* Bottom Footer (Hidden on Print) */}
+        <div className="print:hidden no-print">
+          <AdminLTEFooter />
+        </div>
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ import {
   Cherry,
   ArrowRight,
   Clock,
+  RotateCcw,
   AlertTriangle,
   Warehouse,
   Sparkles,
@@ -619,6 +620,26 @@ export const InventoryModule: React.FC = () => {
                                     </span>
                                   )}
                                 </div>
+                                <div className="absolute bottom-2.5 left-3">
+                                  {gb.ics_verification_status === 'verified' && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white shadow-xs">
+                                      <CheckCircle2 className="w-3 h-3" />
+                                      <span>Terverifikasi ICS ✓</span>
+                                    </span>
+                                  )}
+                                  {(!gb.ics_verification_status || gb.ics_verification_status === 'pending') && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-stone-950 shadow-xs">
+                                      <Clock className="w-3 h-3" />
+                                      <span>Menunggu ICS ⏳</span>
+                                    </span>
+                                  )}
+                                  {gb.ics_verification_status === 'rejected' && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                                      <RotateCcw className="w-3 h-3" />
+                                      <span>Re-Dry / Sortasi ⚠️</span>
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               <div className="p-5 space-y-3">
@@ -736,6 +757,7 @@ export const InventoryModule: React.FC = () => {
                               <th className="whitespace-nowrap">Kadar Air &amp; aW</th>
                               <th className="whitespace-nowrap">Stok Tersedia</th>
                               <th className="whitespace-nowrap">Grade &amp; Eco</th>
+                              <th className="whitespace-nowrap">Status Verifikasi ICS</th>
                               <th className="whitespace-nowrap">Harga / kg</th>
                               <th className="!pr-5 text-right whitespace-nowrap">Tindakan</th>
                             </tr>
@@ -767,6 +789,31 @@ export const InventoryModule: React.FC = () => {
                                 <td className="whitespace-nowrap">
                                   <div className="font-bold text-slate-900">{gb.grade}</div>
                                   <div className="text-[11px] text-teal-700 font-semibold">Zero Waste Eco</div>
+                                </td>
+                                <td className="whitespace-nowrap">
+                                  {gb.ics_verification_status === 'verified' && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                      <span>Terverifikasi ICS ✓</span>
+                                    </span>
+                                  )}
+                                  {(!gb.ics_verification_status || gb.ics_verification_status === 'pending') && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                                      <Clock className="w-3 h-3 text-amber-600" />
+                                      <span>Menunggu ICS ⏳</span>
+                                    </span>
+                                  )}
+                                  {gb.ics_verification_status === 'rejected' && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-900 border border-rose-300">
+                                      <RotateCcw className="w-3 h-3 text-rose-600" />
+                                      <span>Re-Dry / Sortasi ⚠️</span>
+                                    </span>
+                                  )}
+                                  {gb.ics_verification_status === 'unverified' && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-600 border border-stone-200">
+                                      <span>Belum Diaudit</span>
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="font-mono font-bold text-slate-900 whitespace-nowrap">
                                   Rp {gb.pricePerKg.toLocaleString()}
@@ -1228,6 +1275,79 @@ export const InventoryModule: React.FC = () => {
                     </div>
                   </dl>
                 </div>
+              </div>
+
+              {/* ICS Verification Section */}
+              <div className={`p-4 rounded-2xl border ${
+                detailGreenBeanLot.ics_verification_status === 'verified'
+                  ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
+                  : detailGreenBeanLot.ics_verification_status === 'rejected'
+                  ? 'bg-rose-50/80 border-rose-200 text-rose-950'
+                  : 'bg-amber-50/80 border-amber-200 text-amber-950'
+              }`}>
+                <div className="flex items-center justify-between pb-3 border-b border-current/10">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className={`w-4 h-4 ${
+                      detailGreenBeanLot.ics_verification_status === 'verified'
+                        ? 'text-emerald-700'
+                        : detailGreenBeanLot.ics_verification_status === 'rejected'
+                        ? 'text-rose-700'
+                        : 'text-amber-700'
+                    }`} />
+                    <h4 className="font-bold uppercase tracking-wider text-[11px]">
+                      Status Verifikasi ICS Kelompok Tani
+                    </h4>
+                  </div>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    detailGreenBeanLot.ics_verification_status === 'verified'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : detailGreenBeanLot.ics_verification_status === 'rejected'
+                      ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                      : 'bg-amber-100 text-amber-800 border border-amber-300'
+                  }`}>
+                    {detailGreenBeanLot.ics_verification_status === 'verified'
+                      ? '✓ Terverifikasi & Terbit Stempel'
+                      : detailGreenBeanLot.ics_verification_status === 'rejected'
+                      ? '✕ Minta Sortasi / Jemur Ulang'
+                      : '⏳ Menunggu Audit ICS'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 text-xs">
+                  <div>
+                    <span className="text-[10px] block opacity-75 font-medium">Auditor / Verifikator</span>
+                    <span className="font-bold">
+                      {detailGreenBeanLot.ics_verifier_id || 'Petugas ICS'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] block opacity-75 font-medium">Tanggal Audit</span>
+                    <span className="font-bold">
+                      {detailGreenBeanLot.ics_verified_at || 'Belum Diinspeksi'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] block opacity-75 font-medium">Hasil Lab ICS (% MC / Defect)</span>
+                    <span className="font-bold font-mono">
+                      {detailGreenBeanLot.ics_inspected_moisture !== undefined
+                        ? `${detailGreenBeanLot.ics_inspected_moisture}% MC • ${detailGreenBeanLot.ics_inspected_defect ?? 0} defect`
+                        : `${detailGreenBeanLot.moistureContentPercent}% MC • ${detailGreenBeanLot.defectCount} defect`}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] block opacity-75 font-medium">Stempel Digital ICS</span>
+                    <span className="font-mono text-[11px] font-bold truncate block">
+                      {detailGreenBeanLot.ics_stamp_id ? `🛡️ ${detailGreenBeanLot.ics_stamp_id}` : 'Belum Diterbitkan'}
+                    </span>
+                  </div>
+                </div>
+
+                {detailGreenBeanLot.ics_notes && (
+                  <div className="mt-3 p-2.5 rounded-xl bg-white/70 border border-current/10 text-xs">
+                    <span className="font-bold text-[10px] uppercase tracking-wider block opacity-75 mb-0.5">Catatan Petugas ICS:</span>
+                    <p className="italic">{detailGreenBeanLot.ics_notes}</p>
+                  </div>
+                )}
               </div>
 
               {/* Action Bar */}

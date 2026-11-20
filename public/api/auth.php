@@ -10,12 +10,15 @@ function ensureUserColumns($pdo) {
     static $ensured = false;
     if ($ensured) return;
     $cols = [
-        'verification_status' => "TEXT DEFAULT 'pending'",
-        'kelompok_tani_id'    => "TEXT DEFAULT NULL",
-        'kelompok_tani_name'  => "TEXT DEFAULT NULL",
-        'verified_by'         => "TEXT DEFAULT NULL",
-        'verified_at'         => "DATETIME DEFAULT NULL",
-        'verification_notes'  => "TEXT DEFAULT NULL"
+        'verification_status'           => "TEXT DEFAULT 'pending'",
+        'kelompok_tani_id'              => "TEXT DEFAULT NULL",
+        'kelompok_tani_name'            => "TEXT DEFAULT NULL",
+        'verified_by'                   => "TEXT DEFAULT NULL",
+        'verified_at'                   => "DATETIME DEFAULT NULL",
+        'verification_notes'            => "TEXT DEFAULT NULL",
+        'email_verification_token'      => "VARCHAR(64) DEFAULT NULL",
+        'email_verification_expires_at' => "DATETIME DEFAULT NULL",
+        'is_email_verified'             => "INTEGER DEFAULT 0"
     ];
     foreach ($cols as $col => $def) {
         try {
@@ -29,8 +32,44 @@ function ensureUserColumns($pdo) {
 
 ensureUserColumns($pdo);
 
+if ($action === 'verify-email') {
+    $input = getJsonInput();
+    $token = trim($_GET['token'] ?? ($input['token'] ?? ''));
+    if (!$token) {
+        sendError('Token verifikasi wajib disertakan.', 400);
+    }
+
+    $stmt = $pdo->prepare("SELECT `id`, `name`, `email`, `role`, `verifier_domain` as verifierDomain, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status` as verificationStatus, `kelompok_tani_id` as kelompokTaniId, `kelompok_tani_name` as kelompokTaniName, `email_verification_token`, `email_verification_expires_at`, `is_email_verified` FROM `users` WHERE `email_verification_token` = :token LIMIT 1");
+    $stmt->execute(['token' => $token]);
+    $user = $stmt->fetch();
+
+    if (!$user) {
+        sendError('Token verifikasi tidak valid atau tautan sudah pernah digunakan.', 404);
+    }
+
+    if (!empty($user['email_verification_expires_at'])) {
+        $expiresTimestamp = strtotime($user['email_verification_expires_at']);
+        if ($expiresTimestamp && $expiresTimestamp < time()) {
+            sendError('Tautan verifikasi telah kedaluwarsa (berlaku 24 jam). Silakan lakukan pendaftaran atau minta verifikasi ulang.', 400);
+        }
+    }
+
+    // Mark as verified & clear token
+    $upStmt = $pdo->prepare("UPDATE `users` SET `is_email_verified` = 1, `email_verification_token` = NULL, `email_verification_expires_at` = NULL WHERE `id` = :id");
+    $upStmt->execute(['id' => $user['id']]);
+
+    unset($user['email_verification_token']);
+    unset($user['email_verification_expires_at']);
+    $user['isEmailVerified'] = true;
+
+    sendResponse([
+        'message' => 'Alamat email berhasil diverifikasi! Akun Anda kini aktif.',
+        'user'    => $user
+    ]);
+}
+
 if ($method === 'GET' && $action === 'users') {
-    $stmt = $pdo->query("SELECT `id`, `name`, `email`, `role`, `verifier_domain` as verifierDomain, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status` as verificationStatus, `kelompok_tani_id` as kelompokTaniId, `kelompok_tani_name` as kelompokTaniName, `verified_by` as verifiedBy, `verified_at` as verifiedAt, `verification_notes` as verificationNotes FROM `users`");
+    $stmt = $pdo->query("SELECT `id`, `name`, `email`, `role`, `verifier_domain` as verifierDomain, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status` as verificationStatus, `kelompok_tani_id` as kelompokTaniId, `kelompok_tani_name` as kelompokTaniName, `verified_by` as verifiedBy, `verified_at` as verifiedAt, `verification_notes` as verificationNotes, `is_email_verified` as isEmailVerified FROM `users`");
     $users = $stmt->fetchAll();
     sendResponse($users);
 }
@@ -46,7 +85,7 @@ if ($method === 'POST') {
             sendError('Email dan password wajib diisi.', 400);
         }
 
-        $stmt = $pdo->prepare("SELECT `id`, `name`, `email`, `password`, `role`, `verifier_domain` as verifierDomain, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status` as verificationStatus, `kelompok_tani_id` as kelompokTaniId, `kelompok_tani_name` as kelompokTaniName, `verified_by` as verifiedBy, `verified_at` as verifiedAt, `verification_notes` as verificationNotes FROM `users` WHERE `email` = :email LIMIT 1");
+        $stmt = $pdo->prepare("SELECT `id`, `name`, `email`, `password`, `role`, `verifier_domain` as verifierDomain, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status` as verificationStatus, `kelompok_tani_id` as kelompokTaniId, `kelompok_tani_name` as kelompokTaniName, `verified_by` as verifiedBy, `verified_at` as verifiedAt, `verification_notes` as verificationNotes, `is_email_verified` as isEmailVerified FROM `users` WHERE `email` = :email LIMIT 1");
         $stmt->execute(['email' => $email]);
         $user = $stmt->fetch();
 
@@ -93,12 +132,23 @@ if ($method === 'POST') {
             sendError('Nama dan email wajib diisi.', 400);
         }
 
+        // Check if email already registered
+        $checkStmt = $pdo->prepare("SELECT `id` FROM `users` WHERE `email` = :email LIMIT 1");
+        $checkStmt->execute(['email' => $email]);
+        if ($checkStmt->fetch()) {
+            sendError('Alamat email sudah terdaftar. Silakan gunakan email lain atau login.', 409);
+        }
+
         $id = 'user-' . $role . '-' . time();
         $avatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         $verificationStatus = 'pending';
 
-        $stmt = $pdo->prepare("INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status`, `kelompok_tani_id`, `kelompok_tani_name`) VALUES (:id, :name, :email, :password, :role, :org, :location, :avatar, :phone, 0, :bio, :vstatus, :ktid, :ktname)");
+        // Generate 64-char random verification token (24-hour expiry)
+        $verificationToken = bin2hex(random_bytes(32));
+        $verificationExpiresAt = date('Y-m-d H:i:s', strtotime('+24 hours'));
+
+        $stmt = $pdo->prepare("INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status`, `kelompok_tani_id`, `kelompok_tani_name`, `email_verification_token`, `email_verification_expires_at`, `is_email_verified`) VALUES (:id, :name, :email, :password, :role, :org, :location, :avatar, :phone, 0, :bio, :vstatus, :ktid, :ktname, :token, :expires, 0)");
         $stmt->execute([
             'id'       => $id,
             'name'     => $name,
@@ -112,23 +162,39 @@ if ($method === 'POST') {
             'bio'      => $bio,
             'vstatus'  => $verificationStatus,
             'ktid'     => $kelompokTaniId ?: null,
-            'ktname'   => $kelompokTaniName ?: null
+            'ktname'   => $kelompokTaniName ?: null,
+            'token'    => $verificationToken,
+            'expires'  => $verificationExpiresAt
         ]);
 
+        // Construct verification URL
+        $host = $_SERVER['HTTP_HOST'] ?? 'circularcoffee.circulartrace.id';
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+        $baseUrl = (!empty($_SERVER['HTTP_ORIGIN'])) ? rtrim($_SERVER['HTTP_ORIGIN'], '/') : "{$scheme}://{$host}";
+        $verificationLink = "{$baseUrl}/verify-email?token={$verificationToken}";
+
+        // Send email via mailer
+        $mailResult = sendVerificationEmail($email, $name, $verificationToken, $verificationLink);
+
         sendResponse([
-            'id'                 => $id,
-            'name'               => $name,
-            'email'              => $email,
-            'role'               => $role,
-            'organization'       => $org,
-            'location'           => $location,
-            'avatar'             => $avatar,
-            'phone'              => $phone,
-            'balance'            => 0,
-            'bio'                => $bio,
-            'verificationStatus' => $verificationStatus,
-            'kelompokTaniId'     => $kelompokTaniId,
-            'kelompokTaniName'   => $kelompokTaniName
+            'id'                        => $id,
+            'name'                      => $name,
+            'email'                     => $email,
+            'role'                      => $role,
+            'organization'              => $org,
+            'location'                  => $location,
+            'avatar'                    => $avatar,
+            'phone'                     => $phone,
+            'balance'                   => 0,
+            'bio'                       => $bio,
+            'verificationStatus'        => $verificationStatus,
+            'kelompokTaniId'            => $kelompokTaniId,
+            'kelompokTaniName'          => $kelompokTaniName,
+            'isEmailVerified'           => false,
+            'verificationToken'         => $verificationToken,
+            'verificationLink'          => $verificationLink,
+            'mailResult'                => $mailResult,
+            'message'                   => 'Pendaftaran berhasil. Silakan periksa email Anda untuk mengaktifkan akun.'
         ], 201);
     }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import {
   X,
   Printer,
@@ -46,7 +47,7 @@ const PrintableInput: React.FC<PrintableInputProps> = ({
     value={blankMode ? '' : value}
     onChange={(e) => onChange(e.target.value)}
     placeholder={placeholder}
-    className={`bg-transparent border-b border-dotted border-stone-400 focus:border-stone-900 focus:bg-amber-50/50 focus:outline-hidden text-xs text-stone-900 font-semibold px-1 py-0.5 placeholder:text-stone-300 placeholder:italic print:placeholder:text-transparent print:border-stone-400 print:bg-transparent ${className}`}
+    className={`bg-transparent border-b border-dotted border-stone-400 focus:border-stone-900 focus:bg-amber-50/50 focus:outline-hidden text-xs text-stone-900 font-semibold px-1 py-0.5 placeholder:text-stone-300 placeholder:italic print:placeholder:text-transparent print:border-b print:border-solid print:border-stone-800 print:text-black print:bg-transparent ${className}`}
   />
 );
 
@@ -74,15 +75,15 @@ const PrintableCheckbox: React.FC<PrintableCheckboxProps> = ({
       title="Klik untuk centang / lepas centang secara digital"
     >
       <span
-        className={`w-3.5 h-3.5 border rounded-xs flex items-center justify-center text-[10px] font-black transition-colors ${
+        className={`w-3.5 h-3.5 border rounded-xs flex items-center justify-center text-[10px] font-black transition-colors shrink-0 print:border-stone-950 ${
           isChecked
-            ? 'bg-stone-900 text-white border-stone-900 print:bg-white print:text-stone-950 print:border-stone-950'
-            : 'bg-white border-stone-400 text-transparent'
+            ? 'bg-stone-900 text-white border-stone-900 print:bg-stone-900 print:text-white print:border-stone-950'
+            : 'bg-white border-stone-400 text-transparent print:bg-white print:border-stone-800'
         }`}
       >
         ✓
       </span>
-      <span className="text-stone-800 text-xs">{label}</span>
+      <span className="text-stone-800 text-xs print:text-black print:font-medium">{label}</span>
     </button>
   );
 };
@@ -124,6 +125,7 @@ interface FormPetaniState {
   }>;
   ttdPetani: string;
   ttdPetugas: string;
+  ttdKetua: string;
 }
 
 const emptyPetani: FormPetaniState = {
@@ -154,6 +156,7 @@ const emptyPetani: FormPetaniState = {
   ],
   ttdPetani: '',
   ttdPetugas: '',
+  ttdKetua: '',
 };
 
 const samplePetani: FormPetaniState = {
@@ -191,6 +194,7 @@ const samplePetani: FormPetaniState = {
   ],
   ttdPetani: 'Asep Supriatna',
   ttdPetugas: 'Dedi Kurniawan, S.P.',
+  ttdKetua: 'H. Suryana (Ketua Poktan)',
 };
 
 interface FormPengolahState {
@@ -223,6 +227,7 @@ interface FormPengolahState {
   gradeMutu: Record<string, boolean>;
   hargaJual: string;
   ttdOperator: string;
+  ttdIcs: string;
   ttdKepala: string;
 }
 
@@ -256,6 +261,7 @@ const emptyPengolah: FormPengolahState = {
   gradeMutu: {},
   hargaJual: '',
   ttdOperator: '',
+  ttdIcs: '',
   ttdKepala: '',
 };
 
@@ -292,6 +298,7 @@ const samplePengolah: FormPengolahState = {
   gradeMutu: { 'Specialty Grade 1': true },
   hargaJual: '135000',
   ttdOperator: 'Iwan Ridwan',
+  ttdIcs: 'Rahmat Hidayat, S.P. (Auditor ICS)',
   ttdKepala: 'Hendra Gunawan, S.T.',
 };
 
@@ -319,6 +326,7 @@ interface FormGudangState {
   pelabuhanMuat: string;
   negaraTujuan: string;
   ttdSupervisor: string;
+  ttdIcs: string;
   ttdKarantina: string;
 }
 
@@ -346,6 +354,7 @@ const emptyGudang: FormGudangState = {
   pelabuhanMuat: '',
   negaraTujuan: '',
   ttdSupervisor: '',
+  ttdIcs: '',
   ttdKarantina: '',
 };
 
@@ -373,6 +382,7 @@ const sampleGudang: FormGudangState = {
   pelabuhanMuat: 'Tanjung Priok, Jakarta',
   negaraTujuan: 'Hamburg, Jerman (EUDR Compliant)',
   ttdSupervisor: 'Bambang Triyono',
+  ttdIcs: 'Siti Aminah, S.T. (QA / ICS Gudang)',
   ttdKarantina: 'Dr. Ir. Suryadi (Karantina Tumbuhan)',
 };
 
@@ -412,6 +422,7 @@ interface FormRoasteryState {
   restingDays: string;
   ttdRoastmaster: string;
   ttdQGrader: string;
+  ttdHeadQa: string;
 }
 
 const emptyRoastery: FormRoasteryState = {
@@ -450,6 +461,7 @@ const emptyRoastery: FormRoasteryState = {
   restingDays: '',
   ttdRoastmaster: '',
   ttdQGrader: '',
+  ttdHeadQa: '',
 };
 
 const sampleRoastery: FormRoasteryState = {
@@ -488,6 +500,7 @@ const sampleRoastery: FormRoasteryState = {
   restingDays: '7',
   ttdRoastmaster: 'Agus Roastmaster',
   ttdQGrader: 'Rian Santoso (Q-Arabica Grader)',
+  ttdHeadQa: 'Maya Anggraini (Head of Roastery QA)',
 };
 
 // ============================================================================
@@ -510,32 +523,80 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
   const [fGudang, setFGudang] = useState<FormGudangState>(emptyGudang);
   const [fRoastery, setFRoastery] = useState<FormRoasteryState>(emptyRoastery);
 
+  const [qrCodeDataUrls, setQrCodeDataUrls] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if ((isOpen || embedded) && initialForm) {
       setActiveForm(initialForm);
     }
   }, [isOpen, embedded, initialForm]);
 
+  // Pre-generate official QR Codes for all blanko forms
+  useEffect(() => {
+    const host = typeof window !== 'undefined' ? window.location.origin : 'https://circularcoffee.circulartrace.id';
+    const formMeta: Record<StakeholderFormType, string> = {
+      petani: 'FORM-CCT-PETANI-01',
+      pengolah: 'FORM-CCT-MILL-02',
+      gudang: 'FORM-CCT-GUDANG-03',
+      roastery: 'FORM-CCT-ROASTERY-04',
+    };
+
+    (Object.keys(formMeta) as StakeholderFormType[]).forEach(async (key) => {
+      try {
+        const code = formMeta[key];
+        const verifyUrl = `${host}/?docCode=${code}&verified=1`;
+        const dataUrl = await QRCode.toDataURL(verifyUrl, {
+          width: 140,
+          margin: 1,
+          color: {
+            dark: '#1c1917',
+            light: '#ffffff',
+          },
+          errorCorrectionLevel: 'M',
+        });
+        setQrCodeDataUrls((prev) => ({ ...prev, [key]: dataUrl }));
+      } catch (err) {
+        console.error('Failed to generate form QR:', err);
+      }
+    });
+  }, []);
+
+  // Ensure printing-blanko class is removed immediately when print dialog closes
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      document.body.classList.remove('printing-blanko');
+      setPrintBlankMode(false);
+    };
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => window.removeEventListener('afterprint', handleAfterPrint);
+  }, []);
+
   if (!isOpen && !embedded) return null;
 
   // Print with current filled values
   const handlePrintFilled = () => {
     setPrintBlankMode(false);
+    document.body.classList.add('printing-blanko');
     setTimeout(() => {
       window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-blanko');
+      }, 1000);
     }, 150);
   };
 
   // Print 100% blank form for gaptek farmers
   const handlePrintBlank = () => {
     setPrintBlankMode(true);
+    document.body.classList.add('printing-blanko');
     setNotification('Menyiapkan format blanko kosong untuk dicetak...');
     setTimeout(() => {
       window.print();
       setTimeout(() => {
         setPrintBlankMode(false);
+        document.body.classList.remove('printing-blanko');
         setNotification('');
-      }, 500);
+      }, 1000);
     }, 200);
   };
 
@@ -560,10 +621,10 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
   };
 
   const modalContent = (
-    <div className={`relative bg-stone-100 rounded-3xl max-w-5xl w-full border border-stone-300 overflow-hidden print:my-0 print:border-none print:shadow-none print:w-full print:max-w-none print:rounded-none ${embedded ? 'my-0 shadow-md border-stone-200' : 'my-4 shadow-2xl'}`}>
+    <div className={`relative bg-stone-100 rounded-3xl max-w-5xl w-full border border-stone-300 overflow-hidden print:m-0 print:p-0 print:border-none print:shadow-none print:w-full print:max-w-none print:rounded-none print:bg-white print:overflow-visible ${embedded ? 'my-0 shadow-md border-stone-200' : 'my-4 shadow-2xl'}`}>
         
         {/* Top Control Bar (Hidden on Print) */}
-        <div className="bg-stone-900 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-b border-stone-800 print:hidden sticky top-0 z-20">
+        <div className="bg-stone-900 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-b border-stone-800 print:hidden no-print sticky top-0 z-20">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-400/30 flex items-center justify-center">
               <ClipboardList className="w-5 h-5" />
@@ -646,7 +707,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
         </div>
 
         {/* Stakeholder Tab Switcher (Hidden on Print) */}
-        <div className="bg-white border-b border-stone-200 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 overflow-x-auto print:hidden">
+        <div className="bg-white border-b border-stone-200 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 overflow-x-auto print:hidden no-print">
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider mr-1 shrink-0">
               Pilih Lembar Form:
@@ -706,7 +767,7 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
         </div>
 
         {/* Digital Filling Guidance Banner (Hidden on Print) */}
-        <div className="bg-amber-50/80 border-b border-amber-200/60 px-4 sm:px-6 py-2 text-[11px] text-amber-900 flex items-center justify-between gap-2 print:hidden">
+        <div className="bg-amber-50/80 border-b border-amber-200/60 px-4 sm:px-6 py-2 text-[11px] text-amber-900 flex items-center justify-between gap-2 print:hidden no-print">
           <div className="flex items-center gap-2">
             <span className="font-bold bg-amber-200 text-amber-950 px-1.5 py-0.5 rounded text-[10px]">INFO</span>
             <span>
@@ -716,7 +777,8 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
         </div>
 
         {/* Printable Sheet Viewport */}
-        <div className="max-h-[75vh] overflow-y-auto p-4 sm:p-8 space-y-8 print:max-h-none print:overflow-visible print:p-0 print:space-y-12 bg-stone-200/60 print:bg-white">
+        <div className="max-h-[75vh] overflow-y-auto p-4 sm:p-8 space-y-8 print:max-h-none print:overflow-visible print:p-0 print:space-y-0 bg-stone-200/60 print:bg-white">
+          <div id="printable-blanko-document" className="printable-blanko-sheet bg-white print:p-0 print:m-0 print:border-none print:shadow-none print:w-full">
 
           {/* ========================================================================= */}
           {/* FORM 1: FORMULIR PETANI (KEBUN & PANEN CERI) */}
@@ -724,26 +786,44 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
           {activeForm === 'petani' && (
             <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none">
               {/* Header Surat Resmi */}
-              <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-sm tracking-widest text-stone-900 uppercase">
-                      CIRCULAR COFFEE TRACE • CircularCoffee
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
-                      Tier 1: Hulu Perkebunan
-                    </span>
+              <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black shadow-xs shrink-0 print:border print:border-stone-950">
+                    <Sprout className="w-7 h-7 text-emerald-400 print:text-black" />
                   </div>
-                  <h1 className="text-lg sm:text-xl font-black uppercase text-stone-950 mt-1">
-                    Formulir Registrasi Kebun &amp; Catatan Panen Ceri Kopi
-                  </h1>
-                  <p className="text-xs text-stone-600">
-                    Sistem Rantai Pasok Terintegrasi • Standar GAP (Good Agriculture Practice) &amp; Kepatuhan EUDR Bebas Deforestasi
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-sm tracking-widest text-stone-950 uppercase">
+                        CIRCULAR COFFEE TRACE • GABUNGAN KELOMPOK TANI
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 print:bg-transparent print:border-stone-800 print:text-black">
+                        Tier 1: Hulu Perkebunan
+                      </span>
+                    </div>
+                    <h1 className="text-base sm:text-lg font-black uppercase text-stone-950 mt-1">
+                      Formulir Registrasi Kebun &amp; Catatan Panen Ceri Kopi
+                    </h1>
+                    <p className="text-xs text-stone-600 print:text-stone-800">
+                      Sistem Rantai Pasok Terintegrasi • Standar GAP (Good Agriculture Practice) &amp; Kepatuhan EUDR Bebas Deforestasi (EU 2023/1115)
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right text-[11px] font-mono text-stone-600 shrink-0">
-                  <div className="font-bold text-stone-900">FORM-CCT-PETANI-01</div>
-                  <div>Revisi: 2026.09</div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {qrCodeDataUrls['petani'] && (
+                    <div className="text-center print:block">
+                      <img
+                        src={qrCodeDataUrls['petani']}
+                        alt="QR Verifikasi Blanko"
+                        className="w-16 h-16 border border-stone-400 rounded-sm p-0.5 bg-white print:border-black"
+                      />
+                      <span className="text-[8px] font-mono text-stone-500 block">SCAN VERIFIKASI</span>
+                    </div>
+                  )}
+                  <div className="text-right text-[11px] font-mono text-stone-600 print:text-black">
+                    <div className="font-bold text-stone-900">FORM-CCT-PETANI-01</div>
+                    <div>Revisi: 2026.09</div>
+                    <div className="text-[9px] text-stone-500">Kertas Standar A4</div>
+                  </div>
                 </div>
               </div>
 
@@ -1142,30 +1222,45 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                 </div>
               </div>
 
-              {/* Seksi 4: Validasi & Tanda Tangan */}
-              <div className="pt-2 border-t border-stone-300 grid grid-cols-2 gap-8 text-xs text-center">
+              {/* Seksi 4: Validasi & Tanda Tangan Resmi (3 Kolom) */}
+              <div className="pt-3 border-t-2 border-stone-800 grid grid-cols-3 gap-4 text-xs text-center print-avoid-break print-keep-together">
                 <div>
-                  <p className="text-stone-600 mb-8">Petani / Ketua Kelompok Tani,</p>
-                  <div className="max-w-xs mx-auto border-t border-stone-400 pt-1">
+                  <p className="text-stone-700 font-medium mb-12">Petani / Pemilik Kebun,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
                     <PrintableInput
                       value={fPetani.ttdPetani}
                       onChange={(v) => setFPetani({ ...fPetani, ttdPetani: v })}
                       blankMode={printBlankMode}
                       placeholder="( Nama Terang Petani )"
-                      className="text-center font-bold"
+                      className="text-center font-bold w-full"
                     />
+                    <span className="text-[10px] text-stone-500 block">Tanda Tangan &amp; Tanggal</span>
                   </div>
                 </div>
                 <div>
-                  <p className="text-stone-600 mb-8">Petugas Pendamping / Enumerator Lapangan,</p>
-                  <div className="max-w-xs mx-auto border-t border-stone-400 pt-1">
+                  <p className="text-stone-700 font-medium mb-12">Petugas Inspektur ICS,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
                     <PrintableInput
                       value={fPetani.ttdPetugas}
                       onChange={(v) => setFPetani({ ...fPetani, ttdPetugas: v })}
                       blankMode={printBlankMode}
                       placeholder="( Nama Terang Petugas )"
-                      className="text-center font-bold"
+                      className="text-center font-bold w-full"
                     />
+                    <span className="text-[10px] text-stone-500 block">Paraf &amp; Stempel Lapangan</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-stone-700 font-medium mb-12">Ketua Kelompok Tani / Gapoktan,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
+                    <PrintableInput
+                      value={fPetani.ttdKetua}
+                      onChange={(v) => setFPetani({ ...fPetani, ttdKetua: v })}
+                      blankMode={printBlankMode}
+                      placeholder="( Nama Ketua Poktan )"
+                      className="text-center font-bold w-full"
+                    />
+                    <span className="text-[10px] text-stone-500 block">Tanda Tangan &amp; Cap Basah</span>
                   </div>
                 </div>
               </div>
@@ -1177,27 +1272,45 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
           {/* ========================================================================= */}
           {activeForm === 'pengolah' && (
             <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none">
-              {/* Header */}
-              <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-sm tracking-widest text-stone-900 uppercase">
-                      CIRCULAR COFFEE TRACE • CircularCoffee
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                      Tier 2: Stasiun Pengolah (Mill)
-                    </span>
+              {/* Header Surat Resmi Form 2 */}
+              <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black shadow-xs shrink-0 print:border print:border-stone-950">
+                    <Cog className="w-7 h-7 text-amber-400 print:text-black" />
                   </div>
-                  <h1 className="text-lg sm:text-xl font-black uppercase text-stone-950 mt-1">
-                    Formulir Penerimaan Ceri, Batch Olah &amp; Pengelolaan Limbah Mill
-                  </h1>
-                  <p className="text-xs text-stone-600">
-                    Standar Wet &amp; Dry Mill • Verifikasi Rendemen, Kadar Air &amp; Eco-Zero Waste
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-sm tracking-widest text-stone-950 uppercase">
+                        CIRCULAR COFFEE TRACE • STASIUN PENGOLAH (MILL)
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 print:bg-transparent print:border-stone-800 print:text-black">
+                        Tier 2: Wet &amp; Dry Mill Station
+                      </span>
+                    </div>
+                    <h1 className="text-base sm:text-lg font-black uppercase text-stone-950 mt-1">
+                      Formulir Penerimaan Ceri, Batch Olah &amp; Limbah Wet Mill
+                    </h1>
+                    <p className="text-xs text-stone-600 print:text-stone-800">
+                      Verifikasi Rendemen, Kadar Air &amp; Parameter 7 Metode Pengolahan Kopi (Circular Economy &amp; Zero Waste)
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right text-[11px] font-mono text-stone-600 shrink-0">
-                  <div className="font-bold text-stone-900">FORM-CCT-MILL-02</div>
-                  <div>Revisi: 2026.09</div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {qrCodeDataUrls['pengolah'] && (
+                    <div className="text-center print:block">
+                      <img
+                        src={qrCodeDataUrls['pengolah']}
+                        alt="QR Verifikasi Blanko"
+                        className="w-16 h-16 border border-stone-400 rounded-sm p-0.5 bg-white print:border-black"
+                      />
+                      <span className="text-[8px] font-mono text-stone-500 block">SCAN VERIFIKASI</span>
+                    </div>
+                  )}
+                  <div className="text-right text-[11px] font-mono text-stone-600 print:text-black">
+                    <div className="font-bold text-stone-900">FORM-CCT-MILL-02</div>
+                    <div>Revisi: 2026.09</div>
+                    <div className="text-[9px] text-stone-500">Kertas Standar A4</div>
+                  </div>
                 </div>
               </div>
 
@@ -1608,30 +1721,45 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                 </div>
               </div>
 
-              {/* Seksi 5: Tanda Tangan */}
-              <div className="pt-2 border-t border-stone-300 grid grid-cols-2 gap-8 text-xs text-center">
+              {/* Seksi 5: Validasi & Tanda Tangan Resmi (3 Kolom) */}
+              <div className="pt-3 border-t-2 border-stone-800 grid grid-cols-3 gap-4 text-xs text-center print-avoid-break print-keep-together">
                 <div>
-                  <p className="text-stone-600 mb-8">Operator Wet Mill / Pengolah,</p>
-                  <div className="max-w-xs mx-auto border-t border-stone-400 pt-1">
+                  <p className="text-stone-700 font-medium mb-12">Operator Wet Mill / Pelaksana,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
                     <PrintableInput
                       value={fPengolah.ttdOperator}
                       onChange={(v) => setFPengolah({ ...fPengolah, ttdOperator: v })}
                       blankMode={printBlankMode}
                       placeholder="( Nama Terang Operator )"
-                      className="text-center font-bold"
+                      className="text-center font-bold w-full"
                     />
+                    <span className="text-[10px] text-stone-500 block">Tanda Tangan &amp; Tanggal</span>
                   </div>
                 </div>
                 <div>
-                  <p className="text-stone-600 mb-8">Kepala Stasiun &amp; Quality Control Mill,</p>
-                  <div className="max-w-xs mx-auto border-t border-stone-400 pt-1">
+                  <p className="text-stone-700 font-medium mb-12">Petugas Uji Mutu / Verifikator ICS,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
+                    <PrintableInput
+                      value={fPengolah.ttdIcs}
+                      onChange={(v) => setFPengolah({ ...fPengolah, ttdIcs: v })}
+                      blankMode={printBlankMode}
+                      placeholder="( Nama Petugas ICS / QC )"
+                      className="text-center font-bold w-full"
+                    />
+                    <span className="text-[10px] text-stone-500 block">Paraf &amp; Sertifikasi Mutu</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-stone-700 font-medium mb-12">Kepala Stasiun &amp; Mill Manager,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
                     <PrintableInput
                       value={fPengolah.ttdKepala}
                       onChange={(v) => setFPengolah({ ...fPengolah, ttdKepala: v })}
                       blankMode={printBlankMode}
-                      placeholder="( Nama Terang QC / Mill Manager )"
-                      className="text-center font-bold"
+                      placeholder="( Nama Mill Manager )"
+                      className="text-center font-bold w-full"
                     />
+                    <span className="text-[10px] text-stone-500 block">Tanda Tangan &amp; Cap Stasiun</span>
                   </div>
                 </div>
               </div>
@@ -1643,27 +1771,45 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
           {/* ========================================================================= */}
           {activeForm === 'gudang' && (
             <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none">
-              {/* Header */}
-              <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-sm tracking-widest text-stone-900 uppercase">
-                      CIRCULAR COFFEE TRACE • CircularCoffee
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-blue-100 text-blue-900 border border-blue-300">
-                      Tier 3: Gudang &amp; Eksportir
-                    </span>
+              {/* Header Surat Resmi Form 3 */}
+              <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black shadow-xs shrink-0 print:border print:border-stone-950">
+                    <Warehouse className="w-7 h-7 text-blue-400 print:text-black" />
                   </div>
-                  <h1 className="text-lg sm:text-xl font-black uppercase text-stone-950 mt-1">
-                    Formulir Inbound Gudang, QC Grading &amp; Karantina Ekspor
-                  </h1>
-                  <p className="text-xs text-stone-600">
-                    Warehouse &amp; Logistics QA • Penyimpanan Hermetik &amp; Sertifikat Kesehatan Karantina
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-sm tracking-widest text-stone-950 uppercase">
+                        CIRCULAR COFFEE TRACE • GUDANG &amp; LOGISTIK EKSPOR
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-300 print:bg-transparent print:border-stone-800 print:text-black">
+                        Tier 3: Gudang &amp; QA Karantina
+                      </span>
+                    </div>
+                    <h1 className="text-base sm:text-lg font-black uppercase text-stone-950 mt-1">
+                      Formulir Inbound Gudang, QC Grading &amp; Karantina Ekspor
+                    </h1>
+                    <p className="text-xs text-stone-600 print:text-stone-800">
+                      Standar Penyimpanan Klimatik Hermetik GrainPro, Pengendalian Kadar Air &amp; Sertifikat Kesehatan Tumbuhan (Phytosanitary)
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right text-[11px] font-mono text-stone-600 shrink-0">
-                  <div className="font-bold text-stone-900">FORM-CCT-GUDANG-03</div>
-                  <div>Revisi: 2026.09</div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {qrCodeDataUrls['gudang'] && (
+                    <div className="text-center print:block">
+                      <img
+                        src={qrCodeDataUrls['gudang']}
+                        alt="QR Verifikasi Blanko"
+                        className="w-16 h-16 border border-stone-400 rounded-sm p-0.5 bg-white print:border-black"
+                      />
+                      <span className="text-[8px] font-mono text-stone-500 block">SCAN VERIFIKASI</span>
+                    </div>
+                  )}
+                  <div className="text-right text-[11px] font-mono text-stone-600 print:text-black">
+                    <div className="font-bold text-stone-900">FORM-CCT-GUDANG-03</div>
+                    <div>Revisi: 2026.09</div>
+                    <div className="text-[9px] text-stone-500">Kertas Standar A4</div>
+                  </div>
                 </div>
               </div>
 
@@ -1960,30 +2106,45 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                 </div>
               </div>
 
-              {/* Seksi 5: Validasi Kepala Gudang & Karantina */}
-              <div className="pt-2 border-t border-stone-300 grid grid-cols-2 gap-8 text-xs text-center">
+              {/* Seksi 5: Validasi & Tanda Tangan Resmi (3 Kolom) */}
+              <div className="pt-3 border-t-2 border-stone-800 grid grid-cols-3 gap-4 text-xs text-center print-avoid-break print-keep-together">
                 <div>
-                  <p className="text-stone-600 mb-8">Supervisor Gudang &amp; QA Eksportir,</p>
-                  <div className="max-w-xs mx-auto border-t border-stone-400 pt-1">
+                  <p className="text-stone-700 font-medium mb-12">Supervisor Gudang &amp; Logistik,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
                     <PrintableInput
                       value={fGudang.ttdSupervisor}
                       onChange={(v) => setFGudang({ ...fGudang, ttdSupervisor: v })}
                       blankMode={printBlankMode}
-                      placeholder="( Nama Terang Supervisor )"
-                      className="text-center font-bold"
+                      placeholder="( Nama Supervisor )"
+                      className="text-center font-bold w-full"
                     />
+                    <span className="text-[10px] text-stone-500 block">Tanda Tangan &amp; Tanggal</span>
                   </div>
                 </div>
                 <div>
-                  <p className="text-stone-600 mb-8">Pejabat Pemeriksa Karantina Tumbuhan,</p>
-                  <div className="max-w-xs mx-auto border-t border-stone-400 pt-1">
+                  <p className="text-stone-700 font-medium mb-12">Petugas Auditor Mutu / ICS,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
+                    <PrintableInput
+                      value={fGudang.ttdIcs}
+                      onChange={(v) => setFGudang({ ...fGudang, ttdIcs: v })}
+                      blankMode={printBlankMode}
+                      placeholder="( Nama Petugas ICS / QA )"
+                      className="text-center font-bold w-full"
+                    />
+                    <span className="text-[10px] text-stone-500 block">Paraf &amp; Hasil Uji Klimatik</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-stone-700 font-medium mb-12">Pejabat Pemeriksa Karantina Tumbuhan,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
                     <PrintableInput
                       value={fGudang.ttdKarantina}
                       onChange={(v) => setFGudang({ ...fGudang, ttdKarantina: v })}
                       blankMode={printBlankMode}
-                      placeholder="( Nama & NIP Pejabat Karantina )"
-                      className="text-center font-bold"
+                      placeholder="( Nama &amp; NIP Pejabat )"
+                      className="text-center font-bold w-full"
                     />
+                    <span className="text-[10px] text-stone-500 block">Tanda Tangan &amp; Cap Segel</span>
                   </div>
                 </div>
               </div>
@@ -1995,27 +2156,45 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
           {/* ========================================================================= */}
           {activeForm === 'roastery' && (
             <div className="bg-white rounded-2xl shadow-sm border border-stone-300 p-6 sm:p-8 text-stone-900 print:shadow-none print:border-none print:p-0 print:rounded-none">
-              {/* Header */}
-              <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-sm tracking-widest text-stone-900 uppercase">
-                      CIRCULAR COFFEE TRACE • CircularCoffee
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-rose-100 text-rose-900 border border-rose-300">
-                      Tier 4: Roastery &amp; Cupping Lab
-                    </span>
+              {/* Header Surat Resmi Form 4 */}
+              <div className="border-b-2 border-stone-900 pb-3 mb-4 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-stone-900 text-amber-400 flex items-center justify-center font-black shadow-xs shrink-0 print:border print:border-stone-950">
+                    <Flame className="w-7 h-7 text-rose-400 print:text-black" />
                   </div>
-                  <h1 className="text-lg sm:text-xl font-black uppercase text-stone-950 mt-1">
-                    Formulir Profil Sangrai &amp; SCA Cupping Score Sheet
-                  </h1>
-                  <p className="text-xs text-stone-600">
-                    Artisan Coffee Roasting Protocol • Standar Evaluasi Sensori Specialty Coffee Association (SCA)
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-sm tracking-widest text-stone-950 uppercase">
+                        CIRCULAR COFFEE TRACE • ROASTERY &amp; LAB CUPPING
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-900 border border-rose-300 print:bg-transparent print:border-stone-800 print:text-black">
+                        Tier 4: Roasting &amp; Sensori
+                      </span>
+                    </div>
+                    <h1 className="text-base sm:text-lg font-black uppercase text-stone-950 mt-1">
+                      Formulir Profil Sangrai &amp; Lembar Kerja SCA Cupping
+                    </h1>
+                    <p className="text-xs text-stone-600 print:text-stone-800">
+                      Artisan Roasting Telemetry (RoR, Turning Point, DTR) &amp; Evaluasi Sensori Standar SCA 10-Atribut Specialty
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right text-[11px] font-mono text-stone-600 shrink-0">
-                  <div className="font-bold text-stone-900">FORM-CCT-ROASTERY-04</div>
-                  <div>Revisi: 2026.09</div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {qrCodeDataUrls['roastery'] && (
+                    <div className="text-center print:block">
+                      <img
+                        src={qrCodeDataUrls['roastery']}
+                        alt="QR Verifikasi Blanko"
+                        className="w-16 h-16 border border-stone-400 rounded-sm p-0.5 bg-white print:border-black"
+                      />
+                      <span className="text-[8px] font-mono text-stone-500 block">SCAN VERIFIKASI</span>
+                    </div>
+                  )}
+                  <div className="text-right text-[11px] font-mono text-stone-600 print:text-black">
+                    <div className="font-bold text-stone-900">FORM-CCT-ROASTERY-04</div>
+                    <div>Revisi: 2026.09</div>
+                    <div className="text-[9px] text-stone-500">Kertas Standar A4</div>
+                  </div>
                 </div>
               </div>
 
@@ -2324,40 +2503,56 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
                 </div>
               </div>
 
-              {/* Seksi 4: Tanda Tangan */}
-              <div className="pt-2 border-t border-stone-300 grid grid-cols-2 gap-8 text-xs text-center">
+              {/* Seksi 4: Validasi & Tanda Tangan Resmi (3 Kolom) */}
+              <div className="pt-3 border-t-2 border-stone-800 grid grid-cols-3 gap-4 text-xs text-center print-avoid-break print-keep-together">
                 <div>
-                  <p className="text-stone-600 mb-8">Roastmaster Pelaksana Sangrai,</p>
-                  <div className="max-w-xs mx-auto border-t border-stone-400 pt-1">
+                  <p className="text-stone-700 font-medium mb-12">Roastmaster Pelaksana Sangrai,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
                     <PrintableInput
                       value={fRoastery.ttdRoastmaster}
                       onChange={(v) => setFRoastery({ ...fRoastery, ttdRoastmaster: v })}
                       blankMode={printBlankMode}
                       placeholder="( Nama Terang Roastmaster )"
-                      className="text-center font-bold"
+                      className="text-center font-bold w-full"
                     />
+                    <span className="text-[10px] text-stone-500 block">Tanda Tangan &amp; Tanggal</span>
                   </div>
                 </div>
                 <div>
-                  <p className="text-stone-600 mb-8">Certified Q-Grader / Sensori Evaluator,</p>
-                  <div className="max-w-xs mx-auto border-t border-stone-400 pt-1">
+                  <p className="text-stone-700 font-medium mb-12">Certified Q-Grader / Sensori Evaluator,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
                     <PrintableInput
                       value={fRoastery.ttdQGrader}
                       onChange={(v) => setFRoastery({ ...fRoastery, ttdQGrader: v })}
                       blankMode={printBlankMode}
                       placeholder="( Nama Terang Q-Grader )"
-                      className="text-center font-bold"
+                      className="text-center font-bold w-full"
                     />
+                    <span className="text-[10px] text-stone-500 block">Paraf &amp; Sertifikasi SCA</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-stone-700 font-medium mb-12">Head of Roastery QA &amp; Manager,</p>
+                  <div className="max-w-[180px] mx-auto border-t border-stone-500 pt-1">
+                    <PrintableInput
+                      value={fRoastery.ttdHeadQa}
+                      onChange={(v) => setFRoastery({ ...fRoastery, ttdHeadQa: v })}
+                      blankMode={printBlankMode}
+                      placeholder="( Nama Head QA )"
+                      className="text-center font-bold w-full"
+                    />
+                    <span className="text-[10px] text-stone-500 block">Tanda Tangan &amp; Cap Roastery</span>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
+          </div>
         </div>
 
         {/* Footer Modal (Hidden on Print) */}
-        <div className="bg-stone-100 border-t border-stone-300 p-4 flex flex-wrap items-center justify-between text-xs text-stone-600 print:hidden">
+        <div className="bg-stone-100 border-t border-stone-300 p-4 flex flex-wrap items-center justify-between text-xs text-stone-600 print:hidden no-print">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>Semua formulir telah distandarisasi untuk dicetak pada kertas <strong>A4 Potret (Portrait)</strong>.</span>
@@ -2396,14 +2591,14 @@ export const StakeholderFormsModal: React.FC<StakeholderFormsModalProps> = ({
 
   if (embedded) {
     return (
-      <div className="w-full flex justify-center py-2 print:p-0 print:m-0">
+      <div className="w-full flex justify-center py-2 print:p-0 print:m-0 print:block">
         {modalContent}
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200 print:p-0 print:bg-white print:static print:inset-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200 print:p-0 print:m-0 print:bg-white print:static print:inset-auto print:overflow-visible print:block">
       {modalContent}
     </div>
   );

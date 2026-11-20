@@ -1183,10 +1183,15 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
             </NavLink>
 
             {/* Blanko Formulir Fisik Lapangan A4 */}
-            <button
-              type="button"
-              onClick={() => openBlankoModal()}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-amber-300 hover:bg-[#494e53] hover:text-white transition-colors cursor-pointer text-left"
+            <NavLink
+              to="/admin/forms"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  isActive
+                    ? 'bg-amber-600 text-white font-semibold'
+                    : 'text-amber-300 hover:bg-[#494e53] hover:text-white'
+                }`
+              }
               title="Cetak & Download Blanko Formulir Fisik Lapangan (Petani, Pengolah, Gudang, Roastery)"
             >
               <Printer className="w-4 h-4 text-amber-400 shrink-0" />
@@ -1194,11 +1199,11 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 <div className="flex items-center justify-between flex-1 truncate">
                   <span>Blanko Form (A4)</span>
                   <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
-                    Cetak
+                    Halaman
                   </span>
                 </div>
               )}
-            </button>
+            </NavLink>
           </div>
         </div>
       </div>

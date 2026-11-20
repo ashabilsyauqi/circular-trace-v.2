@@ -10,7 +10,6 @@ import {
   Outlet,
 } from 'react-router-dom';
 import { CoffeeProvider, useCoffee } from './context/CoffeeContext';
-import { StakeholderFormsModal } from './components/forms/StakeholderFormsModal';
 import { LoginPage } from './components/LoginPage';
 import { Navbar } from './components/Navbar';
 import { AdminLTELayout } from './components/adminlte/AdminLTELayout';
@@ -51,6 +50,7 @@ import { StakeholderFormsPage } from './pages/admin/forms/StakeholderFormsPage';
 import { BukuTransaksiPage } from './pages/admin/transaksi/BukuTransaksiPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { PlatformPackagesPage } from './pages/admin/superadmin/PlatformPackagesPage';
+import { RegisterPage } from './pages/RegisterPage';
 
 /**
  * Public Layout holding top Navbar + Outlet + bottom Footer
@@ -172,10 +172,16 @@ export const AppRoutes: React.FC = () => {
           path="/transactions"
           element={<Navigate to="/admin/transaksi" replace />}
         />
+        <Route path="/forms" element={<StakeholderFormsPage />} />
+        <Route path="/forms/:formType" element={<StakeholderFormsPage />} />
       </Route>
 
       {/* 2. Standalone Public Pages */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/daftar" element={<Navigate to="/register" replace />} />
+      <Route path="/forgot-password" element={<LoginPage initialMode="forgot" />} />
+      <Route path="/lupa-sandi" element={<Navigate to="/forgot-password" replace />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/trace/:lotId?" element={<PublicTraceRoute />} />
 
@@ -263,23 +269,11 @@ export const AppRoutes: React.FC = () => {
   );
 };
 
-const GlobalBlankoModalHost: React.FC = () => {
-  const { blankoModalOpen, blankoModalInitialTab, closeBlankoModal } = useCoffee();
-  return (
-    <StakeholderFormsModal
-      isOpen={blankoModalOpen}
-      onClose={closeBlankoModal}
-      initialForm={blankoModalInitialTab}
-    />
-  );
-};
-
 export function App() {
   return (
     <BrowserRouter>
       <CoffeeProvider>
         <AppRoutes />
-        <GlobalBlankoModalHost />
       </CoffeeProvider>
     </BrowserRouter>
   );

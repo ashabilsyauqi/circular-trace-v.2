@@ -90,7 +90,11 @@ const COFFEE_SLIDES: CoffeeSlide[] = [
   },
 ];
 
-export const LoginPage: React.FC = () => {
+export interface LoginPageProps {
+  initialMode?: 'login' | 'forgot';
+}
+
+export const LoginPage: React.FC<LoginPageProps> = ({ initialMode }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, login, requestPasswordReset, verifyResetCode, resetPassword } = useCoffee();
@@ -118,6 +122,18 @@ export const LoginPage: React.FC = () => {
     }
   }, [currentUser, location, navigate]);
 
+  // Auth mode state: 'login' | 'forgot' (100% inline, no popup modal!)
+  const [authMode, setAuthMode] = useState<'login' | 'forgot'>(() => {
+    if (
+      initialMode === 'forgot' ||
+      location.pathname === '/forgot-password' ||
+      location.pathname === '/lupa-sandi'
+    ) {
+      return 'forgot';
+    }
+    return 'login';
+  });
+
   // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -130,8 +146,7 @@ export const LoginPage: React.FC = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Forgot password flow states
-  const [forgotModalOpen, setForgotModalOpen] = useState(false);
+  // Forgot password flow states (inline in page)
   const [forgotStep, setForgotStep] = useState<'email' | 'otp' | 'new_password' | 'success'>('email');
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotOtp, setForgotOtp] = useState('');
@@ -232,13 +247,17 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const closeForgotModal = () => {
-    setForgotModalOpen(false);
+  const handleSwitchToForgot = () => {
+    setForgotEmail(email);
     setForgotStep('email');
-    setForgotEmail('');
-    setForgotOtp('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setForgotError(null);
+    setSimulatedOtpNotice(null);
+    setAuthMode('forgot');
+  };
+
+  const handleSwitchToLogin = () => {
+    setAuthMode('login');
+    setForgotStep('email');
     setForgotError(null);
     setSimulatedOtpNotice(null);
   };
@@ -410,257 +429,484 @@ export const LoginPage: React.FC = () => {
           </span>
         </div>
 
-        {/* Center: Main Login Form Card */}
+        {/* Center: Main Login or Forgot Password Form Card */}
         <div className="my-auto max-w-md w-full mx-auto py-6">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300/80 text-xs font-bold mb-3 shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Portal Akses Sistem</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-              Masuk ke Akun Anda
-            </h1>
-            <p className="mt-2 text-xs sm:text-sm text-stone-600 leading-relaxed">
-              Silakan masukkan email dan kata sandi akun Anda untuk mengakses ruang kerja terisolasi sistem kopi terintegrasi.
-            </p>
-          </div>
+          {authMode === 'login' ? (
+            <>
+              {/* Login Header */}
+              <div className="mb-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300/80 text-xs font-bold mb-3 shadow-2xs">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Portal Akses Sistem</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
+                  Masuk ke Akun Anda
+                </h1>
+                <p className="mt-2 text-xs sm:text-sm text-stone-600 leading-relaxed">
+                  Silakan masukkan email dan kata sandi akun Anda untuk mengakses ruang kerja terisolasi sistem kopi terintegrasi.
+                </p>
+              </div>
 
-          {/* Error Banner */}
-          {loginError && (
-            <div className="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2.5 shadow-2xs">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-              <span>{loginError}</span>
+              {/* Error Banner */}
+              {loginError && (
+                <div className="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2.5 shadow-2xs">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleCredentialsSubmit} className="space-y-4.5">
+                {/* Input Email */}
+                <div>
+                  <label
+                    htmlFor="login-email"
+                    className="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1.5"
+                  >
+                    Alamat Email Akun
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                    <input
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="nama@organisasi.id"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Input Password */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label
+                      htmlFor="login-password"
+                      className="block text-xs font-bold text-stone-800 uppercase tracking-wider"
+                    >
+                      Kata Sandi
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleSwitchToForgot}
+                      className="text-xs font-semibold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                    >
+                      Lupa kata sandi?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                    <input
+                      id="login-password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Masukkan kata sandi akun..."
+                      className="w-full pl-10 pr-11 py-3 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-2xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember Me */}
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-stone-700">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="rounded text-amber-600 focus:ring-amber-500 border-stone-300"
+                    />
+                    <span>Ingat akun saya di peramban ini</span>
+                  </label>
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={loginLoading}
+                    className="w-full py-3.5 px-4 rounded-xl bg-stone-900 hover:bg-amber-700 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-75 cursor-pointer"
+                  >
+                    {loginLoading ? (
+                      <>
+                        <RotateCcw className="w-4 h-4 animate-spin" />
+                        <span>Memverifikasi Kredensial...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Masuk ke Sistem</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Direct Link to Register Page (NO POPUP) */}
+                <div className="pt-3 text-center border-t border-stone-200">
+                  <span className="text-xs text-stone-600">Belum memiliki akun? </span>
+                  <Link
+                    to="/register"
+                    className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>Daftar Akun Baru Sekarang</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </form>
+
+              {/* Supported Stakeholder Scope Card */}
+              <div className="mt-6 p-4 rounded-2xl bg-stone-100/80 border border-stone-200/80 text-[11px] text-stone-600 space-y-2">
+                <div className="font-bold text-stone-800 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Lingkup Pengguna Sistem Terdaftar:</span>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    6 Peran Terintegrasi
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1 text-stone-700 font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <Sprout className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>1. Kelompok Tani</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Warehouse className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>2. Gudang &amp; QA</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                    <span>3. Roaster (Roastery)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Coffee className="w-3.5 h-3.5 text-stone-700 shrink-0" />
+                    <span>4. Coffee Shop (Kafe)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                    <span className="font-semibold text-indigo-900">5. Verifikator (Mutu/ICT)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <ShoppingBag className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                    <span>6. Buyer (Marketplace)</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-stone-500 pt-1 leading-relaxed border-t border-stone-200/60">
+                  Hak akses dan dasbor kerja Anda akan otomatis disesuaikan dengan peran organisasi terverifikasi.
+                </p>
+
+                {/* Registered demo accounts helper */}
+                <div className="pt-2 border-t border-stone-200/60 text-[10px] space-y-1.5">
+                  <span className="font-bold text-stone-700 block">Kredensial Akun Pengguna Terdaftar (Sandi: password123):</span>
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 font-mono text-stone-600">
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('superadmin@circulartrace.id'); setPassword('password123'); }}
+                      className="text-left hover:text-purple-900 font-bold text-purple-700 transition-colors cursor-pointer truncate bg-purple-50/90 px-1.5 py-1 rounded border border-purple-200 col-span-2 flex items-center justify-between"
+                      title="Klik untuk mengisi formulir login sebagai Super Admin Platform (Paket Layanan SaaS)"
+                    >
+                      <span>⭐ Super Admin: superadmin@circulartrace.id</span>
+                      <span className="text-[9px] bg-purple-200/80 px-1 rounded text-purple-950 font-sans font-bold">Paket SaaS</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('admin.gapoktan@circularcoffee.id'); setPassword('password123'); }}
+                      className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                      title="Klik untuk mengisi formulir login sebagai Admin Kelompok Tani"
+                    >
+                      • Admin: admin.gapoktan@sangrai.id
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('verifikator@kelompoktani.id'); setPassword('password123'); }}
+                      className="text-left hover:text-indigo-900 font-bold text-indigo-700 transition-colors cursor-pointer truncate bg-indigo-50/90 px-1 py-0.5 rounded border border-indigo-200"
+                      title="Klik untuk mengisi formulir login sebagai Lead Auditor & Verifikator Mutu CT"
+                    >
+                      • Verifikator: verifikator@kelompoktani.id
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('reza@roaster.id'); setPassword('password123'); }}
+                      className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                      title="Klik untuk mengisi formulir login sebagai Roaster"
+                    >
+                      • Roaster: reza@roaster.id
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('gudang.bandung@gudang.id'); setPassword('password123'); }}
+                      className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                      title="Klik untuk mengisi formulir login sebagai Gudang & QA"
+                    >
+                      • Gudang: gudang.bandung@gudang.id
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('budi@pengolah.id'); setPassword('password123'); }}
+                      className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                      title="Klik untuk mengisi formulir login sebagai Stasiun Pengolah"
+                    >
+                      • Pengolah: budi@pengolah.id
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('asep@petani.id'); setPassword('password123'); }}
+                      className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                      title="Klik untuk mengisi formulir login sebagai Petani"
+                    >
+                      • Petani: asep@petani.id
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('maya@cafe.id'); setPassword('password123'); }}
+                      className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                      title="Klik untuk mengisi formulir login sebagai Coffee Shop"
+                    >
+                      • Cafe: maya@cafe.id
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('buyer@circulartrace.id'); setPassword('password123'); }}
+                      className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
+                      title="Klik untuk mengisi formulir login sebagai Buyer (Marketplace)"
+                    >
+                      • Buyer: buyer@circulartrace.id
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-stone-400 italic">Klik salah satu akun di atas untuk mengisi formulir, lalu klik Masuk ke Sistem.</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Forgot Password Flow (100% INLINE CARD, ZERO POPUP) */
+            <div className="space-y-6">
+              {/* Back to Login link */}
+              <div>
+                <button
+                  type="button"
+                  onClick={handleSwitchToLogin}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-stone-800 mb-3 transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Kembali ke Halaman Masuk</span>
+                </button>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300/80 text-xs font-bold mb-3 shadow-2xs">
+                  <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Pemulihan Kata Sandi</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
+                  Reset Kata Sandi Akun
+                </h1>
+                <p className="mt-2 text-xs sm:text-sm text-stone-600 leading-relaxed">
+                  {forgotStep === 'email' && 'Masukkan alamat email akun Anda untuk menerima 6-digit kode verifikasi OTP.'}
+                  {forgotStep === 'otp' && 'Masukkan 6-digit kode OTP yang telah dikirim ke email terdaftar Anda.'}
+                  {forgotStep === 'new_password' && 'Buat kata sandi baru yang kuat untuk akun Anda.'}
+                  {forgotStep === 'success' && 'Kata sandi berhasil diperbarui. Silakan kembali masuk ke sistem.'}
+                </p>
+              </div>
+
+              {/* Progress Steps Indicator */}
+              <div className="flex items-center justify-between text-xs font-bold text-stone-400 border-b border-stone-200 pb-3">
+                <span className={forgotStep === 'email' ? 'text-amber-700 font-extrabold' : 'text-stone-500'}>
+                  1. Masukkan Email
+                </span>
+                <span>&rarr;</span>
+                <span className={forgotStep === 'otp' ? 'text-amber-700 font-extrabold' : 'text-stone-500'}>
+                  2. Kode OTP
+                </span>
+                <span>&rarr;</span>
+                <span className={forgotStep === 'new_password' ? 'text-amber-700 font-extrabold' : 'text-stone-500'}>
+                  3. Sandi Baru
+                </span>
+              </div>
+
+              {/* Error Message */}
+              {forgotError && (
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{forgotError}</span>
+                </div>
+              )}
+
+              {/* Simulated OTP Notice */}
+              {simulatedOtpNotice && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-2xs">
+                  <span>{simulatedOtpNotice}</span>
+                  <span className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-emerald-300">
+                    {forgotOtp}
+                  </span>
+                </div>
+              )}
+
+              {/* Step 1: Input Email */}
+              {forgotStep === 'email' && (
+                <form onSubmit={handleRequestOtp} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                      Email Akun Terdaftar
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                      <input
+                        type="email"
+                        required
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="contoh: akun@organisasi.id"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-2xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleSwitchToLogin}
+                      className="flex-1 py-3 rounded-xl border border-stone-300 text-xs font-bold text-stone-600 hover:bg-stone-100 cursor-pointer transition-colors"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 py-3 rounded-xl bg-stone-900 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <span>Kirim Kode OTP</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Step 2: Input OTP */}
+              {forgotStep === 'otp' && (
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                      Kode 6-Digit OTP
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      value={forgotOtp}
+                      onChange={(e) => setForgotOtp(e.target.value)}
+                      placeholder="123456"
+                      className="w-full text-center tracking-widest text-xl font-mono font-bold py-3 rounded-xl border border-stone-300 bg-white text-stone-900 focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-2xs"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setForgotStep('email')}
+                      className="flex-1 py-3 rounded-xl border border-stone-300 text-xs font-bold text-stone-600 hover:bg-stone-100 cursor-pointer transition-colors"
+                    >
+                      Kembali
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 py-3 rounded-xl bg-stone-900 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <span>Verifikasi Kode</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Step 3: New Password */}
+              {forgotStep === 'new_password' && (
+                <form onSubmit={handleSetNewPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                      Kata Sandi Baru
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        required
+                        minLength={6}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Minimal 6 karakter"
+                        className="w-full pl-4 pr-11 py-3 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-2xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 cursor-pointer"
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                      Konfirmasi Kata Sandi Baru
+                    </label>
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Ulangi kata sandi baru"
+                      className="w-full px-4 py-3 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-2xs"
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 rounded-xl bg-stone-900 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <span>Simpan Kata Sandi Baru</span>
+                      <Check className="w-4 h-4" />
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Step 4: Success */}
+              {forgotStep === 'success' && (
+                <div className="text-center space-y-4 py-4">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+                    <CheckCircle2 className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-lg font-black text-stone-900">Kata Sandi Berhasil Diperbarui!</h3>
+                  <p className="text-xs text-stone-600 leading-relaxed max-w-sm mx-auto">
+                    Kata sandi akun Anda telah diperbarui. Formulir masuk telah siap dengan kredensial baru Anda.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('login');
+                      setForgotStep('email');
+                    }}
+                    className="w-full py-3.5 rounded-xl bg-stone-900 hover:bg-amber-700 text-white text-xs font-bold shadow-md transition-colors cursor-pointer"
+                  >
+                    Masuk Sekarang ke Akun Anda
+                  </button>
+                </div>
+              )}
             </div>
           )}
-
-          {/* Form */}
-          <form onSubmit={handleCredentialsSubmit} className="space-y-4.5">
-            {/* Input Email */}
-            <div>
-              <label
-                htmlFor="login-email"
-                className="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1.5"
-              >
-                Alamat Email Akun
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-                <input
-                  id="login-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@organisasi.id"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-2xs"
-                />
-              </div>
-            </div>
-
-            {/* Input Password */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label
-                  htmlFor="login-password"
-                  className="block text-xs font-bold text-stone-800 uppercase tracking-wider"
-                >
-                  Kata Sandi
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForgotEmail(email);
-                    setForgotModalOpen(true);
-                  }}
-                  className="text-xs font-semibold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
-                >
-                  Lupa kata sandi?
-                </button>
-              </div>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-                <input
-                  id="login-password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Masukkan kata sandi akun..."
-                  className="w-full pl-10 pr-11 py-3 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-2xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Remember Me */}
-            <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-stone-700">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded text-amber-600 focus:ring-amber-500 border-stone-300"
-                />
-                <span>Ingat akun saya di peramban ini</span>
-              </label>
-            </div>
-
-            {/* Submit Button */}
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={loginLoading}
-                className="w-full py-3.5 px-4 rounded-xl bg-stone-900 hover:bg-amber-700 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-75 cursor-pointer"
-              >
-                {loginLoading ? (
-                  <>
-                    <RotateCcw className="w-4 h-4 animate-spin" />
-                    <span>Memverifikasi Kredensial...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Masuk ke Sistem</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-
-          {/* Supported Stakeholder Scope Card */}
-          <div className="mt-8 p-4 rounded-2xl bg-stone-100/80 border border-stone-200/80 text-[11px] text-stone-600 space-y-2">
-            <div className="font-bold text-stone-800 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Lingkup Pengguna Sistem Terdaftar:</span>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                6 Peran Terintegrasi
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-1 text-stone-700 font-medium">
-              <div className="flex items-center gap-1.5">
-                <Sprout className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>1. Kelompok Tani</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Warehouse className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                <span>2. Gudang &amp; QA</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Flame className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-                <span>3. Roaster (Roastery)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Coffee className="w-3.5 h-3.5 text-stone-700 shrink-0" />
-                <span>4. Coffee Shop (Kafe)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                <span className="font-semibold text-indigo-900">5. Verifikator (Mutu/ICT)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <ShoppingBag className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                <span>6. Buyer (Marketplace)</span>
-              </div>
-            </div>
-            <p className="text-[10px] text-stone-500 pt-1 leading-relaxed border-t border-stone-200/60">
-              Hak akses dan dasbor kerja Anda akan otomatis disesuaikan dengan peran organisasi terverifikasi.
-            </p>
-
-            {/* Registered demo accounts helper */}
-            <div className="pt-2 border-t border-stone-200/60 text-[10px] space-y-1.5">
-              <span className="font-bold text-stone-700 block">Kredensial Akun Pengguna Terdaftar (Sandi: password123):</span>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 font-mono text-stone-600">
-                <button
-                  type="button"
-                  onClick={() => { setEmail('superadmin@circulartrace.id'); setPassword('password123'); }}
-                  className="text-left hover:text-purple-900 font-bold text-purple-700 transition-colors cursor-pointer truncate bg-purple-50/90 px-1.5 py-1 rounded border border-purple-200 col-span-2 flex items-center justify-between"
-                  title="Klik untuk mengisi formulir login sebagai Super Admin Platform (Paket Layanan SaaS)"
-                >
-                  <span>⭐ Super Admin: superadmin@circulartrace.id</span>
-                  <span className="text-[9px] bg-purple-200/80 px-1 rounded text-purple-950 font-sans font-bold">Paket SaaS</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmail('admin.gapoktan@circularcoffee.id'); setPassword('password123'); }}
-                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
-                  title="Klik untuk mengisi formulir login sebagai Admin Kelompok Tani"
-                >
-                  • Admin: admin.gapoktan@sangrai.id
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmail('verifikator@kelompoktani.id'); setPassword('password123'); }}
-                  className="text-left hover:text-indigo-900 font-bold text-indigo-700 transition-colors cursor-pointer truncate bg-indigo-50/90 px-1 py-0.5 rounded border border-indigo-200"
-                  title="Klik untuk mengisi formulir login sebagai Lead Auditor & Verifikator Mutu CT"
-                >
-                  • Verifikator: verifikator@kelompoktani.id
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmail('reza@roaster.id'); setPassword('password123'); }}
-                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
-                  title="Klik untuk mengisi formulir login sebagai Roaster"
-                >
-                  • Roaster: reza@roaster.id
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmail('gudang.bandung@gudang.id'); setPassword('password123'); }}
-                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
-                  title="Klik untuk mengisi formulir login sebagai Gudang & QA"
-                >
-                  • Gudang: gudang.bandung@gudang.id
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmail('budi@pengolah.id'); setPassword('password123'); }}
-                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
-                  title="Klik untuk mengisi formulir login sebagai Stasiun Pengolah"
-                >
-                  • Pengolah: budi@pengolah.id
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmail('asep@petani.id'); setPassword('password123'); }}
-                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
-                  title="Klik untuk mengisi formulir login sebagai Petani"
-                >
-                  • Petani: asep@petani.id
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmail('maya@cafe.id'); setPassword('password123'); }}
-                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
-                  title="Klik untuk mengisi formulir login sebagai Coffee Shop"
-                >
-                  • Cafe: maya@cafe.id
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEmail('buyer@circulartrace.id'); setPassword('password123'); }}
-                  className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
-                  title="Klik untuk mengisi formulir login sebagai Buyer (Marketplace)"
-                >
-                  • Buyer: buyer@circulartrace.id
-                </button>
-              </div>
-              <p className="text-[9px] text-stone-400 italic">Klik salah satu akun di atas untuk mengisi formulir, lalu klik Masuk ke Sistem.</p>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
@@ -668,204 +914,7 @@ export const LoginPage: React.FC = () => {
           <p>&copy; 2026 CircularCoffee • Rantai Pasok Kopi Terintegrasi Farm-to-Cup</p>
         </div>
       </div>
-
-      {/* ============================================================== */}
-      {/* FORGOT PASSWORD MODAL (MULTI-STEP OTP)                         */}
-      {/* ============================================================== */}
-      {forgotModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
-          onClick={closeForgotModal}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-2xl border border-stone-200 max-w-md w-full p-6 sm:p-8 space-y-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="text-center space-y-1">
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-2 border border-amber-200">
-                <KeyRound className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-stone-900">
-                Pemulihan Kata Sandi
-              </h3>
-              <p className="text-xs text-stone-600">
-                {forgotStep === 'email' && 'Masukkan alamat email Anda untuk menerima kode verifikasi OTP.'}
-                {forgotStep === 'otp' && 'Masukkan 6-digit kode OTP yang telah dikirim ke email Anda.'}
-                {forgotStep === 'new_password' && 'Buat kata sandi baru yang kuat untuk akun Anda.'}
-                {forgotStep === 'success' && 'Kata sandi akun Anda berhasil diperbarui.'}
-              </p>
-            </div>
-
-            {/* Error Message */}
-            {forgotError && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{forgotError}</span>
-              </div>
-            )}
-
-            {/* Simulated OTP Notice */}
-            {simulatedOtpNotice && (
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
-                <span>{simulatedOtpNotice}</span>
-                <span className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-emerald-300">
-                  {forgotOtp}
-                </span>
-              </div>
-            )}
-
-            {/* Step 1: Input Email */}
-            {forgotStep === 'email' && (
-              <form onSubmit={handleRequestOtp} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                    Email Akun Terdaftar
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
-                    <input
-                      type="email"
-                      required
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="contoh: akun@organisasi.id"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-amber-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={closeForgotModal}
-                    className="flex-1 py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-600 hover:bg-stone-100 cursor-pointer"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <span>Kirim Kode OTP</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* Step 2: Input OTP */}
-            {forgotStep === 'otp' && (
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                    Kode 6-Digit OTP
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={6}
-                    value={forgotOtp}
-                    onChange={(e) => setForgotOtp(e.target.value)}
-                    placeholder="123456"
-                    className="w-full text-center tracking-widest text-lg font-mono font-bold py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setForgotStep('email')}
-                    className="flex-1 py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-600 hover:bg-stone-100 cursor-pointer"
-                  >
-                    Kembali
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <span>Verifikasi Kode</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* Step 3: New Password */}
-            {forgotStep === 'new_password' && (
-              <form onSubmit={handleSetNewPassword} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                    Kata Sandi Baru
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      required
-                      minLength={6}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Minimal 6 karakter"
-                      className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-amber-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 cursor-pointer"
-                    >
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                    Konfirmasi Kata Sandi Baru
-                  </label>
-                  <input
-                    type={showNewPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Ulangi kata sandi baru"
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <span>Simpan Kata Sandi Baru</span>
-                    <Check className="w-4 h-4" />
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* Step 4: Success */}
-            {forgotStep === 'success' && (
-              <div className="text-center space-y-4">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-6 h-6" />
-                </div>
-                <p className="text-xs text-stone-600">
-                  Kata sandi Anda telah berhasil diubah. Formulir masuk telah siap dengan kata sandi baru Anda.
-                </p>
-                <button
-                  type="button"
-                  onClick={closeForgotModal}
-                  className="w-full py-3 rounded-xl bg-stone-900 hover:bg-amber-700 text-white text-xs font-bold shadow-md transition-colors cursor-pointer"
-                >
-                  Masuk Sekarang
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
+

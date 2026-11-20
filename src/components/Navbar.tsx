@@ -10,7 +10,6 @@ import {
   ExternalLink,
   Printer,
 } from 'lucide-react';
-import { RegisterModal } from './RegisterModal';
 import { ProfileMenu } from './shared/ProfileMenu';
 import { LanguageSwitch } from './shared/LanguageSwitch';
 
@@ -20,18 +19,14 @@ export const Navbar: React.FC = () => {
     activeView,
     setActiveView,
     unifiedMarketplaceItems,
-    openBlankoModal,
     t,
   } = useCoffee();
 
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [isRegisterOpen, setIsRegisterOpen] = React.useState(false);
   const currentRoleInfo = currentUser ? ROLE_DETAILS[currentUser.role] : null;
 
   return (
-    <>
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-xs">
       {/* Main E-Commerce & Landing Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -88,16 +83,15 @@ export const Navbar: React.FC = () => {
             </a>
 
             {/* 3. Blanko Form Cetak Fisik */}
-            <button
-              type="button"
-              onClick={() => openBlankoModal('petani')}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 shadow-2xs"
+            <Link
+              to={currentUser ? '/admin/forms' : '/forms'}
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 shadow-2xs"
               title="Cetak & Download Blanko Formulir Fisik (A4) untuk Petani, Pengolah, Gudang, Roastery"
             >
               <Printer className="w-3.5 h-3.5 text-amber-600" />
               <span className="hidden md:inline">Blanko Form (A4)</span>
               <span className="md:hidden">Blanko</span>
-            </button>
+            </Link>
           </div>
 
           {/* Right Action */}
@@ -108,17 +102,17 @@ export const Navbar: React.FC = () => {
                 variant="light"
                 panelLabel={`${t('navbar.adminPanel')} ${currentRoleInfo?.label.split(' ')[0] || ''}`.trim()}
                 onOpenPanel={() => navigate('/admin/overview')}
-                onOpenRegister={() => setIsRegisterOpen(true)}
+                onOpenRegister={() => navigate('/register')}
               />
             ) : (
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsRegisterOpen(true)}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold border border-stone-300 transition-all cursor-pointer"
+                <Link
+                  to="/register"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold border border-stone-300 transition-all"
                   title="Daftar Akun Baru"
                 >
                   <span>{t('navbar.register')}</span>
-                </button>
+                </Link>
                 <Link
                   to="/login"
                   className="px-3.5 sm:px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs shadow-xs whitespace-nowrap"
@@ -131,10 +125,5 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
     </header>
-    <RegisterModal
-      isOpen={isRegisterOpen}
-      onClose={() => setIsRegisterOpen(false)}
-    />
-    </>
   );
 };

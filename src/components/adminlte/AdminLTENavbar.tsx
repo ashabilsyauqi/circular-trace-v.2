@@ -364,16 +364,15 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
       {/* Right nav items */}
       <div className="flex items-center gap-2">
         {/* Tombol Cetak & Download Blanko Formulir Fisik Lapangan */}
-        <button
-          onClick={() => openBlankoModal(getContextFormTab())}
-          type="button"
+        <Link
+          to={`/admin/forms/${getContextFormTab()}`}
           className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer shrink-0"
-          title="Cetak & Download Blanko Formulir Fisik A4 (Petani, Pengolah, Gudang, Roastery) untuk Pengisian Manual ICS"
+          title="Buka Halaman Blanko Formulir Fisik A4 (Petani, Pengolah, Gudang, Roastery) untuk Pengisian Manual ICS"
         >
           <Printer className="w-4 h-4 text-amber-600" />
           <span className="hidden sm:inline">Blanko Form (A4)</span>
           <span className="sm:hidden">Blanko</span>
-        </button>
+        </Link>
 
         {/* Fullscreen Button */}
         <button

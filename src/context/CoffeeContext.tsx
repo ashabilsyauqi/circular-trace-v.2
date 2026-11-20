@@ -587,7 +587,13 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const openBlankoModal = (tab: StakeholderFormType = 'petani') => {
     setBlankoModalInitialTab(tab);
-    setBlankoModalOpen(true);
+    setBlankoModalOpen(false);
+    // Directly navigate to full dedicated page (NO POPUPS)
+    if (currentUser) {
+      navigate(`/admin/forms/${tab}`);
+    } else {
+      navigate(`/forms/${tab}`);
+    }
   };
 
   const closeBlankoModal = () => {

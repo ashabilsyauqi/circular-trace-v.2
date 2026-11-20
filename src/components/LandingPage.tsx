@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
-import { RegisterModal } from './RegisterModal';
 import { landingContent } from '../i18n/landingContent';
 import {
   Sprout,
@@ -46,15 +45,12 @@ export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { language, setActiveView } = useCoffee();
   const content = landingContent[language];
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [registerRole, setRegisterRole] = useState<UserRole>('roaster');
   const [activeTabService, setActiveTabService] = useState<UserRole>('roaster');
   const [activePipelineStep, setActivePipelineStep] = useState<number>(0);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const openRegister = (role: UserRole = 'roaster') => {
-    setRegisterRole(role);
-    setIsRegisterOpen(true);
+    navigate(`/register?role=${role}`);
   };
 
   // Pipeline simulation stages
@@ -1079,12 +1075,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Registration Modal Component */}
-      <RegisterModal
-        isOpen={isRegisterOpen}
-        onClose={() => setIsRegisterOpen(false)}
-        initialRole={registerRole}
-      />
+      {/* End of Sections */}
     </div>
   );
 };

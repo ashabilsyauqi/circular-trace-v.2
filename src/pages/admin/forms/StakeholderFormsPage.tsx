@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import {
   Printer,
   FileSpreadsheet,
@@ -21,6 +21,7 @@ interface StakeholderFormsPageProps {
 
 export const StakeholderFormsPage: React.FC<StakeholderFormsPageProps> = ({ defaultForm }) => {
   const { formType } = useParams<{ formType?: string }>();
+  const location = useLocation();
 
   const activeFormType: StakeholderFormType = (() => {
     if (defaultForm) return defaultForm;
@@ -97,7 +98,7 @@ export const StakeholderFormsPage: React.FC<StakeholderFormsPageProps> = ({ defa
         {/* Quick Nav to other forms */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <Link
-            to="/admin/petani/blanko"
+            to={`${location.pathname.startsWith('/admin') ? '/admin/forms' : '/forms'}/petani`}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
               activeFormType === 'petani'
                 ? 'bg-emerald-700 text-white shadow-xs'
@@ -107,7 +108,7 @@ export const StakeholderFormsPage: React.FC<StakeholderFormsPageProps> = ({ defa
             Form Petani
           </Link>
           <Link
-            to="/admin/pengolah/blanko"
+            to={`${location.pathname.startsWith('/admin') ? '/admin/forms' : '/forms'}/pengolah`}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
               activeFormType === 'pengolah'
                 ? 'bg-amber-600 text-white shadow-xs'
@@ -117,7 +118,7 @@ export const StakeholderFormsPage: React.FC<StakeholderFormsPageProps> = ({ defa
             Form Pengolah
           </Link>
           <Link
-            to="/admin/gudang/blanko"
+            to={`${location.pathname.startsWith('/admin') ? '/admin/forms' : '/forms'}/gudang`}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
               activeFormType === 'gudang'
                 ? 'bg-blue-700 text-white shadow-xs'
@@ -127,7 +128,7 @@ export const StakeholderFormsPage: React.FC<StakeholderFormsPageProps> = ({ defa
             Form Gudang
           </Link>
           <Link
-            to="/admin/roaster/blanko"
+            to={`${location.pathname.startsWith('/admin') ? '/admin/forms' : '/forms'}/roastery`}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
               activeFormType === 'roastery'
                 ? 'bg-orange-600 text-white shadow-xs'

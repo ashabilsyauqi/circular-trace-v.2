@@ -58,16 +58,15 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           { id: 'kt-04', name: 'Gapoktan Priangan Lestari', location: 'Garut, Jawa Barat' },
         ];
 
-  const registerableRoles: Exclude<UserRole, 'super_admin'>[] = [
+  const registerableRoles: Exclude<UserRole, 'super_admin' | 'verifikator'>[] = [
     'admin_kelompok_tani',
     'gudang',
     'roaster',
     'cafe',
-    'verifikator',
   ];
 
   const resolvedInitialRole: Exclude<UserRole, 'super_admin'> = (() => {
-    if (initialRole === 'petani' || initialRole === 'pengolah' || initialRole === 'ict') {
+    if (initialRole === 'petani' || initialRole === 'pengolah' || initialRole === 'ict' || initialRole === 'verifikator') {
       return 'admin_kelompok_tani';
     }
     if (registerableRoles.includes(initialRole as any)) {
@@ -481,6 +480,32 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                       Peran <strong>Petani Kopi</strong>, <strong>Stasiun Pengolah (Wet/Dry Mill)</strong>, dan <strong>Petugas Auditor ICS</strong> telah tercakup langsung (<em>included</em>) di dalam akun <strong>Kelompok Tani / Koperasi</strong>. Pendaftaran dan penugasan akun anggota dikelola langsung oleh pengurus melalui portal Kelompok Tani setelah terdaftar.
                     </span>
                   </div>
+                </div>
+
+                {/* Hook Khusus untuk Verifikator / Q-Grader */}
+                <div className="mt-2.5 p-3 bg-gradient-to-r from-purple-50 via-indigo-50/60 to-purple-50/80 border border-purple-200 rounded-xl flex items-center justify-between gap-2.5 text-[11px] text-purple-950 leading-relaxed shadow-2xs">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-purple-950 font-bold">
+                        Anda Seorang Verifikator Mutu atau Q-Grader?
+                      </strong>
+                      <span className="text-purple-800 text-[10px]">
+                        Pendaftaran Auditor &amp; Q-Grader memerlukan nomor lisensi resmi.
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleClose();
+                      navigate('/register-verifikator');
+                    }}
+                    className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg font-bold text-[10px] shrink-0 transition-colors shadow-2xs inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Form Auditor</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
                 </div>
 
                 {/* Selected Role Description Banner */}

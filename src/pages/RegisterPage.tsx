@@ -40,13 +40,19 @@ export const RegisterPage: React.FC = () => {
   }, [currentUser, navigate]);
 
   const initialRoleParam = searchParams.get('role') as UserRole | null;
-  const registerableRoles: Exclude<UserRole, 'super_admin'>[] = [
+  const registerableRoles: Exclude<UserRole, 'super_admin' | 'verifikator'>[] = [
     'admin_kelompok_tani',
     'gudang',
     'roaster',
     'cafe',
-    'verifikator',
   ];
+
+  // Redirect verifikator to dedicated registration portal
+  useEffect(() => {
+    if (initialRoleParam === 'verifikator') {
+      navigate('/register-verifikator', { replace: true });
+    }
+  }, [initialRoleParam, navigate]);
 
   const defaultRole: Exclude<UserRole, 'super_admin'> = (() => {
     if (!initialRoleParam) return 'admin_kelompok_tani';
@@ -456,6 +462,30 @@ export const RegisterPage: React.FC = () => {
                         Peran <strong>Petani Kopi</strong>, <strong>Stasiun Pengolah (Wet/Dry Mill)</strong>, dan <strong>Petugas Auditor ICS</strong> telah tercakup langsung (<em>included</em>) di bawah manajemen <strong>Kelompok Tani / Koperasi</strong>. Penugasan akun anggota dilakukan oleh pengurus melalui portal Kelompok Tani setelah terdaftar.
                       </p>
                     </div>
+                  </div>
+
+                  {/* Hook Khusus untuk Verifikator / Q-Grader */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50/60 to-purple-50/80 border border-purple-200 text-xs text-purple-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 border border-purple-200">
+                        <ShieldCheck className="w-5 h-5" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="font-black text-purple-950 block">
+                          Anda Seorang Verifikator Mutu atau Q-Grader Independen?
+                        </span>
+                        <p className="text-[11px] text-purple-800 leading-relaxed">
+                          Pendaftaran Verifikator &amp; Auditor memerlukan formulir khusus pengisian nomor lisensi, instansi sertifikasi, dan lingkup audit kepatuhan EUDR / SCA.
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      to="/register-verifikator"
+                      className="px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs shrink-0 transition-colors shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Buka Form Verifikator</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
                   </div>
                 </div>
 

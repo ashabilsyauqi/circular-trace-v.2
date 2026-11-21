@@ -52,6 +52,7 @@ import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { PlatformPackagesPage } from './pages/admin/superadmin/PlatformPackagesPage';
 import { SuperAdminLoginPage } from './pages/admin/superadmin/SuperAdminLoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { RegisterVerifierPage } from './pages/RegisterVerifierPage';
 
 /**
  * Public Layout holding top Navbar + Outlet + bottom Footer
@@ -184,6 +185,9 @@ export const AppRoutes: React.FC = () => {
       <Route path="/admin/superadmin/login" element={<Navigate to="/superadmin/login" replace />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/daftar" element={<Navigate to="/register" replace />} />
+      <Route path="/register-verifikator" element={<RegisterVerifierPage />} />
+      <Route path="/verifikator/register" element={<Navigate to="/register-verifikator" replace />} />
+      <Route path="/daftar-verifikator" element={<Navigate to="/register-verifikator" replace />} />
       <Route path="/forgot-password" element={<LoginPage initialMode="forgot" />} />
       <Route path="/lupa-sandi" element={<Navigate to="/forgot-password" replace />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />

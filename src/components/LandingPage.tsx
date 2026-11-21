@@ -962,6 +962,167 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ------------------------------------------------------------- */}
+      {/* SECTION 4.5: AUDITOR & VERIFIKATOR HOOK ("Anda Seorang Verifikator?") */}
+      {/* ------------------------------------------------------------- */}
+      <section id="verifikator" className="py-20 bg-gradient-to-br from-[#0c071e] via-[#140b2e] to-[#221045] text-white relative overflow-hidden border-t border-b border-purple-900/40">
+        {/* Ambient lighting glows */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Section Header */}
+          <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
+            <div className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-300 border border-purple-500/40 px-4 py-1.5 rounded-full text-xs font-bold shadow-lg backdrop-blur-md">
+              <ShieldCheck className="w-4 h-4 text-purple-400" />
+              <span>PORTAL AUDITOR &amp; AKREDITASI INDEPENDEN</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+              Anda Seorang <span className="bg-gradient-to-r from-purple-400 via-pink-300 to-indigo-300 bg-clip-text text-transparent">Verifikator Mutu</span> atau <span className="bg-gradient-to-r from-amber-300 to-yellow-200 bg-clip-text text-transparent">Q-Grader</span>?
+            </h2>
+
+            <p className="text-stone-300 text-sm sm:text-base leading-relaxed">
+              Bergabunglah dengan dewan auditor independen ekosistem Circular Coffee Trace. Validasi kepatuhan deforestasi EUDR, lakukan inspeksi sanitasi stasiun olah, evaluasi sensori SCA 10-atribut, dan terbitkan stempel verifikasi digital berstandar global.
+            </p>
+          </div>
+
+          {/* 4 Feature Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+            {/* Card 1: EUDR */}
+            <div className="bg-white/5 border border-purple-500/20 rounded-2xl p-6 backdrop-blur-md hover:border-purple-400/50 hover:bg-white/10 transition-all flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-900/60 border border-purple-500/30 flex items-center justify-center text-purple-300 shadow-md">
+                  <Globe className="w-6 h-6 text-emerald-400" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30">
+                    Regulasi EU 2023/1115
+                  </span>
+                  <h3 className="text-white font-bold text-base mt-2.5">
+                    Audit Kepatuhan Bebas Deforestasi (EUDR)
+                  </h3>
+                  <p className="text-xs text-stone-300 mt-2 leading-relaxed">
+                    Verifikasi koordinat GPS polygon kebun, audit legalitas lahan petani, dan pastikan kepatuhan nol deforestasi untuk ekspor kopi ke Uni Eropa.
+                  </p>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-purple-900/40 mt-4 flex items-center gap-1.5 text-[11px] text-purple-300 font-semibold">
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Geolokasi &amp; Polygon Terverifikasi</span>
+              </div>
+            </div>
+
+            {/* Card 2: Standarisasi Olah */}
+            <div className="bg-white/5 border border-purple-500/20 rounded-2xl p-6 backdrop-blur-md hover:border-purple-400/50 hover:bg-white/10 transition-all flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-900/60 border border-purple-500/30 flex items-center justify-center text-purple-300 shadow-md">
+                  <Layers className="w-6 h-6 text-amber-400" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-500/30">
+                    Inspeksi Stasiun Mill
+                  </span>
+                  <h3 className="text-white font-bold text-base mt-2.5">
+                    Standarisasi Olah &amp; Parameter Fisik
+                  </h3>
+                  <p className="text-xs text-stone-300 mt-2 leading-relaxed">
+                    Inspeksi sanitasi stasiun olah, verifikasi 7 metode fermentasi, serta kalibrasi kadar air 10–12% dan water activity (Aw ≤ 0.60).
+                  </p>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-purple-900/40 mt-4 flex items-center gap-1.5 text-[11px] text-purple-300 font-semibold">
+                <Check className="w-3.5 h-3.5 text-amber-400" />
+                <span>Zero Defect &amp; Lab Standard</span>
+              </div>
+            </div>
+
+            {/* Card 3: Evaluasi Sensori SCA */}
+            <div className="bg-white/5 border border-purple-500/20 rounded-2xl p-6 backdrop-blur-md hover:border-purple-400/50 hover:bg-white/10 transition-all flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-900/60 border border-purple-500/30 flex items-center justify-center text-purple-300 shadow-md">
+                  <Award className="w-6 h-6 text-purple-300" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-300 px-2 py-0.5 rounded-full bg-purple-950/60 border border-purple-500/30">
+                    SCA Cupping 10-Atribut
+                  </span>
+                  <h3 className="text-white font-bold text-base mt-2.5">
+                    Evaluasi Sensori &amp; Q-Grader Score
+                  </h3>
+                  <p className="text-xs text-stone-300 mt-2 leading-relaxed">
+                    Input skor cupping 10 atribut spesifik SCA (Fragrance, Flavor, Acidity, Body, Cleanliness, Balance) yang langsung menghasilkan Spider Radar Chart realtime.
+                  </p>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-purple-900/40 mt-4 flex items-center gap-1.5 text-[11px] text-purple-300 font-semibold">
+                <Check className="w-3.5 h-3.5 text-purple-400" />
+                <span>Radar Sensorik Otomatis</span>
+              </div>
+            </div>
+
+            {/* Card 4: Stempel Digital */}
+            <div className="bg-white/5 border border-purple-500/20 rounded-2xl p-6 backdrop-blur-md hover:border-purple-400/50 hover:bg-white/10 transition-all flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-900/60 border border-purple-500/30 flex items-center justify-center text-purple-300 shadow-md">
+                  <CheckCircle2 className="w-6 h-6 text-cyan-400" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-500/30">
+                    Stempel Anti-Tamper
+                  </span>
+                  <h3 className="text-white font-bold text-base mt-2.5">
+                    Penerbitan Stempel Verifikasi Digital
+                  </h3>
+                  <p className="text-xs text-stone-300 mt-2 leading-relaxed">
+                    Terbitkan sertifikat dan stempel digital terotentikasi SHA-256 pada Paspor Kopi untuk menjamin keaslian data bagi pembeli internasional.
+                  </p>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-purple-900/40 mt-4 flex items-center gap-1.5 text-[11px] text-purple-300 font-semibold">
+                <Check className="w-3.5 h-3.5 text-cyan-400" />
+                <span>SHA-256 Validated Signature</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Callout Banner Box */}
+          <div className="bg-gradient-to-r from-purple-950/90 via-[#231248] to-indigo-950/90 border border-purple-500/30 rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8 backdrop-blur-md">
+            <div className="space-y-3 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-200 text-xs font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                <span>Formulir Khusus Kredensial Auditor</span>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                Daftarkan Lisensi Auditor &amp; Q-Grader Anda
+              </h3>
+              <p className="text-stone-300 text-xs sm:text-sm max-w-xl leading-relaxed">
+                Registrasi verifikator dilengkapi validasi nomor lisensi resmi, instansi sertifikasi penguji, portofolio keahlian, dan pakta integritas independensi.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
+              <button
+                onClick={() => navigate('/register-verifikator')}
+                className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-purple-900/50 hover:shadow-2xl hover:scale-102 transition-all flex items-center justify-center gap-2 cursor-pointer border border-purple-400/50"
+              >
+                <span>Daftar sebagai Verifikator Resmi</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full sm:w-auto px-5 py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-purple-200 hover:text-white font-bold text-sm border border-purple-400/30 backdrop-blur-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <ShieldCheck className="w-4 h-4 text-purple-300" />
+                <span>Masuk Portal Verifikator</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------- */}
       {/* SECTION 5: CTA TO REGISTER (Call to Action & Onboarding)       */}
       {/* ------------------------------------------------------------- */}
       <section id="register" className="py-20 bg-[#1C120C] text-stone-200 relative overflow-hidden">
@@ -982,18 +1143,18 @@ export const LandingPage: React.FC = () => {
             </p>
           </div>
 
-          {/* 5 Role Selection Cards for Fast Registration */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+          {/* 4 Supply Chain Role Selection Cards for Fast Registration */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {(
               [
-                { role: 'petani' as UserRole, icon: <Sprout className="w-5 h-5 text-emerald-400" />, btnColor: 'bg-emerald-600 hover:bg-emerald-500' },
-                { role: 'pengolah' as UserRole, icon: <Cog className="w-5 h-5 text-amber-400" />, btnColor: 'bg-amber-600 hover:bg-amber-500' },
+                { role: 'admin_kelompok_tani' as UserRole, icon: <Building2 className="w-5 h-5 text-emerald-400" />, btnColor: 'bg-emerald-600 hover:bg-emerald-500' },
                 { role: 'gudang' as UserRole, icon: <Warehouse className="w-5 h-5 text-blue-400" />, btnColor: 'bg-blue-600 hover:bg-blue-500' },
                 { role: 'roaster' as UserRole, icon: <Flame className="w-5 h-5 text-orange-400" />, btnColor: 'bg-orange-600 hover:bg-orange-500' },
                 { role: 'cafe' as UserRole, icon: <Coffee className="w-5 h-5 text-amber-300" />, btnColor: 'bg-stone-800 hover:bg-stone-700' },
               ] as { role: UserRole; icon: React.ReactNode; btnColor: string }[]
             ).map((cardMeta) => {
-              const card = content.cta.roleCards.find((c) => c.role === cardMeta.role)!;
+              const card = content.cta.roleCards.find((c) => c.role === cardMeta.role);
+              if (!card) return null;
               return (
                 <div
                   key={card.role}
@@ -1019,6 +1180,30 @@ export const LandingPage: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+
+          {/* Quick Notice to Verifier Registration */}
+          <div className="bg-purple-950/30 border border-purple-500/30 rounded-2xl p-4 sm:p-5 mb-12 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-900/50 border border-purple-500/40 flex items-center justify-center text-purple-300 shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs sm:text-sm font-bold text-purple-200">
+                  Mendaftar sebagai Auditor atau Q-Grader?
+                </p>
+                <p className="text-[11px] text-purple-300/70">
+                  Verifikator independen memiliki formulir registrasi khusus kredensial &amp; lisensi sertifikasi.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/register-verifikator')}
+              className="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <span>Form Registrasi Verifikator</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           {/* Central Callout Banner */}

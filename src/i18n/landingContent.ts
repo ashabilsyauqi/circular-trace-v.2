@@ -687,16 +687,14 @@ const enAdvantageCards: AdvantageCard[] = [
 ];
 
 const idCtaRoleCards: CtaRoleCard[] = [
-  { role: 'petani', name: 'Petani Kopi', desc: 'Upload panen ceri & jual langsung ke mill', registerLabel: 'Daftar Petani' },
-  { role: 'pengolah', name: 'Pengolah Mill', desc: 'Fermentasi, uji mutu & kelola limbah sirkular', registerLabel: 'Daftar Pengolah' },
+  { role: 'admin_kelompok_tani', name: 'Kelompok Tani / Koperasi', desc: 'Induk kebun Petani, stasiun olah Pengolah & audit internal ICS', registerLabel: 'Daftar Koperasi / KT' },
   { role: 'gudang', name: 'Gudang & QA', desc: 'Kelola stok gudang GrainPro & sertifikasi SCA', registerLabel: 'Daftar Gudang' },
   { role: 'roaster', name: 'Artisan Roastery', desc: 'Work order, kurva Agtron & CircularCoffee', registerLabel: 'Daftar Artisan' },
   { role: 'cafe', name: 'Pemilik Cafe', desc: 'Beli roasted beans & cetak QR cup seduh', registerLabel: 'Daftar Pemilik' },
 ];
 
 const enCtaRoleCards: CtaRoleCard[] = [
-  { role: 'petani', name: 'Coffee Farmer', desc: 'Upload cherry harvests & sell directly to the mill', registerLabel: 'Register as Farmer' },
-  { role: 'pengolah', name: 'Mill Processor', desc: 'Fermentation, quality testing & circular waste management', registerLabel: 'Register as Processor' },
+  { role: 'admin_kelompok_tani', name: 'Farmer Group / Cooperative', desc: 'Hub for Farmers, Mill Processors & internal ICS officers', registerLabel: 'Register Cooperative' },
   { role: 'gudang', name: 'Warehouse & QA', desc: 'Manage GrainPro warehouse stock & SCA certification', registerLabel: 'Register Warehouse' },
   { role: 'roaster', name: 'Artisan Roastery', desc: 'Work orders, Agtron curves & CircularCoffee', registerLabel: 'Register as Roastery' },
   { role: 'cafe', name: 'Cafe Owner', desc: 'Buy roasted beans & print QR brew cups', registerLabel: 'Register as Owner' },

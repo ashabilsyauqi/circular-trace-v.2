@@ -166,24 +166,24 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
   return (
     <aside
-      className={`bg-[#343a40] text-[#c2c7d0] transition-all duration-300 flex flex-col shrink-0 select-none z-40 ${
+      className={`bg-stone-900 text-stone-300 border-r border-stone-800/80 transition-all duration-300 flex flex-col shrink-0 select-none z-40 ${
         isCollapsed ? 'w-18' : 'w-64'
       }`}
     >
       {/* 1. Brand Logo Header */}
       <Link
         to={getHomePath()}
-        className="h-14 bg-[#343a40] border-b border-[#4f5962] flex items-center px-4 gap-3 text-white transition-colors hover:text-amber-400 overflow-hidden"
+        className="h-16 bg-stone-950 border-b border-stone-800/90 flex items-center px-4 gap-3 text-white transition-colors hover:text-amber-400 overflow-hidden"
       >
-        <div className="w-8 h-8 rounded-lg bg-amber-500 text-stone-950 flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-stone-950 flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-amber-950/40">
           {getBrandIcon()}
         </div>
         {!isCollapsed && (
           <div className="leading-tight truncate">
-            <span className="font-extrabold text-sm tracking-wide text-white block">
+            <span className="font-black text-sm tracking-wide text-white block">
               Circular<span className="text-amber-400">Coffee</span>
             </span>
-            <span className="text-[10px] text-stone-400 font-normal block truncate">
+            <span className="text-[10px] text-stone-400 font-medium block truncate">
               {getBrandSubtitle()}
             </span>
           </div>
@@ -192,19 +192,19 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
       {/* 2. User Info Panel */}
       {currentUser && (
-        <div className="p-3 border-b border-[#4f5962] flex items-center gap-3 overflow-hidden">
+        <div className="p-3.5 bg-stone-950/40 border-b border-stone-800/80 flex items-center gap-3 overflow-hidden">
           <img
             src={currentUser.avatar}
             alt={currentUser.name}
-            className="w-9 h-9 rounded-full object-cover border border-[#6c757d] shrink-0"
+            className="w-9 h-9 rounded-full object-cover ring-2 ring-amber-500/20 border border-stone-700 shrink-0"
           />
           {!isCollapsed && (
             <div className="min-w-0 flex-1 leading-tight">
               <span className="font-bold text-xs text-white block truncate">
                 {currentUser.name}
               </span>
-              <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
-                <Circle className="w-2 h-2 fill-emerald-400 text-emerald-400" />
+              <span className="text-[10px] text-emerald-400 flex items-center gap-1.5 mt-0.5 font-medium">
+                <Circle className="w-2 h-2 fill-emerald-400 text-emerald-400 animate-pulse" />
                 <span>Online • {currentRoleInfo?.label || currentUser.role}</span>
               </span>
             </div>
@@ -212,7 +212,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
         </div>
       )}
 
-      {/* 3. Search Bar (AdminLTE Style) */}
+      {/* 3. Search Bar */}
       {!isCollapsed && (
         <div className="p-3">
           <div className="relative">
@@ -221,9 +221,9 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               value={filterQuery}
               onChange={(e) => setFilterQuery(e.target.value)}
               placeholder="Cari Menu..."
-              className="w-full bg-[#3f474e] text-xs text-white placeholder-[#869099] rounded-md px-3 py-1.5 pl-8 border border-[#4f5962] focus:outline-none focus:border-amber-400"
+              className="w-full bg-stone-800/80 text-xs text-stone-100 placeholder-stone-500 rounded-xl px-3 py-1.5 pl-8 border border-stone-700/60 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/20 transition-all"
             />
-            <Search className="w-3.5 h-3.5 text-[#869099] absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           </div>
         </div>
       )}
@@ -234,9 +234,9 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
         {isSuperAdmin && (
           <div>
             {!isCollapsed && (
-              <div className="px-3 py-1 text-[10px] font-bold text-purple-400 uppercase tracking-wider flex items-center justify-between">
+              <div className="px-3 py-1.5 text-[10px] font-black text-stone-400 uppercase tracking-wider flex items-center justify-between">
                 <span>Platform Super Admin</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800 font-bold">
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">
                   SaaS Owner
                 </span>
               </div>
@@ -246,71 +246,93 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               <NavLink
                 to="/admin/superadmin/packages"
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                     isActive
-                      ? 'bg-purple-600 text-white font-bold shadow-xs'
-                      : 'text-purple-200 hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`
                 }
                 title="Master Paket Layanan & Harga"
               >
-                <Package className="w-4 h-4 text-purple-400 shrink-0" />
-                {!isCollapsed && <span className="flex-1 truncate">Paket Layanan &amp; Harga</span>}
-                {!isCollapsed && (
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-900/80 text-purple-200 font-bold border border-purple-700/60">
-                    Komersial
-                  </span>
+                {({ isActive }) => (
+                  <>
+                    <Package className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                    {!isCollapsed && <span className="flex-1 truncate">Paket Layanan &amp; Harga</span>}
+                    {!isCollapsed && (
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                        isActive
+                          ? 'bg-stone-950/20 text-stone-950 font-black'
+                          : 'bg-stone-800 text-amber-300 border border-amber-500/20'
+                      }`}>
+                        Komersial
+                      </span>
+                    )}
+                  </>
                 )}
               </NavLink>
 
               <NavLink
                 to="/admin/users"
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                     isActive
-                      ? 'bg-purple-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`
                 }
                 title="Master Pengguna Platform"
               >
-                <Users className="w-4 h-4 text-purple-400 shrink-0" />
-                {!isCollapsed && <span className="flex-1 truncate">Master Users</span>}
-                {!isCollapsed && (
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-700 text-white font-bold">
-                    {users.length}
-                  </span>
+                {({ isActive }) => (
+                  <>
+                    <Users className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                    {!isCollapsed && <span className="flex-1 truncate">Master Users</span>}
+                    {!isCollapsed && (
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                        isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-emerald-700/80 text-emerald-100'
+                      }`}>
+                        {users.length}
+                      </span>
+                    )}
+                  </>
                 )}
               </NavLink>
 
               <NavLink
                 to="/admin/transaksi"
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                     isActive
-                      ? 'bg-purple-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`
                 }
                 title="Buku Transaksi Marketplace"
               >
-                <History className="w-4 h-4 text-purple-400 shrink-0" />
-                {!isCollapsed && <span className="flex-1 truncate">Buku Transaksi</span>}
+                {({ isActive }) => (
+                  <>
+                    <History className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                    {!isCollapsed && <span className="flex-1 truncate">Buku Transaksi</span>}
+                  </>
+                )}
               </NavLink>
 
               <NavLink
                 to="/admin/overview"
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                     isActive
-                      ? 'bg-purple-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`
                 }
                 title="Control Tower Ekosistem"
               >
-                <LayoutDashboard className="w-4 h-4 text-purple-400 shrink-0" />
-                {!isCollapsed && <span className="flex-1 truncate">Control Tower</span>}
+                {({ isActive }) => (
+                  <>
+                    <LayoutDashboard className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                    {!isCollapsed && <span className="flex-1 truncate">Control Tower</span>}
+                  </>
+                )}
               </NavLink>
             </div>
           </div>

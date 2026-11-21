@@ -175,14 +175,14 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
   return (
     <aside
-      className={`bg-stone-900 text-stone-300 border-r border-stone-800/80 transition-all duration-300 flex flex-col shrink-0 select-none z-40 ${
-        isCollapsed ? 'w-18' : 'w-64'
+      className={`bg-stone-900 text-stone-300 border-r border-stone-800/80 transition-all duration-300 flex flex-col shrink-0 select-none z-40 h-full max-h-screen ${
+        isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
       {/* 1. Brand Logo Header */}
       <Link
         to={getHomePath()}
-        className="h-16 bg-stone-950 border-b border-stone-800/90 flex items-center px-4 gap-3 text-white transition-colors hover:text-amber-400 overflow-hidden"
+        className="h-16 bg-stone-950 border-b border-stone-800/90 flex items-center px-4 gap-3 text-white transition-colors hover:text-amber-400 overflow-hidden shrink-0"
       >
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-stone-950 flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-amber-950/40">
           {getBrandIcon()}
@@ -201,7 +201,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
       {/* 2. User Info Panel */}
       {currentUser && (
-        <div className="p-3.5 bg-stone-950/40 border-b border-stone-800/80 flex items-center gap-3 overflow-hidden">
+        <div className="p-3.5 bg-stone-950/40 border-b border-stone-800/80 flex items-center gap-3 overflow-hidden shrink-0">
           <img
             src={currentUser.avatar}
             alt={currentUser.name}
@@ -223,7 +223,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
       {/* 3. Search Bar */}
       {!isCollapsed && (
-        <div className="p-3">
+        <div className="p-3 shrink-0">
           <div className="relative">
             <input
               type="text"
@@ -238,7 +238,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
       )}
 
       {/* 4. Sidebar Navigation Menus */}
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-4 text-xs font-medium">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-4 text-xs font-medium cct-sidebar-scroll">
         {/* SECTION: KHUSUS SUPER ADMIN / PLATFORM OWNER */}
         {isSuperAdmin && (
           <div className="space-y-4">
@@ -1529,7 +1529,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
       {/* 5. Bottom Brand Footnote */}
       {!isCollapsed && (
-        <div className="p-3 border-t border-stone-800/80 text-[10px] text-stone-400 text-center font-medium">
+        <div className="p-3 border-t border-stone-800/80 text-[10px] text-stone-400 text-center font-medium shrink-0 bg-stone-950/40">
           CircularCoffee OS • Enterprise Coffee Platform
         </div>
       )}

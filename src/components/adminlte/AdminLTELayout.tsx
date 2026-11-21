@@ -9,7 +9,19 @@ import { AdminLTEFooter } from './AdminLTEFooter';
 export const AdminLTELayout: React.FC = () => {
   const { currentUser } = useCoffee();
   const location = useLocation();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 1024;
+    }
+    return false;
+  });
+
+  // Auto-collapse on small screens when route changes
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsSidebarCollapsed(true);
+    }
+  }, [location.pathname]);
 
   // Auth Guard: if not authenticated, redirect to login
   if (!currentUser) {
@@ -434,7 +446,7 @@ export const AdminLTELayout: React.FC = () => {
   return (
     <div className="min-h-screen flex bg-[#FAF7F2] font-sans antialiased text-stone-900 print:bg-white print:block">
       {/* 1. AdminLTE Dark Sidebar (Hidden on Print) */}
-      <div className="print:hidden no-print">
+      <div className="print:hidden no-print self-start sticky top-0 h-screen max-h-screen z-40 shrink-0">
         <AdminLTESidebar isCollapsed={isSidebarCollapsed} />
       </div>
 

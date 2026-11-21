@@ -46,6 +46,25 @@
   background: #B9AA96;
 }
 
+/* Sidebar dark amber subtle scrollbar */
+.cct-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(217, 119, 6, 0.35) transparent;
+}
+.cct-sidebar-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.cct-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cct-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.25);
+  border-radius: 9999px;
+}
+.cct-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.5);
+}
+
 /* ==========================================================================
    Circular Coffee ERP Design System: Odoo Style Navigation, Control Panel & Sheets
    ========================================================================== */

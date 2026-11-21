@@ -26,6 +26,8 @@ import {
   Award,
   ExternalLink,
   Printer,
+  CreditCard,
+  Activity,
 } from 'lucide-react';
 import { ROLE_DETAILS } from '../../constants/roles';
 
@@ -83,6 +85,13 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   const canSeeIct = (isAdminKelompok || userRole === 'ict') && !isVerifikator && !isSuperAdmin;
   const canSeeVerifikator = isVerifikator;
   const canSeeSeller = (isAdminKelompok || userRole === 'roaster' || userRole === 'gudang' || userRole === 'pengolah' || userRole === 'petani') && !isVerifikator && !isSuperAdmin;
+
+  // User counts per service for Super Admin badges
+  const kelompokTaniUsersCount = (users || []).filter((u) => u.role === 'admin_kelompok_tani' || u.role === 'petani' || u.role === 'pengolah' || u.role === 'ict').length;
+  const gudangUsersCount = (users || []).filter((u) => u.role === 'gudang').length;
+  const roasterUsersCount = (users || []).filter((u) => u.role === 'roaster').length;
+  const cafeUsersCount = (users || []).filter((u) => u.role === 'cafe').length;
+  const verifikatorUsersCount = (users || []).filter((u) => u.role === 'verifikator').length;
 
   const getHomePath = () => {
     switch (userRole) {
@@ -232,19 +241,341 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-4 text-xs font-medium">
         {/* SECTION: KHUSUS SUPER ADMIN / PLATFORM OWNER */}
         {isSuperAdmin && (
+          <div className="space-y-4">
+            {/* Group 1: Platform Owner SaaS */}
+            <div>
+              {!isCollapsed && (
+                <div className="px-3 py-1.5 text-[10px] font-black text-stone-400 uppercase tracking-wider flex items-center justify-between">
+                  <span>Platform Super Admin</span>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">
+                    SaaS Owner
+                  </span>
+                </div>
+              )}
+
+              <div className="space-y-1 mt-1">
+                {/* 1. Paket Layanan & Harga */}
+                <NavLink
+                  to="/admin/superadmin/packages"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Master Paket Layanan & Harga"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Package className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Paket Layanan &amp; Harga</span>}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                          isActive
+                            ? 'bg-stone-950/20 text-stone-950 font-black'
+                            : 'bg-stone-800 text-amber-300 border border-amber-500/20'
+                        }`}>
+                          Komersial
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+
+                {/* 2. Subscribed Users (Point 3) */}
+                <NavLink
+                  to="/admin/superadmin/subscriptions"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Pelanggan Berlangganan (Subscribed Users)"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <CreditCard className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Subscribed Users</span>}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                          isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                        }`}>
+                          Billing
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+
+                {/* 3. Master Users */}
+                <NavLink
+                  to="/admin/users"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Master Pengguna Platform"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Users className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Master Users</span>}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                          isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-emerald-700/80 text-emerald-100'
+                        }`}>
+                          {users.length}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+
+                {/* 4. Buku Transaksi */}
+                <NavLink
+                  to="/admin/transaksi"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Buku Transaksi Marketplace"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <History className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Buku Transaksi</span>}
+                    </>
+                  )}
+                </NavLink>
+              </div>
+            </div>
+
+            {/* Group 2: SETTING MASING-MASING SERVICE (USER REQUEST POINT 1 & 2) */}
+            <div>
+              {!isCollapsed && (
+                <div className="px-3 py-1.5 text-[10px] font-black text-amber-400 uppercase tracking-wider flex items-center justify-between border-t border-stone-800 pt-3">
+                  <span>Settingan Services</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-stone-800 text-stone-400 font-mono">
+                    5 Pilar
+                  </span>
+                </div>
+              )}
+
+              <div className="space-y-1 mt-1">
+                {/* Service 1: Kelompok Tani */}
+                <NavLink
+                  to="/admin/superadmin/services/admin_kelompok_tani"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Setting Service Kelompok Tani & Hulu"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Building2 className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Kelompok Tani &amp; Hulu</span>}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
+                          isActive ? 'bg-stone-950/20 text-stone-950 font-black' : 'bg-amber-950 text-amber-300 border border-amber-800/60'
+                        }`}>
+                          {kelompokTaniUsersCount}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+
+                {/* Service 2: Gudang & QA */}
+                <NavLink
+                  to="/admin/superadmin/services/gudang"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Setting Service Gudang & QA"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Warehouse className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-blue-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Gudang &amp; QA</span>}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
+                          isActive ? 'bg-stone-950/20 text-stone-950 font-black' : 'bg-blue-950 text-blue-300 border border-blue-800/60'
+                        }`}>
+                          {gudangUsersCount}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+
+                {/* Service 3: Roastery */}
+                <NavLink
+                  to="/admin/superadmin/services/roaster"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Setting Service Artisan Roastery"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Flame className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-orange-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Artisan Roastery</span>}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
+                          isActive ? 'bg-stone-950/20 text-stone-950 font-black' : 'bg-orange-950 text-orange-300 border border-orange-800/60'
+                        }`}>
+                          {roasterUsersCount}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+
+                {/* Service 4: Cafe & Kedai */}
+                <NavLink
+                  to="/admin/superadmin/services/cafe"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Setting Service Cafe & Kedai"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Coffee className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-stone-300'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Cafe &amp; Kedai</span>}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
+                          isActive ? 'bg-stone-950/20 text-stone-950 font-black' : 'bg-stone-800 text-stone-300 border border-stone-700'
+                        }`}>
+                          {cafeUsersCount}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+
+                {/* Service 5: Verifikator Mutu */}
+                <NavLink
+                  to="/admin/superadmin/services/verifikator"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Setting Service Verifikator Mutu"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <ShieldCheck className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-purple-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Verifikator Mutu</span>}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
+                          isActive ? 'bg-stone-950/20 text-stone-950 font-black' : 'bg-purple-950 text-purple-300 border border-purple-800/60'
+                        }`}>
+                          {verifikatorUsersCount}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              </div>
+            </div>
+
+            {/* Group 3: DATA & METRIK EKOSISTEM (USER REQUEST POINT 4) */}
+            <div>
+              {!isCollapsed && (
+                <div className="px-3 py-1.5 text-[10px] font-black text-cyan-400 uppercase tracking-wider flex items-center justify-between border-t border-stone-800 pt-3">
+                  <span>Data &amp; Telemetri</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 font-mono">
+                    Impact
+                  </span>
+                </div>
+              )}
+
+              <div className="space-y-1 mt-1">
+                {/* 1. Telemetri & Dampak Sirkular */}
+                <NavLink
+                  to="/admin/superadmin/telemetry"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-black shadow-md shadow-cyan-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Telemetri & Dampak Sirkular"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Activity className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-cyan-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Telemetri &amp; Sirkular</span>}
+                    </>
+                  )}
+                </NavLink>
+
+                {/* 2. Control Tower */}
+                <NavLink
+                  to="/admin/overview"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Control Tower Ekosistem"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <LayoutDashboard className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Control Tower (Pusat)</span>}
+                    </>
+                  )}
+                </NavLink>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SECTION: UTAMA (KHUSUS ADMIN KELOMPOK TANI) */}
+        {canSeePusatKendali && (
           <div>
             {!isCollapsed && (
-              <div className="px-3 py-1.5 text-[10px] font-black text-stone-400 uppercase tracking-wider flex items-center justify-between">
-                <span>Platform Super Admin</span>
-                <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">
-                  SaaS Owner
-                </span>
+              <div className="px-3 py-1 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                Pusat Kendali
               </div>
             )}
 
             <div className="space-y-1 mt-1">
               <NavLink
-                to="/admin/superadmin/packages"
+                to="/admin/overview"
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                     isActive
@@ -252,19 +583,17 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                       : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`
                 }
-                title="Master Paket Layanan & Harga"
+                title="Control Tower"
               >
                 {({ isActive }) => (
                   <>
-                    <Package className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
-                    {!isCollapsed && <span className="flex-1 truncate">Paket Layanan &amp; Harga</span>}
+                    <LayoutDashboard className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                    {!isCollapsed && <span className="flex-1 truncate">Control Tower</span>}
                     {!isCollapsed && (
                       <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
-                        isActive
-                          ? 'bg-stone-950/20 text-stone-950 font-black'
-                          : 'bg-stone-800 text-amber-300 border border-amber-500/20'
+                        isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-stone-800 text-amber-300 border border-amber-500/30'
                       }`}>
-                        Komersial
+                        3 Layanan
                       </span>
                     )}
                   </>
@@ -280,7 +609,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                       : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`
                 }
-                title="Master Pengguna Platform"
+                title="Master Users"
               >
                 {({ isActive }) => (
                   <>
@@ -298,133 +627,54 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               </NavLink>
 
               <NavLink
-                to="/admin/transaksi"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
-                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
-                  }`
-                }
-                title="Buku Transaksi Marketplace"
-              >
-                {({ isActive }) => (
-                  <>
-                    <History className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
-                    {!isCollapsed && <span className="flex-1 truncate">Buku Transaksi</span>}
-                  </>
-                )}
-              </NavLink>
-
-              <NavLink
-                to="/admin/overview"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
-                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
-                  }`
-                }
-                title="Control Tower Ekosistem"
-              >
-                {({ isActive }) => (
-                  <>
-                    <LayoutDashboard className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
-                    {!isCollapsed && <span className="flex-1 truncate">Control Tower</span>}
-                  </>
-                )}
-              </NavLink>
-            </div>
-          </div>
-        )}
-
-        {/* SECTION: UTAMA (KHUSUS ADMIN KELOMPOK TANI) */}
-        {canSeePusatKendali && (
-          <div>
-            {!isCollapsed && (
-              <div className="px-3 py-1 text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">
-                Pusat Kendali
-              </div>
-            )}
-
-            <div className="space-y-1 mt-1">
-              <NavLink
-                to="/admin/overview"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                    isActive
-                      ? 'bg-amber-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
-                  }`
-                }
-                title="Control Tower"
-              >
-                <LayoutDashboard className="w-4 h-4 shrink-0" />
-                {!isCollapsed && <span className="flex-1 truncate">Control Tower</span>}
-                {!isCollapsed && (
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-stone-900/40 text-amber-200">
-                    3 Layanan
-                  </span>
-                )}
-              </NavLink>
-
-              <NavLink
-                to="/admin/users"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                    isActive
-                      ? 'bg-amber-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
-                  }`
-                }
-                title="Master Users"
-              >
-                <Users className="w-4 h-4 shrink-0" />
-                {!isCollapsed && <span className="flex-1 truncate">Master Users</span>}
-                {!isCollapsed && (
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-700 text-white font-bold">
-                    {users.length}
-                  </span>
-                )}
-              </NavLink>
-
-              <NavLink
                 to="/admin/superadmin/packages"
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                     isActive
-                      ? 'bg-amber-600 text-white font-bold shadow-xs'
-                      : 'text-purple-300 hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`
                 }
                 title="Paket Layanan SaaS & Lisensi Fitur"
               >
-                <Package className="w-4 h-4 text-purple-400 shrink-0" />
-                {!isCollapsed && <span className="flex-1 truncate">Paket Layanan SaaS</span>}
-                {!isCollapsed && (
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-900/60 text-purple-200 font-bold border border-purple-700/40">
-                    Lisensi
-                  </span>
+                {({ isActive }) => (
+                  <>
+                    <Package className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                    {!isCollapsed && <span className="flex-1 truncate">Paket Layanan SaaS</span>}
+                    {!isCollapsed && (
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                        isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                      }`}>
+                        Lisensi
+                      </span>
+                    )}
+                  </>
                 )}
               </NavLink>
 
               <NavLink
                 to="/admin/forms"
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                     isActive
-                      ? 'bg-amber-600 text-white font-bold shadow-xs'
-                      : 'text-amber-300 hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`
                 }
                 title="Blanko Formulir Fisik Lapangan (A4)"
               >
-                <Printer className="w-4 h-4 text-amber-400 shrink-0" />
-                {!isCollapsed && <span className="flex-1 truncate">Blanko Formulir (A4)</span>}
-                {!isCollapsed && (
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
-                    4 Form
-                  </span>
+                {({ isActive }) => (
+                  <>
+                    <Printer className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                    {!isCollapsed && <span className="flex-1 truncate">Blanko Formulir (A4)</span>}
+                    {!isCollapsed && (
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                        isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                      }`}>
+                        4 Form
+                      </span>
+                    )}
+                  </>
                 )}
               </NavLink>
             </div>
@@ -434,7 +684,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
         {/* SECTION: LAYANAN OPERASIONAL */}
         <div>
           {!isCollapsed && (
-            <div className="px-3 py-1 text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">
+            <div className="px-3 py-1 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
               {getSectionTitle()}
             </div>
           )}
@@ -445,10 +695,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               <div>
                 <div
                   onClick={() => setPetaniOpen(!petaniOpen)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer select-none ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer select-none ${
                     isPetaniSectionActive
-                      ? 'bg-amber-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-stone-800 text-amber-300 font-bold border border-amber-500/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`}
                 >
                   <Link
@@ -492,7 +742,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
                 {/* Sub-menu Dropdown Items */}
                 {petaniOpen && !isCollapsed && (
-                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-600 ml-4">
+                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-800 ml-4">
                     {[
                       {
                         to: '/admin/petani',
@@ -536,10 +786,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         <Link
                           key={sub.to}
                           to={sub.to}
-                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] transition-colors ${
+                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-colors ${
                             sub.isActive
-                              ? 'bg-emerald-600 text-white font-bold'
-                              : 'text-[#869099] hover:bg-[#3f474e] hover:text-white'
+                              ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                              : 'text-stone-400 hover:bg-stone-800 hover:text-white'
                           }`}
                         >
                           <span className="flex items-center gap-2 truncate">
@@ -562,10 +812,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               <div>
                 <div
                   onClick={() => setPengolahOpen(!pengolahOpen)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer select-none ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer select-none ${
                     location.pathname === '/admin/pengolah'
-                      ? 'bg-amber-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-stone-800 text-amber-300 font-bold border border-amber-500/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`}
                 >
                   <Link
@@ -609,7 +859,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
                 {/* Sub-menu Dropdown Items */}
                 {pengolahOpen && !isCollapsed && (
-                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-600 ml-4">
+                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-800 ml-4">
                     {[
                       { id: 'dashboard' as const, label: 'Dashboard Wet Mill', icon: LayoutDashboard },
                       { id: 'sourcing' as const, label: 'Penerimaan Ceri (Sourcing)', icon: Sprout },
@@ -627,10 +877,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                           key={sub.id}
                           to="/admin/pengolah"
                           onClick={() => setProcessorActiveTab(sub.id)}
-                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] transition-colors ${
+                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-colors ${
                             isSubActive
-                              ? 'bg-amber-600 text-white font-bold'
-                              : 'text-[#869099] hover:bg-[#3f474e] hover:text-white'
+                              ? 'bg-amber-600 text-white font-bold shadow-xs'
+                              : 'text-stone-400 hover:bg-stone-800 hover:text-white'
                           }`}
                         >
                           <span className="flex items-center gap-2 truncate">
@@ -644,10 +894,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                     {/* Blanko Form Pengolah */}
                     <Link
                       to="/admin/pengolah/blanko"
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] transition-colors ${
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-colors ${
                         location.pathname === '/admin/pengolah/blanko'
-                          ? 'bg-amber-600 text-white font-bold'
-                          : 'text-[#869099] hover:bg-[#3f474e] hover:text-white'
+                          ? 'bg-amber-600 text-white font-bold shadow-xs'
+                          : 'text-stone-400 hover:bg-stone-800 hover:text-white'
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
@@ -668,10 +918,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               <div>
                 <div
                   onClick={() => setGudangOpen(!gudangOpen)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer select-none ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer select-none ${
                     isGudangSectionActive
-                      ? 'bg-amber-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-stone-800 text-amber-300 font-bold border border-amber-500/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`}
                 >
                   <Link
@@ -715,7 +965,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
                 {/* Sub-menu Dropdown Items */}
                 {gudangOpen && !isCollapsed && (
-                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-600 ml-4">
+                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-800 ml-4">
                     {[
                       {
                         to: '/admin/gudang/inventory',
@@ -753,10 +1003,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         <Link
                           key={sub.to}
                           to={sub.to}
-                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] transition-colors ${
+                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-colors ${
                             sub.isActive
-                              ? 'bg-amber-600 text-white font-bold'
-                              : 'text-[#869099] hover:bg-[#3f474e] hover:text-white'
+                              ? 'bg-amber-600 text-white font-bold shadow-xs'
+                              : 'text-stone-400 hover:bg-stone-800 hover:text-white'
                           }`}
                         >
                           <span className="flex items-center gap-2 truncate">
@@ -779,10 +1029,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               <div>
                 <div
                   onClick={() => setRoasterOpen(!roasterOpen)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer select-none ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer select-none ${
                     isRoasterSectionActive
-                      ? 'bg-amber-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-stone-800 text-amber-300 font-bold border border-amber-500/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`}
                 >
                   <Link
@@ -826,7 +1076,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
                 {/* Sub-menu Dropdown Items */}
                 {roasterOpen && !isCollapsed && (
-                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-600 ml-4">
+                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-800 ml-4">
                     {[
                       {
                         to: '/admin/roaster/inventory',
@@ -851,7 +1101,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         icon: Award,
                         badge: `${roastedLots.filter((r) => r.roastStatus === 'cupping_pending').length} Menunggu`,
                         badgeColor: roastedLots.some((r) => r.roastStatus === 'cupping_pending')
-                          ? 'bg-purple-500 text-white font-black'
+                          ? 'bg-amber-500 text-stone-950 font-black'
                           : '',
                         isActive: location.pathname.startsWith('/admin/roaster/cupping'),
                       },
@@ -884,10 +1134,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         <Link
                           key={sub.to}
                           to={sub.to}
-                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] transition-colors ${
+                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-colors ${
                             sub.isActive
-                              ? 'bg-amber-600 text-white font-bold'
-                              : 'text-[#869099] hover:bg-[#3f474e] hover:text-white'
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-bold shadow-xs'
+                              : 'text-stone-400 hover:bg-stone-800 hover:text-white'
                           }`}
                         >
                           <span className="flex items-center gap-2 truncate">
@@ -911,24 +1161,30 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 <NavLink
                   to="/admin/cafe"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                       isActive
-                        ? 'bg-amber-600 text-white font-bold shadow-xs'
-                        : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                     }`
                   }
                   title="Coffee Shop & Cafe"
                 >
-                  <Coffee className="w-4 h-4 text-amber-300 shrink-0" />
-                  {!isCollapsed && (
-                    <span className="flex-1 truncate">
-                      {isAdminKelompok ? '5. Layanan Coffee Shop' : 'Layanan Coffee Shop & Cafe'}
-                    </span>
-                  )}
-                  {!isCollapsed && (
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-stone-700 text-white font-bold">
-                      Cafe
-                    </span>
+                  {({ isActive }) => (
+                    <>
+                      <Coffee className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-300'}`} />
+                      {!isCollapsed && (
+                        <span className="flex-1 truncate">
+                          {isAdminKelompok ? '5. Layanan Coffee Shop' : 'Layanan Coffee Shop & Cafe'}
+                        </span>
+                      )}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                          isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-stone-800 text-amber-300 border border-amber-500/30'
+                        }`}>
+                          Cafe
+                        </span>
+                      )}
+                    </>
                   )}
                 </NavLink>
               </div>
@@ -939,10 +1195,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               <div>
                 <div
                   onClick={() => setIcsOpen(!icsOpen)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer select-none ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 cursor-pointer select-none ${
                     location.pathname.startsWith('/admin/ict')
-                      ? 'bg-blue-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                      ? 'bg-stone-800 text-sky-300 font-bold border border-sky-500/30'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`}
                 >
                   <Link
@@ -986,7 +1242,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
                 {/* Sub-menu Dropdown Items */}
                 {icsOpen && !isCollapsed && (
-                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-600 ml-4">
+                  <div className="pl-6 pr-1 py-1 space-y-0.5 mt-0.5 border-l-2 border-stone-800 ml-4">
                     {[
                       {
                         to: '/admin/ict',
@@ -1030,10 +1286,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         <Link
                           key={sub.to}
                           to={sub.to}
-                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] transition-colors ${
+                          className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-colors ${
                             sub.isActive
                               ? 'bg-blue-600 text-white font-bold'
-                              : 'text-[#869099] hover:bg-[#3f474e] hover:text-white'
+                              : 'text-stone-400 hover:bg-stone-800 hover:text-white'
                           }`}
                         >
                           <span className="flex items-center gap-2 truncate">
@@ -1059,10 +1315,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 <NavLink
                   to="/admin/verifikator"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                       isActive
-                        ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                        : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-md'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                     }`
                   }
                   title="Lembar Kerja Verifikasi Mutu (Tab Petani, Pengolah, Gudang, Roaster, Cafe, Riwayat Stempel)"
@@ -1079,10 +1335,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 <NavLink
                   to="/admin/ict/ct-dashboard"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
+                    `flex items-center gap-3 px-3 py-1.5 rounded-lg text-[11px] transition-colors ml-2 ${
                       isActive
                         ? 'bg-amber-600 text-white font-bold shadow-xs'
-                        : 'text-[#869099] hover:bg-[#494e53] hover:text-white'
+                        : 'text-stone-400 hover:bg-stone-800 hover:text-white'
                     }`
                   }
                   title="Sertifikasi Kebun (CircularTrace Index Engine: CT-4CI / CCI / SDI / Fairtrade)"
@@ -1099,10 +1355,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 <NavLink
                   to="/admin/ict/audit"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
+                    `flex items-center gap-3 px-3 py-1.5 rounded-lg text-[11px] transition-colors ml-2 ${
                       isActive
                         ? 'bg-blue-700 text-white font-bold shadow-xs'
-                        : 'text-[#869099] hover:bg-[#494e53] hover:text-white'
+                        : 'text-stone-400 hover:bg-stone-800 hover:text-white'
                     }`
                   }
                   title="Lembar Kerja Audit ICS"
@@ -1114,10 +1370,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 <NavLink
                   to="/admin/ict/blanko"
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-1.5 rounded-md text-[11px] transition-colors ml-2 ${
+                    `flex items-center justify-between px-3 py-1.5 rounded-lg text-[11px] transition-colors ml-2 ${
                       isActive
                         ? 'bg-amber-600 text-white font-bold shadow-xs'
-                        : 'text-amber-300 hover:bg-[#494e53] hover:text-white'
+                        : 'text-amber-300 hover:bg-stone-800 hover:text-white'
                     }`
                   }
                   title="Formulir Blanko Fisik Audit Lapangan (A4)"
@@ -1140,7 +1396,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
         {/* SECTION: EKSTERNAL / PUBLIK */}
         <div>
           {!isCollapsed && (
-            <div className="px-3 py-1 text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">
+            <div className="px-3 py-1 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
               Portal Terhubung
             </div>
           )}
@@ -1150,10 +1406,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               href="https://marketplace.circulartrace.id/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-[#c2c7d0] hover:bg-[#494e53] hover:text-white transition-colors"
+              className="flex items-center gap-3 px-3 py-2 rounded-xl text-stone-300 hover:bg-stone-800/80 hover:text-white transition-all"
               title="Katalog Marketplace"
             >
-              <Store className="w-4 h-4 shrink-0" />
+              <Store className="w-4 h-4 shrink-0 text-amber-400" />
               {!isCollapsed && (
                 <div className="flex items-center justify-between flex-1 truncate">
                   <span>Marketplace Kopi</span>
@@ -1166,10 +1422,10 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               <NavLink
                 to="/admin/seller"
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                     isActive
                       ? 'bg-orange-600 text-white font-bold shadow-xs'
-                      : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                   }`
                 }
                 title="Admin Seller Panel & Monitoring Penjualan"
@@ -1187,20 +1443,26 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
             <NavLink
               to="/admin/transaksi"
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                   isActive
-                    ? 'bg-[#007bff] text-white font-bold shadow-xs'
-                    : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                    : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                 }`
               }
               title="Buku Transaksi & Rekapitulasi Penjualan Marketplace"
             >
-              <History className="w-4 h-4 text-emerald-400 shrink-0" />
-              {!isCollapsed && <span className="flex-1 truncate">Buku Transaksi</span>}
-              {!isCollapsed && (
-                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-600 text-white font-bold">
-                  Rekap
-                </span>
+              {({ isActive }) => (
+                <>
+                  <History className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-emerald-400'}`} />
+                  {!isCollapsed && <span className="flex-1 truncate">Buku Transaksi</span>}
+                  {!isCollapsed && (
+                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                      isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-emerald-700/80 text-emerald-100'
+                    }`}>
+                      Rekap
+                    </span>
+                  )}
+                </>
               )}
             </NavLink>
 
@@ -1208,22 +1470,28 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
             <NavLink
               to="/admin/forms"
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
                   isActive
-                    ? 'bg-amber-600 text-white font-semibold'
-                    : 'text-amber-300 hover:bg-[#494e53] hover:text-white'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                    : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
                 }`
               }
               title="Cetak & Download Blanko Formulir Fisik Lapangan (Petani, Pengolah, Gudang, Roastery)"
             >
-              <Printer className="w-4 h-4 text-amber-400 shrink-0" />
-              {!isCollapsed && (
-                <div className="flex items-center justify-between flex-1 truncate">
-                  <span>Blanko Form (A4)</span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
-                    Halaman
-                  </span>
-                </div>
+              {({ isActive }) => (
+                <>
+                  <Printer className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                  {!isCollapsed && (
+                    <div className="flex items-center justify-between flex-1 truncate">
+                      <span>Blanko Form (A4)</span>
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                        isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                      }`}>
+                        Halaman
+                      </span>
+                    </div>
+                  )}
+                </>
               )}
             </NavLink>
           </div>
@@ -1232,8 +1500,8 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
 
       {/* 5. Bottom Brand Footnote */}
       {!isCollapsed && (
-        <div className="p-3 border-t border-[#4f5962] text-[10px] text-[#869099] text-center">
-          AdminLTE v3.2 • CircularCoffee System
+        <div className="p-3 border-t border-stone-800/80 text-[10px] text-stone-400 text-center font-medium">
+          CircularCoffee OS • Enterprise Coffee Platform
         </div>
       )}
     </aside>

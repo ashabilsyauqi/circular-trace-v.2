@@ -7,8 +7,8 @@ export const AdminLTEFooter: React.FC = () => {
         <strong>Copyright &copy; 2026 <span className="text-amber-800 font-bold">CircularCoffee</span>.</strong>{' '}
         Platform Rantai Pasok Kopi Kelompok Tani Nusantara.
       </div>
-      <div className="hidden sm:block text-[11px] text-stone-400">
-        <b>AdminLTE Edition</b> 3.2.0
+      <div className="hidden sm:block text-[11px] text-stone-500">
+        <b>CircularCoffee OS</b> v2.4 Enterprise
       </div>
     </footer>
   );

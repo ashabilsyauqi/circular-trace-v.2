@@ -432,7 +432,7 @@ export const AdminLTELayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#f4f6f9] font-sans antialiased text-[#212529] print:bg-white print:block">
+    <div className="min-h-screen flex bg-[#FAF7F2] font-sans antialiased text-stone-900 print:bg-white print:block">
       {/* 1. AdminLTE Dark Sidebar (Hidden on Print) */}
       <div className="print:hidden no-print">
         <AdminLTESidebar isCollapsed={isSidebarCollapsed} />

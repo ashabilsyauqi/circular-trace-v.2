@@ -47,7 +47,7 @@ import { cctApi } from '../../../services/api';
 import { INITIAL_SERVICE_PACKAGES } from '../../../data/mockData';
 
 const TARGET_ROLE_OPTIONS: { value: PackageTargetRole; label: string; icon: React.ReactNode; color: string }[] = [
-  { value: 'all', label: 'Semua / Konsorsium Enterprise', icon: <Globe className="w-3.5 h-3.5 text-purple-600" />, color: 'bg-purple-100 text-purple-900 border-purple-300' },
+  { value: 'all', label: 'Semua / Konsorsium Enterprise', icon: <Globe className="w-3.5 h-3.5 text-amber-600" />, color: 'bg-amber-100 text-amber-950 border-amber-300' },
   { value: 'admin_kelompok_tani', label: 'Kelompok Tani & Gapoktan', icon: <Building2 className="w-3.5 h-3.5 text-amber-600" />, color: 'bg-amber-100 text-amber-900 border-amber-300' },
   { value: 'roaster', label: 'Roastery & Coffee Lab', icon: <Flame className="w-3.5 h-3.5 text-orange-600" />, color: 'bg-orange-100 text-orange-900 border-orange-300' },
   { value: 'gudang', label: 'Gudang Hermetik & QA', icon: <Warehouse className="w-3.5 h-3.5 text-blue-600" />, color: 'bg-blue-100 text-blue-900 border-blue-300' },
@@ -427,12 +427,12 @@ export const PlatformPackagesPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-16">
       {/* 1. Header & Title Banner */}
-      <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-purple-950 rounded-2xl p-6 text-white shadow-lg border border-purple-900/50 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+      <div className="bg-gradient-to-r from-stone-950 via-stone-900 to-amber-950/90 rounded-2xl p-6 text-white shadow-xl border border-amber-900/30 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-400/30">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-400/30">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>Super Admin / Platform Admin CircularTrace</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
@@ -461,7 +461,7 @@ export const PlatformPackagesPage: React.FC = () => {
             <button
               type="button"
               onClick={handleOpenCreateModal}
-              className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer transform hover:-translate-y-0.5"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 text-xs font-black transition-all flex items-center gap-2 shadow-md hover:shadow-lg shadow-amber-950/30 cursor-pointer transform hover:-translate-y-0.5"
             >
               <Plus className="w-4 h-4" />
               <span>Buat Paket Baru</span>
@@ -500,7 +500,7 @@ export const PlatformPackagesPage: React.FC = () => {
       {/* 2. Top Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
             <Package className="w-5 h-5" />
           </div>
           <div>
@@ -575,7 +575,7 @@ export const PlatformPackagesPage: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari nama paket atau ID (e.g. GAPOKTAN, PRO)..."
-              className="w-full text-xs bg-stone-50 border border-stone-300 rounded-xl pl-9 pr-3 py-2 text-stone-900 placeholder-stone-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+              className="w-full text-xs bg-stone-50 border border-stone-300 rounded-xl pl-9 pr-3 py-2 text-stone-900 placeholder-stone-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
             />
             {searchQuery && (
               <button
@@ -607,7 +607,7 @@ export const PlatformPackagesPage: React.FC = () => {
                 onClick={() => setBillingCycle('yearly')}
                 className={`px-3 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   billingCycle === 'yearly'
-                    ? 'bg-purple-600 text-white shadow-xs'
+                    ? 'bg-stone-900 text-amber-300 shadow-xs'
                     : 'text-stone-600 hover:text-stone-900'
                 }`}
               >
@@ -717,7 +717,7 @@ export const PlatformPackagesPage: React.FC = () => {
             onClick={() => setSelectedRole('all')}
             className={`px-2.5 py-1 rounded-lg font-bold transition-colors cursor-pointer flex items-center gap-1 ${
               selectedRole === 'all'
-                ? 'bg-purple-700 text-white'
+                ? 'bg-amber-600 text-white'
                 : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             }`}
           >
@@ -779,14 +779,14 @@ export const PlatformPackagesPage: React.FC = () => {
                 key={pkg.id}
                 className={`bg-white rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden relative shadow-xs hover:shadow-md ${
                   pkg.isPopular
-                    ? 'border-purple-400 ring-2 ring-purple-400/20'
+                    ? 'border-amber-400 ring-2 ring-amber-400/20'
                     : 'border-stone-200'
                 } ${pkg.status === 'archived' ? 'opacity-70 bg-stone-50/60' : ''}`}
               >
                 {/* Popular Glow Header Pill */}
                 {pkg.isPopular && (
-                  <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-500 text-white text-[10.5px] font-extrabold uppercase tracking-wider py-1 text-center shadow-xs flex items-center justify-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-amber-300" />
+                  <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-stone-950 text-[10.5px] font-black uppercase tracking-wider py-1 text-center shadow-xs flex items-center justify-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-stone-950" />
                     <span>Paling Diminati &bull; Recommended</span>
                   </div>
                 )}
@@ -859,7 +859,7 @@ export const PlatformPackagesPage: React.FC = () => {
 
                     <div className="text-[10.5px] text-stone-400 pt-0.5 flex items-center justify-between">
                       <span>Terdaftar: {pkg.subscribersCount || 10} organisasi</span>
-                      <span className="text-purple-700 font-semibold">SaaS Lisensi</span>
+                      <span className="text-stone-500 font-semibold">SaaS Lisensi</span>
                     </div>
                   </div>
 
@@ -943,7 +943,7 @@ export const PlatformPackagesPage: React.FC = () => {
                         ) : (
                           <X className="w-4 h-4 text-stone-300 shrink-0" />
                         )}
-                        <span className={feat.apiIntegration ? 'text-purple-700 font-bold' : 'text-stone-400 line-through'}>
+                        <span className={feat.apiIntegration ? 'text-stone-900 font-bold' : 'text-stone-400 line-through'}>
                           Akses REST API &amp; Webhook Eksternal
                         </span>
                       </li>
@@ -1130,9 +1130,9 @@ export const PlatformPackagesPage: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-4xl w-full border border-stone-200 shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-stone-900 to-purple-950 text-white flex items-center justify-between shrink-0">
+            <div className="px-6 py-4 bg-gradient-to-r from-stone-950 via-stone-900 to-amber-950 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center border border-purple-400/30">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-400/30">
                   <Package className="w-5 h-5" />
                 </div>
                 <div>
@@ -1157,8 +1157,8 @@ export const PlatformPackagesPage: React.FC = () => {
             <form onSubmit={handleSavePackage} className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* SECTION A: INFORMASI DASAR */}
               <div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-purple-900 flex items-center gap-2 mb-3">
-                  <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center text-[10px]">
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-950 flex items-center gap-2 mb-3">
+                  <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center text-[10px] font-bold">
                     1
                   </span>
                   <span>Informasi Identitas &amp; Target Stakeholder</span>
@@ -1174,7 +1174,7 @@ export const PlatformPackagesPage: React.FC = () => {
                       value={formId}
                       onChange={(e) => setFormId(e.target.value.toUpperCase())}
                       placeholder="e.g. PKG-GAPOKTAN-CUSTOM"
-                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-mono focus:outline-none focus:border-purple-500"
+                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-mono focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     />
                     <span className="text-[10px] text-stone-400 mt-0.5 block">
                       Kosongkan untuk generate otomatis.
@@ -1191,7 +1191,7 @@ export const PlatformPackagesPage: React.FC = () => {
                       value={formName}
                       onChange={(e) => setFormName(e.target.value)}
                       placeholder="e.g. Paket Starter Gapoktan Mandiri"
-                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 focus:outline-none focus:border-purple-500"
+                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     />
                   </div>
 
@@ -1202,7 +1202,7 @@ export const PlatformPackagesPage: React.FC = () => {
                     <select
                       value={formTargetRole}
                       onChange={(e) => setFormTargetRole(e.target.value as PackageTargetRole)}
-                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-semibold focus:outline-none focus:border-purple-500"
+                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-semibold focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     >
                       {TARGET_ROLE_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -1256,14 +1256,14 @@ export const PlatformPackagesPage: React.FC = () => {
                 </div>
 
                 {/* Popular Toggle Checkbox */}
-                <div className="mt-3 p-3 rounded-xl bg-purple-50/70 border border-purple-200/80 flex items-center justify-between">
+                <div className="mt-3 p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+                    <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
                     <div>
-                      <span className="text-xs font-bold text-purple-950 block">
+                      <span className="text-xs font-bold text-amber-950 block">
                         Tandai Sebagai "Paling Populer" (Rekomendasi)
                       </span>
-                      <span className="text-[10px] text-purple-800">
+                      <span className="text-[10px] text-amber-800">
                         Menampilkan badge highlight bersinar dan posisi terdepan di tabel harga pelanggan.
                       </span>
                     </div>
@@ -1272,7 +1272,7 @@ export const PlatformPackagesPage: React.FC = () => {
                     type="checkbox"
                     checked={formIsPopular}
                     onChange={(e) => setFormIsPopular(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 rounded border-stone-300 focus:ring-purple-500 cursor-pointer"
+                    className="w-4 h-4 text-amber-600 rounded border-stone-300 focus:ring-amber-500 cursor-pointer"
                   />
                 </div>
               </div>
@@ -1280,8 +1280,8 @@ export const PlatformPackagesPage: React.FC = () => {
               {/* SECTION B: PRICING & DISKON */}
               <div className="pt-4 border-t border-stone-100">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-purple-900 flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center text-[10px]">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-950 flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center text-[10px] font-bold">
                       2
                     </span>
                     <span>Struktur Harga Langganan (IDR)</span>
@@ -1290,7 +1290,7 @@ export const PlatformPackagesPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleCalculateDiscount}
-                    className="text-[11px] font-bold text-purple-700 hover:text-purple-900 underline cursor-pointer"
+                    className="text-[11px] font-bold text-amber-700 hover:text-amber-900 underline cursor-pointer"
                   >
                     Hitung Diskon Otomatis dari 12 Bulan
                   </button>
@@ -1307,7 +1307,7 @@ export const PlatformPackagesPage: React.FC = () => {
                       step={1000}
                       value={formPriceMonthly}
                       onChange={(e) => setFormPriceMonthly(Number(e.target.value))}
-                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-mono font-bold focus:outline-none focus:border-purple-500"
+                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-mono font-bold focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     />
                     <span className="text-[10px] text-stone-500 mt-0.5 block">
                       {formatIdr(formPriceMonthly)} / bln
@@ -1324,7 +1324,7 @@ export const PlatformPackagesPage: React.FC = () => {
                       step={1000}
                       value={formPriceYearly}
                       onChange={(e) => setFormPriceYearly(Number(e.target.value))}
-                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-mono font-bold focus:outline-none focus:border-purple-500"
+                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-mono font-bold focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     />
                     <span className="text-[10px] text-stone-500 mt-0.5 block">
                       {formatIdr(formPriceYearly)} / thn
@@ -1341,7 +1341,7 @@ export const PlatformPackagesPage: React.FC = () => {
                       max={100}
                       value={formDiscountPercent}
                       onChange={(e) => setFormDiscountPercent(Number(e.target.value))}
-                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-mono font-bold focus:outline-none focus:border-purple-500"
+                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-mono font-bold focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     />
                     <span className="text-[10px] text-stone-500 mt-0.5 block">
                       Badge hemat yang ditampilkan ke user
@@ -1352,8 +1352,8 @@ export const PlatformPackagesPage: React.FC = () => {
 
               {/* SECTION C: FEATURE FLAGS CONFIGURATOR */}
               <div className="pt-4 border-t border-stone-100">
-                <h4 className="text-xs font-black uppercase tracking-wider text-purple-900 flex items-center gap-2 mb-3">
-                  <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center text-[10px]">
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-950 flex items-center gap-2 mb-3">
+                  <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center text-[10px] font-bold">
                     3
                   </span>
                   <span>Matriks Fitur &amp; Pembatasan Kuota (Feature Flags)</span>
@@ -1380,7 +1380,7 @@ export const PlatformPackagesPage: React.FC = () => {
                             setFormIsLotsUnlimited(e.target.checked);
                             if (e.target.checked) setFormQuotaLots('Unlimited (Tanpa Batas)');
                           }}
-                          className="w-4 h-4 text-purple-600 rounded"
+                          className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
                         />
                         <span>Unlimited</span>
                       </label>
@@ -1417,7 +1417,7 @@ export const PlatformPackagesPage: React.FC = () => {
                             setFormIsQrUnlimited(e.target.checked);
                             if (e.target.checked) setFormQuotaQrBarcodes('Unlimited');
                           }}
-                          className="w-4 h-4 text-purple-600 rounded"
+                          className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
                         />
                         <span>Unlimited</span>
                       </label>
@@ -1437,7 +1437,7 @@ export const PlatformPackagesPage: React.FC = () => {
                   {/* Feature Toggles Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     {/* EUDR Polygon */}
-                    <label className="p-3 rounded-xl border border-stone-200 hover:border-purple-300 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
+                    <label className="p-3 rounded-xl border border-stone-200 hover:border-amber-400 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
                       <div>
                         <span className="font-bold text-stone-900 block">
                           Peta Poligon Lahan EUDR &amp; GPS Patok
@@ -1450,12 +1450,12 @@ export const PlatformPackagesPage: React.FC = () => {
                         type="checkbox"
                         checked={formEudrPolygon}
                         onChange={(e) => setFormEudrPolygon(e.target.checked)}
-                        className="w-4 h-4 text-purple-600 rounded"
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
                       />
                     </label>
 
                     {/* AI Cupping Radar */}
-                    <label className="p-3 rounded-xl border border-stone-200 hover:border-purple-300 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
+                    <label className="p-3 rounded-xl border border-stone-200 hover:border-amber-400 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
                       <div>
                         <span className="font-bold text-stone-900 block">
                           AI Spider Cupping Radar &amp; Agtron
@@ -1468,12 +1468,12 @@ export const PlatformPackagesPage: React.FC = () => {
                         type="checkbox"
                         checked={formAiCuppingRadar}
                         onChange={(e) => setFormAiCuppingRadar(e.target.checked)}
-                        className="w-4 h-4 text-purple-600 rounded"
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
                       />
                     </label>
 
                     {/* Marketplace Access */}
-                    <label className="p-3 rounded-xl border border-stone-200 hover:border-purple-300 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
+                    <label className="p-3 rounded-xl border border-stone-200 hover:border-amber-400 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
                       <div>
                         <span className="font-bold text-stone-900 block">
                           Akses Marketplace B2B Kopi
@@ -1486,12 +1486,12 @@ export const PlatformPackagesPage: React.FC = () => {
                         type="checkbox"
                         checked={formMarketplaceAccess}
                         onChange={(e) => setFormMarketplaceAccess(e.target.checked)}
-                        className="w-4 h-4 text-purple-600 rounded"
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
                       />
                     </label>
 
                     {/* Warehouse Hermetic QA */}
-                    <label className="p-3 rounded-xl border border-stone-200 hover:border-purple-300 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
+                    <label className="p-3 rounded-xl border border-stone-200 hover:border-amber-400 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
                       <div>
                         <span className="font-bold text-stone-900 block">
                           Gudang Hermetik &amp; Defect QA
@@ -1504,12 +1504,12 @@ export const PlatformPackagesPage: React.FC = () => {
                         type="checkbox"
                         checked={formWarehouseHermeticQa}
                         onChange={(e) => setFormWarehouseHermeticQa(e.target.checked)}
-                        className="w-4 h-4 text-purple-600 rounded"
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
                       />
                     </label>
 
                     {/* API Integration */}
-                    <label className="p-3 rounded-xl border border-stone-200 hover:border-purple-300 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
+                    <label className="p-3 rounded-xl border border-stone-200 hover:border-amber-400 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
                       <div>
                         <span className="font-bold text-stone-900 block">
                           Akses REST API &amp; Webhook
@@ -1522,12 +1522,12 @@ export const PlatformPackagesPage: React.FC = () => {
                         type="checkbox"
                         checked={formApiIntegration}
                         onChange={(e) => setFormApiIntegration(e.target.checked)}
-                        className="w-4 h-4 text-purple-600 rounded"
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
                       />
                     </label>
 
                     {/* Custom Branding Logo */}
-                    <label className="p-3 rounded-xl border border-stone-200 hover:border-purple-300 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
+                    <label className="p-3 rounded-xl border border-stone-200 hover:border-amber-400 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs">
                       <div>
                         <span className="font-bold text-stone-900 block">
                           Kustomisasi Logo &amp; Stempel
@@ -1540,12 +1540,12 @@ export const PlatformPackagesPage: React.FC = () => {
                         type="checkbox"
                         checked={formCustomBrandingLogo}
                         onChange={(e) => setFormCustomBrandingLogo(e.target.checked)}
-                        className="w-4 h-4 text-purple-600 rounded"
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
                       />
                     </label>
 
                     {/* Dedicated Support */}
-                    <label className="p-3 rounded-xl border border-stone-200 hover:border-purple-300 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs sm:col-span-2">
+                    <label className="p-3 rounded-xl border border-stone-200 hover:border-amber-400 bg-white flex items-center justify-between cursor-pointer transition-colors shadow-2xs sm:col-span-2">
                       <div>
                         <span className="font-bold text-stone-900 block">
                           Dukungan Dedicated Support 24/7 SLA Priority
@@ -1558,7 +1558,7 @@ export const PlatformPackagesPage: React.FC = () => {
                         type="checkbox"
                         checked={formDedicatedSupport}
                         onChange={(e) => setFormDedicatedSupport(e.target.checked)}
-                        className="w-4 h-4 text-purple-600 rounded"
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
                       />
                     </label>
                   </div>
@@ -1576,7 +1576,7 @@ export const PlatformPackagesPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 text-xs font-black transition-all shadow-md hover:shadow-lg shadow-amber-950/20 cursor-pointer flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>{editingPackage ? 'Simpan Perubahan' : 'Terbitkan Paket Layanan'}</span>

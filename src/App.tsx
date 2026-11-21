@@ -51,6 +51,9 @@ import { BukuTransaksiPage } from './pages/admin/transaksi/BukuTransaksiPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { PlatformPackagesPage } from './pages/admin/superadmin/PlatformPackagesPage';
 import { SuperAdminLoginPage } from './pages/admin/superadmin/SuperAdminLoginPage';
+import { ServiceSettingsPage } from './pages/admin/superadmin/ServiceSettingsPage';
+import { SubscribedUsersPage } from './pages/admin/superadmin/SubscribedUsersPage';
+import { EcosystemTelemetryPage } from './pages/admin/superadmin/EcosystemTelemetryPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { RegisterVerifierPage } from './pages/RegisterVerifierPage';
 
@@ -199,9 +202,14 @@ export const AppRoutes: React.FC = () => {
         <Route path="overview" element={<KelompokTaniDashboard />} />
         <Route path="users" element={<MasterUsersView />} />
 
-        {/* Modul Super Admin SaaS: Manajemen Paket Layanan & Harga Fitur */}
+        {/* Modul Super Admin SaaS: Manajemen Paket Layanan, Subscribed Users, Services, & Telemetri */}
         <Route path="superadmin/packages" element={<PlatformPackagesPage />} />
         <Route path="packages" element={<Navigate to="/admin/superadmin/packages" replace />} />
+        <Route path="superadmin/services/:serviceId?" element={<ServiceSettingsPage />} />
+        <Route path="superadmin/services" element={<Navigate to="/admin/superadmin/services/admin_kelompok_tani" replace />} />
+        <Route path="superadmin/subscriptions" element={<SubscribedUsersPage />} />
+        <Route path="superadmin/subscribed-users" element={<Navigate to="/admin/superadmin/subscriptions" replace />} />
+        <Route path="superadmin/telemetry" element={<EcosystemTelemetryPage />} />
 
         {/* Buku Transaksi: Rekapitulasi Penjualan Berhasil Marketplace */}
         <Route path="transaksi" element={<BukuTransaksiPage />} />

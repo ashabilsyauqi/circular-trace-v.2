@@ -298,9 +298,27 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                   <>
                     <Link
                       to="/admin/superadmin/packages"
-                      className="hover:text-purple-800 transition-colors font-bold text-purple-900 bg-purple-100/70 px-2.5 py-1 rounded-md border border-purple-300"
+                      className="hover:text-amber-950 transition-colors font-bold text-amber-950 bg-amber-100/90 px-2.5 py-1 rounded-md border border-amber-300 shadow-2xs"
                     >
-                      Katalog Paket Layanan SaaS
+                      Katalog Paket
+                    </Link>
+                    <Link
+                      to="/admin/superadmin/subscriptions"
+                      className="hover:text-stone-900 transition-colors font-medium"
+                    >
+                      Subscribed Users
+                    </Link>
+                    <Link
+                      to="/admin/superadmin/services/admin_kelompok_tani"
+                      className="hover:text-stone-900 transition-colors font-medium"
+                    >
+                      Setting Services
+                    </Link>
+                    <Link
+                      to="/admin/superadmin/telemetry"
+                      className="hover:text-stone-900 transition-colors font-medium"
+                    >
+                      Telemetri
                     </Link>
                     <Link
                       to="/admin/users"
@@ -313,12 +331,6 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                       className="hover:text-stone-900 transition-colors"
                     >
                       Buku Transaksi
-                    </Link>
-                    <Link
-                      to="/admin/overview"
-                      className="hover:text-stone-900 transition-colors"
-                    >
-                      Control Tower
                     </Link>
                   </>
                 );

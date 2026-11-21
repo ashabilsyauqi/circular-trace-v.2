@@ -58,7 +58,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           { id: 'kt-04', name: 'Gapoktan Priangan Lestari', location: 'Garut, Jawa Barat' },
         ];
 
-  const registerableRoles: UserRole[] = [
+  const registerableRoles: Exclude<UserRole, 'super_admin'>[] = [
     'admin_kelompok_tani',
     'gudang',
     'roaster',
@@ -66,17 +66,17 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     'verifikator',
   ];
 
-  const resolvedInitialRole: UserRole = (() => {
+  const resolvedInitialRole: Exclude<UserRole, 'super_admin'> = (() => {
     if (initialRole === 'petani' || initialRole === 'pengolah' || initialRole === 'ict') {
       return 'admin_kelompok_tani';
     }
-    if (registerableRoles.includes(initialRole)) {
-      return initialRole;
+    if (registerableRoles.includes(initialRole as any)) {
+      return initialRole as Exclude<UserRole, 'super_admin'>;
     }
     return 'admin_kelompok_tani';
   })();
 
-  const [selectedRole, setSelectedRole] = useState<UserRole>(resolvedInitialRole);
+  const [selectedRole, setSelectedRole] = useState<Exclude<UserRole, 'super_admin'>>(resolvedInitialRole);
   const [selectedKelompokTaniId, setSelectedKelompokTaniId] = useState(kelompokTaniList[0]?.id || '');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -93,7 +93,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [registeredData, setRegisteredData] = useState<{
     email: string;
     name: string;
-    role: UserRole;
+    role: Exclude<UserRole, 'super_admin'>;
     verificationToken?: string;
     verificationLink?: string;
   } | null>(null);
@@ -129,7 +129,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   if (!isOpen) return null;
 
   const roleConfigs: Record<
-    UserRole,
+    Exclude<UserRole, 'super_admin'>,
     {
       title: string;
       tier: string;
@@ -229,17 +229,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       bgBadge: 'bg-blue-50 text-blue-700 border-blue-200',
       defaultOrgExample: 'e.g. Tim ICS Gapoktan Kopi Mandiri',
       defaultLocExample: 'e.g. Pangalengan, Jawa Barat',
-    },
-    super_admin: {
-      title: 'Super Admin CircularTrace',
-      tier: 'Platform Owner',
-      badgeText: 'Platform Owner',
-      desc: 'Pusat operasional manajemen paket komersial, tarif layanan, dan lisensi ekosistem.',
-      icon: <Building2 className="w-5 h-5 text-purple-700" />,
-      color: 'border-purple-500 ring-purple-500/20',
-      bgBadge: 'bg-purple-50 text-purple-900 border-purple-300',
-      defaultOrgExample: 'e.g. PT Circular Trace Global',
-      defaultLocExample: 'e.g. Bandung HQ',
     },
   };
 

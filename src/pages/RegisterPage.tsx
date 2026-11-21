@@ -40,7 +40,7 @@ export const RegisterPage: React.FC = () => {
   }, [currentUser, navigate]);
 
   const initialRoleParam = searchParams.get('role') as UserRole | null;
-  const registerableRoles: UserRole[] = [
+  const registerableRoles: Exclude<UserRole, 'super_admin'>[] = [
     'admin_kelompok_tani',
     'gudang',
     'roaster',
@@ -48,13 +48,13 @@ export const RegisterPage: React.FC = () => {
     'verifikator',
   ];
 
-  const defaultRole: UserRole = (() => {
+  const defaultRole: Exclude<UserRole, 'super_admin'> = (() => {
     if (!initialRoleParam) return 'admin_kelompok_tani';
     if (initialRoleParam === 'petani' || initialRoleParam === 'pengolah' || initialRoleParam === 'ict') {
       return 'admin_kelompok_tani';
     }
-    if (registerableRoles.includes(initialRoleParam)) {
-      return initialRoleParam;
+    if (registerableRoles.includes(initialRoleParam as any)) {
+      return initialRoleParam as Exclude<UserRole, 'super_admin'>;
     }
     return 'admin_kelompok_tani';
   })();
@@ -77,7 +77,7 @@ export const RegisterPage: React.FC = () => {
           { id: 'kt-04', name: 'Gapoktan Priangan Lestari', location: 'Garut, Jawa Barat' },
         ];
 
-  const [selectedRole, setSelectedRole] = useState<UserRole>(defaultRole);
+  const [selectedRole, setSelectedRole] = useState<Exclude<UserRole, 'super_admin'>>(defaultRole);
   const [selectedKelompokTaniId, setSelectedKelompokTaniId] = useState(kelompokTaniList[0]?.id || '');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -94,7 +94,7 @@ export const RegisterPage: React.FC = () => {
   const [registeredData, setRegisteredData] = useState<{
     email: string;
     name: string;
-    role: UserRole;
+    role: Exclude<UserRole, 'super_admin'>;
     verificationToken?: string;
     verificationLink?: string;
   } | null>(null);
@@ -104,14 +104,14 @@ export const RegisterPage: React.FC = () => {
     if (initialRoleParam) {
       if (initialRoleParam === 'petani' || initialRoleParam === 'pengolah' || initialRoleParam === 'ict') {
         setSelectedRole('admin_kelompok_tani');
-      } else if (registerableRoles.includes(initialRoleParam)) {
-        setSelectedRole(initialRoleParam);
+      } else if (registerableRoles.includes(initialRoleParam as any)) {
+        setSelectedRole(initialRoleParam as Exclude<UserRole, 'super_admin'>);
       }
     }
   }, [initialRoleParam]);
 
   const roleConfigs: Record<
-    UserRole,
+    Exclude<UserRole, 'super_admin'>,
     {
       title: string;
       tier: string;
@@ -211,17 +211,6 @@ export const RegisterPage: React.FC = () => {
       bgBadge: 'bg-blue-50 text-blue-700 border-blue-200',
       defaultOrgExample: 'e.g. Tim ICS Gapoktan Kopi Mandiri',
       defaultLocExample: 'e.g. Pangalengan, Jawa Barat',
-    },
-    super_admin: {
-      title: 'Super Admin CircularTrace',
-      tier: 'Platform Owner',
-      badgeText: 'Platform Owner',
-      desc: 'Pusat operasional manajemen paket komersial, tarif layanan, dan lisensi ekosistem.',
-      icon: <Building2 className="w-5 h-5 text-purple-700" />,
-      color: 'border-purple-500 ring-purple-500/20',
-      bgBadge: 'bg-purple-50 text-purple-900 border-purple-300',
-      defaultOrgExample: 'e.g. PT Circular Trace Global',
-      defaultLocExample: 'e.g. Bandung HQ',
     },
   };
 

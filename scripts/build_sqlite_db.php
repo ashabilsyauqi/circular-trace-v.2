@@ -398,5 +398,8 @@ foreach ($lines as $line) {
 }
 $pdo->commit();
 
+// Ensure all pre-seeded accounts have email verified
+$pdo->exec("UPDATE users SET is_email_verified = 1 WHERE is_email_verified = 0 OR is_email_verified IS NULL");
+
 echo "Seeded $count records into SQLite database successfully!\n";
 echo "File created at: " . realpath($dbPath) . " (" . round(filesize($dbPath) / 1024, 1) . " KB)\n";

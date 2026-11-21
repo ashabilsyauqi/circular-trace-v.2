@@ -58,7 +58,25 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           { id: 'kt-04', name: 'Gapoktan Priangan Lestari', location: 'Garut, Jawa Barat' },
         ];
 
-  const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole);
+  const registerableRoles: UserRole[] = [
+    'admin_kelompok_tani',
+    'gudang',
+    'roaster',
+    'cafe',
+    'verifikator',
+  ];
+
+  const resolvedInitialRole: UserRole = (() => {
+    if (initialRole === 'petani' || initialRole === 'pengolah' || initialRole === 'ict') {
+      return 'admin_kelompok_tani';
+    }
+    if (registerableRoles.includes(initialRole)) {
+      return initialRole;
+    }
+    return 'admin_kelompok_tani';
+  })();
+
+  const [selectedRole, setSelectedRole] = useState<UserRole>(resolvedInitialRole);
   const [selectedKelompokTaniId, setSelectedKelompokTaniId] = useState(kelompokTaniList[0]?.id || '');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -125,14 +143,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
   > = {
     admin_kelompok_tani: {
-      title: 'Admin Kelompok Tani',
-      tier: 'Pusat Kendali Gapoktan',
+      title: 'Kelompok Tani / Koperasi (Petani, Pengolah & ICS)',
+      tier: 'Penaung Ekosistem Hulu Terpadu',
       badgeText: 'Penaung Ekosistem',
-      desc: 'Kelola ekosistem terpadu 5 layanan hulu-hilir dan alokasi akun anggota kelompok tani.',
+      desc: 'Menaungi kebun petani anggota, stasiun pengolah ceri (wet/dry mill), dan audit kepatuhan ICS internal.',
       icon: <Building2 className="w-5 h-5 text-amber-700" />,
       color: 'border-amber-500 ring-amber-500/20',
       bgBadge: 'bg-amber-50 text-amber-900 border-amber-300',
-      defaultOrgExample: 'e.g. Gapoktan Kopi Mandiri Nusantara',
+      defaultOrgExample: 'e.g. Gapoktan Kopi Mandiri Nusantara / Koperasi Petani',
       defaultLocExample: 'e.g. Pangalengan, Jawa Barat',
     },
     gudang: {
@@ -417,7 +435,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                   1. Pilih Peran Bisnis Anda dalam Rantai Pasok:
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {(Object.keys(roleConfigs) as UserRole[]).map((roleKey) => {
+                  {registerableRoles.map((roleKey) => {
                     const cfg = roleConfigs[roleKey];
                     const isSelected = selectedRole === roleKey;
                     return (
@@ -425,7 +443,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                         type="button"
                         key={roleKey}
                         onClick={() => setSelectedRole(roleKey)}
-                        className={`p-3 rounded-2xl text-left border-2 transition-all flex flex-col justify-between relative ${
+                        className={`p-3 rounded-2xl text-left border-2 transition-all flex flex-col justify-between relative cursor-pointer ${
                           isSelected
                             ? `${cfg.color} bg-amber-50/40 shadow-sm ring-2`
                             : 'border-stone-200 bg-stone-50/50 hover:bg-stone-100/80 hover:border-stone-300'
@@ -438,8 +456,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                           <div className="flex items-center gap-1">
                             {cfg.badgeText && (
                               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
-                                cfg.badgeText.includes('Binaan')
-                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                cfg.badgeText.includes('Penaung')
+                                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
                                   : 'bg-stone-100 text-stone-600 border border-stone-200'
                               }`}>
                                 {cfg.badgeText}
@@ -466,11 +484,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 </div>
 
                 {/* Info Callout for Roles Under Kelompok Tani */}
-                <div className="mt-2.5 p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl flex items-start gap-2 text-[11px] text-amber-900 leading-snug">
+                <div className="mt-2.5 p-3 bg-amber-50/90 border border-amber-200 rounded-xl flex items-start gap-2.5 text-[11px] text-amber-950 leading-relaxed shadow-2xs">
                   <Building2 className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Pemberitahuan Peran:</strong> Untuk <strong>Petani Kopi</strong> dan <strong>Stasiun Pengolah</strong>, operasional dan alokasi akun berada di bawah naungan <strong>Kelompok Tani / Gapoktan</strong> binaan.
-                  </span>
+                  <div>
+                    <strong className="block text-amber-950 font-bold mb-0.5">Informasi Struktur Keanggotaan Hulu:</strong>
+                    <span>
+                      Peran <strong>Petani Kopi</strong>, <strong>Stasiun Pengolah (Wet/Dry Mill)</strong>, dan <strong>Petugas Auditor ICS</strong> telah tercakup langsung (<em>included</em>) di dalam akun <strong>Kelompok Tani / Koperasi</strong>. Pendaftaran dan penugasan akun anggota dikelola langsung oleh pengurus melalui portal Kelompok Tani setelah terdaftar.
+                    </span>
+                  </div>
                 </div>
 
                 {/* Selected Role Description Banner */}

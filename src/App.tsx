@@ -50,6 +50,7 @@ import { StakeholderFormsPage } from './pages/admin/forms/StakeholderFormsPage';
 import { BukuTransaksiPage } from './pages/admin/transaksi/BukuTransaksiPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { PlatformPackagesPage } from './pages/admin/superadmin/PlatformPackagesPage';
+import { SuperAdminLoginPage } from './pages/admin/superadmin/SuperAdminLoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 
 /**
@@ -178,6 +179,9 @@ export const AppRoutes: React.FC = () => {
 
       {/* 2. Standalone Public Pages */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/superadmin/login" element={<SuperAdminLoginPage />} />
+      <Route path="/portal-superadmin" element={<Navigate to="/superadmin/login" replace />} />
+      <Route path="/admin/superadmin/login" element={<Navigate to="/superadmin/login" replace />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/daftar" element={<Navigate to="/register" replace />} />
       <Route path="/forgot-password" element={<LoginPage initialMode="forgot" />} />

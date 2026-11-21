@@ -40,21 +40,24 @@ export const RegisterPage: React.FC = () => {
   }, [currentUser, navigate]);
 
   const initialRoleParam = searchParams.get('role') as UserRole | null;
-  const validRoles: UserRole[] = [
+  const registerableRoles: UserRole[] = [
     'admin_kelompok_tani',
     'gudang',
     'roaster',
     'cafe',
     'verifikator',
-    'petani',
-    'pengolah',
-    'ict',
-    'super_admin',
   ];
 
-  const defaultRole: UserRole = validRoles.includes(initialRoleParam as any)
-    ? (initialRoleParam as UserRole)
-    : 'roaster';
+  const defaultRole: UserRole = (() => {
+    if (!initialRoleParam) return 'admin_kelompok_tani';
+    if (initialRoleParam === 'petani' || initialRoleParam === 'pengolah' || initialRoleParam === 'ict') {
+      return 'admin_kelompok_tani';
+    }
+    if (registerableRoles.includes(initialRoleParam)) {
+      return initialRoleParam;
+    }
+    return 'admin_kelompok_tani';
+  })();
 
   const availableKelompokTani = (users || [])
     .filter((u) => u.role === 'admin_kelompok_tani')
@@ -98,8 +101,12 @@ export const RegisterPage: React.FC = () => {
 
   // Sync role from query param if changed
   useEffect(() => {
-    if (initialRoleParam && validRoles.includes(initialRoleParam as any)) {
-      setSelectedRole(initialRoleParam);
+    if (initialRoleParam) {
+      if (initialRoleParam === 'petani' || initialRoleParam === 'pengolah' || initialRoleParam === 'ict') {
+        setSelectedRole('admin_kelompok_tani');
+      } else if (registerableRoles.includes(initialRoleParam)) {
+        setSelectedRole(initialRoleParam);
+      }
     }
   }, [initialRoleParam]);
 
@@ -118,14 +125,14 @@ export const RegisterPage: React.FC = () => {
     }
   > = {
     admin_kelompok_tani: {
-      title: 'Admin Kelompok Tani',
-      tier: 'Pusat Kendali Gapoktan',
+      title: 'Kelompok Tani / Koperasi (Petani, Pengolah & ICS)',
+      tier: 'Penaung Ekosistem Hulu Terpadu',
       badgeText: 'Penaung Ekosistem',
-      desc: 'Kelola ekosistem terpadu 5 layanan hulu-hilir dan alokasi akun anggota kelompok tani.',
+      desc: 'Menaungi kebun petani anggota, stasiun pengolah ceri (wet/dry mill), dan audit kepatuhan ICS internal.',
       icon: <Building2 className="w-5 h-5 text-amber-700" />,
       color: 'border-amber-500 ring-amber-500/20',
       bgBadge: 'bg-amber-50 text-amber-900 border-amber-300',
-      defaultOrgExample: 'e.g. Gapoktan Kopi Mandiri Nusantara',
+      defaultOrgExample: 'e.g. Gapoktan Kopi Mandiri Nusantara / Koperasi Petani',
       defaultLocExample: 'e.g. Pangalengan, Jawa Barat',
     },
     gudang: {
@@ -404,7 +411,7 @@ export const RegisterPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {(Object.keys(roleConfigs) as UserRole[]).map((r) => {
+                    {registerableRoles.map((r) => {
                       const cfg = roleConfigs[r];
                       const isSelected = selectedRole === r;
                       return (
@@ -447,6 +454,19 @@ export const RegisterPage: React.FC = () => {
                         </button>
                       );
                     })}
+                  </div>
+
+                  {/* Callout Info: Petani, Pengolah & ICS sudah included dalam Kelompok Tani */}
+                  <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-950 flex items-start gap-3 shadow-2xs">
+                    <Building2 className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <span className="font-bold text-amber-950 block">
+                        Informasi Struktur Keanggotaan Hulu:
+                      </span>
+                      <p className="text-[11px] text-amber-900 leading-relaxed">
+                        Peran <strong>Petani Kopi</strong>, <strong>Stasiun Pengolah (Wet/Dry Mill)</strong>, dan <strong>Petugas Auditor ICS</strong> telah tercakup langsung (<em>included</em>) di bawah manajemen <strong>Kelompok Tani / Koperasi</strong>. Penugasan akun anggota dilakukan oleh pengurus melalui portal Kelompok Tani setelah terdaftar.
+                      </p>
+                    </div>
                   </div>
                 </div>
 

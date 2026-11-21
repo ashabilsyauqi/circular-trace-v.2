@@ -405,7 +405,7 @@ export const LandingPage: React.FC = () => {
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => openRegister('petani')}
+                      onClick={() => openRegister('admin_kelompok_tani')}
                       className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
                     >
                       {content.servicePanels.petani.ctaRegister}
@@ -482,7 +482,7 @@ export const LandingPage: React.FC = () => {
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => openRegister('pengolah')}
+                      onClick={() => openRegister('admin_kelompok_tani')}
                       className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
                     >
                       {content.servicePanels.pengolah.ctaRegister}

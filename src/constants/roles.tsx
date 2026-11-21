@@ -32,10 +32,10 @@ export const ROLE_DETAILS: Record<
   { label: string; badgeClass: string; icon: React.ReactNode; description: string }
 > = {
   admin_kelompok_tani: {
-    label: 'Admin Kelompok Tani',
+    label: 'Kelompok Tani / Koperasi (Petani, Pengolah & ICS)',
     badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
     icon: <Building2 className="w-4 h-4 text-amber-700" />,
-    description: 'Control Tower pengelola ekosistem terpadu 3 layanan (Petani, Pengolah, Petugas ICS) & penugasan akun',
+    description: 'Control Tower pengelola ekosistem terpadu 3 layanan hulu (Petani, Pengolah, Petugas ICS) & penugasan akun',
   },
   petani: {
     label: 'Petani Kopi',

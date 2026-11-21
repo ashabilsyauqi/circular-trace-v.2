@@ -78,8 +78,8 @@ const SERVICE_NAV_ITEMS: {
     id: 'verifikator',
     label: 'Verifikator Mutu (Auditor)',
     icon: ShieldCheck,
-    color: 'text-purple-600',
-    badgeBg: 'bg-purple-100 text-purple-900 border-purple-300',
+    color: 'text-amber-600',
+    badgeBg: 'bg-amber-100 text-amber-950 border-amber-300',
   },
 ];
 
@@ -258,13 +258,13 @@ export const ServiceSettingsPage: React.FC = () => {
       {/* 1. Header Banner */}
       <div className="rounded-3xl bg-gradient-to-br from-[#1A0E08] via-[#24130B] to-[#140A06] text-white p-6 sm:p-8 border border-amber-900/40 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 left-1/3 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 left-1/3 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-purple-900/80 text-purple-200 border border-purple-700/60 flex items-center gap-1.5 shadow-2xs">
-                <ShieldAlert className="w-3.5 h-3.5 text-purple-300" />
+              <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1.5 shadow-2xs">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
                 Super Admin / Platform Owner
               </span>
               <span className="text-xs text-stone-400">
@@ -591,7 +591,7 @@ export const ServiceSettingsPage: React.FC = () => {
           <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-stone-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>

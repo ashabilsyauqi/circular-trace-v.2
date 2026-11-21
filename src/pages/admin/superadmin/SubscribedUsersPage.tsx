@@ -65,7 +65,7 @@ const SERVICE_BADGES: Record<
   },
   verifikator: {
     label: 'Verifikator',
-    bg: 'bg-purple-100 text-purple-900 border-purple-300',
+    bg: 'bg-amber-100 text-amber-950 border-amber-300',
     icon: ShieldCheck,
   },
 };
@@ -200,13 +200,13 @@ export const SubscribedUsersPage: React.FC = () => {
     <div className="space-y-6 pb-16">
       {/* 1. Header Hero Banner */}
       <div className="rounded-3xl bg-gradient-to-br from-[#120B08] via-[#1E110A] to-[#100906] text-white p-6 sm:p-8 border border-amber-900/40 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-10 left-1/4 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-purple-900/80 text-purple-200 border border-purple-700/60 shadow-2xs">
+              <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30 shadow-2xs">
                 SaaS Subscription &amp; Tenant Hub
               </span>
               <span className="text-xs text-stone-400">
@@ -216,7 +216,7 @@ export const SubscribedUsersPage: React.FC = () => {
 
             <Link
               to="/admin/superadmin/packages"
-              className="py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
+              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs shadow-md shadow-amber-950/30 transition-all flex items-center gap-2"
             >
               <Package className="w-4 h-4" />
               <span>Katalog Paket &amp; Harga</span>

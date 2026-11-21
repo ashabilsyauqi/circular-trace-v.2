@@ -493,11 +493,11 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 >
                   {({ isActive }) => (
                     <>
-                      <ShieldCheck className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-purple-400'}`} />
+                      <ShieldCheck className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
                       {!isCollapsed && <span className="flex-1 truncate">Verifikator Mutu</span>}
                       {!isCollapsed && (
                         <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
-                          isActive ? 'bg-stone-950/20 text-stone-950 font-black' : 'bg-purple-950 text-purple-300 border border-purple-800/60'
+                          isActive ? 'bg-stone-950/20 text-stone-950 font-black' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
                         }`}>
                           {verifikatorUsersCount}
                         </span>

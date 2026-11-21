@@ -94,7 +94,7 @@ export const EcosystemTelemetryPage: React.FC = () => {
                 Limbah Terolah Sirkular
               </span>
               <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-2xl font-black text-purple-400">
+                <span className="text-2xl font-black text-amber-400">
                   {(telemetry.totalCircularWasteDivertedKg / 1000).toFixed(1)}
                 </span>
                 <span className="text-xs text-slate-300">Ton Cascara/Kompos</span>
@@ -197,7 +197,7 @@ export const EcosystemTelemetryPage: React.FC = () => {
         {/* Card 3: Sirkularitas & Infrastruktur */}
         <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm space-y-4">
           <div className="flex items-center gap-3 pb-3 border-b border-stone-100">
-            <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
               <Recycle className="w-5 h-5" />
             </div>
             <div>
@@ -207,9 +207,9 @@ export const EcosystemTelemetryPage: React.FC = () => {
           </div>
 
           <div className="space-y-3 text-xs">
-            <div className="p-3 rounded-2xl bg-purple-50 border border-purple-200 text-purple-950 flex items-center justify-between">
+            <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 flex items-center justify-between">
               <span className="font-bold">Indeks Sirkularitas CT:</span>
-              <span className="font-black text-base text-purple-900">
+              <span className="font-black text-base text-amber-900">
                 {telemetry.circularityScoreAverage} / 100
               </span>
             </div>

@@ -96,7 +96,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   const getHomePath = () => {
     switch (userRole) {
       case 'super_admin':
-        return '/admin/superadmin/packages';
+        return '/admin/superadmin/dashboard';
       case 'roaster':
         return '/admin/roaster/inventory';
       case 'gudang':
@@ -254,6 +254,35 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               )}
 
               <div className="space-y-1 mt-1">
+                {/* 0. Dashboard Super Admin */}
+                <NavLink
+                  to="/admin/superadmin/dashboard"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
+                        : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
+                    }`
+                  }
+                  title="Dashboard Utama Super Admin"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <LayoutDashboard className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                      {!isCollapsed && <span className="flex-1 truncate">Dashboard Utama</span>}
+                      {!isCollapsed && (
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                          isActive
+                            ? 'bg-stone-950/20 text-stone-950 font-black'
+                            : 'bg-emerald-950 text-emerald-300 border border-emerald-800/60'
+                        }`}>
+                          Live
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+
                 {/* 1. Paket Layanan & Harga */}
                 <NavLink
                   to="/admin/superadmin/packages"

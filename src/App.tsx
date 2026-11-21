@@ -50,6 +50,7 @@ import { StakeholderFormsPage } from './pages/admin/forms/StakeholderFormsPage';
 import { BukuTransaksiPage } from './pages/admin/transaksi/BukuTransaksiPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { PlatformPackagesPage } from './pages/admin/superadmin/PlatformPackagesPage';
+import { SuperAdminDashboard } from './pages/admin/superadmin/SuperAdminDashboard';
 import { SuperAdminLoginPage } from './pages/admin/superadmin/SuperAdminLoginPage';
 import { ServiceSettingsPage } from './pages/admin/superadmin/ServiceSettingsPage';
 import { SubscribedUsersPage } from './pages/admin/superadmin/SubscribedUsersPage';
@@ -156,6 +157,14 @@ const MarketplaceRedirect: React.FC = () => {
   );
 };
 
+const AdminOverviewDispatcher: React.FC = () => {
+  const { currentUser } = useCoffee();
+  if (currentUser?.role === 'super_admin') {
+    return <SuperAdminDashboard />;
+  }
+  return <KelompokTaniDashboard />;
+};
+
 /**
  * All Application Routes
  */
@@ -199,7 +208,8 @@ export const AppRoutes: React.FC = () => {
       {/* 3. Admin Panel (AdminLTE 3 Layout Style) */}
       <Route path="/admin" element={<AdminLTELayout />}>
         <Route index element={<Navigate to="overview" replace />} />
-        <Route path="overview" element={<KelompokTaniDashboard />} />
+        <Route path="overview" element={<AdminOverviewDispatcher />} />
+        <Route path="superadmin/dashboard" element={<SuperAdminDashboard />} />
         <Route path="users" element={<MasterUsersView />} />
 
         {/* Modul Super Admin SaaS: Manajemen Paket Layanan, Subscribed Users, Services, & Telemetri */}

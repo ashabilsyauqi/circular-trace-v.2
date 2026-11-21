@@ -23,10 +23,10 @@ export const SuperAdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, login } = useCoffee();
 
-  // If already logged in as super_admin, redirect to package dashboard
+  // If already logged in as super_admin, redirect to superadmin dashboard
   useEffect(() => {
     if (currentUser?.role === 'super_admin') {
-      navigate('/admin/superadmin/packages', { replace: true });
+      navigate('/admin/superadmin/dashboard', { replace: true });
     }
   }, [currentUser, navigate]);
 
@@ -48,7 +48,7 @@ export const SuperAdminLoginPage: React.FC = () => {
         setLoading(false);
         if (res.success && res.user) {
           if (res.user.role === 'super_admin') {
-            navigate('/admin/superadmin/packages', { replace: true });
+            navigate('/admin/superadmin/dashboard', { replace: true });
           } else {
             navigate('/admin/overview', { replace: true });
           }
@@ -72,7 +72,7 @@ export const SuperAdminLoginPage: React.FC = () => {
       const res = login('superadmin@circulartrace.id', 'password123', true);
       setLoading(false);
       if (res.success) {
-        navigate('/admin/superadmin/packages', { replace: true });
+        navigate('/admin/superadmin/dashboard', { replace: true });
       } else {
         setErrorMsg(res.message || 'Gagal login instan.');
       }

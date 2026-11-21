@@ -297,8 +297,14 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                 return (
                   <>
                     <Link
+                      to="/admin/superadmin/dashboard"
+                      className="hover:text-amber-950 transition-colors font-black text-amber-950 bg-amber-200/90 px-2.5 py-1 rounded-md border border-amber-400 shadow-2xs"
+                    >
+                      Dashboard Utama
+                    </Link>
+                    <Link
                       to="/admin/superadmin/packages"
-                      className="hover:text-amber-950 transition-colors font-bold text-amber-950 bg-amber-100/90 px-2.5 py-1 rounded-md border border-amber-300 shadow-2xs"
+                      className="hover:text-stone-900 transition-colors font-medium"
                     >
                       Katalog Paket
                     </Link>

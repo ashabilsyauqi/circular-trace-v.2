@@ -698,7 +698,16 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return upgradeFarmPhotos(parsed);
+          const merged = [...parsed];
+          INITIAL_COFFEE_FARMS.forEach((initialFarm) => {
+            const idx = merged.findIndex((f) => f.id === initialFarm.id);
+            if (idx >= 0) {
+              merged[idx] = { ...initialFarm, ...merged[idx] };
+            } else {
+              merged.push(initialFarm);
+            }
+          });
+          return upgradeFarmPhotos(merged);
         }
       } catch (e) {
         // Fallback
@@ -739,7 +748,13 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0 && parsed.some((l: FarmerHarvestLot) => l.availableWeightKg > 0)) {
-          return parsed;
+          const merged = [...parsed];
+          INITIAL_FARMER_LOTS.forEach((initialLot) => {
+            if (!merged.some((l: FarmerHarvestLot) => l.id === initialLot.id)) {
+              merged.push(initialLot);
+            }
+          });
+          return merged;
         }
       } catch (e) {
         // Fallback to fresh seed lots

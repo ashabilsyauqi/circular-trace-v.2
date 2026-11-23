@@ -12,8 +12,20 @@ import {
   SellerOrder,
   ServicePackage,
 } from '../types/coffee';
+import {
+  TEGAL_SARI_ADMIN,
+  TEGAL_SARI_FARMERS,
+  TEGAL_SARI_FARMS,
+  TEGAL_SARI_HARVEST_LOTS,
+} from './mockTegalSariData';
 
 export const MOCK_USERS: AppUser[] = [
+  // --- 0. ADMIN KELOMPOK TANI TEGAL SARI (Kintamani, Bali) ---
+  TEGAL_SARI_ADMIN,
+
+  // --- 0.0 22 PETANI RIIL KELOMPOK TANI TEGAL SARI (SIMLUHTAN 572991) ---
+  ...TEGAL_SARI_FARMERS,
+
   // --- 0. ADMIN KELOMPOK TANI (Control Tower Induk) ---
   {
     id: 'user-admin-gapoktan',
@@ -483,6 +495,9 @@ export const COFFEE_FARM_PHOTO_PRESETS: FarmPhotoPreset[] = [
 ];
 
 export const INITIAL_COFFEE_FARMS: CoffeeFarm[] = [
+  // --- 22 KEBUN RIIL KELOMPOK TANI TEGAL SARI (KINTAMANI, BALI) ---
+  ...TEGAL_SARI_FARMS,
+
   {
     id: 'FARM-PGL-01',
     farmerId: 'user-petani-1',
@@ -1051,6 +1066,9 @@ export const INITIAL_COFFEE_FARMS: CoffeeFarm[] = [
 ];
 
 export const INITIAL_FARMER_LOTS: FarmerHarvestLot[] = [
+  // --- PANEN CERI KELOMPOK TANI TEGAL SARI (KINTAMANI, BALI) ---
+  ...TEGAL_SARI_HARVEST_LOTS,
+
   {
     id: 'LOT-PTN-001',
     farmerId: 'user-petani-1',

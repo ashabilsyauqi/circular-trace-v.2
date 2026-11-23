@@ -617,11 +617,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode }) => {
                   <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 font-mono text-stone-600">
                     <button
                       type="button"
+                      onClick={() => { setEmail('admin.tegalsari@circularcoffee.id'); setPassword('password123'); }}
+                      className="text-left hover:text-emerald-800 font-bold text-emerald-800 transition-colors cursor-pointer truncate bg-emerald-50 px-1 py-0.5 rounded border border-emerald-300"
+                      title="Klik untuk mengisi formulir login sebagai Admin Kelompok Tani Tegal Sari (Bali)"
+                    >
+                      • KT Tegal Sari (Bali): admin.tegalsari@circularcoffee.id
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => { setEmail('admin.gapoktan@circularcoffee.id'); setPassword('password123'); }}
                       className="text-left hover:text-amber-800 transition-colors cursor-pointer truncate"
-                      title="Klik untuk mengisi formulir login sebagai Admin Kelompok Tani"
+                      title="Klik untuk mengisi formulir login sebagai Admin Gapoktan"
                     >
-                      • Admin: admin.gapoktan@sangrai.id
+                      • KT Pangalengan: admin.gapoktan@circularcoffee.id
                     </button>
                     <button
                       type="button"

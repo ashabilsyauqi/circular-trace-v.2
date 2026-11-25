@@ -6,7 +6,6 @@ import {
   Coffee,
   Store,
   ExternalLink,
-  Printer,
   Layers,
   ChevronDown,
   Building2,
@@ -149,21 +148,6 @@ export const Navbar: React.FC = () => {
               <span className="hidden md:inline">Pasar Kopi</span>
               <ExternalLink className="w-3 h-3 text-stone-400" />
             </a>
-
-            {/* 3. Blanko Form Cetak Fisik */}
-            <Link
-              to={currentUser ? '/admin/forms' : '/forms'}
-              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-                isDarkNav
-                  ? 'text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30'
-                  : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 shadow-2xs'
-              }`}
-              title="Cetak & Download Blanko Formulir Fisik (A4) untuk Petani, Pengolah, Gudang, Roastery"
-            >
-              <Printer className={`w-3.5 h-3.5 ${isDarkNav ? 'text-amber-400' : 'text-amber-600'}`} />
-              <span className="hidden lg:inline">Blanko Form</span>
-              <span className="lg:hidden hidden sm:inline">Blanko</span>
-            </Link>
           </nav>
 
           {/* Right Action Buttons */}

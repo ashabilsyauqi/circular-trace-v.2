@@ -29,7 +29,7 @@ LOCAL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dist")
 
 
 class RobustFTPClient:
-    def __init__(self, host, timeout=30):
+    def __init__(self, host, timeout=60):
         self.host = host
         self.timeout = timeout
         self.raw_sock = None
@@ -203,7 +203,7 @@ def main():
         print("❌ Password tidak boleh kosong.")
         sys.exit(1)
 
-    client = RobustFTPClient(HOST, timeout=30)
+    client = RobustFTPClient(HOST, timeout=60)
     try:
         client.connect_and_login(USER, password)
         upload_tree(client, LOCAL_DIR, REMOTE_TARGET_DIR)

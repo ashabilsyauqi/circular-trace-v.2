@@ -5,7 +5,6 @@ import { ROLE_DETAILS } from '../constants/roles';
 import {
   Coffee,
   Store,
-  Home,
   ExternalLink,
   Printer,
   Layers,
@@ -28,7 +27,18 @@ export const Navbar: React.FC = () => {
   const currentRoleInfo = currentUser ? ROLE_DETAILS[currentUser.role] : null;
 
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const registerDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll position for adaptive transparent-to-solid navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 25);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -55,95 +65,113 @@ export const Navbar: React.FC = () => {
     }
   };
 
+  const isHome = location.pathname === '/' && !location.hash;
+  const isDarkNav = isHome && !isScrolled;
+
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-xs">
+    <header
+      className={`sticky top-0 z-40 transition-all duration-300 ${
+        isDarkNav
+          ? 'bg-[#0a160f]/95 backdrop-blur-md border-b border-stone-800/80 shadow-md'
+          : 'bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-xs'
+      }`}
+    >
       {/* Main E-Commerce & Landing Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-16 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Logo & E-Commerce Title */}
+          {/* Logo & Brand Identity (Clicking logo returns to top of Beranda) */}
           <Link
             to="/"
+            onClick={() => {
+              if (location.pathname === '/') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
             className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group min-w-0 shrink-0"
+            title="CircularCoffee - Beranda"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-stone-900 group-hover:bg-amber-900 flex items-center justify-center text-amber-400 shadow-sm shrink-0 transition-colors">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-stone-900 group-hover:bg-amber-900 flex items-center justify-center text-amber-400 shadow-sm shrink-0 transition-colors border border-stone-800/60">
               <Coffee className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-black tracking-tight text-base sm:text-lg text-stone-900 truncate">
+                <span
+                  className={`font-black tracking-tight text-base sm:text-lg truncate transition-colors ${
+                    isDarkNav ? 'text-white' : 'text-stone-900'
+                  }`}
+                >
                   CircularCoffee
                 </span>
                 <span className="hidden sm:inline-flex text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-stone-950 shadow-2xs shrink-0">
                   Circular Trace
                 </span>
               </div>
-              <p className="text-[11px] text-stone-500 hidden md:block leading-tight truncate">
+              <p
+                className={`text-[11px] hidden md:block leading-tight truncate transition-colors ${
+                  isDarkNav ? 'text-stone-300' : 'text-stone-500'
+                }`}
+              >
                 Ekosistem Kopi Specialty • Hulu ke Hilir &amp; Traceability
               </p>
             </div>
           </Link>
 
-          {/* Center Navigation Buttons */}
-          <nav className="flex items-center gap-1 bg-stone-100/90 p-1 rounded-full border border-stone-200/80 shrink-0 shadow-2xs">
-            {/* 1. Beranda / Landing */}
-            <Link
-              to="/"
-              className={`px-3 py-1.5 rounded-full text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                location.pathname === '/' && !location.hash
-                  ? 'bg-white text-stone-900 font-bold shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 font-medium hover:bg-stone-200/50'
-              }`}
-            >
-              <Home className="w-3.5 h-3.5 text-stone-500" />
-              <span className="hidden sm:inline">{t('navbar.home')}</span>
-            </Link>
-
-            {/* 2. Layanan (Smooth Scroll to #services) */}
+          {/* Center Navigation Buttons: Clean, Flat Modern Minimalism (No heavy black block) */}
+          <nav className="flex items-center gap-1 sm:gap-2">
+            {/* 1. Layanan (Smooth Scroll to #services) */}
             <button
               type="button"
               onClick={handleServicesClick}
-              className={`px-3 py-1.5 rounded-full text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                location.hash === '#services'
-                  ? 'bg-white text-amber-900 font-bold shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 font-medium hover:bg-stone-200/50'
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                isDarkNav
+                  ? 'text-stone-200 hover:text-white hover:bg-white/10'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
               }`}
               title="Pilih 4 Solusi Ekosistem Layanan"
             >
-              <Layers className="w-3.5 h-3.5 text-stone-500" />
-              <span className="hidden sm:inline">Layanan</span>
+              <Layers className={`w-4 h-4 ${isDarkNav ? 'text-amber-400' : 'text-amber-600'}`} />
+              <span>Layanan</span>
             </button>
 
-            {/* 3. Marketplace */}
+            {/* 2. Marketplace Pasar Kopi */}
             <a
               href="https://marketplace.circulartrace.id/"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 rounded-full text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-200/50 transition-all flex items-center gap-1.5 cursor-pointer"
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                isDarkNav
+                  ? 'text-stone-200 hover:text-white hover:bg-white/10'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+              }`}
               title="Kunjungi Marketplace CircularTrace"
             >
-              <Store className="w-3.5 h-3.5 text-stone-500" />
+              <Store className={`w-4 h-4 ${isDarkNav ? 'text-amber-400' : 'text-amber-600'}`} />
               <span className="hidden md:inline">Pasar Kopi</span>
               <ExternalLink className="w-3 h-3 text-stone-400" />
             </a>
 
-            {/* 4. Blanko Form Cetak Fisik */}
+            {/* 3. Blanko Form Cetak Fisik */}
             <Link
               to={currentUser ? '/admin/forms' : '/forms'}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold text-amber-900 bg-amber-500/10 hover:bg-amber-500/20 transition-all flex items-center gap-1.5 border border-amber-300/50"
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                isDarkNav
+                  ? 'text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30'
+                  : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 shadow-2xs'
+              }`}
               title="Cetak & Download Blanko Formulir Fisik (A4) untuk Petani, Pengolah, Gudang, Roastery"
             >
-              <Printer className="w-3.5 h-3.5 text-amber-700" />
+              <Printer className={`w-3.5 h-3.5 ${isDarkNav ? 'text-amber-400' : 'text-amber-600'}`} />
               <span className="hidden lg:inline">Blanko Form</span>
               <span className="lg:hidden hidden sm:inline">Blanko</span>
             </Link>
           </nav>
 
-          {/* Right Action */}
+          {/* Right Action Buttons */}
           <div className="flex items-center gap-2 shrink-0">
-            <LanguageSwitch variant="light" />
+            <LanguageSwitch variant={isDarkNav ? 'dark' : 'light'} />
             {currentUser ? (
               <ProfileMenu
-                variant="light"
+                variant={isDarkNav ? 'dark' : 'light'}
                 panelLabel={`${t('navbar.adminPanel')} ${currentRoleInfo?.label.split(' ')[0] || ''}`.trim()}
                 onOpenPanel={() => navigate('/admin/overview')}
                 onOpenRegister={handleServicesClick}
@@ -155,14 +183,18 @@ export const Navbar: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsRegisterOpen(!isRegisterOpen)}
-                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold border border-stone-300 transition-all cursor-pointer"
+                    className={`hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                      isDarkNav
+                        ? 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+                        : 'bg-stone-100 hover:bg-stone-200 text-stone-800 border-stone-300'
+                    }`}
                     title="Pilih Layanan Pendaftaran Akun"
                   >
                     <span>Daftar Akun</span>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-stone-500 transition-transform duration-200 ${
-                        isRegisterOpen ? 'rotate-180' : ''
-                      }`}
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        isDarkNav ? 'text-stone-300' : 'text-stone-500'
+                      } ${isRegisterOpen ? 'rotate-180' : ''}`}
                     />
                   </button>
 
@@ -256,7 +288,7 @@ export const Navbar: React.FC = () => {
 
                 <Link
                   to="/login"
-                  className="px-3.5 sm:px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs shadow-xs whitespace-nowrap"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs shadow-xs whitespace-nowrap transition-all"
                 >
                   {t('navbar.login')}
                 </Link>
@@ -268,4 +300,5 @@ export const Navbar: React.FC = () => {
     </header>
   );
 };
+
 export default Navbar;

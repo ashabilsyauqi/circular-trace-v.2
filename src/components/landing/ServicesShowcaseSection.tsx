@@ -253,7 +253,7 @@ export const ServicesShowcaseSection: React.FC = () => {
               <div className="w-full flex items-center justify-between mb-4 z-20">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-bold">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>Objek Nyata: Daun &amp; Biji Kopi Segar</span>
+                  <span>Objek Nyata: Buah Ceri Kopi Merah (Petik Merah)</span>
                 </div>
                 <button
                   onClick={() => setShowHotspots1(!showHotspots1)}
@@ -268,15 +268,15 @@ export const ServicesShowcaseSection: React.FC = () => {
               <div className="relative w-full max-w-lg aspect-[4/3] flex items-center justify-center p-4 z-10">
                 <img
                   src="/images/coffee_cherries.png"
-                  alt="Biji Kopi dan Daun Segar Asal Kebun"
-                  className="w-full h-auto max-h-[380px] object-contain drop-shadow-[0_20px_40px_rgba(5,150,105,0.25)] animate-cct-float"
+                  alt="Buah Ceri Kopi Merah Segar (Petik Merah)"
+                  className="w-full h-auto max-h-[380px] object-contain drop-shadow-[0_20px_40px_rgba(239,68,68,0.28)] animate-cct-float"
                 />
 
                 {/* Hotspot Pins */}
                 {showHotspots1 && (
                   <>
                     {/* Pin 1: Kematangan Ceri */}
-                    <div className="absolute top-[28%] left-[24%] z-30">
+                    <div className="absolute top-[22%] left-[34%] z-30">
                       <button
                         onClick={() => setActivePin1(activePin1 === 1 ? null : 1)}
                         className="relative group focus:outline-hidden cursor-pointer"
@@ -303,7 +303,7 @@ export const ServicesShowcaseSection: React.FC = () => {
                     </div>
 
                     {/* Pin 2: Batas Lahan EUDR */}
-                    <div className="absolute top-[18%] right-[25%] z-30">
+                    <div className="absolute top-[38%] right-[16%] z-30">
                       <button
                         onClick={() => setActivePin1(activePin1 === 2 ? null : 2)}
                         className="relative group focus:outline-hidden cursor-pointer"
@@ -330,7 +330,7 @@ export const ServicesShowcaseSection: React.FC = () => {
                     </div>
 
                     {/* Pin 3: Pengolahan Basah Wet Mill */}
-                    <div className="absolute bottom-[22%] left-[42%] z-30">
+                    <div className="absolute bottom-[22%] left-[54%] z-30">
                       <button
                         onClick={() => setActivePin1(activePin1 === 3 ? null : 3)}
                         className="relative group focus:outline-hidden cursor-pointer"
@@ -659,7 +659,7 @@ export const ServicesShowcaseSection: React.FC = () => {
               <div className="w-full flex items-center justify-between mb-4 z-20">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-950/80 border border-sky-500/40 text-sky-300 text-xs font-bold">
                   <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
-                  <span>Objek Nyata: Karung Goni Kopi &amp; Biji Hijau</span>
+                  <span>Objek Nyata: Biji Kopi Beras (Green Bean)</span>
                 </div>
                 <button
                   onClick={() => setShowHotspots2(!showHotspots2)}
@@ -673,20 +673,20 @@ export const ServicesShowcaseSection: React.FC = () => {
               {/* Image Frame */}
               <div className="relative w-full max-w-lg aspect-[4/3] flex items-center justify-center p-4 z-10">
                 <img
-                  src="/images/coffee_sack.png"
-                  alt="Karung Goni Biji Kopi Ekspor"
-                  className="w-full h-auto max-h-[380px] object-contain drop-shadow-[0_20px_40px_rgba(14,165,233,0.22)] animate-cct-float-slow"
+                  src="/images/green_beans.png"
+                  alt="Biji Kopi Beras Mentah (Green Beans)"
+                  className="w-full h-auto max-h-[380px] object-contain drop-shadow-[0_20px_40px_rgba(16,185,129,0.25)] animate-cct-float-slow"
                 />
 
                 {/* Hotspot Pins */}
                 {showHotspots2 && (
                   <>
-                    {/* Pin 1: Barrier GrainPro */}
-                    <div className="absolute top-[20%] left-[45%] z-30">
+                    {/* Pin 1: Kadar Air Green Bean */}
+                    <div className="absolute top-[28%] left-[46%] z-30">
                       <button
                         onClick={() => setActivePin2(activePin2 === 1 ? null : 1)}
                         className="relative group focus:outline-hidden cursor-pointer"
-                        title="Klik untuk detail lapisan hermetik"
+                        title="Klik untuk detail kadar air green bean"
                       >
                         <span className="absolute -inset-2 rounded-full bg-sky-500/40 animate-ping" />
                         <span className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 font-black text-xs shadow-lg transition-transform ${
@@ -698,22 +698,22 @@ export const ServicesShowcaseSection: React.FC = () => {
                       {activePin2 === 1 && (
                         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 p-3 bg-stone-900/95 backdrop-blur-md border border-sky-500/50 rounded-xl shadow-2xl z-40 text-left animate-in fade-in slide-in-from-top-2 duration-200">
                           <div className="flex items-center justify-between pb-1 border-b border-stone-800 mb-1.5">
-                            <span className="text-xs font-black text-sky-400 uppercase tracking-wide">Liner Hermetik 5-Lapisan</span>
+                            <span className="text-xs font-black text-sky-400 uppercase tracking-wide">Kadar Air Green Bean (11.2%)</span>
                             <button onClick={() => setActivePin2(null)} className="text-stone-400 hover:text-white cursor-pointer"><X className="w-3.5 h-3.5" /></button>
                           </div>
                           <p className="text-stone-300 text-xs leading-relaxed">
-                            Plastik hermetik tebal menahan penetrasi uap air laut dan bau asing kontainer saat pengiriman kapal kargo ekspor.
+                            Biji hijau dikeringkan terukur hingga kadar air 10-12% dan nilai Water Activity (aW) 0.56, menghentikan pertumbuhan jamur dan mengunci mutu fisik.
                           </p>
                         </div>
                       )}
                     </div>
 
-                    {/* Pin 2: Kadar Air 11.2% */}
-                    <div className="absolute bottom-[28%] left-[28%] z-30">
+                    {/* Pin 2: Sortasi Fisik SCA */}
+                    <div className="absolute bottom-[30%] left-[26%] z-30">
                       <button
                         onClick={() => setActivePin2(activePin2 === 2 ? null : 2)}
                         className="relative group focus:outline-hidden cursor-pointer"
-                        title="Klik untuk detail kadar air"
+                        title="Klik untuk detail sortasi fisik green bean"
                       >
                         <span className="absolute -inset-2 rounded-full bg-sky-500/40 animate-ping" />
                         <span className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 font-black text-xs shadow-lg transition-transform ${
@@ -725,18 +725,18 @@ export const ServicesShowcaseSection: React.FC = () => {
                       {activePin2 === 2 && (
                         <div className="absolute bottom-10 left-0 w-64 p-3 bg-stone-900/95 backdrop-blur-md border border-sky-500/50 rounded-xl shadow-2xl z-40 text-left animate-in fade-in slide-in-from-bottom-2 duration-200">
                           <div className="flex items-center justify-between pb-1 border-b border-stone-800 mb-1.5">
-                            <span className="text-xs font-black text-sky-400 uppercase tracking-wide">Kadar Air Stabil (11.2%)</span>
+                            <span className="text-xs font-black text-sky-400 uppercase tracking-wide">Sortasi Fisik Specialty SCA</span>
                             <button onClick={() => setActivePin2(null)} className="text-stone-400 hover:text-white cursor-pointer"><X className="w-3.5 h-3.5" /></button>
                           </div>
                           <p className="text-stone-300 text-xs leading-relaxed">
-                            Nilai Water Activity (aW) di angka 0.56 berada di bawah ambang hidup spora jamur (&gt;0.65). Mutu fisik tetap prima hingga tiba di roastery.
+                            Standar Specialty Grade 1 mewajibkan 0 cacat primer (biji hitam/kutu) dan maksimal 5 cacat sekunder per sampel 350 gram.
                           </p>
                         </div>
                       )}
                     </div>
 
                     {/* Pin 3: Sertifikat Ekspor KT-9 */}
-                    <div className="absolute bottom-[35%] right-[22%] z-30">
+                    <div className="absolute bottom-[28%] right-[24%] z-30">
                       <button
                         onClick={() => setActivePin2(activePin2 === 3 ? null : 3)}
                         className="relative group focus:outline-hidden cursor-pointer"
@@ -756,7 +756,7 @@ export const ServicesShowcaseSection: React.FC = () => {
                             <button onClick={() => setActivePin2(null)} className="text-stone-400 hover:text-white cursor-pointer"><X className="w-3.5 h-3.5" /></button>
                           </div>
                           <p className="text-stone-300 text-xs leading-relaxed">
-                            Dokumen uji lab bebas serangga hama bubuk buah kopi (*Hypothenemus hampei*) langsung tersemat dalam QR barcode tiap karung.
+                            Hasil uji karantina bebas serangga hama bubuk buah kopi (*Hypothenemus hampei*) tersimpan otomatis di paspor batch QR.
                           </p>
                         </div>
                       )}
@@ -796,7 +796,7 @@ export const ServicesShowcaseSection: React.FC = () => {
               <div className="w-full flex items-center justify-between mb-4 z-20">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-xs font-bold">
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                  <span>Objek Nyata: Tumpukan Biji Kopi Sangrai</span>
+                  <span>Objek Nyata: Biji Kopi Sangrai (Roasted Beans)</span>
                 </div>
                 <button
                   onClick={() => setShowHotspots3(!showHotspots3)}
@@ -811,7 +811,7 @@ export const ServicesShowcaseSection: React.FC = () => {
               <div className="relative w-full max-w-lg aspect-[4/3] flex items-center justify-center p-4 z-10">
                 <img
                   src="/images/roasted_beans.png"
-                  alt="Biji Kopi Sangrai Specialty"
+                  alt="Biji Kopi Sangrai Specialty (Roasted Beans)"
                   className="w-full h-auto max-h-[380px] object-contain drop-shadow-[0_20px_40px_rgba(245,158,11,0.25)] animate-cct-float"
                 />
 

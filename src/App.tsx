@@ -57,6 +57,10 @@ import { SubscribedUsersPage } from './pages/admin/superadmin/SubscribedUsersPag
 import { EcosystemTelemetryPage } from './pages/admin/superadmin/EcosystemTelemetryPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { RegisterVerifierPage } from './pages/RegisterVerifierPage';
+import { RegisterKelompokTaniPage } from './pages/register/RegisterKelompokTaniPage';
+import { RegisterGudangPage } from './pages/register/RegisterGudangPage';
+import { RegisterRoasterPage } from './pages/register/RegisterRoasterPage';
+import { RegisterCoffeeShopPage } from './pages/register/RegisterCoffeeShopPage';
 
 /**
  * Public Layout holding top Navbar + Outlet + bottom Footer
@@ -195,8 +199,15 @@ export const AppRoutes: React.FC = () => {
       <Route path="/superadmin/login" element={<SuperAdminLoginPage />} />
       <Route path="/portal-superadmin" element={<Navigate to="/superadmin/login" replace />} />
       <Route path="/admin/superadmin/login" element={<Navigate to="/superadmin/login" replace />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/daftar" element={<Navigate to="/register" replace />} />
+      {/* 4 Dedicated Self-Contained Registration Routes */}
+      <Route path="/register/kelompok-tani" element={<RegisterKelompokTaniPage />} />
+      <Route path="/register/gudang" element={<RegisterGudangPage />} />
+      <Route path="/register/roaster" element={<RegisterRoasterPage />} />
+      <Route path="/register/coffee-shop" element={<RegisterCoffeeShopPage />} />
+
+      {/* Legacy /register and /daftar redirect to Frontpage Services Section */}
+      <Route path="/register" element={<Navigate to="/#services" replace />} />
+      <Route path="/daftar" element={<Navigate to="/#services" replace />} />
       <Route path="/register-verifikator" element={<RegisterVerifierPage />} />
       <Route path="/verifikator/register" element={<Navigate to="/register-verifikator" replace />} />
       <Route path="/daftar-verifikator" element={<Navigate to="/register-verifikator" replace />} />

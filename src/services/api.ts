@@ -14,11 +14,18 @@ const getApiBaseUrl = (): string => {
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<{ success: boolean; data?: T; message?: string }> {
   const url = `${getApiBaseUrl()}${endpoint}`;
   try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('cct_auth_token') : null;
+    const authHeaders: Record<string, string> = {};
+    if (token) {
+      authHeaders['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        ...authHeaders,
         ...(options.headers || {}),
       },
     });
@@ -49,7 +56,7 @@ export const cctApi = {
   // 1. Auth & Users
   auth: {
     login: (email: string, password: string) =>
-      request<{ user: any; message: string }>('/auth.php?action=login', {
+      request<{ user: any; token: string; message: string }>('/auth.php?action=login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       }),
@@ -59,6 +66,22 @@ export const cctApi = {
         body: JSON.stringify(userData),
       }),
     getUsers: () => request<any[]>('/auth.php?action=users'),
+    getPendingApprovals: () => request<any[]>('/auth.php?action=pending-approvals'),
+    verifyUser: (userId: string, status: 'verified' | 'rejected' | 'pending', notes?: string) =>
+      request<any>('/auth.php?action=verify-user', {
+        method: 'POST',
+        body: JSON.stringify({ userId, status, notes }),
+      }),
+    forgotPassword: (email: string) =>
+      request<{ message: string }>('/auth.php?action=forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      }),
+    resetPassword: (payload: { email: string; otp: string; newPassword: string }) =>
+      request<{ message: string }>('/auth.php?action=reset-password', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
   },
 
   // 2. Coffee Farms & Geolocation

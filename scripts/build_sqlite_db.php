@@ -47,15 +47,42 @@ CREATE TABLE IF NOT EXISTS users (
   email_verification_token TEXT DEFAULT NULL,
   email_verification_expires_at DATETIME DEFAULT NULL,
   is_email_verified INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'active',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS user_tokens (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  token TEXT NOT NULL UNIQUE,
+  role TEXT NOT NULL,
+  kelompok_tani_id TEXT DEFAULT NULL,
+  ip_address TEXT DEFAULT NULL,
+  user_agent TEXT DEFAULT NULL,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_user_tokens_token ON user_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_user_tokens_user_id ON user_tokens(user_id);
+
+CREATE TABLE IF NOT EXISTS password_resets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL,
+  otp_hash TEXT NOT NULL,
+  attempts INTEGER DEFAULT 0,
+  is_used INTEGER DEFAULT 0,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_password_resets_email ON password_resets(email);
 
 CREATE TABLE IF NOT EXISTS coffee_farms (
   id TEXT PRIMARY KEY,
   farmer_id TEXT NOT NULL,
   farmer_name TEXT NOT NULL,
   farm_name TEXT NOT NULL,
+  kelompok_tani_id TEXT DEFAULT NULL,
   location TEXT NOT NULL,
   province TEXT DEFAULT 'Jawa Barat',
   latitude REAL DEFAULT NULL,
@@ -85,6 +112,7 @@ CREATE TABLE IF NOT EXISTS farmer_harvest_lots (
   id TEXT PRIMARY KEY,
   farmer_id TEXT NOT NULL,
   farmer_name TEXT NOT NULL,
+  kelompok_tani_id TEXT DEFAULT NULL,
   farm_id TEXT DEFAULT NULL,
   farm_name TEXT DEFAULT NULL,
   farm_location TEXT NOT NULL,
@@ -112,6 +140,7 @@ CREATE TABLE IF NOT EXISTS processing_batches (
   id TEXT PRIMARY KEY,
   processor_id TEXT NOT NULL,
   processor_name TEXT NOT NULL,
+  kelompok_tani_id TEXT DEFAULT NULL,
   batch_code TEXT NOT NULL,
   source_cherry_lots TEXT DEFAULT '[]',
   process_method TEXT NOT NULL,
@@ -137,6 +166,7 @@ CREATE TABLE IF NOT EXISTS processed_green_bean_lots (
   id TEXT PRIMARY KEY,
   processor_id TEXT NOT NULL,
   processor_name TEXT NOT NULL,
+  kelompok_tani_id TEXT DEFAULT NULL,
   source_farmer_lot_id TEXT NOT NULL,
   source_farmer_name TEXT NOT NULL,
   source_origin TEXT NOT NULL,
@@ -398,8 +428,68 @@ foreach ($lines as $line) {
 }
 $pdo->commit();
 
-// Ensure all pre-seeded accounts have email verified
+// 1. Ensure all pre-seeded accounts have email verified & status active
 $pdo->exec("UPDATE users SET is_email_verified = 1 WHERE is_email_verified = 0 OR is_email_verified IS NULL");
+$pdo->exec("UPDATE users SET status = 'active' WHERE status IS NULL OR status = ''");
+$pdo->exec("UPDATE users SET verification_status = 'verified' WHERE verification_status IS NULL OR verification_status = ''");
 
+// 2. Set default kelompok_tani_id for core users if not set
+$pdo->exec("UPDATE users SET kelompok_tani_id = 'POKTAN-JBR-001', kelompok_tani_name = 'Kelompok Tani Gunung Tilu Pangalengan' 
+            WHERE (id IN ('user-petani-1', 'user-admin-1', 'user-pengolah-1', 'user-verifikator-1') 
+                   OR email IN ('admin@circularcoffee.id', 'admin@circulartrace.id', 'asep@petani.id', 'budi@pengolah.id', 'verifikator@circulartrace.id'))
+              AND (kelompok_tani_id IS NULL OR kelompok_tani_id = '')");
+
+// 3. Propagate kelompok_tani_id to farms, lots, and batches
+$pdo->exec("UPDATE coffee_farms SET kelompok_tani_id = (SELECT kelompok_tani_id FROM users WHERE users.id = coffee_farms.farmer_id) WHERE kelompok_tani_id IS NULL OR kelompok_tani_id = ''");
+$pdo->exec("UPDATE farmer_harvest_lots SET kelompok_tani_id = (SELECT kelompok_tani_id FROM users WHERE users.id = farmer_harvest_lots.farmer_id) WHERE kelompok_tani_id IS NULL OR kelompok_tani_id = ''");
+$pdo->exec("UPDATE processing_batches SET kelompok_tani_id = (SELECT kelompok_tani_id FROM users WHERE users.id = processing_batches.processor_id) WHERE kelompok_tani_id IS NULL OR kelompok_tani_id = ''");
+$pdo->exec("UPDATE processed_green_bean_lots SET kelompok_tani_id = (SELECT kelompok_tani_id FROM users WHERE users.id = processed_green_bean_lots.processor_id) WHERE kelompok_tani_id IS NULL OR kelompok_tani_id = ''");
+
+// 4. Bcrypt-hash all user passwords
+$users = $pdo->query("SELECT id, email, role, kelompok_tani_id, password FROM users")->fetchAll(PDO::FETCH_ASSOC);
+$updatePwdStmt = $pdo->prepare("UPDATE users SET password = :p WHERE id = :id");
+$insertTokenStmt = $pdo->prepare("INSERT OR REPLACE INTO user_tokens (user_id, token, role, kelompok_tani_id, ip_address, user_agent, expires_at) VALUES (:uid, :token, :role, :ktid, '127.0.0.1', 'Seed Initializer', :exp)");
+$expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
+
+$hashedCount = 0;
+foreach ($users as $u) {
+    if (!str_starts_with($u['password'], '$2y$') && !str_starts_with($u['password'], '$2a$')) {
+        $hashed = password_hash($u['password'], PASSWORD_BCRYPT);
+        $updatePwdStmt->execute(['p' => $hashed, 'id' => $u['id']]);
+        $hashedCount++;
+    }
+
+    // Seed predictable demo tokens for standard roles
+    $demoToken = null;
+    if ($u['role'] === 'super_admin' || $u['email'] === 'superadmin@circulartrace.id') {
+        $demoToken = 'token_superadmin_demo';
+    } elseif ($u['role'] === 'admin_kelompok_tani' || $u['email'] === 'admin@circularcoffee.id') {
+        $demoToken = 'token_admin_koptan_demo';
+    } elseif ($u['email'] === 'asep@petani.id') {
+        $demoToken = 'token_petani_demo';
+    } elseif ($u['email'] === 'budi@pengolah.id') {
+        $demoToken = 'token_pengolah_demo';
+    } elseif ($u['role'] === 'verifikator' || $u['email'] === 'verifikator@circulartrace.id') {
+        $demoToken = 'token_verifikator_demo';
+    } elseif ($u['role'] === 'roaster' || $u['email'] === 'roaster@circulartrace.id') {
+        $demoToken = 'token_roaster_demo';
+    } elseif ($u['role'] === 'gudang' || $u['email'] === 'gudang@circulartrace.id') {
+        $demoToken = 'token_gudang_demo';
+    } elseif ($u['role'] === 'cafe' || $u['email'] === 'cafe@circulartrace.id') {
+        $demoToken = 'token_cafe_demo';
+    }
+
+    if ($demoToken) {
+        $insertTokenStmt->execute([
+            'uid'   => $u['id'],
+            'token' => $demoToken,
+            'role'  => $u['role'],
+            'ktid'  => $u['kelompok_tani_id'],
+            'exp'   => $expiresAt
+        ]);
+    }
+}
+
+echo "Hashed $hashedCount passwords to bcrypt securely.\n";
 echo "Seeded $count records into SQLite database successfully!\n";
 echo "File created at: " . realpath($dbPath) . " (" . round(filesize($dbPath) / 1024, 1) . " KB)\n";

@@ -5,13 +5,22 @@ $pdo = getDbConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
+    $auth = requireAuth($pdo);
     $whId = $_GET['warehouse_id'] ?? null;
-    $sql = "SELECT * FROM `warehouse_lots`";
+    $sql = "SELECT * FROM `warehouse_lots` WHERE 1=1";
     $params = [];
-    if ($whId) {
-        $sql .= " WHERE `warehouse_id` = :wid";
+
+    if ($auth['role'] === 'gudang') {
+        $sql .= " AND (`warehouse_id` = :wid OR `warehouse_id` = :uid)";
+        $params['wid'] = $whId ?: $auth['user_id'];
+        $params['uid'] = $auth['user_id'];
+    } elseif (in_array($auth['role'], ['roaster', 'cafe'])) {
+        $sql .= " AND `status` = 'available'";
+    } elseif ($whId) {
+        $sql .= " AND `warehouse_id` = :wid";
         $params['wid'] = $whId;
     }
+
     $sql .= " ORDER BY `stored_date` DESC, `created_at` DESC";
 
     $stmt = $pdo->prepare($sql);
@@ -52,10 +61,12 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
+    $auth = requireAuth($pdo, ['gudang', 'super_admin']);
     $data = getJsonInput();
+
     $id = $data['id'] ?? ('LOT-GDG-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT));
-    $whId = $data['warehouseId'] ?? '';
-    $whName = $data['warehouseName'] ?? '';
+    $whId = !empty($data['warehouseId']) ? $data['warehouseId'] : $auth['user_id'];
+    $whName = !empty($data['warehouseName']) ? $data['warehouseName'] : $auth['organization'];
     $sourceGreenBeanId = $data['sourceGreenBeanId'] ?? '';
     $sourceProc = $data['sourceProcessorName'] ?? '';
     $sourceFarmer = $data['sourceFarmerName'] ?? '';

@@ -6,6 +6,8 @@ $method = $_SERVER['REQUEST_METHOD'];
 $type = $_GET['type'] ?? 'lots';
 
 if ($method === 'GET') {
+    $auth = requireAuth($pdo);
+
     if ($type === 'profiles') {
         $roasterId = $_GET['roaster_id'] ?? null;
         $sql = "SELECT * FROM `roast_profiles`";
@@ -55,12 +57,20 @@ if ($method === 'GET') {
 
     // Default: roasted bean lots
     $roasterId = $_GET['roaster_id'] ?? null;
-    $sql = "SELECT * FROM `roasted_bean_lots`";
+    $sql = "SELECT * FROM `roasted_bean_lots` WHERE 1=1";
     $params = [];
-    if ($roasterId) {
-        $sql .= " WHERE `roaster_id` = :rid";
+
+    if ($auth['role'] === 'roaster') {
+        $sql .= " AND (`roaster_id` = :rid OR `roaster_id` = :uid)";
+        $params['rid'] = $roasterId ?: $auth['user_id'];
+        $params['uid'] = $auth['user_id'];
+    } elseif ($auth['role'] === 'cafe') {
+        $sql .= " AND `available_packs` > 0";
+    } elseif ($roasterId) {
+        $sql .= " AND `roaster_id` = :rid";
         $params['rid'] = $roasterId;
     }
+
     $sql .= " ORDER BY `roast_date` DESC, `created_at` DESC";
 
     $stmt = $pdo->prepare($sql);
@@ -95,6 +105,7 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
+    $auth = requireAuth($pdo, ['roaster', 'super_admin', 'verifikator']);
     $data = getJsonInput();
 
     if ($type === 'cupping') {

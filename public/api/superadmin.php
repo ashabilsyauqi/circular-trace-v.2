@@ -11,6 +11,9 @@ $pdo = getDbConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? 'services';
 
+// Wajib proteksi peran Super Admin
+$auth = requireAuth($pdo, ['super_admin']);
+
 // Auto create table for superadmin service settings if not exists
 try {
     $pdo->exec("CREATE TABLE IF NOT EXISTS superadmin_service_settings (

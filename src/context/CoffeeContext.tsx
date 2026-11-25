@@ -865,8 +865,23 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('cct_currentUser', JSON.stringify(currentUser));
+      if (!localStorage.getItem('cct_auth_token')) {
+        const demoRoleTokens: Record<string, string> = {
+          super_admin: 'token_superadmin_demo',
+          admin_kelompok_tani: 'token_admin_koptan_demo',
+          petani: 'token_petani_demo',
+          pengolah: 'token_pengolah_demo',
+          verifikator: 'token_verifikator_demo',
+          roaster: 'token_roaster_demo',
+          gudang: 'token_gudang_demo',
+          cafe: 'token_cafe_demo',
+        };
+        const defaultToken = demoRoleTokens[currentUser.role] || 'token_petani_demo';
+        localStorage.setItem('cct_auth_token', defaultToken);
+      }
     } else {
       localStorage.removeItem('cct_currentUser');
+      localStorage.removeItem('cct_auth_token');
     }
   }, [currentUser]);
 
@@ -1015,6 +1030,19 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const loginAsRole = (role: UserRole) => {
+    const demoRoleTokens: Record<string, string> = {
+      super_admin: 'token_superadmin_demo',
+      admin_kelompok_tani: 'token_admin_koptan_demo',
+      petani: 'token_petani_demo',
+      pengolah: 'token_pengolah_demo',
+      verifikator: 'token_verifikator_demo',
+      roaster: 'token_roaster_demo',
+      gudang: 'token_gudang_demo',
+      cafe: 'token_cafe_demo',
+    };
+    if (demoRoleTokens[role]) {
+      localStorage.setItem('cct_auth_token', demoRoleTokens[role]);
+    }
     const matched = users.find((u) => u.role === role) || MOCK_USERS.find((u) => u.role === role);
     if (matched) {
       setCurrentUser(matched);
@@ -1035,6 +1063,19 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const loginAsUser = (userId: string) => {
     const matched = users.find((u) => u.id === userId) || MOCK_USERS.find((u) => u.id === userId);
     if (matched) {
+      const demoRoleTokens: Record<string, string> = {
+        super_admin: 'token_superadmin_demo',
+        admin_kelompok_tani: 'token_admin_koptan_demo',
+        petani: 'token_petani_demo',
+        pengolah: 'token_pengolah_demo',
+        verifikator: 'token_verifikator_demo',
+        roaster: 'token_roaster_demo',
+        gudang: 'token_gudang_demo',
+        cafe: 'token_cafe_demo',
+      };
+      if (demoRoleTokens[matched.role]) {
+        localStorage.setItem('cct_auth_token', demoRoleTokens[matched.role]);
+      }
       setCurrentUser(matched);
       setActiveViewState('dashboard');
       if (matched.role === 'admin_kelompok_tani') {
@@ -1137,6 +1178,27 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!isPasswordValid) {
       return { success: false, message: 'Kata sandi salah. Silakan coba kembali atau gunakan Lupa Password.' };
     }
+
+    const demoRoleTokens: Record<string, string> = {
+      super_admin: 'token_superadmin_demo',
+      admin_kelompok_tani: 'token_admin_koptan_demo',
+      petani: 'token_petani_demo',
+      pengolah: 'token_pengolah_demo',
+      verifikator: 'token_verifikator_demo',
+      roaster: 'token_roaster_demo',
+      gudang: 'token_gudang_demo',
+      cafe: 'token_cafe_demo',
+    };
+    if (demoRoleTokens[matched.role]) {
+      localStorage.setItem('cct_auth_token', demoRoleTokens[matched.role]);
+    }
+
+    // Attempt backend token acquisition asynchronously in the background
+    cctApi.auth.login(cleanEmail, password).then((res) => {
+      if (res.success && res.data?.token) {
+        localStorage.setItem('cct_auth_token', res.data.token);
+      }
+    }).catch(() => {});
 
     setCurrentUser(matched);
     setActiveViewState('dashboard');
@@ -1265,7 +1327,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       await fetch('/api/auth.php?action=reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, newPassword }),
+        body: JSON.stringify({ email: cleanEmail, otp: code.trim(), newPassword }),
       });
     } catch (e) {
       console.warn('Backend reset-password call failed, continuing with local state:', e);
@@ -1782,6 +1844,15 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     let verificationToken = fallbackToken;
     let verificationLink = `${window.location.origin}/verify-email?token=${fallbackToken}`;
 
+    const autoVerifiedRoles: UserRole[] = ['admin_kelompok_tani', 'gudang', 'roaster', 'cafe'];
+    const isAutoVerified = autoVerifiedRoles.includes(userData.role);
+    const resolvedKtId = userData.role === 'admin_kelompok_tani'
+      ? (userData.kelompokTaniId || `kt-${Date.now().toString().slice(-6)}`)
+      : userData.kelompokTaniId;
+    const resolvedKtName = userData.role === 'admin_kelompok_tani'
+      ? userData.organization
+      : (userData.kelompokTaniName || userData.organization);
+
     const newUser: AppUser = {
       id: `user-${userData.role}-${Date.now().toString().slice(-4)}`,
       name: userData.name,
@@ -1794,9 +1865,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       avatar: defaultAvatars[userData.role] || defaultAvatars.roaster,
       balance: 50000000,
       bio: userData.bio || `Pengguna terdaftar baru sebagai ${userData.role}`,
-      verificationStatus: 'pending',
-      kelompokTaniId: userData.kelompokTaniId,
-      kelompokTaniName: userData.kelompokTaniName || userData.organization,
+      verificationStatus: isAutoVerified ? 'verified' : 'pending',
+      kelompokTaniId: resolvedKtId,
+      kelompokTaniName: resolvedKtName,
       registeredAt: new Date().toISOString().split('T')[0],
       isEmailVerified: false,
       emailVerificationToken: fallbackToken,

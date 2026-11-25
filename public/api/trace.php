@@ -3,12 +3,17 @@ require_once __DIR__ . '/config.php';
 
 $pdo = getDbConnection();
 
-$code = $_GET['code'] ?? $_GET['lotId'] ?? $_GET['cupId'] ?? $_GET['scan'] ?? '';
+$code = $_GET['lot_id'] ?? $_GET['code'] ?? $_GET['lotId'] ?? $_GET['cupId'] ?? $_GET['scan'] ?? '';
 $code = trim($code);
 
 if (!$code) {
-    sendError('Parameter code / lotId / cupId wajib disertakan.', 400);
+    sendError('Parameter lot_id / code / cupId wajib disertakan.', 400);
 }
+
+// 0. Try finding in cafe_inventory
+$stmt = $pdo->prepare("SELECT * FROM `cafe_inventory` WHERE `id` = :id LIMIT 1");
+$stmt->execute(['id' => $code]);
+$cafeInventory = $stmt->fetch();
 
 // 1. Try finding in cafe_products
 $stmt = $pdo->prepare("SELECT * FROM `cafe_products` WHERE `id` = :id LIMIT 1");
@@ -36,6 +41,12 @@ $stmt->execute(['id' => $code]);
 $harvestLot = $stmt->fetch();
 
 // Trace Lineage backward
+if ($cafeInventory && !$roastedLot) {
+    $stmt = $pdo->prepare("SELECT * FROM `roasted_bean_lots` WHERE `id` = :id LIMIT 1");
+    $stmt->execute(['id' => $cafeInventory['source_roasted_bean_id']]);
+    $roastedLot = $stmt->fetch();
+}
+
 if ($cafeProduct && !$roastedLot) {
     // If cafe product has a source roasted bean lot (search first available roasted lot with same origin)
     $stmt = $pdo->prepare("SELECT * FROM `roasted_bean_lots` WHERE `origin` LIKE :origin LIMIT 1");
@@ -73,8 +84,8 @@ if ($harvestLot && !empty($harvestLot['farm_id'])) {
     $farm = $stmt->fetch();
 }
 
-if (!$harvestLot && !$processedLot && !$warehouseLot && !$roastedLot && !$cafeProduct) {
-    sendError("Lot / Cup dengan kode '{$code}' tidak ditemukan di sistem.", 404);
+if (!$harvestLot && !$processedLot && !$warehouseLot && !$roastedLot && !$cafeProduct && !$cafeInventory) {
+    sendError("Data lot kopi tidak ditemukan atau belum diverifikasi oleh auditor mutu.", 404);
 }
 
 // Decode JSON fields helper

@@ -46,11 +46,43 @@ CREATE TABLE `users` (
   `email_verification_token` VARCHAR(64) DEFAULT NULL,
   `email_verification_expires_at` DATETIME DEFAULT NULL,
   `is_email_verified` TINYINT(1) DEFAULT 0,
+  `status` VARCHAR(20) DEFAULT 'active',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_users_email` (`email`),
   KEY `idx_users_role` (`role`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 1B. USER TOKENS & SESSIONS
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `user_tokens` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` VARCHAR(64) NOT NULL,
+  `token` VARCHAR(128) NOT NULL UNIQUE,
+  `role` VARCHAR(30) NOT NULL,
+  `kelompok_tani_id` VARCHAR(64) DEFAULT NULL,
+  `ip_address` VARCHAR(45) DEFAULT NULL,
+  `user_agent` TEXT DEFAULT NULL,
+  `expires_at` DATETIME NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_user_tokens_token` (`token`),
+  KEY `idx_user_tokens_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 1C. PASSWORD RESETS (Secure OTP Management)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `password_resets` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `email` VARCHAR(191) NOT NULL,
+  `otp_hash` VARCHAR(255) NOT NULL,
+  `attempts` INT DEFAULT 0,
+  `is_used` TINYINT(1) DEFAULT 0,
+  `expires_at` DATETIME NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_password_resets_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
@@ -82,10 +114,12 @@ CREATE TABLE `coffee_farms` (
   `notes` TEXT DEFAULT NULL,
   `verification_status` ENUM('unverified', 'pending', 'verified', 'rejected') DEFAULT 'verified',
   `verification_stamp` JSON DEFAULT NULL,
+  `kelompok_tani_id` VARCHAR(64) DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_farms_farmer_id` (`farmer_id`),
+  KEY `idx_farms_kelompok_tani` (`kelompok_tani_id`),
   CONSTRAINT `fk_farms_farmer` FOREIGN KEY (`farmer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -96,6 +130,7 @@ CREATE TABLE `farmer_harvest_lots` (
   `id` VARCHAR(64) NOT NULL,
   `farmer_id` VARCHAR(64) NOT NULL,
   `farmer_name` VARCHAR(150) NOT NULL,
+  `kelompok_tani_id` VARCHAR(64) DEFAULT NULL,
   `farm_id` VARCHAR(64) DEFAULT NULL,
   `farm_name` VARCHAR(200) DEFAULT NULL,
   `farm_location` VARCHAR(255) NOT NULL,
@@ -119,6 +154,7 @@ CREATE TABLE `farmer_harvest_lots` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_harvest_farmer_id` (`farmer_id`),
+  KEY `idx_harvest_kelompok_tani` (`kelompok_tani_id`),
   KEY `idx_harvest_farm_id` (`farm_id`),
   KEY `idx_harvest_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -130,6 +166,7 @@ CREATE TABLE `processing_batches` (
   `id` VARCHAR(64) NOT NULL,
   `processor_id` VARCHAR(64) NOT NULL,
   `processor_name` VARCHAR(150) NOT NULL,
+  `kelompok_tani_id` VARCHAR(64) DEFAULT NULL,
   `batch_code` VARCHAR(100) NOT NULL,
   `source_cherry_lots` JSON DEFAULT NULL,
   `process_method` VARCHAR(100) NOT NULL,
@@ -151,6 +188,7 @@ CREATE TABLE `processing_batches` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_batches_processor_id` (`processor_id`),
+  KEY `idx_batches_kelompok_tani` (`kelompok_tani_id`),
   KEY `idx_batches_batch_code` (`batch_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -161,6 +199,7 @@ CREATE TABLE `processed_green_bean_lots` (
   `id` VARCHAR(64) NOT NULL,
   `processor_id` VARCHAR(64) NOT NULL,
   `processor_name` VARCHAR(150) NOT NULL,
+  `kelompok_tani_id` VARCHAR(64) DEFAULT NULL,
   `source_farmer_lot_id` VARCHAR(64) NOT NULL,
   `source_farmer_name` VARCHAR(150) NOT NULL,
   `source_origin` VARCHAR(255) NOT NULL,
@@ -196,6 +235,7 @@ CREATE TABLE `processed_green_bean_lots` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_processed_processor_id` (`processor_id`),
+  KEY `idx_processed_kelompok_tani` (`kelompok_tani_id`),
   KEY `idx_processed_source_farmer_lot` (`source_farmer_lot_id`),
   KEY `idx_processed_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

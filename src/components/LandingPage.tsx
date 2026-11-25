@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
 import { landingContent } from '../i18n/landingContent';
+import { ServicesShowcaseSection } from './landing/ServicesShowcaseSection';
 import {
   Sprout,
   Cog,
@@ -39,6 +40,8 @@ import {
   Thermometer,
   Droplets,
   HeartHandshake,
+  Truck,
+  PackageCheck,
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -49,8 +52,38 @@ export const LandingPage: React.FC = () => {
   const [activePipelineStep, setActivePipelineStep] = useState<number>(0);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    if (window.location.hash === '#services') {
+      const el = document.getElementById('services');
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+    }
+  }, []);
+
+  const scrollToServices = () => {
+    const el = document.getElementById('services');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/#services');
+    }
+  };
+
   const openRegister = (role: UserRole = 'roaster') => {
-    navigate(`/register?role=${role}`);
+    if (role === 'admin_kelompok_tani' || role === 'petani' || role === 'pengolah') {
+      navigate('/register/kelompok-tani');
+    } else if (role === 'gudang') {
+      navigate('/register/gudang');
+    } else if (role === 'roaster') {
+      navigate('/register/roaster');
+    } else if (role === 'cafe') {
+      navigate('/register/coffee-shop');
+    } else {
+      scrollToServices();
+    }
   };
 
   // Pipeline simulation stages
@@ -123,7 +156,7 @@ export const LandingPage: React.FC = () => {
               {/* Main Action Buttons (Left Aligned) */}
               <div className="pt-1 flex flex-wrap items-center gap-3 sm:gap-4">
                 <button
-                  onClick={() => openRegister('roaster')}
+                  onClick={scrollToServices}
                   className="px-6 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-sm sm:text-base shadow-xl shadow-amber-500/25 hover:shadow-2xl hover:scale-102 transition-all flex items-center gap-2.5 border border-amber-400 group cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-stone-950 group-hover:scale-110 transition-transform" />
@@ -320,442 +353,9 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ------------------------------------------------------------- */}
-      {/* SECTION 2: SERVICES KITA (5 Pilar Layanan & Fitur Sistem)      */}
+      {/* SECTION 2: 4 SOLUSI UTAMA (Ekosistem Digital Circular Trace)   */}
       {/* ------------------------------------------------------------- */}
-      <section id="services" className="py-20 bg-white border-b border-stone-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 px-3.5 py-1 rounded-full text-xs font-bold mb-3">
-              <Layers className="w-3.5 h-3.5 text-amber-600" />
-              {content.servicesHeader.badge}
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">
-              {content.servicesHeader.title}
-            </h2>
-            <p className="mt-3 text-stone-600 text-sm sm:text-base">
-              {content.servicesHeader.subtitle}
-            </p>
-          </div>
-
-          {/* Role Navigation Tabs */}
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10">
-            {(
-              [
-                { id: 'petani' as UserRole, icon: <Sprout className="w-4 h-4" /> },
-                { id: 'pengolah' as UserRole, icon: <Cog className="w-4 h-4" /> },
-                { id: 'gudang' as UserRole, icon: <Warehouse className="w-4 h-4" /> },
-                { id: 'roaster' as UserRole, icon: <Flame className="w-4 h-4" /> },
-                { id: 'cafe' as UserRole, icon: <Coffee className="w-4 h-4" /> },
-              ] as { id: UserRole; icon: React.ReactNode }[]
-            ).map((tab) => {
-              const isActive = activeTabService === tab.id;
-              const label = content.roleTabs.find((t) => t.id === tab.id)?.label ?? '';
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTabService(tab.id)}
-                  className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
-                    isActive
-                      ? 'bg-amber-500 text-stone-950 shadow-md scale-105'
-                      : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
-                  }`}
-                >
-                  {tab.icon}
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Service Tab Dynamic Content */}
-          <div className="bg-[#FAF7F2] rounded-3xl p-6 sm:p-10 border border-stone-300 shadow-sm max-w-5xl mx-auto">
-            {activeTabService === 'petani' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 rounded-full text-xs font-bold">
-                    <Sprout className="w-3.5 h-3.5 text-emerald-600" />
-                    {content.servicePanels.petani.badge}
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    {content.servicePanels.petani.title}
-                  </h3>
-                  <p className="text-stone-600 text-sm leading-relaxed">
-                    {content.servicePanels.petani.desc}
-                  </p>
-                  <ul className="space-y-2.5 text-xs text-stone-700">
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      {content.servicePanels.petani.bullets[0]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      {content.servicePanels.petani.bullets[1]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      {content.servicePanels.petani.bullets[2]}
-                    </li>
-                  </ul>
-                  <div className="pt-2 flex items-center gap-3">
-                    <button
-                      onClick={() => navigate('/login')}
-                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>{content.servicePanels.petani.ctaOpen}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => openRegister('admin_kelompok_tani')}
-                      className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
-                    >
-                      {content.servicePanels.petani.ctaRegister}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.petani.previewTitle}</span>
-                    <span className="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">
-                      LOT-PTN-001
-                    </span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[0].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.petani.previewRows[0].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[1].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.petani.previewRows[1].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[2].label}</span>
-                      <span className="font-bold text-emerald-700">{content.servicePanels.petani.previewRows[2].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[3].label}</span>
-                      <span className="font-bold text-amber-600">{content.servicePanels.petani.previewRows[3].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-stone-500">{content.servicePanels.petani.previewRows[4].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.petani.previewRows[4].value}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTabService === 'pengolah' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1 rounded-full text-xs font-bold">
-                    <Cog className="w-3.5 h-3.5 text-amber-600" />
-                    {content.servicePanels.pengolah.badge}
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    {content.servicePanels.pengolah.title}
-                  </h3>
-                  <p className="text-stone-600 text-sm leading-relaxed">
-                    {content.servicePanels.pengolah.desc}
-                  </p>
-                  <ul className="space-y-2.5 text-xs text-stone-700">
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-amber-600 shrink-0" />
-                      {content.servicePanels.pengolah.bullets[0]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-amber-600 shrink-0" />
-                      {content.servicePanels.pengolah.bullets[1]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-amber-600 shrink-0" />
-                      {content.servicePanels.pengolah.bullets[2]}
-                    </li>
-                  </ul>
-                  <div className="pt-2 flex items-center gap-3">
-                    <button
-                      onClick={() => navigate('/login')}
-                      className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>{content.servicePanels.pengolah.ctaOpen}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => openRegister('admin_kelompok_tani')}
-                      className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
-                    >
-                      {content.servicePanels.pengolah.ctaRegister}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.pengolah.previewTitle}</span>
-                    <span className="text-[10px] font-mono bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">
-                      LOT-GB-001
-                    </span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[0].label}</span>
-                      <span className="font-bold text-amber-700">{content.servicePanels.pengolah.previewRows[0].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[1].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.pengolah.previewRows[1].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[2].label}</span>
-                      <span className="font-bold text-emerald-700">{content.servicePanels.pengolah.previewRows[2].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[3].label}</span>
-                      <span className="font-bold text-emerald-600">{content.servicePanels.pengolah.previewRows[3].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-stone-500">{content.servicePanels.pengolah.previewRows[4].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.pengolah.previewRows[4].value}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTabService === 'gudang' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 border border-blue-300 px-3 py-1 rounded-full text-xs font-bold">
-                    <Warehouse className="w-3.5 h-3.5 text-blue-600" />
-                    {content.servicePanels.gudang.badge}
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    {content.servicePanels.gudang.title}
-                  </h3>
-                  <p className="text-stone-600 text-sm leading-relaxed">
-                    {content.servicePanels.gudang.desc}
-                  </p>
-                  <ul className="space-y-2.5 text-xs text-stone-700">
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-blue-600 shrink-0" />
-                      {content.servicePanels.gudang.bullets[0]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-blue-600 shrink-0" />
-                      {content.servicePanels.gudang.bullets[1]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-blue-600 shrink-0" />
-                      {content.servicePanels.gudang.bullets[2]}
-                    </li>
-                  </ul>
-                  <div className="pt-2 flex items-center gap-3">
-                    <button
-                      onClick={() => navigate('/login')}
-                      className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>{content.servicePanels.gudang.ctaOpen}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => openRegister('gudang')}
-                      className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
-                    >
-                      {content.servicePanels.gudang.ctaRegister}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.gudang.previewTitle}</span>
-                    <span className="text-[10px] font-mono bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">
-                      LOT-WH-001
-                    </span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[0].label}</span>
-                      <span className="font-bold text-blue-700">{content.servicePanels.gudang.previewRows[0].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[1].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.gudang.previewRows[1].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[2].label}</span>
-                      <span className="font-bold text-amber-600">{content.servicePanels.gudang.previewRows[2].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[3].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.gudang.previewRows[3].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-stone-500">{content.servicePanels.gudang.previewRows[4].label}</span>
-                      <span className="font-bold text-emerald-600">{content.servicePanels.gudang.previewRows[4].value}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTabService === 'roaster' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 border border-orange-300 px-3 py-1 rounded-full text-xs font-bold">
-                    <Flame className="w-3.5 h-3.5 text-orange-600" />
-                    {content.servicePanels.roaster.badge}
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    {content.servicePanels.roaster.title}
-                  </h3>
-                  <p className="text-stone-600 text-sm leading-relaxed">
-                    {content.servicePanels.roaster.desc}
-                  </p>
-                  <ul className="space-y-2.5 text-xs text-stone-700">
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-orange-600 shrink-0" />
-                      {content.servicePanels.roaster.bullets[0]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-orange-600 shrink-0" />
-                      {content.servicePanels.roaster.bullets[1]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-orange-600 shrink-0" />
-                      {content.servicePanels.roaster.bullets[2]}
-                    </li>
-                  </ul>
-                  <div className="pt-2 flex items-center gap-3">
-                    <button
-                      onClick={() => navigate('/login')}
-                      className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>{content.servicePanels.roaster.ctaOpen}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => openRegister('roaster')}
-                      className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
-                    >
-                      {content.servicePanels.roaster.ctaRegister}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.roaster.previewTitle}</span>
-                    <span className="text-[10px] font-mono bg-orange-100 text-orange-800 px-2 py-0.5 rounded font-bold">
-                      LOT-ROAST-001
-                    </span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[0].label}</span>
-                      <span className="font-bold text-orange-700">{content.servicePanels.roaster.previewRows[0].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[1].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.roaster.previewRows[1].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[2].label}</span>
-                      <span className="font-bold text-amber-700">{content.servicePanels.roaster.previewRows[2].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[3].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.roaster.previewRows[3].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-stone-500">{content.servicePanels.roaster.previewRows[4].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.roaster.previewRows[4].value}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTabService === 'cafe' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 bg-stone-200 text-stone-800 border border-stone-300 px-3 py-1 rounded-full text-xs font-bold">
-                    <Coffee className="w-3.5 h-3.5 text-stone-700" />
-                    {content.servicePanels.cafe.badge}
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                    {content.servicePanels.cafe.title}
-                  </h3>
-                  <p className="text-stone-600 text-sm leading-relaxed">
-                    {content.servicePanels.cafe.desc}
-                  </p>
-                  <ul className="space-y-2.5 text-xs text-stone-700">
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-stone-900 shrink-0" />
-                      {content.servicePanels.cafe.bullets[0]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-stone-900 shrink-0" />
-                      {content.servicePanels.cafe.bullets[1]}
-                    </li>
-                    <li className="flex items-center gap-2 font-medium">
-                      <Check className="w-4 h-4 text-stone-900 shrink-0" />
-                      {content.servicePanels.cafe.bullets[2]}
-                    </li>
-                  </ul>
-                  <div className="pt-2 flex items-center gap-3">
-                    <button
-                      onClick={() => navigate('/login')}
-                      className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>{content.servicePanels.cafe.ctaOpen}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => openRegister('cafe')}
-                      className="px-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 font-bold text-xs hover:bg-stone-100 transition-all cursor-pointer"
-                    >
-                      {content.servicePanels.cafe.ctaRegister}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <span className="text-xs font-bold text-stone-800">{content.servicePanels.cafe.previewTitle}</span>
-                    <span className="text-[10px] font-mono bg-stone-100 text-stone-800 px-2 py-0.5 rounded font-bold">
-                      CUP-TEDUH-2026
-                    </span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[0].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.cafe.previewRows[0].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[1].label}</span>
-                      <span className="font-bold text-stone-900">{content.servicePanels.cafe.previewRows[1].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[2].label}</span>
-                      <span className="font-bold text-emerald-700">{content.servicePanels.cafe.previewRows[2].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-stone-100">
-                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[3].label}</span>
-                      <span className="font-bold text-orange-700">{content.servicePanels.cafe.previewRows[3].value}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-stone-500">{content.servicePanels.cafe.previewRows[4].label}</span>
-                      <span className="font-bold text-amber-600">{content.servicePanels.cafe.previewRows[4].value}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+      <ServicesShowcaseSection />
 
       {/* ------------------------------------------------------------- */}
       {/* SECTION 3: KELEBIHAN KITA (Value Propositions & Advantages)    */}

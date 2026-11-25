@@ -84,17 +84,17 @@ export const Navbar: React.FC = () => {
           </Link>
 
           {/* Center Navigation Buttons */}
-          <div className="flex items-center bg-stone-100 p-1 rounded-2xl border border-stone-200 shrink-0">
+          <nav className="flex items-center gap-1 bg-stone-100/90 p-1 rounded-full border border-stone-200/80 shrink-0 shadow-2xs">
             {/* 1. Beranda / Landing */}
             <Link
               to="/"
-              className={`px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
                 location.pathname === '/' && !location.hash
-                  ? 'bg-stone-900 text-amber-400 shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-white text-stone-900 font-bold shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900 font-medium hover:bg-stone-200/50'
               }`}
             >
-              <Home className="w-4 h-4" />
+              <Home className="w-3.5 h-3.5 text-stone-500" />
               <span className="hidden sm:inline">{t('navbar.home')}</span>
             </Link>
 
@@ -102,14 +102,14 @@ export const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={handleServicesClick}
-              className={`px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
                 location.hash === '#services'
-                  ? 'bg-amber-500 text-stone-950 shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
+                  ? 'bg-white text-amber-900 font-bold shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900 font-medium hover:bg-stone-200/50'
               }`}
               title="Pilih 4 Solusi Ekosistem Layanan"
             >
-              <Layers className="w-4 h-4 text-amber-600" />
+              <Layers className="w-3.5 h-3.5 text-stone-500" />
               <span className="hidden sm:inline">Layanan</span>
             </button>
 
@@ -118,10 +118,10 @@ export const Navbar: React.FC = () => {
               href="https://marketplace.circulartrace.id/"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer text-stone-700 hover:text-amber-800 hover:bg-stone-200/60"
+              className="px-3 py-1.5 rounded-full text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-200/50 transition-all flex items-center gap-1.5 cursor-pointer"
               title="Kunjungi Marketplace CircularTrace"
             >
-              <Store className="w-4 h-4 text-amber-600" />
+              <Store className="w-3.5 h-3.5 text-stone-500" />
               <span className="hidden md:inline">Pasar Kopi</span>
               <ExternalLink className="w-3 h-3 text-stone-400" />
             </a>
@@ -129,14 +129,14 @@ export const Navbar: React.FC = () => {
             {/* 4. Blanko Form Cetak Fisik */}
             <Link
               to={currentUser ? '/admin/forms' : '/forms'}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 shadow-2xs"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold text-amber-900 bg-amber-500/10 hover:bg-amber-500/20 transition-all flex items-center gap-1.5 border border-amber-300/50"
               title="Cetak & Download Blanko Formulir Fisik (A4) untuk Petani, Pengolah, Gudang, Roastery"
             >
-              <Printer className="w-3.5 h-3.5 text-amber-600" />
+              <Printer className="w-3.5 h-3.5 text-amber-700" />
               <span className="hidden lg:inline">Blanko Form</span>
               <span className="lg:hidden hidden sm:inline">Blanko</span>
             </Link>
-          </div>
+          </nav>
 
           {/* Right Action */}
           <div className="flex items-center gap-2 shrink-0">

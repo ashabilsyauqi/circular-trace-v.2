@@ -66,6 +66,50 @@
 }
 
 /* ==========================================================================
+   Smooth Floating & Glowing Animations for Landing Page Transparent Graphics
+   ========================================================================== */
+@keyframes cct-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(0.8deg);
+  }
+}
+
+@keyframes cct-float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(-1deg);
+  }
+}
+
+@keyframes cct-pulse-glow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.06);
+  }
+}
+
+.animate-cct-float {
+  animation: cct-float 5s ease-in-out infinite;
+}
+
+.animate-cct-float-slow {
+  animation: cct-float-slow 7s ease-in-out infinite;
+}
+
+.animate-cct-pulse-glow {
+  animation: cct-pulse-glow 4s ease-in-out infinite;
+}
+
+/* ==========================================================================
    Circular Coffee ERP Design System: Odoo Style Navigation, Control Panel & Sheets
    ========================================================================== */
 

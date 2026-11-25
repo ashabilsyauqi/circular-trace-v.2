@@ -150,8 +150,8 @@ export const ServicesShowcaseSection: React.FC = () => {
               {/* Image Frame */}
               <div className="relative w-full max-w-md aspect-square flex items-center justify-center p-4 z-10">
                 <img
-                  src="/images/coffee_cherries.png"
-                  alt="Buah Ceri Kopi Merah Segar Hasil Petik Kebun"
+                  src="/images/fresh_cherries_branch.png"
+                  alt="Buah Ceri Kopi Merah Segar Petik Kebun"
                   className="w-full h-auto max-h-[360px] object-contain drop-shadow-[0_20px_45px_rgba(239,68,68,0.35)] animate-cct-float"
                 />
               </div>

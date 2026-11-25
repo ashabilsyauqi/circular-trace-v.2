@@ -55,6 +55,7 @@ class RobustFTPClient:
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
         self.sock = ctx.wrap_socket(self.raw_sock, server_hostname=self.host)
+        self.sock.settimeout(self.timeout)
         self.file = self.sock.makefile("r", encoding="latin-1")
         print("🔒 Jalur kendali TLS terenkripsi berhasil aktif!")
 
@@ -107,6 +108,16 @@ class RobustFTPClient:
                 self.send(f"MKD {curr}")
                 self.send(f"CWD {curr}")
 
+    def get_remote_size(self, remote_dir, filename):
+        self.ensure_remote_dir(remote_dir)
+        resp = self.send(f"SIZE {filename}")
+        if resp.startswith("213"):
+            try:
+                return int(resp.split()[1])
+            except (IndexError, ValueError):
+                return -1
+        return -1
+
     def upload_file(self, local_path, remote_dir, filename):
         self.ensure_remote_dir(remote_dir)
 
@@ -133,7 +144,12 @@ class RobustFTPClient:
             while chunk := fp.read(65536):
                 data_sock.sendall(chunk)
 
+        try:
+            data_sock.shutdown(socket.SHUT_WR)
+        except Exception:
+            pass
         data_sock.close()
+
         # Read completion response (226 Transfer complete)
         trans_resp = self._read_resp()
         if not trans_resp.startswith("226"):
@@ -158,7 +174,10 @@ def upload_tree(client: RobustFTPClient, local_path: str, remote_target: str):
             file_list.append((root, f))
 
     total = len(file_list)
-    print(f"🚀 Memulai upload {total} file ke cPanel...\n")
+    print(f"🚀 Memulai sinkronisasi {total} file ke cPanel...\n")
+
+    uploaded = 0
+    skipped = 0
 
     for idx, (root, filename) in enumerate(file_list, 1):
         rel_dir = os.path.relpath(root, local_path)
@@ -170,17 +189,29 @@ def upload_tree(client: RobustFTPClient, local_path: str, remote_target: str):
             display_name = f"{rel_dir}/{filename}"
 
         local_file = os.path.join(root, filename)
-        size_kb = os.path.getsize(local_file) / 1024
+        local_size = os.path.getsize(local_file)
+        size_kb = local_size / 1024
+
+        # For files other than html/php, check if size already matches on remote
+        is_html_or_php = filename.endswith(".html") or filename.endswith(".php")
+        if not is_html_or_php:
+            remote_size = client.get_remote_size(target_dir, filename)
+            if remote_size == local_size:
+                sys.stdout.write(f"  ⚡ [{idx}/{total}] {display_name} ({size_kb:.1f} KB) - Sama persis (Dilewati)\n")
+                sys.stdout.flush()
+                skipped += 1
+                continue
 
         sys.stdout.write(f"  ⬆  [{idx}/{total}] Mengunggah {display_name} ({size_kb:.1f} KB)... ")
         sys.stdout.flush()
 
         client.upload_file(local_file, target_dir, filename)
+        uploaded += 1
 
         sys.stdout.write("✓ Selesai\n")
         sys.stdout.flush()
 
-    print(f"\n✨ Sukses! {total} file berhasil terunggah dan sinkron sempurna.")
+    print(f"\n✨ Sukses! {uploaded} file diunggah, {skipped} file identik dilewati.")
 
 
 def main():

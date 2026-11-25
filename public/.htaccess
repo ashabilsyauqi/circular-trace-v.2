@@ -2,11 +2,6 @@
 # Circular Coffee Trace (sangrAI) - cPanel / Apache / LiteSpeed Configuration
 # ==============================================================================
 
-# 0. CloudLinux alt-php82 handler
-<IfModule mime_module>
-  AddHandler application/x-httpd-alt-php82 .php .php8 .phtml
-</IfModule>
-
 # 1. Force HTTPS & SPA Routing Fallback (Direct All Non-File Requests to index.html)
 <IfModule mod_rewrite.c>
   RewriteEngine On

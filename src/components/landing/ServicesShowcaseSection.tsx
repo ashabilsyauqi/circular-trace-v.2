@@ -404,7 +404,7 @@ export const ServicesShowcaseSection: React.FC = () => {
                   <span>Layanan Hilir 1 • Artisan Roastery &amp; Cupping Lab</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-                  Software ERP Roasting, Uji Cupping &amp; Kemasan QR
+                  Profil Penyangraian, Uji Cupping &amp; Kemasan QR
                 </h3>
                 <p className="text-stone-300 text-sm sm:text-base leading-relaxed">
                   Solusi manajemen produksi lengkap bagi rumah sangrai (*roastery*) untuk mencatat profil kurva panas, evaluasi skor sensorik rasa, serta otomatisasi label kemasan ritel ber-QR code.

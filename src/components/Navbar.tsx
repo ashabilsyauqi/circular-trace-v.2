@@ -444,7 +444,7 @@ export const Navbar: React.FC = () => {
                               Artisan Roastery
                             </div>
                             <div className="text-[10px] text-stone-500 leading-tight">
-                              Software ERP Profiling &amp; Cupping Lab
+                              Profil Sangrai, Lab Cupping &amp; Batch Lot
                             </div>
                           </div>
                         </Link>

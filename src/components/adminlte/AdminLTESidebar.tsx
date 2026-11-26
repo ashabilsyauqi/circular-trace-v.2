@@ -153,7 +153,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
       case 'super_admin':
         return 'PORTAL SUPER ADMIN SAAS';
       case 'roaster':
-        return 'Layanan Roastery (ERP)';
+        return 'Layanan Roastery';
       case 'gudang':
         return 'Layanan Gudang (QA)';
       case 'pengolah':
@@ -1075,7 +1075,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                     <Flame className="w-4 h-4 text-orange-400 shrink-0" />
                     {!isCollapsed && (
                       <span className="truncate">
-                        {isAdminKelompok ? '4. Layanan Roaster (ERP)' : 'Layanan Roaster (ERP)'}
+                        {isAdminKelompok ? '4. Layanan Roastery' : 'Layanan Roastery'}
                       </span>
                     )}
                   </Link>

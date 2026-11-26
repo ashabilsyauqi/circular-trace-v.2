@@ -162,7 +162,7 @@ export const RegisterRoasterPage: React.FC = () => {
           <div className="max-w-3xl space-y-3">
             <div className="inline-flex items-center gap-2 bg-orange-950/80 text-orange-300 border border-orange-500/30 px-3.5 py-1 rounded-full text-xs font-bold backdrop-blur-md">
               <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-              <span>ERP Roastery &amp; Artisan Lab Cupping</span>
+              <span>Manajemen Roastery &amp; Artisan Lab Cupping</span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
               Pendaftaran Artisan Roastery
@@ -213,7 +213,7 @@ export const RegisterRoasterPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-stone-500">Peran Layanan:</span>
                   <span className="font-bold text-orange-800 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-200">
-                    Artisan Roastery ERP &amp; Cupping Lab
+                    Artisan Roastery Profiling &amp; Cupping Lab
                   </span>
                 </div>
               </div>
@@ -447,7 +447,7 @@ export const RegisterRoasterPage: React.FC = () => {
                         Fitur Artisan Roastery
                       </h3>
                       <p className="text-[11px] text-stone-500">
-                        ERP Penyangraian &amp; Sains Kurva RoR
+                        Profil Penyangraian &amp; Sains Kurva RoR
                       </p>
                     </div>
                   </div>

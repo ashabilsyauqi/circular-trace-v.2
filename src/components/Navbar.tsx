@@ -31,6 +31,30 @@ export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const registerDropdownRef = useRef<HTMLDivElement>(null);
   const servicesDropdownRef = useRef<HTMLDivElement>(null);
+  const servicesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleServicesMouseEnter = () => {
+    if (servicesTimeoutRef.current) {
+      clearTimeout(servicesTimeoutRef.current);
+      servicesTimeoutRef.current = null;
+    }
+    setIsServicesOpen(true);
+  };
+
+  const handleServicesMouseLeave = () => {
+    if (servicesTimeoutRef.current) {
+      clearTimeout(servicesTimeoutRef.current);
+    }
+    servicesTimeoutRef.current = setTimeout(() => {
+      setIsServicesOpen(false);
+    }, 180);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (servicesTimeoutRef.current) clearTimeout(servicesTimeoutRef.current);
+    };
+  }, []);
 
   // Track scroll position for adaptive transparent-to-solid navbar
   useEffect(() => {
@@ -63,6 +87,10 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const handleNavSectionClick = (sectionId: string) => {
+    if (servicesTimeoutRef.current) {
+      clearTimeout(servicesTimeoutRef.current);
+      servicesTimeoutRef.current = null;
+    }
     setIsServicesOpen(false);
     if (location.pathname === '/') {
       const el = document.getElementById(sectionId);
@@ -133,16 +161,21 @@ export const Navbar: React.FC = () => {
           {/* Center Navigation Buttons: Clean, Flat Modern Minimalism (No heavy black block) */}
           <nav className="flex items-center gap-1 sm:gap-2">
             {/* 1. Layanan Dropdown with direct links to #sec-kebun, #sec-gudang, #sec-roastery, #sec-cafe */}
-            <div className="relative" ref={servicesDropdownRef}>
+            <div
+              className="relative"
+              ref={servicesDropdownRef}
+              onMouseEnter={handleServicesMouseEnter}
+              onMouseLeave={handleServicesMouseLeave}
+            >
               <button
                 type="button"
-                onClick={() => setIsServicesOpen(!isServicesOpen)}
+                onClick={() => handleNavSectionClick('services')}
                 className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   isDarkNav
                     ? 'text-stone-200 hover:text-white hover:bg-white/10'
                     : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
                 }`}
-                title="Pilih 4 Solusi Ekosistem Layanan"
+                title="Lihat 4 Solusi Ekosistem Layanan"
               >
                 <Layers className={`w-4 h-4 ${isDarkNav ? 'text-amber-400' : 'text-amber-600'}`} />
                 <span>Layanan</span>
@@ -154,7 +187,8 @@ export const Navbar: React.FC = () => {
               </button>
 
               {isServicesOpen && (
-                <div className="absolute left-0 mt-2 w-76 sm:w-84 bg-white rounded-2xl border border-[#E6DFD5] shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 text-left">
+                <div className="absolute left-0 top-full pt-1.5 w-76 sm:w-84 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="bg-white rounded-2xl border border-[#E6DFD5] shadow-2xl p-2 text-left">
                   <div className="px-3 py-1.5 border-b border-stone-100 mb-1 flex items-center justify-between">
                     <p className="text-[10px] font-black uppercase tracking-wider text-stone-400">
                       Cakupan Rantai Pasok Kopi
@@ -296,8 +330,9 @@ export const Navbar: React.FC = () => {
                     </a>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
             {/* 2. Marketplace Pasar Kopi */}
             <a

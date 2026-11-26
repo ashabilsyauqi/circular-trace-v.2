@@ -11,6 +11,7 @@ import {
   Building2,
   Warehouse,
   Flame,
+  Sprout,
 } from 'lucide-react';
 import { ProfileMenu } from './shared/ProfileMenu';
 import { LanguageSwitch } from './shared/LanguageSwitch';
@@ -26,8 +27,10 @@ export const Navbar: React.FC = () => {
   const currentRoleInfo = currentUser ? ROLE_DETAILS[currentUser.role] : null;
 
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const registerDropdownRef = useRef<HTMLDivElement>(null);
+  const servicesDropdownRef = useRef<HTMLDivElement>(null);
 
   // Track scroll position for adaptive transparent-to-solid navbar
   useEffect(() => {
@@ -39,7 +42,7 @@ export const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -48,20 +51,32 @@ export const Navbar: React.FC = () => {
       ) {
         setIsRegisterOpen(false);
       }
+      if (
+        servicesDropdownRef.current &&
+        !servicesDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsServicesOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleServicesClick = () => {
+  const handleNavSectionClick = (sectionId: string) => {
+    setIsServicesOpen(false);
     if (location.pathname === '/') {
-      const el = document.getElementById('services');
+      const el = document.getElementById(sectionId);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth' });
+        window.history.pushState(null, '', `#${sectionId}`);
       }
     } else {
-      navigate('/#services');
+      navigate(`/#${sectionId}`);
     }
+  };
+
+  const handleServicesClick = () => {
+    handleNavSectionClick('services');
   };
 
   const isHome = location.pathname === '/' && !location.hash;
@@ -117,20 +132,172 @@ export const Navbar: React.FC = () => {
 
           {/* Center Navigation Buttons: Clean, Flat Modern Minimalism (No heavy black block) */}
           <nav className="flex items-center gap-1 sm:gap-2">
-            {/* 1. Layanan (Smooth Scroll to #services) */}
-            <button
-              type="button"
-              onClick={handleServicesClick}
-              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                isDarkNav
-                  ? 'text-stone-200 hover:text-white hover:bg-white/10'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-              }`}
-              title="Pilih 4 Solusi Ekosistem Layanan"
-            >
-              <Layers className={`w-4 h-4 ${isDarkNav ? 'text-amber-400' : 'text-amber-600'}`} />
-              <span>Layanan</span>
-            </button>
+            {/* 1. Layanan Dropdown with direct links to #sec-kebun, #sec-gudang, #sec-roastery, #sec-cafe */}
+            <div className="relative" ref={servicesDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsServicesOpen(!isServicesOpen)}
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isDarkNav
+                    ? 'text-stone-200 hover:text-white hover:bg-white/10'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                }`}
+                title="Pilih 4 Solusi Ekosistem Layanan"
+              >
+                <Layers className={`w-4 h-4 ${isDarkNav ? 'text-amber-400' : 'text-amber-600'}`} />
+                <span>Layanan</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    isDarkNav ? 'text-stone-300' : 'text-stone-500'
+                  } ${isServicesOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {isServicesOpen && (
+                <div className="absolute left-0 mt-2 w-76 sm:w-84 bg-white rounded-2xl border border-[#E6DFD5] shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 text-left">
+                  <div className="px-3 py-1.5 border-b border-stone-100 mb-1 flex items-center justify-between">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-stone-400">
+                      Cakupan Rantai Pasok Kopi
+                    </p>
+                    <a
+                      href="#services"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavSectionClick('services');
+                      }}
+                      className="text-[10px] font-bold text-amber-600 hover:text-amber-700 hover:underline cursor-pointer"
+                    >
+                      Semua Layanan
+                    </a>
+                  </div>
+
+                  <div className="space-y-1">
+                    {/* 1. Hulu / Kelompok Tani */}
+                    <a
+                      href="#sec-kebun"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavSectionClick('sec-kebun');
+                      }}
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-emerald-50 text-stone-800 transition-colors group cursor-pointer"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <Sprout className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-stone-900 group-hover:text-emerald-900">
+                            1. Hulu &amp; Kelompok Tani
+                          </span>
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-sm bg-emerald-100 text-emerald-800">
+                            Petik Merah
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-stone-500 leading-tight">
+                          Audit Lahan EUDR, Uji Brix Ceri &amp; Pascapanen
+                        </div>
+                      </div>
+                    </a>
+
+                    {/* 2. Gudang & QA Logistik */}
+                    <a
+                      href="#sec-gudang"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavSectionClick('sec-gudang');
+                      }}
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-sky-50 text-stone-800 transition-colors group cursor-pointer"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                        <Warehouse className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-stone-900 group-hover:text-sky-900">
+                            2. Gudang &amp; QA Logistik
+                          </span>
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-sm bg-sky-100 text-sky-800">
+                            Green Bean
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-stone-500 leading-tight">
+                          Grading Mutu Fisik SCA, Kadar Air &amp; QR Karung
+                        </div>
+                      </div>
+                    </a>
+
+                    {/* 3. Artisan Roastery */}
+                    <a
+                      href="#sec-roastery"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavSectionClick('sec-roastery');
+                      }}
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-amber-50 text-stone-800 transition-colors group cursor-pointer"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                        <Flame className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-stone-900 group-hover:text-amber-900">
+                            3. Artisan Roastery
+                          </span>
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-sm bg-amber-100 text-amber-800">
+                            Sangrai
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-stone-500 leading-tight">
+                          Log Profil Sangrai, Cupping Lab &amp; QR Kemasan
+                        </div>
+                      </div>
+                    </a>
+
+                    {/* 4. Coffee Shop & Konsumen */}
+                    <a
+                      href="#sec-cafe"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavSectionClick('sec-cafe');
+                      }}
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-rose-50 text-stone-800 transition-colors group cursor-pointer"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-rose-600 group-hover:text-white transition-colors">
+                        <Coffee className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-stone-900 group-hover:text-rose-900">
+                            4. Coffee Shop &amp; Meja
+                          </span>
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-sm bg-rose-100 text-rose-800">
+                            Cangkir Seduh
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-stone-500 leading-tight">
+                          Paspor QR Meja Kafe, Resep Barista &amp; Fair Share
+                        </div>
+                      </div>
+                    </a>
+                  </div>
+
+                  {/* Dropdown footer with overview anchor */}
+                  <div className="pt-1.5 mt-1 border-t border-stone-100">
+                    <a
+                      href="#services"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavSectionClick('services');
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-700 hover:text-stone-900 text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      <Layers className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Lihat Ikhtisar 4 Layanan Terintegrasi</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* 2. Marketplace Pasar Kopi */}
             <a

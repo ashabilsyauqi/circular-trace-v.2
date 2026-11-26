@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
 import { landingContent } from '../i18n/landingContent';
@@ -46,6 +46,7 @@ import {
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { language, setActiveView } = useCoffee();
   const content = landingContent[language];
   const [activeTabService, setActiveTabService] = useState<UserRole>('roaster');
@@ -53,15 +54,16 @@ export const LandingPage: React.FC = () => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (window.location.hash === '#services') {
-      const el = document.getElementById('services');
+    if (location.hash) {
+      const id = location.hash.replace('#', '');
+      const el = document.getElementById(id);
       if (el) {
         setTimeout(() => {
           el.scrollIntoView({ behavior: 'smooth' });
         }, 150);
       }
     }
-  }, []);
+  }, [location.hash]);
 
   const scrollToServices = () => {
     const el = document.getElementById('services');

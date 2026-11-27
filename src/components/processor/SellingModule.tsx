@@ -40,10 +40,13 @@ export const SellingModule: React.FC = () => {
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
   const [selectedLotForBarcode, setSelectedLotForBarcode] = useState<ProcessedGreenBeanLot | null>(null);
 
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
   // My Processed Green Bean Lots
-  const myGreenLots = processedLots.filter(
-    (lot) => !lot.processorId || lot.processorId === currentUser?.id
-  );
+  const myGreenLots = processedLots.filter((lot) => {
+    if (isSuperAdmin) return true;
+    return lot.processorId === currentUser?.id || (currentUser?.kelompokTaniId && lot.processorId === currentUser?.kelompokTaniId);
+  });
 
   // Filtered Green Bean Lots
   const filteredLots = myGreenLots.filter((lot) => {
@@ -58,13 +61,15 @@ export const SellingModule: React.FC = () => {
   });
 
   // Sales Transactions where Processor is seller
-  const mySalesTransactions = transactions.filter(
-    (t) =>
+  const mySalesTransactions = transactions.filter((t) => {
+    if (isSuperAdmin) return true;
+    return (
       t.fromName === currentUser?.name ||
       t.toName === currentUser?.name ||
       t.fromName === (currentUser?.organization || currentUser?.name) ||
       t.toName === (currentUser?.organization || currentUser?.name)
-  );
+    );
+  });
 
   // Filtered transactions
   const filteredTransactions = mySalesTransactions.filter((t) => {
@@ -87,9 +92,11 @@ export const SellingModule: React.FC = () => {
   );
 
   // Batch Profitability Report items (connecting batch intake to green bean sales value)
-  const completedBatches = processingBatches.filter(
-    (b) => (!b.processorId || b.processorId === currentUser?.id) && (b.status === 'completed' || b.currentStage === 'packing_closure')
-  );
+  const completedBatches = processingBatches.filter((b) => {
+    if (isSuperAdmin) return b.status === 'completed' || b.currentStage === 'packing_closure';
+    const isOwner = b.processorId === currentUser?.id || (currentUser?.kelompokTaniId && b.processorId === currentUser?.kelompokTaniId);
+    return isOwner && (b.status === 'completed' || b.currentStage === 'packing_closure');
+  });
 
   const handleOpenBarcode = (lot: ProcessedGreenBeanLot) => {
     setSelectedLotForBarcode(lot);

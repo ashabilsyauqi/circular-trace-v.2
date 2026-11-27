@@ -44,6 +44,9 @@ export const MasterPetaniTab: React.FC<MasterPetaniTabProps> = ({
 }) => {
   const { currentUser, users, addUser, updateUser, deleteUser, coffeeFarms, farmerLots } = useCoffee();
 
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const activeOrg = currentUser?.organization || currentUser?.kelompokTaniName || 'Kelompok Tani';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVillageFilter, setSelectedVillageFilter] = useState<string>('all');
   const [selectedFarmerForCard, setSelectedFarmerForCard] = useState<AppUser | null>(null);
@@ -82,7 +85,7 @@ export const MasterPetaniTab: React.FC<MasterPetaniTabProps> = ({
     subdistrict: 'Kec. Pangalengan',
     district: 'Kab. Bandung',
     province: 'Jawa Barat',
-    organization: 'Gapoktan Kopi Mandiri Nusantara',
+    organization: isSuperAdmin ? 'Gapoktan Kopi Mandiri Nusantara' : activeOrg,
     phone: '',
     email: '',
     totalLandAreaHa: 2.0,
@@ -181,7 +184,7 @@ export const MasterPetaniTab: React.FC<MasterPetaniTabProps> = ({
       subdistrict: 'Kec. Pangalengan',
       district: 'Kab. Bandung',
       province: 'Jawa Barat',
-      organization: 'Gapoktan Kopi Mandiri Nusantara',
+      organization: isSuperAdmin ? 'Gapoktan Kopi Mandiri Nusantara' : activeOrg,
       phone: '',
       email: '',
       totalLandAreaHa: 2.0,
@@ -207,7 +210,7 @@ export const MasterPetaniTab: React.FC<MasterPetaniTabProps> = ({
       subdistrict: farmer.subdistrict || 'Kec. Pangalengan',
       district: farmer.district || 'Kab. Bandung',
       province: farmer.province || 'Jawa Barat',
-      organization: farmer.organization || 'Gapoktan Kopi Mandiri Nusantara',
+      organization: farmer.organization || activeOrg,
       phone: farmer.phone || '',
       email: farmer.email || '',
       totalLandAreaHa: farmer.totalLandAreaHa || 2.0,
@@ -233,6 +236,7 @@ export const MasterPetaniTab: React.FC<MasterPetaniTabProps> = ({
     }
 
     const fullLocation = `${formData.village}, ${formData.subdistrict}, ${formData.district}, ${formData.province}`;
+    const finalOrg = !isSuperAdmin ? activeOrg : (formData.organization.trim() || activeOrg);
 
     if (editingFarmerId) {
       updateUser(editingFarmerId, {
@@ -246,7 +250,8 @@ export const MasterPetaniTab: React.FC<MasterPetaniTabProps> = ({
         district: formData.district,
         province: formData.province,
         location: fullLocation,
-        organization: formData.organization,
+        organization: finalOrg,
+        kelompokTaniName: finalOrg,
         phone: formData.phone,
         email: formData.email || undefined,
         totalLandAreaHa: Number(formData.totalLandAreaHa),
@@ -268,7 +273,9 @@ export const MasterPetaniTab: React.FC<MasterPetaniTabProps> = ({
         district: formData.district,
         province: formData.province,
         location: fullLocation,
-        organization: formData.organization,
+        organization: finalOrg,
+        kelompokTaniId: currentUser?.kelompokTaniId || currentUser?.id,
+        kelompokTaniName: finalOrg,
         phone: formData.phone,
         email: formData.email || `petani.${Date.now()}@sangrai.id`,
         role: 'petani',
@@ -602,17 +609,33 @@ export const MasterPetaniTab: React.FC<MasterPetaniTabProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="font-bold text-stone-700 block mb-1">
-                    Nama Kelompok Tani / Gapoktan *
+                  <label className="font-bold text-stone-700 block mb-1 flex items-center justify-between">
+                    <span>Nama Kelompok Tani / Gapoktan</span>
+                    {!isSuperAdmin && (
+                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-sm border border-emerald-200 flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                        Terkunci Otomatis
+                      </span>
+                    )}
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.organization}
-                    onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                    placeholder="e.g. Gapoktan Kopi Mandiri Nusantara"
-                    className="w-full px-3 py-2 rounded-lg border border-stone-300 text-stone-900 focus:outline-none focus:border-emerald-600 bg-white"
-                  />
+                  {isSuperAdmin ? (
+                    <input
+                      type="text"
+                      required
+                      value={formData.organization}
+                      onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+                      placeholder="e.g. Gapoktan Kopi Mandiri Nusantara"
+                      className="w-full px-3 py-2 rounded-lg border border-stone-300 text-stone-900 focus:outline-none focus:border-emerald-600 bg-white"
+                    />
+                  ) : (
+                    <div className="w-full bg-stone-100 border border-stone-300 rounded-lg px-3 py-2 text-xs font-bold text-stone-700 flex items-center gap-2 cursor-not-allowed select-none">
+                      <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="truncate">{formData.organization || activeOrg}</span>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-stone-400 mt-1">
+                    Petani baru otomatis terdaftar di bawah naungan kelompok tani akun Anda saat ini.
+                  </p>
                 </div>
 
                 <div>

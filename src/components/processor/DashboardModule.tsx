@@ -26,20 +26,73 @@ interface DashboardModuleProps {
 }
 
 export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) => {
-  const { currentUser, farmerLots, processedLots, processingBatches, processorCherryStock, transactions } = useCoffee();
+  const { currentUser, users, farmerLots, processedLots, processingBatches, processorCherryStock, transactions } = useCoffee();
 
-  const availableFarmerLots = farmerLots.filter((lot) => lot.availableWeightKg > 0);
-  const myProcessedLots = processedLots.filter((lot) => !lot.processorId || lot.processorId === currentUser?.id);
-  const myBatches = processingBatches.filter((b) => !b.processorId || b.processorId === currentUser?.id);
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  const availableFarmerLots = farmerLots.filter((lot) => {
+    if (lot.availableWeightKg <= 0) return false;
+    if (isSuperAdmin) return true;
+
+    if (currentUser?.role === 'admin_kelompok_tani') {
+      const userKtId = (currentUser.kelompokTaniId || '').trim().toLowerCase();
+      const lotKtId = (lot.kelompokTaniId || '').trim().toLowerCase();
+      const isSameKtId = Boolean(userKtId && lotKtId && userKtId === lotKtId);
+
+      const userOrg = (currentUser.organization || '').trim().toLowerCase();
+      const lotOrg = (lot.organization || lot.kelompokTaniName || '').trim().toLowerCase();
+      const isSameOrg = Boolean(
+        userOrg && lotOrg && (
+          lotOrg === userOrg ||
+          (userOrg.length > 5 && lotOrg.includes(userOrg)) ||
+          (lotOrg.length > 5 && userOrg.includes(lotOrg))
+        )
+      );
+
+      const isMyFarmer = users.some((u) => {
+        if (u.id !== lot.farmerId) return false;
+        const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+        return Boolean(userKtId && farmerKtId && userKtId === farmerKtId);
+      });
+
+      return isSameKtId || isSameOrg || isMyFarmer;
+    }
+
+    if (currentUser?.role === 'pengolah') {
+      if (currentUser.kelompokTaniId) return lot.kelompokTaniId === currentUser.kelompokTaniId;
+      if (currentUser.id === 'user-pengolah-1') return lot.farmerId === 'user-petani-1' || lot.farmerName?.includes('Asep');
+      return false;
+    }
+
+    return false;
+  });
+
+  const myProcessedLots = processedLots.filter((lot) => {
+    if (isSuperAdmin) return true;
+    return lot.processorId === currentUser?.id || (currentUser?.kelompokTaniId && lot.processorId === currentUser?.kelompokTaniId);
+  });
+
+  const myBatches = processingBatches.filter((b) => {
+    if (isSuperAdmin) return true;
+    return b.processorId === currentUser?.id || (currentUser?.kelompokTaniId && b.processorId === currentUser?.kelompokTaniId);
+  });
+
   const inProgressBatches = myBatches.filter((b) => b.status === 'in_progress');
-  const myCherryStock = processorCherryStock.filter((s) => !s.processorId || s.processorId === currentUser?.id);
-  const myProcessorTransactions = transactions.filter(
-    (trx) =>
+
+  const myCherryStock = processorCherryStock.filter((s) => {
+    if (isSuperAdmin) return true;
+    return s.processorId === currentUser?.id || (currentUser?.kelompokTaniId && s.processorId === currentUser?.kelompokTaniId);
+  });
+
+  const myProcessorTransactions = transactions.filter((trx) => {
+    if (isSuperAdmin) return true;
+    return (
       trx.fromName === currentUser?.name ||
       trx.toName === currentUser?.name ||
       trx.fromName === currentUser?.organization ||
       trx.toName === currentUser?.organization
-  );
+    );
+  });
 
   const totalCherryStockKg = myCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
   const totalProcessedKg = myProcessedLots.reduce((acc, curr) => acc + curr.greenBeanWeightKg, 0);
@@ -56,12 +109,12 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({ onNavigate }) 
   const avgEcoScore =
     myEcoRatings.length > 0
       ? Math.round(myEcoRatings.reduce((acc, curr) => acc + curr.ecoScore, 0) / myEcoRatings.length)
-      : 98;
+      : 0;
 
   const avgStarRating =
     myEcoRatings.length > 0
       ? Number((myEcoRatings.reduce((acc, curr) => acc + curr.starRating, 0) / myEcoRatings.length).toFixed(2))
-      : 4.92;
+      : 0;
 
   const totalWasteManagedKg = myProcessedLots.reduce(
     (acc, curr) => acc + (curr.wasteManagement?.weightKgOrLiters || Math.round(curr.greenBeanWeightKg * 2.2)),

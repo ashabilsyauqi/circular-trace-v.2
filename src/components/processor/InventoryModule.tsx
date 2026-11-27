@@ -93,8 +93,15 @@ export const InventoryModule: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   // Computations
-  const myCherryStock = processorCherryStock.filter((item) => !item.processorId || item.processorId === currentUser?.id);
-  const myProcessedLots = processedLots.filter((lot) => !lot.processorId || lot.processorId === currentUser?.id);
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const myCherryStock = processorCherryStock.filter((item) => {
+    if (isSuperAdmin) return true;
+    return item.processorId === currentUser?.id || (currentUser?.kelompokTaniId && item.processorId === currentUser?.kelompokTaniId);
+  });
+  const myProcessedLots = processedLots.filter((lot) => {
+    if (isSuperAdmin) return true;
+    return lot.processorId === currentUser?.id || (currentUser?.kelompokTaniId && lot.processorId === currentUser?.kelompokTaniId);
+  });
 
   const totalCherryKg = myCherryStock.reduce((acc, curr) => acc + curr.availableWeightKg, 0);
   const totalCherryValue = myCherryStock.reduce((acc, curr) => acc + (curr.availableWeightKg * curr.purchasePricePerKg), 0);

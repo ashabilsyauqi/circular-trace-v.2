@@ -129,6 +129,14 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
     return scopedFarmers.some((farmer) => farmer.id === lot.farmerId);
   });
 
+  const scopedProcessedLots = (processedLots || []).filter((lot) => {
+    if (isSuperAdmin) return true;
+    return (
+      lot.processorId === currentUser?.id ||
+      (currentUser?.kelompokTaniId && lot.processorId === currentUser?.kelompokTaniId)
+    );
+  });
+
   const getHomePath = () => {
     switch (userRole) {
       case 'super_admin':
@@ -850,7 +858,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                   {!isCollapsed && (
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-[9px] px-1.5 py-0.2 rounded-full text-white font-bold bg-amber-600">
-                        {processedLots.length}
+                        {scopedProcessedLots.length}
                       </span>
                       <button
                         type="button"
@@ -1281,7 +1289,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         to: '/admin/ict/audit-olahan',
                         label: 'Verifikasi Olahan Green Bean',
                         icon: Coffee,
-                        badge: `${processedLots.filter((p) => !p.ics_verification_status || p.ics_verification_status === 'pending' || p.ics_verification_status === 'unverified').length} Lot`,
+                        badge: `${scopedProcessedLots.filter((p) => !p.ics_verification_status || p.ics_verification_status === 'pending' || p.ics_verification_status === 'unverified').length} Lot`,
                         badgeClass: 'bg-teal-700 text-white font-bold',
                         isActive: location.pathname === '/admin/ict/audit-olahan' || location.pathname === '/admin/ict/olahan',
                       },

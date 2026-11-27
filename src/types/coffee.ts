@@ -257,6 +257,9 @@ export interface FarmerHarvestLot {
   status: 'available' | 'sold' | 'partial';
   createdAt: string;
   photoUrl?: string;
+  kelompokTaniId?: string;
+  kelompokTaniName?: string;
+  organization?: string;
   weatherSnapshot?: FarmWeatherData;
   soilType?: string;
   shadeTrees?: string[];

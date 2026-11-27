@@ -308,10 +308,29 @@ export const BatchesModule: React.FC = () => {
     }
   };
 
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  // Filtered Batches
+  const myBatches = processingBatches.filter((b) => {
+    if (isSuperAdmin) return true;
+    return b.processorId === currentUser?.id || (currentUser?.kelompokTaniId && b.processorId === currentUser?.kelompokTaniId);
+  });
+  const myCherryStock = processorCherryStock.filter((s) => {
+    if (isSuperAdmin) return true;
+    return s.processorId === currentUser?.id || (currentUser?.kelompokTaniId && s.processorId === currentUser?.kelompokTaniId);
+  });
+
   // Direct create new batch & open Lembar Kerja immediately
   const handleCreateNewBatchFromAvailable = () => {
-    const availableStock = processorCherryStock.find((s) => s.availableWeightKg > 0);
-    const availableFarmer = farmerLots.find((l) => l.availableWeightKg > 0);
+    const availableStock = myCherryStock.find((s) => s.availableWeightKg > 0);
+    const availableFarmer = farmerLots.find((l) => {
+      if (l.availableWeightKg <= 0) return false;
+      if (isSuperAdmin) return true;
+      if (currentUser?.role === 'admin_kelompok_tani') {
+        return (currentUser.kelompokTaniId && l.kelompokTaniId === currentUser.kelompokTaniId);
+      }
+      return false;
+    });
 
     let newBatch: ProcessingBatch | null = null;
     if (availableStock) {
@@ -320,7 +339,7 @@ export const BatchesModule: React.FC = () => {
         boughtCherryKg: Math.min(availableStock.availableWeightKg, 500),
         method: 'Natural / Dry',
         dryingMethod: 'Solar Dryer Raised Bed',
-        operatorName: 'Budi Santoso (Mill Master)',
+        operatorName: currentUser?.name || 'Mill Master',
         notes: `Batch pengolahan baru dari stok ceri ${availableStock.variety} (${availableStock.origin}).`,
       });
     } else if (availableFarmer) {
@@ -329,13 +348,13 @@ export const BatchesModule: React.FC = () => {
         boughtCherryKg: Math.min(availableFarmer.availableWeightKg, 500),
         method: 'Natural / Dry',
         dryingMethod: 'Solar Dryer Raised Bed',
-        operatorName: 'Budi Santoso (Mill Master)',
+        operatorName: currentUser?.name || 'Mill Master',
         notes: `Batch pengolahan baru dari panen ceri petani ${availableFarmer.farmerName} (${availableFarmer.farmLocation}).`,
       });
     } else {
       setAlertMessage({
         type: 'error',
-        text: 'Tidak ada stok ceri di gudang ataupun ceri petani. Silakan muat seeder petani terlebih dahulu di menu Pengadaan Ceri.',
+        text: 'Tidak ada stok ceri di gudang ataupun ceri petani. Silakan terima ceri di menu Penerimaan Ceri terlebih dahulu.',
       });
       return;
     }
@@ -349,10 +368,6 @@ export const BatchesModule: React.FC = () => {
       setTimeout(() => setAlertMessage(null), 5000);
     }
   };
-
-  // Filtered Batches
-  const myBatches = processingBatches.filter((b) => !b.processorId || b.processorId === currentUser?.id);
-  const myCherryStock = processorCherryStock.filter((s) => !s.processorId || s.processorId === currentUser?.id);
 
   const filteredBatches = myBatches.filter((b) => {
     const q = searchQuery.toLowerCase();

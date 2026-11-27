@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
 import {
   MapPin,
@@ -41,6 +42,8 @@ export const SourcingModule: React.FC = () => {
     setActiveProcessingBatchId,
     setProcessorActiveTab,
     seedFarmerLots,
+    currentUser,
+    users,
   } = useCoffee();
 
   const [successMsg, setSuccessMsg] = useState<{ title: string; desc: string } | null>(null);
@@ -54,7 +57,44 @@ export const SourcingModule: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
 
-  const availableFarmerLots = farmerLots.filter((lot) => lot.availableWeightKg > 0);
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  const availableFarmerLots = farmerLots.filter((lot) => {
+    if (lot.availableWeightKg <= 0) return false;
+    if (isSuperAdmin) return true;
+
+    if (currentUser?.role === 'admin_kelompok_tani') {
+      const userKtId = (currentUser.kelompokTaniId || '').trim().toLowerCase();
+      const lotKtId = (lot.kelompokTaniId || '').trim().toLowerCase();
+      const isSameKtId = Boolean(userKtId && lotKtId && userKtId === lotKtId);
+
+      const userOrg = (currentUser.organization || '').trim().toLowerCase();
+      const lotOrg = (lot.organization || lot.kelompokTaniName || '').trim().toLowerCase();
+      const isSameOrg = Boolean(
+        userOrg && lotOrg && (
+          lotOrg === userOrg ||
+          (userOrg.length > 5 && lotOrg.includes(userOrg)) ||
+          (lotOrg.length > 5 && userOrg.includes(lotOrg))
+        )
+      );
+
+      const isMyFarmer = users.some((u) => {
+        if (u.id !== lot.farmerId) return false;
+        const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+        return Boolean(userKtId && farmerKtId && userKtId === farmerKtId);
+      });
+
+      return isSameKtId || isSameOrg || isMyFarmer;
+    }
+
+    if (currentUser?.role === 'pengolah') {
+      if (currentUser.kelompokTaniId) return lot.kelompokTaniId === currentUser.kelompokTaniId;
+      if (currentUser.id === 'user-pengolah-1') return lot.farmerId === 'user-petani-1' || lot.farmerName?.includes('Asep');
+      return false;
+    }
+
+    return false;
+  });
 
   const filteredLots = availableFarmerLots.filter((lot) => {
     const q = searchQuery.toLowerCase();
@@ -226,15 +266,27 @@ export const SourcingModule: React.FC = () => {
               <Sparkles className="w-12 h-12 text-amber-500 mx-auto mb-3" />
               <h3 className="text-base font-bold text-stone-800">Belum ada ceri petani yang tersedia</h3>
               <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto mb-4">
-                Semua lot panen petani telah dibeli atau tersaring. Klik tombol di bawah untuk memuat 10 data seeder panen petani Nusantara.
+                {currentUser?.role === 'admin_kelompok_tani'
+                  ? 'Belum ada lot panen ceri dari kelompok tani Anda. Catat panen di Layanan Petani terlebih dahulu agar ceri dapat diserap oleh wet mill.'
+                  : 'Belum ada lot panen ceri segar yang tersedia untuk diproses saat ini.'}
               </p>
-              <button
-                onClick={seedFarmerLots}
-                className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs inline-flex items-center gap-2 shadow-md transition-all cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Muat Ulang Seeder Panen Petani (10 Lot)</span>
-              </button>
+              {currentUser?.role === 'admin_kelompok_tani' ? (
+                <Link
+                  to="/admin/panen/tambah"
+                  className="px-5 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md transition-all cursor-pointer"
+                >
+                  <Cherry className="w-4 h-4" />
+                  <span>+ Catat Hasil Panen Baru</span>
+                </Link>
+              ) : isSuperAdmin ? (
+                <button
+                  onClick={seedFarmerLots}
+                  className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold text-xs inline-flex items-center gap-2 shadow-md transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>Muat Ulang Seeder Panen Petani (10 Lot)</span>
+                </button>
+              ) : null}
             </div>
           ) : (
             <>

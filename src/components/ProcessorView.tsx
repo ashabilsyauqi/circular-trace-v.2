@@ -22,6 +22,8 @@ import { HistoryModule } from './processor/HistoryModule';
 
 export const ProcessorView: React.FC = () => {
   const {
+    currentUser,
+    users,
     processorActiveTab,
     setProcessorActiveTab,
     farmerLots,
@@ -32,22 +34,82 @@ export const ProcessorView: React.FC = () => {
     openBlankoModal,
   } = useCoffee();
 
-  const availableCherryIntake = farmerLots.filter((l) => l.availableWeightKg > 0);
-  const inProgressBatches = processingBatches.filter((b) => b.status === 'in_progress');
-  const availableGreenBeanLots = processedLots.filter((l) => l.availableWeightKg > 0);
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
+
+  // Scoped farmer cherry intake for this tenant/processor
+  const scopedCherryIntake = farmerLots.filter((lot) => {
+    if (lot.availableWeightKg <= 0) return false;
+    if (isSuperAdmin) return true;
+
+    if (currentUser?.role === 'admin_kelompok_tani') {
+      const lotKtId = (lot.kelompokTaniId || '').trim().toLowerCase();
+      const isSameKtId = Boolean(userKtId && lotKtId && userKtId === lotKtId);
+
+      const userOrg = (currentUser?.organization || currentUser?.kelompokTaniName || '').trim().toLowerCase();
+      const lotOrg = (lot.organization || lot.kelompokTaniName || '').trim().toLowerCase();
+      const isSameOrg = Boolean(
+        userOrg && lotOrg && (
+          lotOrg === userOrg ||
+          (userOrg.length > 5 && lotOrg.includes(userOrg)) ||
+          (lotOrg.length > 5 && userOrg.includes(lotOrg))
+        )
+      );
+
+      const isMyFarmer = users.some((u) => {
+        if (u.id !== lot.farmerId) return false;
+        const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+        return Boolean(userKtId && farmerKtId && userKtId === farmerKtId);
+      });
+
+      return isSameKtId || isSameOrg || isMyFarmer;
+    }
+
+    if (currentUser?.role === 'pengolah') {
+      if (currentUser.kelompokTaniId) return lot.kelompokTaniId === currentUser.kelompokTaniId;
+      if (currentUser.id === 'user-pengolah-1') return lot.farmerId === 'user-petani-1' || lot.farmerName?.includes('Asep');
+      return false;
+    }
+    return true;
+  });
+
+  // Scoped batches for this processor
+  const myBatches = processingBatches.filter((b) => {
+    if (isSuperAdmin) return true;
+    return b.processorId === currentUser?.id || (currentUser?.kelompokTaniId && b.processorId === currentUser?.kelompokTaniId);
+  });
+  const inProgressBatches = myBatches.filter((b) => b.status === 'in_progress');
+
+  // Scoped processed green bean lots
+  const myProcessedLots = processedLots.filter((l) => {
+    if (isSuperAdmin) return true;
+    return l.processorId === currentUser?.id || (currentUser?.kelompokTaniId && l.processorId === currentUser?.kelompokTaniId);
+  });
+  const availableGreenBeanLots = myProcessedLots.filter((l) => l.availableWeightKg > 0);
+
+  // Scoped sales transactions
+  const myTransactions = transactions.filter((t) => {
+    if (isSuperAdmin) return true;
+    return (
+      t.fromName === currentUser?.name ||
+      t.toName === currentUser?.name ||
+      t.fromName === currentUser?.organization ||
+      t.toName === currentUser?.organization
+    );
+  });
 
   const tabs = [
     {
       id: 'dashboard' as const,
       label: '1. Dashboard Wet Mill',
       icon: LayoutDashboard,
-      badge: `${processingBatches.length} Total`,
+      badge: `${myBatches.length} Total`,
     },
     {
       id: 'sourcing' as const,
       label: '2. Penerimaan Ceri Petani',
       icon: Sprout,
-      badge: `${availableCherryIntake.length} Lot Ceri`,
+      badge: `${scopedCherryIntake.length} Lot Ceri`,
       badgeColor: 'bg-emerald-500/20 text-emerald-800',
     },
     {
@@ -74,7 +136,7 @@ export const ProcessorView: React.FC = () => {
       id: 'history' as const,
       label: '6. Riwayat Transaksi',
       icon: History,
-      badge: `${transactions.length}`,
+      badge: `${myTransactions.length}`,
     },
   ];
 

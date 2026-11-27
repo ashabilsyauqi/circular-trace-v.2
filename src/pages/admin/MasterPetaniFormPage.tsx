@@ -26,6 +26,9 @@ export const MasterPetaniFormPage: React.FC = () => {
   const { currentUser, users, addUser, updateUser } = useCoffee();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const activeOrg = currentUser?.organization || currentUser?.kelompokTaniName || 'Kelompok Tani';
+
   const isEditMode = Boolean(farmerId);
   const existingFarmer = isEditMode ? users.find((u) => u.id === farmerId) : null;
 
@@ -41,7 +44,7 @@ export const MasterPetaniFormPage: React.FC = () => {
     subdistrict: '',
     district: '',
     province: '',
-    organization: currentUser?.organization || 'Kelompok Tani',
+    organization: activeOrg,
     phone: '',
     email: '',
     totalLandAreaHa: 1.0,
@@ -80,10 +83,11 @@ export const MasterPetaniFormPage: React.FC = () => {
       const randomSuffix = Math.floor(1000 + Math.random() * 9000);
       setFormData((prev) => ({
         ...prev,
+        organization: activeOrg,
         farmerCardNumber: `KTA-KTN-2026-${randomSuffix}`,
       }));
     }
-  }, [existingFarmer, isEditMode]);
+  }, [existingFarmer, isEditMode, activeOrg]);
 
   // Handle Photo File Upload (Base64)
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,6 +118,8 @@ export const MasterPetaniFormPage: React.FC = () => {
       return;
     }
 
+    const finalOrg = !isSuperAdmin ? activeOrg : (formData.organization.trim() || activeOrg);
+
     if (isEditMode && existingFarmer) {
       updateUser(existingFarmer.id, {
         name: formData.name,
@@ -126,7 +132,8 @@ export const MasterPetaniFormPage: React.FC = () => {
         subdistrict: formData.subdistrict,
         district: formData.district,
         province: formData.province,
-        organization: formData.organization,
+        organization: finalOrg,
+        kelompokTaniName: finalOrg,
         phone: formData.phone,
         email: formData.email,
         totalLandAreaHa: Number(formData.totalLandAreaHa),
@@ -150,9 +157,9 @@ export const MasterPetaniFormPage: React.FC = () => {
         subdistrict: formData.subdistrict,
         district: formData.district,
         province: formData.province,
-        organization: currentUser?.organization || formData.organization || 'Kelompok Tani',
+        organization: finalOrg,
         kelompokTaniId: currentUser?.kelompokTaniId || currentUser?.id,
-        kelompokTaniName: currentUser?.kelompokTaniName || currentUser?.organization || formData.organization || 'Kelompok Tani',
+        kelompokTaniName: finalOrg,
         phone: formData.phone || '0812-3456-7890',
         email: formData.email || `petani.${Date.now()}@kelompoktani.id`,
         balance: 0,
@@ -333,9 +340,14 @@ export const MasterPetaniFormPage: React.FC = () => {
 
           {/* SECTION C: ALAMAT LENGKAP & WILAYAH DOMISILI */}
           <div className="space-y-3">
-            <h3 className="font-bold text-stone-900 border-b border-stone-200 pb-2 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-emerald-600" />
-              <span>2. Alamat Lengkap & Wilayah Kelompok Tani</span>
+            <h3 className="font-bold text-stone-900 border-b border-stone-200 pb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-emerald-600" />
+                <span>2. Alamat Domisili Petani</span>
+              </div>
+              <span className="text-[11px] font-normal text-stone-500">
+                Kelompok Tani: <strong className="text-emerald-800 font-bold">{formData.organization || activeOrg}</strong>
+              </span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -400,16 +412,32 @@ export const MasterPetaniFormPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-stone-700 mb-1">
-                  Nama Kelompok Tani / Gapoktan Induk
+                <label className="block font-semibold text-stone-700 mb-1 flex items-center justify-between">
+                  <span>Kelompok Tani / Gapoktan Induk</span>
+                  {!isSuperAdmin && (
+                    <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-sm border border-emerald-200 flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                      Terkunci Otomatis
+                    </span>
+                  )}
                 </label>
-                <input
-                  type="text"
-                  value={formData.organization}
-                  onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                  placeholder="Gapoktan Kopi Mandiri Pangalengan"
-                  className="w-full border border-stone-300 rounded-md px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
-                />
+                {isSuperAdmin ? (
+                  <input
+                    type="text"
+                    value={formData.organization}
+                    onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+                    placeholder="Gapoktan Kopi Mandiri Pangalengan"
+                    className="w-full border border-stone-300 rounded-md px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                ) : (
+                  <div className="w-full bg-stone-100 border border-stone-300 rounded-md px-3 py-2 text-xs font-bold text-stone-700 flex items-center gap-2 cursor-not-allowed select-none">
+                    <Building2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span className="truncate">{formData.organization || activeOrg}</span>
+                  </div>
+                )}
+                <p className="text-[10px] text-stone-400 mt-1">
+                  Petani baru otomatis terdaftar di bawah naungan kelompok tani akun Anda saat ini.
+                </p>
               </div>
             </div>
           </div>

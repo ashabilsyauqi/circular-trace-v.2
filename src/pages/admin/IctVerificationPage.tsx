@@ -73,8 +73,64 @@ export const IctVerificationPage: React.FC = () => {
     notes: '',
   });
 
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  // Scoped farmers, farms, lots, and processed lots for tenant isolation
+  const farmersList = users.filter((u) => {
+    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
+    if (!isFarmer) return false;
+    if (isSuperAdmin) return true;
+
+    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
+    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+    const isSameId = Boolean(
+      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
+      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
+    );
+
+    const userOrg = (currentUser?.organization || currentUser?.kelompokTaniName || '').trim().toLowerCase();
+    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
+
+    const isSameOrg = Boolean(
+      userOrg && farmerOrg && (
+        farmerOrg === userOrg ||
+        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
+        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
+      )
+    );
+    return isSameOrg || isSameId;
+  });
+
+  const scopedFarms = coffeeFarms.filter((farm) => {
+    if (isSuperAdmin) return true;
+    return farmersList.some((farmer) => farmer.id === farm.farmerId);
+  });
+
+  const scopedLots = farmerLots.filter((lot) => {
+    if (isSuperAdmin) return true;
+    return farmersList.some((farmer) => farmer.id === lot.farmerId);
+  });
+
+  const scopedProcessedLots = processedLots.filter((lot) => {
+    if (isSuperAdmin) return true;
+    return (
+      lot.processorId === currentUser?.id ||
+      (currentUser?.kelompokTaniId && lot.processorId === currentUser?.kelompokTaniId)
+    );
+  });
+
+  const scopedStamps = verificationStamps.filter((stamp) => {
+    if (isSuperAdmin) return true;
+    return (
+      stamp.verifierId === currentUser?.id ||
+      farmersList.some((f) => f.id === stamp.targetId) ||
+      scopedFarms.some((farm) => farm.id === stamp.targetId) ||
+      scopedLots.some((lot) => lot.id === stamp.targetId) ||
+      scopedProcessedLots.some((p) => p.id === stamp.targetId)
+    );
+  });
+
   // Filtered farmers
-  const farmersList = users.filter((u) => u.role === 'petani' || u.assignedService === 'petani');
   const filteredFarmers = farmersList.filter((f) => {
     const q = searchQuery.toLowerCase();
     const matchQuery =
@@ -96,7 +152,7 @@ export const IctVerificationPage: React.FC = () => {
   });
 
   // Filtered farms
-  const filteredFarms = coffeeFarms.filter((farm) => {
+  const filteredFarms = scopedFarms.filter((farm) => {
     const q = searchQuery.toLowerCase();
     const varieties = Array.isArray(farm.primaryVarieties) ? farm.primaryVarieties.join(' ') : (farm.primaryVarieties || '');
     const matchQuery =
@@ -117,7 +173,7 @@ export const IctVerificationPage: React.FC = () => {
   });
 
   // Filtered harvest lots
-  const filteredHarvestLots = farmerLots.filter((lot) => {
+  const filteredHarvestLots = scopedLots.filter((lot) => {
     const q = searchQuery.toLowerCase();
     const matchQuery =
       lot.id.toLowerCase().includes(q) ||
@@ -140,16 +196,16 @@ export const IctVerificationPage: React.FC = () => {
   const pendingFarmers = farmersList.filter((f) => !f.verificationStatus || f.verificationStatus === 'pending' || f.verificationStatus === 'unverified').length;
   const verifiedFarmers = farmersList.filter((f) => f.verificationStatus === 'verified').length;
 
-  const pendingFarms = coffeeFarms.filter((f) => !f.verificationStatus || f.verificationStatus === 'pending' || f.verificationStatus === 'unverified').length;
-  const verifiedFarms = coffeeFarms.filter((f) => f.verificationStatus === 'verified').length;
+  const pendingFarms = scopedFarms.filter((f) => !f.verificationStatus || f.verificationStatus === 'pending' || f.verificationStatus === 'unverified').length;
+  const verifiedFarms = scopedFarms.filter((f) => f.verificationStatus === 'verified').length;
 
-  const pendingLots = farmerLots.filter((l) => !l.verificationStatus || l.verificationStatus === 'pending' || l.verificationStatus === 'unverified').length;
-  const verifiedLots = farmerLots.filter((l) => l.verificationStatus === 'verified').length;
+  const pendingLots = scopedLots.filter((l) => !l.verificationStatus || l.verificationStatus === 'pending' || l.verificationStatus === 'unverified').length;
+  const verifiedLots = scopedLots.filter((l) => l.verificationStatus === 'verified').length;
 
-  const pendingProcessed = processedLots.filter(
+  const pendingProcessed = scopedProcessedLots.filter(
     (p) => !p.ics_verification_status || p.ics_verification_status === 'pending' || p.ics_verification_status === 'unverified'
   ).length;
-  const verifiedProcessed = processedLots.filter((p) => p.ics_verification_status === 'verified').length;
+  const verifiedProcessed = scopedProcessedLots.filter((p) => p.ics_verification_status === 'verified').length;
 
   // Handler for Confirming Verification / Rejection
   const handleConfirmAction = () => {
@@ -311,7 +367,7 @@ export const IctVerificationPage: React.FC = () => {
         <div className="bg-white rounded-lg border border-[#d2d6de] shadow-xs overflow-hidden">
           <div className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-xl font-black text-stone-900">{verifiedProcessed} / {processedLots.length}</div>
+              <div className="text-xl font-black text-stone-900">{verifiedProcessed} / {scopedProcessedLots.length}</div>
               <div className="text-[11px] font-bold text-stone-600 mt-0.5">Olahan Green Bean</div>
               <div className="text-[10px] text-amber-700 font-semibold mt-0.5">
                 {pendingProcessed} perlu uji kadar air
@@ -334,7 +390,7 @@ export const IctVerificationPage: React.FC = () => {
         <div className="bg-white rounded-lg border border-[#d2d6de] shadow-xs overflow-hidden">
           <div className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-xl font-black text-stone-900">{verificationStamps.length}</div>
+              <div className="text-xl font-black text-stone-900">{scopedStamps.length}</div>
               <div className="text-[11px] font-bold text-stone-600 mt-0.5">Stempel Diterbitkan</div>
               <div className="text-[10px] text-blue-700 font-semibold mt-0.5">
                 Buku Ledger Resmi
@@ -467,7 +523,7 @@ export const IctVerificationPage: React.FC = () => {
             }`}
           >
             <Award className="w-4 h-4" />
-            <span>5. Buku Audit &amp; Stempel Mutu ({verificationStamps.length})</span>
+            <span>5. Buku Audit &amp; Stempel Mutu ({scopedStamps.length})</span>
           </button>
         </div>
 
@@ -1145,18 +1201,18 @@ export const IctVerificationPage: React.FC = () => {
               </p>
             </div>
             <span className="text-xs font-bold text-stone-600 bg-white px-2.5 py-1 rounded border border-stone-200">
-              Total {verificationStamps.length} Sertifikat
+              Total {scopedStamps.length} Sertifikat
             </span>
           </div>
 
           <div className="divide-y divide-stone-100">
-            {verificationStamps.length === 0 ? (
+            {scopedStamps.length === 0 ? (
               <div className="py-12 text-center text-stone-400">
                 <Award className="w-8 h-8 mx-auto mb-2 opacity-40" />
                 <p className="font-medium text-xs">Belum ada stempel verifikasi yang diterbitkan.</p>
               </div>
             ) : (
-              verificationStamps.map((stamp) => (
+              scopedStamps.map((stamp) => (
                 <div key={stamp.id} className="p-4 hover:bg-blue-50/20 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0 mt-0.5">

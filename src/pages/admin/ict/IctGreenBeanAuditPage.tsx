@@ -71,8 +71,19 @@ export const IctGreenBeanAuditPage: React.FC = () => {
   // Feedback Notification
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  // Scoped lots for tenant isolation
+  const scopedProcessedLots = processedLots.filter((lot) => {
+    if (isSuperAdmin) return true;
+    return (
+      lot.processorId === currentUser?.id ||
+      (currentUser?.kelompokTaniId && lot.processorId === currentUser?.kelompokTaniId)
+    );
+  });
+
   // Filtered lots computation
-  const filteredLots = processedLots.filter((lot) => {
+  const filteredLots = scopedProcessedLots.filter((lot) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       lot.id.toLowerCase().includes(q) ||
@@ -96,12 +107,12 @@ export const IctGreenBeanAuditPage: React.FC = () => {
   });
 
   // KPI Counts
-  const totalLots = processedLots.length;
-  const pendingLots = processedLots.filter(
+  const totalLots = scopedProcessedLots.length;
+  const pendingLots = scopedProcessedLots.filter(
     (l) => !l.ics_verification_status || l.ics_verification_status === 'pending' || l.ics_verification_status === 'unverified'
   ).length;
-  const verifiedLots = processedLots.filter((l) => l.ics_verification_status === 'verified').length;
-  const rejectedLots = processedLots.filter((l) => l.ics_verification_status === 'rejected').length;
+  const verifiedLots = scopedProcessedLots.filter((l) => l.ics_verification_status === 'verified').length;
+  const rejectedLots = scopedProcessedLots.filter((l) => l.ics_verification_status === 'rejected').length;
 
   // Open Inspection Modal with initial values from lot
   const handleOpenInspection = (lot: ProcessedGreenBeanLot) => {

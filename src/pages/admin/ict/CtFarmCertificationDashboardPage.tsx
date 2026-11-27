@@ -82,14 +82,57 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { coffeeFarms, users, currentUser, certifyFarmWithCtIndex, openBlankoModal } = useCoffee();
 
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  // Scoped farmers and farms for tenant isolation
+  const scopedFarmers = useMemo(() => {
+    return (users || []).filter((u) => {
+      const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
+      if (!isFarmer) return false;
+      if (isSuperAdmin) return true;
+
+      const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
+      const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+      const isSameId = Boolean(
+        (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
+        (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
+      );
+
+      const userOrg = (currentUser?.organization || currentUser?.kelompokTaniName || '').trim().toLowerCase();
+      const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
+
+      const isSameOrg = Boolean(
+        userOrg && farmerOrg && (
+          farmerOrg === userOrg ||
+          (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
+          (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
+        )
+      );
+      return isSameOrg || isSameId;
+    });
+  }, [users, currentUser, isSuperAdmin]);
+
+  const scopedFarms = useMemo(() => {
+    return (coffeeFarms || []).filter((f) => {
+      if (isSuperAdmin) return true;
+      return scopedFarmers.some((farmer) => farmer.id === f.farmerId);
+    });
+  }, [coffeeFarms, scopedFarmers, isSuperAdmin]);
+
   // Selected farm selection
   const [selectedFarmId, setSelectedFarmId] = useState<string>(
-    routeFarmId || coffeeFarms[0]?.id || ''
+    routeFarmId || scopedFarms[0]?.id || ''
   );
 
+  useEffect(() => {
+    if (scopedFarms.length > 0 && !scopedFarms.some(f => f.id === selectedFarmId)) {
+      setSelectedFarmId(scopedFarms[0].id);
+    }
+  }, [scopedFarms, selectedFarmId]);
+
   const selectedFarm = useMemo(() => {
-    return coffeeFarms.find((f) => f.id === selectedFarmId) || coffeeFarms[0];
-  }, [coffeeFarms, selectedFarmId]);
+    return scopedFarms.find((f) => f.id === selectedFarmId) || scopedFarms[0] || null;
+  }, [scopedFarms, selectedFarmId]);
 
   const selectedFarmer = useMemo(() => {
     if (!selectedFarm) return null;

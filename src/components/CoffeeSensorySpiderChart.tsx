@@ -112,7 +112,7 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
       key: 'sweetness',
       name: 'Sweetness & Sugars',
       shortLabel: 'Sweetness',
-      score: getDynamicScore(9.10, 'Sweetness'),
+      score: getDynamicScore(9.10, 'sweetness'),
       icon: '🍯',
       description: 'Kemanisan karamelisasi alami fruktosa & sukrosa buah ceri matang optimal.',
       flavorTones: ['Cane Sugar', 'Caramelized Fig', 'Maple Syrup'],
@@ -146,6 +146,16 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
     },
   ];
 
+  // Commercial coffee benchmark scores for comparison
+  const commercialBenchmarkMap: Record<string, number> = {
+    aroma: 6.2,
+    flavor: 6.0,
+    sweetness: 5.8,
+    body: 6.8,
+    aftertaste: 5.9,
+    acidity: 5.6,
+  };
+
   // Spider Chart Mathematical Constants
   const cx = 190;
   const cy = 160;
@@ -174,10 +184,19 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
     return { x, y, angle };
   };
 
-  // Polygon points path string
+  // Polygon points path string for specialty coffee
   const polygonPoints = attributes
     .map((attr, idx) => {
       const { x, y } = getCoordinates(idx, attr.score);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(' ');
+
+  // Polygon points path string for commercial coffee benchmark
+  const commercialPolygonPoints = attributes
+    .map((attr, idx) => {
+      const commScore = commercialBenchmarkMap[attr.key] || 6.0;
+      const { x, y } = getCoordinates(idx, commScore);
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     })
     .join(' ');
@@ -361,7 +380,32 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
               );
             })}
 
-            {/* 3. The Filled Spider Data Polygon */}
+            {/* 3a. Commercial Coffee Benchmark Polygon (Dashed Slate) */}
+            <polygon
+              points={commercialPolygonPoints}
+              fill="rgba(148, 163, 184, 0.12)"
+              stroke="#94a3b8"
+              strokeWidth="1.8"
+              strokeDasharray="4,4"
+              strokeLinejoin="round"
+            />
+            {attributes.map((attr, idx) => {
+              const commScore = commercialBenchmarkMap[attr.key] || 6.0;
+              const { x, y } = getCoordinates(idx, commScore);
+              return (
+                <circle
+                  key={`comm-vertex-${idx}`}
+                  cx={x}
+                  cy={y}
+                  r={3}
+                  fill="#ffffff"
+                  stroke="#94a3b8"
+                  strokeWidth="1.5"
+                />
+              );
+            })}
+
+            {/* 3b. The Filled Specialty Spider Data Polygon */}
             <polygon
               points={polygonPoints}
               fill="url(#spiderAmberGlow)"
@@ -457,11 +501,25 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
             })}
           </svg>
 
-          {/* Center Specialty Score Tag */}
-          <div className="mt-2 text-center">
-            <span className="text-[11px] text-stone-500 font-semibold">
-              Rata-Rata Karakter Sensori: <strong className="text-stone-950 font-black font-mono">{averageSensoryScore} / 10.00</strong>
-            </span>
+          {/* Center Specialty Score Tag & Benchmark Legend */}
+          <div className="mt-3 text-center space-y-1.5">
+            <div>
+              <span className="text-[11px] text-stone-500 font-semibold">
+                Rata-Rata Karakter Sensori: <strong className="text-stone-950 font-black font-mono">{averageSensoryScore} / 10.00</strong>
+              </span>
+            </div>
+
+            {/* Benchmark Legend: Specialty vs Commercial Coffee */}
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-1 text-[11px]">
+              <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                <span className="w-3.5 h-2 rounded bg-amber-600 inline-block border border-amber-800 shadow-2xs" />
+                <span>Specialty ({averageSensoryScore})</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-stone-500 font-medium">
+                <span className="w-3.5 h-0.5 border-t-2 border-dashed border-stone-400 inline-block" />
+                <span>Komersial (6.05)</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -494,16 +552,19 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
                         <span>{attr.icon}</span>
                         <strong className="text-stone-900 font-bold">{attr.name}</strong>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-20 sm:w-28 bg-stone-200/80 rounded-full h-1.5 overflow-hidden">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-16 sm:w-24 bg-stone-200/80 rounded-full h-1.5 overflow-hidden">
                           <div
                             className="bg-amber-600 h-full rounded-full transition-all duration-300"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
-                        <span className="font-mono text-xs font-black text-amber-900 w-11 text-right">
-                          {attr.score.toFixed(2)}
-                        </span>
+                        <div className="flex items-center gap-1 font-mono text-xs font-black text-amber-900 w-20 justify-end">
+                          <span>{attr.score.toFixed(2)}</span>
+                          <span className="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-1 py-0.2 rounded border border-emerald-200/80" title="Kenaikan vs Benchmark Kopi Komersial">
+                            +{((attr.score - (commercialBenchmarkMap[attr.key] || 6.0))).toFixed(1)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-stone-500 mt-1">

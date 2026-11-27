@@ -44,6 +44,12 @@ import { calculateProcessorEcoRating } from '../utils/ecoRating';
 import { CoffeeSensorySpiderChart } from './CoffeeSensorySpiderChart';
 import { IntegratedCircularIndicesView } from './verifier/IntegratedCircularIndicesView';
 import { FarmLocationMap } from './shared/FarmLocationMap';
+import {
+  BrixCherryMeter,
+  WetMillProcessAndCircularity,
+  WarehouseScreenAndClimateLog,
+  RoastingCurveSparkline,
+} from './trace/TraceVisualDiagrams';
 
 interface PublicLotScanViewProps {
   lotId: string;
@@ -1163,6 +1169,14 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                 beanName={currentCafeItem.beanName}
                 roasterName={currentCafeItem.roasterName}
                 tastingNotes={currentCafeItem.tastingNotes}
+                customAttributes={{
+                  aroma: 8.90,
+                  flavor: 8.85,
+                  sweetness: 9.15,
+                  body: 8.35,
+                  aftertaste: 8.70,
+                  acidity: 8.95,
+                }}
                 interactive={true}
                 flat={true}
               />
@@ -1282,6 +1296,12 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                     </div>
                   </div>
 
+                  {/* Visual Brix Meter & Cherry Ripeness Ratio Gauge */}
+                  <BrixCherryMeter
+                    brixScore={Number(currentCafeItem.lineage.brix) || 22.5}
+                    cherryRipePercent={96.5}
+                  />
+
                   {/* Interactive Map: Clean single frame */}
                   <div className="pt-2 space-y-2">
                     <span className="text-xs font-bold text-stone-700 block">
@@ -1359,6 +1379,15 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                       <strong className="text-stone-900 font-bold">400 kg Kulit Ceri (Cascara) diolah jadi Teh Organik & Kompos Kebun</strong>
                     </div>
                   </div>
+
+                  {/* Visual 4-Step Sequence & Circularity Flow Diagram */}
+                  <WetMillProcessAndCircularity
+                    cherryWeightKg={500}
+                    greenBeanWeightKg={100}
+                    cascaraWeightKg={400}
+                    cascaraTeaWeightKg={120}
+                    compostWeightKg={280}
+                  />
                 </div>
 
                 {/* TAHAP 3: GUDANG & KONTROL MUTU */}
@@ -1402,6 +1431,17 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                       <strong className="text-emerald-700 font-bold">HC-EXP-2026-BLI-01 (Passed & Certified)</strong>
                     </div>
                   </div>
+
+                  {/* Visual Screen Size Grading Histogram & Climate Control Log */}
+                  <WarehouseScreenAndClimateLog
+                    temperatureCelsius={19.2}
+                    humidityPercent={58}
+                    screen18Percent={92.0}
+                    screen17Percent={6.2}
+                    screen16Percent={1.8}
+                    defectCount={1}
+                    waterActivityAw={0.54}
+                  />
                 </div>
 
                 {/* TAHAP 4: ARTISAN ROASTING */}
@@ -1445,6 +1485,20 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                       <strong className="text-stone-900 font-bold">V60 Ceramic, Kalita Wave, Aeropress, Origami</strong>
                     </div>
                   </div>
+
+                  {/* Visual Roasting Temperature Sparkline Curve */}
+                  <RoastingCurveSparkline
+                    roasterMachine="Giesen W6A Artisan Drum Roaster"
+                    roastLevel={currentCafeItem.roastLevel}
+                    agtronNumber={68}
+                    dtrPercent={14.5}
+                    chargeTemp={200}
+                    tpTemp={98}
+                    yellowingTemp={150}
+                    firstCrackTemp={196}
+                    dropTemp={208}
+                    totalTimeMinutes="10m 45s"
+                  />
                 </div>
 
                 {/* TAHAP 5: PENYAJIAN CAFE */}

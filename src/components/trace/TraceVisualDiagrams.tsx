@@ -247,96 +247,72 @@ export const WetMillProcessAndCircularity: React.FC<WetMillProcessProps> = ({
         </div>
       </div>
 
-      {/* Circular Economy Flow Diagram (Zero-Waste Sankey Model) */}
-      <div className="space-y-3 pt-3 border-t border-stone-200/70">
-        <div className="flex items-center justify-between border-b border-stone-200/60 pb-2">
+      {/* Circular Economy Flow Diagram - Clean Flat Minimalist Design (Zero Nested Cards) */}
+      <div className="space-y-3 pt-3 border-t border-stone-200/60">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <RotateCcw className="w-4 h-4 text-emerald-700" />
-            <span className="text-xs font-black uppercase tracking-wider text-stone-900">
-              Diagram Alir Sirkularitas Limbah (Zero-Waste Eco Mill)
+            <span className="text-xs font-bold text-stone-800">
+              Sirkularitas Limbah Olah (Zero-Waste Eco Mill)
             </span>
           </div>
-          <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2.5 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+          <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             0% Limbah ke Sungai
           </span>
         </div>
 
-        {/* Visual Clean Flow Row */}
-        <div className="bg-stone-50/70 rounded-2xl p-4 border border-stone-200/80 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-            {/* Input Lot Ceri (4 Cols) */}
-            <div className="md:col-span-4 bg-white p-3.5 rounded-xl border border-stone-200 shadow-2xs space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">
-                Bahan Baku Hulu (100%)
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-xl font-black font-mono text-stone-900">{cherryWeightKg} kg</span>
-                <span className="text-xs font-bold text-red-700">Buah Ceri Merah Segar</span>
-              </div>
-              <p className="text-[11px] text-stone-500">
-                Panen optimal dari kebun Komang Adiarta (Desa Awan, Kintamani).
-              </p>
+        {/* Minimalist Proportional Flow Bar */}
+        <div className="space-y-1.5 bg-stone-50/80 p-3 rounded-xl border border-stone-200/60">
+          <div className="flex items-center justify-between text-xs text-stone-600 font-medium">
+            <span>Input Panen: <strong className="text-stone-900 font-semibold">{cherryWeightKg} kg Ceri Segar</strong></span>
+            <span className="text-stone-400 text-[11px]">100% Termanfaatkan</span>
+          </div>
+          {/* Dual Split Bar */}
+          <div className="h-2.5 w-full bg-stone-200 rounded-full overflow-hidden flex shadow-2xs">
+            <div
+              className="bg-emerald-600 h-full"
+              style={{ width: '20%' }}
+              title="20% Green Bean"
+            />
+            <div
+              className="bg-amber-500 h-full"
+              style={{ width: '80%' }}
+              title="80% Kulit Ceri Cascara"
+            />
+          </div>
+          <div className="flex items-center justify-between text-[11px] pt-0.5">
+            <span className="flex items-center gap-1.5 font-medium text-emerald-800">
+              <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+              Green Bean (20% • {greenBeanWeightKg} kg)
+            </span>
+            <span className="flex items-center gap-1.5 font-medium text-amber-800">
+              <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+              Kulit Cascara (80% • {cascaraWeightKg} kg)
+            </span>
+          </div>
+        </div>
+
+        {/* Clean Flat 2-Column Summary without Nested Boxes */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+          <div className="p-3 rounded-xl bg-white border border-stone-200/70 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-stone-900">Green Bean Specialty</span>
+              <span className="font-mono font-semibold text-emerald-800">{greenBeanWeightKg} kg (20%)</span>
             </div>
+            <p className="text-[11px] text-stone-500 leading-relaxed">
+              Biji beras kering grade 1 dengan kadar air 11.4%, siap grading dan sangrai artisan.
+            </p>
+          </div>
 
-            {/* Split Arrow Indicator (1 Col) */}
-            <div className="md:col-span-1 hidden md:flex items-center justify-center text-stone-400">
-              <ArrowRight className="w-5 h-5" />
+          <div className="p-3 rounded-xl bg-white border border-stone-200/70 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-stone-900">Pemanfaatan Kulit (Cascara)</span>
+              <span className="font-mono font-semibold text-amber-800">{cascaraWeightKg} kg (80%)</span>
             </div>
-
-            {/* Output Fractions (7 Cols) */}
-            <div className="md:col-span-7 space-y-2.5">
-              {/* Branch 1: Green Bean 20% */}
-              <div className="bg-white p-3 rounded-xl border border-emerald-200 shadow-2xs flex items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded">
-                      20% Biji Utama
-                    </span>
-                    <strong className="text-xs font-bold text-stone-900">Green Bean Specialty</strong>
-                  </div>
-                  <p className="text-[11px] text-stone-500">
-                    Biji kopi beras kering siap grading ke gudang silo &amp; ekspor.
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-base font-black font-mono text-emerald-800 block">
-                    {greenBeanWeightKg} kg
-                  </span>
-                  <span className="text-[10px] font-semibold text-stone-400">MC 11.4% • Gr.1</span>
-                </div>
-              </div>
-
-              {/* Branch 2: Cascara & Upcycling 80% */}
-              <div className="bg-white p-3 rounded-xl border border-amber-200 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded">
-                      80% Sirkularitas
-                    </span>
-                    <strong className="text-xs font-bold text-stone-900">Kulit Ceri (Cascara Upcycled)</strong>
-                  </div>
-                  <span className="text-base font-black font-mono text-amber-900">{cascaraWeightKg} kg</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-stone-100 text-[11px]">
-                  <div className="bg-amber-50/70 p-2 rounded-lg border border-amber-200/60">
-                    <span className="text-stone-500 font-medium block">Teh Cascara Artisan:</span>
-                    <strong className="text-xs font-bold text-amber-950 font-mono block mt-0.5">
-                      {cascaraTeaWeightKg} kg
-                    </strong>
-                    <span className="text-[10px] text-amber-800">Dijual premium kaya polifenol</span>
-                  </div>
-                  <div className="bg-emerald-50/70 p-2 rounded-lg border border-emerald-200/60">
-                    <span className="text-stone-500 font-medium block">Kompos Organik Kebun:</span>
-                    <strong className="text-xs font-bold text-emerald-950 font-mono block mt-0.5">
-                      {compostWeightKg} kg
-                    </strong>
-                    <span className="text-[10px] text-emerald-800">Menyuburkan tanah Desa Awan</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="text-[11px] text-stone-500 leading-relaxed">
+              Diolah menjadi <strong className="text-stone-700 font-medium">Teh Cascara ({cascaraTeaWeightKg} kg)</strong> dan <strong className="text-stone-700 font-medium">Pupuk Kompos Organik ({compostWeightKg} kg)</strong> untuk kesuburan kebun.
+            </p>
           </div>
         </div>
       </div>
@@ -891,13 +867,19 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
           </p>
         </div>
 
-        {/* Digital Verification Hash */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[10px] text-stone-500 font-mono">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-            Kriptografi Audit: <span className="text-stone-700 font-bold truncate max-w-xs">{digitalSignatureHash}</span>
-          </span>
-          <span className="text-emerald-700 font-bold">✓ Tervalidasi Sistem Kepatuhan ICS</span>
+        {/* Digital Verification Hash - Clean Responsive Layout (No Overflow) */}
+        <div className="pt-2 border-t border-stone-200/60 space-y-1.5 text-xs">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="flex items-center gap-1.5 text-stone-500 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0" />
+              Integritas Kriptografi Audit
+            </span>
+            <span className="text-emerald-700 font-semibold text-[11px]">✓ Tervalidasi Sistem ICS</span>
+          </div>
+          <div className="bg-stone-50 px-2.5 py-1.5 rounded-lg font-mono text-[10px] text-stone-600 border border-stone-200/80 flex items-center justify-between gap-2 overflow-hidden">
+            <span className="truncate min-w-0">{digitalSignatureHash}</span>
+            <span className="text-[9px] uppercase tracking-wider text-stone-400 font-bold shrink-0">SHA-256</span>
+          </div>
         </div>
       </div>
     </div>

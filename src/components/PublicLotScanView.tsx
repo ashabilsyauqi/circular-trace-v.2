@@ -1126,23 +1126,23 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                 ))}
               </div>
 
-              {/* Hero Clean Key-Value Rows */}
-              <div className="pt-4 border-t border-stone-200/70 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs">
-                <div className="flex items-center justify-between py-2 border-b border-stone-200/50">
-                  <span className="text-stone-500 font-medium">Petani Produsen Asal</span>
-                  <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.farmerName}</strong>
+              {/* Hero Clean Editorial Metadata Grid */}
+              <div className="pt-4 border-t border-stone-200/70 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-stone-400 block font-normal">Petani Produsen Asal</span>
+                  <span className="text-xs font-semibold text-stone-900 block">{currentCafeItem.lineage.farmerName}</span>
                 </div>
-                <div className="flex items-center justify-between py-2 border-b border-stone-200/50">
-                  <span className="text-stone-500 font-medium">Ketinggian Lahan</span>
-                  <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.altitude}</strong>
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-stone-400 block font-normal">Ketinggian Lahan</span>
+                  <span className="text-xs font-semibold text-stone-900 block">{currentCafeItem.lineage.altitude}</span>
                 </div>
-                <div className="flex items-center justify-between py-2 border-b border-stone-200/50">
-                  <span className="text-stone-500 font-medium">Kadar Manis Ceri (Brix)</span>
-                  <strong className="text-emerald-800 font-bold">{currentCafeItem.lineage.brix}° Bx (Petik Merah 95%+)</strong>
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-stone-400 block font-normal">Kadar Manis Ceri</span>
+                  <span className="text-xs font-semibold text-emerald-800 block font-mono">{currentCafeItem.lineage.brix}° Bx (Petik Merah)</span>
                 </div>
-                <div className="flex items-center justify-between py-2 border-b border-stone-200/50">
-                  <span className="text-stone-500 font-medium">Profil Roasting Artisan</span>
-                  <strong className="text-amber-900 font-bold">{currentCafeItem.roastLevel} (Agtron #68 • DTR 14.5%)</strong>
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-stone-400 block font-normal">Profil Roasting</span>
+                  <span className="text-xs font-semibold text-amber-900 block">{currentCafeItem.roastLevel} (Agtron #68)</span>
                 </div>
               </div>
             </div>
@@ -1258,42 +1258,26 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                     </p>
                   </div>
 
-                  {/* Clean Key-Value List */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Petani Produsen</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.farmerName}</strong>
+                  {/* Clean Editorial Metadata Grid (No Harsh Zebra Stripes) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2 text-xs">
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Varietas Pohon</span>
+                      <span className="text-xs font-semibold text-stone-800 block">{currentCafeItem.variety}</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Nama Blok Lahan</span>
-                      <strong className="text-stone-900 font-bold">{matchedFarm?.farmName || 'Kebun Kintamani Mandiri (Ashabil) Blok 10'}</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Ketinggian Kebun</span>
+                      <span className="text-xs font-semibold text-emerald-800 block font-mono">{currentCafeItem.lineage.altitude}</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Lokasi Geografis</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.farmLocation}</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Kadar Gula Ceri</span>
+                      <span className="text-xs font-semibold text-amber-800 block font-mono">{currentCafeItem.lineage.brix}° Bx (Petik Merah)</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Ketinggian Lahan</span>
-                      <strong className="text-emerald-800 font-bold">{currentCafeItem.lineage.altitude}</strong>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Varietas Pohon</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.variety}</strong>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Standar Kematangan</span>
-                      <strong className="text-amber-800 font-bold">{currentCafeItem.lineage.brix}° Bx (Petik Merah 95%+)</strong>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Tanah & Naungan</span>
-                      <strong className="text-stone-900 font-bold">Andosol Vulkanik • Jeruk Kintamani & Sengon</strong>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">EUDR Deforestation-Free</span>
-                      <strong className="text-emerald-700 font-bold flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        100% Bebas Deforestasi (Sentinel-2)
-                      </strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Kepatuhan EUDR</span>
+                      <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        100% Bebas Deforestasi
+                      </span>
                     </div>
                   </div>
 
@@ -1369,35 +1353,23 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                     </p>
                   </div>
 
-                  {/* Clean Key-Value List */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Stasiun Pengolah</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.processorName}</strong>
+                  {/* Clean Editorial Metadata Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2 text-xs">
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Metode Fermentasi</span>
+                      <span className="text-xs font-semibold text-stone-800 block">{currentCafeItem.lineage.fermentationTime || '36 Jam Double Ferment'}</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Metode Fermentasi</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.fermentationTime || '36 Jam Double Ferment'}</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Sumber Air Cuci</span>
+                      <span className="text-xs font-semibold text-stone-800 block">Mata Air Alami Kintamani</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Sumber Air Olah</span>
-                      <strong className="text-stone-900 font-bold">Mata Air Alami Pegunungan Kintamani</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Pengeringan Biji</span>
+                      <span className="text-xs font-semibold text-stone-800 block">Solar Dryer Raised Bed</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Metode Pengeringan</span>
-                      <strong className="text-stone-900 font-bold">Solar Dryer Raised Bed Kintamani</strong>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Kadar Air Green Bean</span>
-                      <strong className="text-emerald-700 font-bold">{currentCafeItem.lineage.moisturePercent}% MC (Standar Ekspor: 10-12%)</strong>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Grade & Defect Fisik</span>
-                      <strong className="text-stone-900 font-bold">Specialty Grade 1 • Defect 1/350g</strong>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50 sm:col-span-2">
-                      <span className="text-stone-500 font-medium">Sirkularitas Zero-Waste</span>
-                      <strong className="text-stone-900 font-bold">400 kg Kulit Ceri (Cascara) diolah jadi Teh Organik & Kompos Kebun</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Kadar Air Green Bean</span>
+                      <span className="text-xs font-semibold text-emerald-700 block font-mono">{currentCafeItem.lineage.moisturePercent}% MC (Grade 1)</span>
                     </div>
                   </div>
 
@@ -1433,23 +1405,23 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                     </p>
                   </div>
 
-                  {/* Clean Key-Value List */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Fasilitas Gudang</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.warehouseName}</strong>
+                  {/* Clean Editorial Metadata Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2 text-xs">
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Kondisi Simpan Silo</span>
+                      <span className="text-xs font-semibold text-stone-800 block">{currentCafeItem.lineage.storageConditions}</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Kondisi Penyimpanan</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.storageConditions}</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">SCA Cupping Score</span>
+                      <span className="text-xs font-semibold text-amber-800 block font-mono">{currentCafeItem.lineage.warehouseScaScore} (CQI Verified)</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">SCA Cupping Score</span>
-                      <strong className="text-amber-800 font-bold">{currentCafeItem.lineage.warehouseScaScore} (Verified CQI Q-Grader)</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Health Certificate</span>
+                      <span className="text-xs font-semibold text-emerald-700 block">HC-EXP-2026 (Passed)</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Health Certificate</span>
-                      <strong className="text-emerald-700 font-bold">HC-EXP-2026-BLI-01 (Passed & Certified)</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Grading Fisik</span>
+                      <span className="text-xs font-semibold text-stone-800 block">Screen 18+ (Defect 1)</span>
                     </div>
                   </div>
 
@@ -1487,23 +1459,23 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                     </p>
                   </div>
 
-                  {/* Clean Key-Value List */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Rumah Sangrai</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.roasterName}</strong>
+                  {/* Clean Editorial Metadata Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2 text-xs">
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Profil Sangrai</span>
+                      <span className="text-xs font-semibold text-stone-800 block">{currentCafeItem.lineage.roastProfile}</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Profil & Mesin Sangrai</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.roastProfile}</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Mesin Sangrai</span>
+                      <span className="text-xs font-semibold text-stone-800 block">Giesen W6A Artisan</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Agtron Color Number</span>
-                      <strong className="text-stone-900 font-bold">#68 (Light-Medium Specialty)</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Warna Agtron</span>
+                      <span className="text-xs font-semibold text-amber-800 block font-mono">#68 (Light-Medium)</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Rekomendasi Seduh</span>
-                      <strong className="text-stone-900 font-bold">V60 Ceramic, Kalita Wave, Aeropress, Origami</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Rekomendasi Seduh</span>
+                      <span className="text-xs font-semibold text-stone-800 block">V60, Kalita, Aeropress</span>
                     </div>
                   </div>
 
@@ -1544,14 +1516,15 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Kedai Penyaji</span>
-                      <strong className="text-stone-900 font-bold">{currentCafeItem.cafeName}</strong>
+                  {/* Clean Editorial Metadata Grid */}
+                  <div className="grid grid-cols-2 gap-3 py-2 text-xs">
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Kedai Penyaji</span>
+                      <span className="text-xs font-semibold text-stone-800 block">{currentCafeItem.cafeName}</span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
-                      <span className="text-stone-500 font-medium">Jaminan Keaslian</span>
-                      <strong className="text-emerald-800 font-bold">100% Kopi Asli Kintamani Single Origin Direct-Trade</strong>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] text-stone-400 block font-normal">Jaminan Keaslian</span>
+                      <span className="text-xs font-semibold text-emerald-700 block">100% Single Origin Direct-Trade</span>
                     </div>
                   </div>
                 </div>

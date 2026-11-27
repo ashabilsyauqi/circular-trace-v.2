@@ -1000,139 +1000,6 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
     },
   };
 
-  // Helper renderer for DonutRing with embedded Factor Progress Bars & Formula Reference Button
-  const DonutRing = ({
-    configId,
-  }: {
-    configId: 'ct4ci' | 'environmental' | 'social' | 'economic';
-  }) => {
-    const config = indexConfigs[configId];
-    const clamped = Math.min(100, Math.max(0, config.score));
-    const isExpanded = !!expandedFactors[configId];
-
-    return (
-      <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/95 border border-stone-200/80 hover:border-emerald-400 hover:shadow-md transition-all shadow-2xs space-y-2">
-        {/* Card Header: Icon & Title */}
-        <div className="flex items-center gap-1.5 text-xs font-bold text-stone-900 w-full justify-center">
-          <config.icon className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-          <span className="truncate whitespace-nowrap">{config.title}</span>
-        </div>
-
-        {/* Circular Donut Gauge - Compact */}
-        <div className="relative w-18 h-18 sm:w-20 sm:h-20 my-0.5 shrink-0">
-          <svg viewBox="0 0 36 36" className="w-18 h-18 sm:w-20 sm:h-20 transform -rotate-90">
-            {/* Background Track */}
-            <path
-              className="stroke-stone-200"
-              strokeWidth="3.2"
-              fill="none"
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            />
-            {/* Progress Arc */}
-            <path
-              className={`${config.strokeColor} transition-all duration-1000 ease-out`}
-              strokeWidth="3.2"
-              strokeLinecap="round"
-              strokeDasharray={`${clamped}, 100`}
-              fill="none"
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            />
-          </svg>
-
-          {/* Center Text inside Donut */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-            <span className="text-xs sm:text-sm font-black font-mono text-stone-950 leading-none">
-              {config.score.toFixed(1)}%
-            </span>
-            <span className="text-[8px] font-bold uppercase tracking-tight text-emerald-700 mt-0.5">
-              {config.isMajor ? 'MAJOR' : 'PASS'}
-            </span>
-          </div>
-        </div>
-
-        {/* Sub-label description */}
-        <span className="text-[10px] text-stone-500 font-medium leading-tight truncate whitespace-nowrap w-full">
-          {config.subLabel}
-        </span>
-
-        {/* Action Buttons: Faktor (Toggle) & Rumus (Modal) - Strict Single Line, Zero Stacking */}
-        <div className="w-full pt-2 border-t border-stone-200/60 grid grid-cols-2 gap-1.5 mt-1">
-          <button
-            type="button"
-            onClick={() => toggleExpanded(configId)}
-            className={`h-7 px-1.5 rounded-xl text-[10px] font-bold border transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap select-none overflow-hidden ${
-              isExpanded
-                ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                : 'bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 border-stone-200 hover:border-emerald-300'
-            }`}
-            title="Klik untuk melihat / menyembunyikan detail faktor penentu"
-          >
-            <BarChart3 className="w-3 h-3 text-emerald-700 shrink-0" />
-            <span className="whitespace-nowrap">Faktor</span>
-            {isExpanded ? (
-              <ChevronUp className="w-2.5 h-2.5 text-stone-500 shrink-0" />
-            ) : (
-              <ChevronDown className="w-2.5 h-2.5 text-stone-500 shrink-0" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedFormulaId(configId);
-              setActiveModalTab('rumus');
-            }}
-            className="h-7 px-1.5 rounded-xl bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 text-[10px] font-bold border border-stone-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap select-none overflow-hidden"
-            title={`Buka rincian rumus matematis & acuan regulasi untuk ${config.title}`}
-          >
-            <Calculator className="w-3 h-3 text-stone-500 shrink-0" />
-            <span className="whitespace-nowrap">Rumus</span>
-          </button>
-        </div>
-
-        {/* Mini Factor Progress Bars: ONLY SHOWN WHEN CLICKED */}
-        {isExpanded && (
-          <div className="w-full space-y-2 pt-2.5 pb-1 border-t border-emerald-100 text-left animate-in fade-in slide-in-from-top-1 duration-200">
-            <div className="flex items-center justify-between text-[9px] font-bold text-stone-500 uppercase tracking-wider">
-              <span>Sub-Faktor Penentu</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedFormulaId(configId);
-                  setActiveModalTab('faktor');
-                }}
-                className="text-emerald-700 hover:underline flex items-center gap-0.5 font-bold cursor-pointer"
-              >
-                Audit Lengkap <ExternalLink className="w-2.5 h-2.5" />
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              {config.factors.map((factor, idx) => (
-                <div key={idx} className="space-y-0.5">
-                  <div className="flex items-center justify-between text-[9px]">
-                    <span className="text-stone-600 truncate max-w-[115px] sm:max-w-[130px] font-medium" title={factor.name}>
-                      {factor.name}
-                    </span>
-                    <span className="font-mono font-bold text-stone-800 shrink-0">
-                      {factor.scorePct.toFixed(0)}%
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${config.progressColor}`}
-                      style={{ width: `${Math.min(100, Math.max(0, factor.scorePct))}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const selectedConfig = selectedFormulaId ? indexConfigs[selectedFormulaId] : null;
 
   return (
@@ -1155,10 +1022,144 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
 
       {/* 4 Percentage Donut Rings Grid with Embedded Progress Bars & Formula Reference Links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <DonutRing configId="ct4ci" />
-        <DonutRing configId="environmental" />
-        <DonutRing configId="social" />
-        <DonutRing configId="economic" />
+        {(['ct4ci', 'environmental', 'social', 'economic'] as const).map((configId) => {
+          const config = indexConfigs[configId];
+          const clamped = Math.min(100, Math.max(0, config.score));
+          const isExpanded = !!expandedFactors[configId];
+
+          return (
+            <div
+              key={configId}
+              className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/95 border border-stone-200/80 hover:border-emerald-400 hover:shadow-md transition-all shadow-2xs space-y-2"
+            >
+              {/* Card Header: Icon & Title */}
+              <div className="flex items-center gap-1.5 text-xs font-bold text-stone-900 w-full justify-center">
+                <config.icon className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span className="truncate whitespace-nowrap">{config.title}</span>
+              </div>
+
+              {/* Circular Donut Gauge - Compact */}
+              <div className="relative w-18 h-18 sm:w-20 sm:h-20 my-0.5 shrink-0">
+                <svg viewBox="0 0 36 36" className="w-18 h-18 sm:w-20 sm:h-20 transform -rotate-90">
+                  {/* Background Track */}
+                  <path
+                    className="stroke-stone-200"
+                    strokeWidth="3.2"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  {/* Progress Arc */}
+                  <path
+                    className={`${config.strokeColor} transition-all duration-1000 ease-out`}
+                    strokeWidth="3.2"
+                    strokeLinecap="round"
+                    strokeDasharray={`${clamped}, 100`}
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+
+                {/* Center Text inside Donut */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                  <span className="text-xs sm:text-sm font-black font-mono text-stone-950 leading-none">
+                    {config.score.toFixed(1)}%
+                  </span>
+                  <span className="text-[8px] font-bold uppercase tracking-tight text-emerald-700 mt-0.5">
+                    {config.isMajor ? 'MAJOR' : 'PASS'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Sub-label description */}
+              <span className="text-[10px] text-stone-500 font-medium leading-tight truncate whitespace-nowrap w-full">
+                {config.subLabel}
+              </span>
+
+              {/* Action Buttons: Faktor (Toggle) & Rumus (Modal) - Strict Single Line, Zero Stacking */}
+              <div className="w-full pt-2 border-t border-stone-200/60 grid grid-cols-2 gap-1.5 mt-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleExpanded(configId);
+                  }}
+                  className={`h-7 px-1.5 rounded-xl text-[10px] font-bold border transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap select-none overflow-hidden ${
+                    isExpanded
+                      ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                      : 'bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 border-stone-200 hover:border-emerald-300'
+                  }`}
+                  title="Klik untuk melihat / menyembunyikan detail faktor penentu"
+                >
+                  <BarChart3 className="w-3 h-3 text-emerald-700 shrink-0" />
+                  <span className="whitespace-nowrap">Faktor</span>
+                  {isExpanded ? (
+                    <ChevronUp className="w-2.5 h-2.5 text-stone-500 shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-2.5 h-2.5 text-stone-500 shrink-0" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedFormulaId(configId);
+                    setActiveModalTab('rumus');
+                  }}
+                  className="h-7 px-1.5 rounded-xl bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 text-[10px] font-bold border border-stone-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap select-none overflow-hidden"
+                  title={`Buka rincian rumus matematis & acuan regulasi untuk ${config.title}`}
+                >
+                  <Calculator className="w-3 h-3 text-stone-500 shrink-0" />
+                  <span className="whitespace-nowrap">Rumus</span>
+                </button>
+              </div>
+
+              {/* Mini Factor Progress Bars: ONLY SHOWN WHEN CLICKED */}
+              {isExpanded && (
+                <div className="w-full space-y-2 pt-2.5 pb-1 border-t border-emerald-100 text-left animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="flex items-center justify-between text-[9px] font-bold text-stone-500 uppercase tracking-wider">
+                    <span>Sub-Faktor Penentu</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedFormulaId(configId);
+                        setActiveModalTab('faktor');
+                      }}
+                      className="text-emerald-700 hover:underline flex items-center gap-0.5 font-bold cursor-pointer"
+                    >
+                      Audit Lengkap <ExternalLink className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    {config.factors.map((factor, idx) => (
+                      <div key={idx} className="space-y-0.5">
+                        <div className="flex items-center justify-between text-[9px]">
+                          <span className="text-stone-600 truncate max-w-[115px] sm:max-w-[130px] font-medium" title={factor.name}>
+                            {factor.name}
+                          </span>
+                          <span className="font-mono font-bold text-stone-800 shrink-0">
+                            {factor.scorePct.toFixed(0)}%
+                          </span>
+                        </div>
+                        <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${config.progressColor}`}
+                            style={{ width: `${Math.min(100, Math.max(0, factor.scorePct))}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* ==================================================================== */}

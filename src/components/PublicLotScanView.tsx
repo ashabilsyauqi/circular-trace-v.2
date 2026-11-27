@@ -1073,12 +1073,12 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
       </header>
 
       {/* Main Verified Specification Card */}
-      <main className="max-w-5xl mx-auto w-full my-6 sm:my-8 space-y-6 overflow-x-hidden">
+      <main className="max-w-5xl mx-auto w-full my-6 sm:my-8 space-y-6">
         {/* ==================================================================== */}
         {/* CASE 0: GELAS KOPI PELANGGAN CAFE (FARM-TO-CUP CONSUMER EXPERIENCE) */}
         {/* ==================================================================== */}
         {isCafeCup ? (
-          <div className="space-y-10 max-w-4xl mx-auto w-full overflow-x-hidden">
+          <div className="space-y-10 max-w-4xl mx-auto w-full">
             {/* 1. DIGITAL COFFEE PASSPORT — Boarding Pass Ticket Minimalist Aesthetic */}
             <div className="relative bg-gradient-to-br from-[#FAF8F5] via-white to-[#F5EFEB] rounded-3xl border border-stone-300/80 shadow-xs overflow-hidden text-stone-900">
               {/* Header Strip */}

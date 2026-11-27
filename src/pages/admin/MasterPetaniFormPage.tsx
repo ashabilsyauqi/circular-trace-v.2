@@ -23,7 +23,7 @@ import {
 export const MasterPetaniFormPage: React.FC = () => {
   const navigate = useNavigate();
   const { farmerId } = useParams<{ farmerId?: string }>();
-  const { users, addUser, updateUser } = useCoffee();
+  const { currentUser, users, addUser, updateUser } = useCoffee();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = Boolean(farmerId);
@@ -36,19 +36,19 @@ export const MasterPetaniFormPage: React.FC = () => {
     nik: '',
     farmerCardNumber: '',
     avatar: 'https://images.unsplash.com/photo-1595273670150-bd0c3c392e46?w=400&auto=format&fit=crop&q=80',
-    village: 'Desa Margamukti',
-    rtRw: 'RT 03 / RW 08',
-    subdistrict: 'Kec. Pangalengan',
-    district: 'Kab. Bandung',
-    province: 'Jawa Barat',
-    organization: 'Gapoktan Kopi Mandiri Nusantara',
+    village: '',
+    rtRw: 'RT 01 / RW 01',
+    subdistrict: '',
+    district: '',
+    province: '',
+    organization: currentUser?.organization || 'Kelompok Tani',
     phone: '',
     email: '',
-    totalLandAreaHa: 2.0,
-    farmWorkerCount: 4,
-    startYear: 2015,
+    totalLandAreaHa: 1.0,
+    farmWorkerCount: 2,
+    startYear: 2020,
     certification: 'Organik SNI & EUDR Ready',
-    bio: 'Petani kopi specialty anggota kelompok tani aktif memproduksi ceri kualitas petik merah optimal.',
+    bio: 'Petani kopi specialty aktif memproduksi ceri kualitas petik merah optimal binaan kelompok tani.',
     status: 'active' as 'active' | 'inactive',
   });
 
@@ -150,7 +150,9 @@ export const MasterPetaniFormPage: React.FC = () => {
         subdistrict: formData.subdistrict,
         district: formData.district,
         province: formData.province,
-        organization: formData.organization,
+        organization: currentUser?.organization || formData.organization || 'Kelompok Tani',
+        kelompokTaniId: currentUser?.kelompokTaniId || currentUser?.id,
+        kelompokTaniName: currentUser?.kelompokTaniName || currentUser?.organization || formData.organization || 'Kelompok Tani',
         phone: formData.phone || '0812-3456-7890',
         email: formData.email || `petani.${Date.now()}@kelompoktani.id`,
         balance: 0,

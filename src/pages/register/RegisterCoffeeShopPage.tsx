@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
+import { RegisterPaymentPlanBox } from '../../components/register/RegisterPaymentPlanBox';
+import { requestSnapToken, triggerSnapCheckout } from '../../services/midtransService';
+import { InlineSandboxPaymentSection } from '../../components/register/InlineSandboxPaymentSection';
 import {
   Coffee,
   Store,
@@ -21,11 +24,16 @@ import {
   User,
   Calculator,
   Award,
+  CreditCard,
+  Clock,
+  Zap,
 } from 'lucide-react';
 
 export const RegisterCoffeeShopPage: React.FC = () => {
   const navigate = useNavigate();
-  const { registerUser, currentUser } = useCoffee();
+  const [searchParams] = useSearchParams();
+  const initialPlan = searchParams.get('plan') === 'yearly' ? 'yearly' : 'monthly';
+  const { registerUser, activateUserSubscription, currentUser, login } = useCoffee();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -35,6 +43,7 @@ export const RegisterCoffeeShopPage: React.FC = () => {
   }, [currentUser, navigate]);
 
   // Form states
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(initialPlan);
   const [cafeName, setCafeName] = useState('');
   const [address, setAddress] = useState('');
   const [barBranches, setBarBranches] = useState('1 Bar');
@@ -50,8 +59,14 @@ export const RegisterCoffeeShopPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registeredData, setRegisteredData] = useState<{
     email: string;
+    password: string;
     name: string;
     org: string;
+    orderId?: string;
+    snapToken?: string;
+    isPaid?: boolean;
+    billingCycle?: 'monthly' | 'yearly';
+    amount?: number;
     verificationToken?: string;
     verificationLink?: string;
   } | null>(null);
@@ -96,10 +111,37 @@ export const RegisterCoffeeShopPage: React.FC = () => {
           bio: bioText,
         });
 
+        let orderId = '';
+        let snapToken = '';
+
+        try {
+          const snapRes = await requestSnapToken({
+            userId: result?.user?.id,
+            userEmail: email.trim().toLowerCase(),
+            userName: ownerName.trim(),
+            userPhone: phone.trim() || '0812-3456-7890',
+            serviceRole: 'cafe',
+            billingCycle: billingCycle,
+          });
+
+          orderId = snapRes.orderId;
+          snapToken = snapRes.snapToken;
+        } catch (snapErr) {
+          console.warn('Gagal memproses sesi token Midtrans:', snapErr);
+          orderId = `CCT-CFE-${Date.now()}`;
+        }
+
+        const calculatedAmount = billingCycle === 'yearly' ? 3500000 : 350000;
+
         setRegisteredData({
           email: email.trim().toLowerCase(),
+          password: password,
           name: ownerName.trim(),
           org: cafeName.trim(),
+          orderId: orderId,
+          snapToken: snapToken,
+          billingCycle: billingCycle,
+          amount: calculatedAmount,
           verificationToken: result?.verificationToken,
           verificationLink: result?.verificationLink,
         });
@@ -110,6 +152,29 @@ export const RegisterCoffeeShopPage: React.FC = () => {
       setErrorMsg(err?.message || 'Gagal melakukan pendaftaran akun Coffee Shop.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentSuccess = async () => {
+    if (!registeredData) return;
+    try {
+      if (activateUserSubscription && registeredData.email) {
+        await activateUserSubscription(registeredData.email, registeredData.orderId);
+      }
+      try {
+        sessionStorage.setItem('cct_show_welcome_modal', 'true');
+      } catch (_) {}
+
+      if (login) {
+        const loginRes = login(registeredData.email, registeredData.password);
+        if (loginRes.success) {
+          return;
+        }
+      }
+      navigate('/admin/cafe');
+    } catch (e) {
+      console.error('Error on auto-login after payment:', e);
+      navigate('/admin/cafe');
     }
   };
 
@@ -178,63 +243,20 @@ export const RegisterCoffeeShopPage: React.FC = () => {
       <main className="w-full py-8 sm:py-12 flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {isSuccess && registeredData ? (
-            /* Success State */
-            <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-[#E6DFD5] shadow-lg p-8 sm:p-12 text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
-              <div className="w-20 h-20 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto ring-8 ring-amber-50 shadow-sm">
-                <CheckCircle2 className="w-10 h-10 stroke-[2.2]" />
-              </div>
-
-              <div className="space-y-2">
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest text-amber-900 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
-                  Pendaftaran Kedai Kopi Berhasil
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                  Selamat Datang di CircularCoffee
-                </h2>
-                <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
-                  Kedai kopi <strong className="text-stone-900">{registeredData.org}</strong> telah terdaftar. Anda dapat langsung sourcing roasted bean dan mencetak QR Code meja seduh.
-                </p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-[#F8F5F0] border border-[#E6DFD5] text-left space-y-2.5 text-xs">
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-                  <span className="text-stone-500">Nama Kedai:</span>
-                  <span className="font-bold text-stone-900">{registeredData.org}</span>
-                </div>
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-                  <span className="text-stone-500">Pemilik / Manajer:</span>
-                  <span className="font-bold text-stone-900">{registeredData.name}</span>
-                </div>
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-                  <span className="text-stone-500">Email Bisnis:</span>
-                  <span className="font-bold text-stone-900 font-mono">{registeredData.email}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500">Peran Layanan:</span>
-                  <span className="font-bold text-amber-900 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
-                    Coffee Shop, Cafe &amp; Barista
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigate('/login')}
-                  className="flex-1 py-3.5 px-6 rounded-xl bg-amber-600 hover:bg-amber-700 text-stone-950 font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>Masuk ke Panel Kedai Kopi</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <Link
-                  to="/"
-                  className="py-3.5 px-6 rounded-xl border border-stone-300 text-stone-700 hover:bg-white font-bold text-xs sm:text-sm transition-all block text-center"
-                >
-                  Ke Beranda
-                </Link>
-              </div>
-            </div>
+            /* Inline Midtrans Sandbox Payment Step (NO POPUPS) */
+            <InlineSandboxPaymentSection
+              userEmail={registeredData.email}
+              userName={registeredData.name}
+              organizationName={registeredData.org}
+              orderId={registeredData.orderId || `CCT-CFE-${Date.now()}`}
+              snapToken={registeredData.snapToken}
+              planRole="cafe"
+              planName="Coffee Shop & Barista Passport"
+              billingCycle={registeredData.billingCycle || 'monthly'}
+              amount={registeredData.amount || 350000}
+              onPaymentSuccess={handlePaymentSuccess}
+              onBackToForm={() => setIsSuccess(false)}
+            />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* LEFT COLUMN: FORM INPUTS (7 OF 12) */}
@@ -410,27 +432,37 @@ export const RegisterCoffeeShopPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* 7. Pilihan Siklus Pembayaran & Midtrans Plan Box */}
+                  <div className="pt-2">
+                    <RegisterPaymentPlanBox
+                      role="cafe"
+                      billingCycle={billingCycle}
+                      onChangeCycle={setBillingCycle}
+                    />
+                  </div>
+
                   {/* Submit CTA */}
                   <div className="pt-2">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full py-3.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm shadow-md shadow-amber-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="w-full py-4 px-6 rounded-2xl bg-stone-900 hover:bg-stone-800 text-amber-400 font-black text-sm shadow-md shadow-stone-900/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin text-stone-950" />
-                          <span>Mendaftarkan Kedai Kopi...</span>
+                          <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                          <span>Mempersiapkan Pembayaran Midtrans...</span>
                         </>
                       ) : (
                         <>
-                          <span>Daftarkan Coffee Shop Anda</span>
+                          <CreditCard className="w-4 h-4" />
+                          <span>Daftar &amp; Bayar Sekarang (Midtrans Snap)</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
                     </button>
                     <p className="text-[11px] text-stone-500 text-center mt-2.5">
-                      Dengan mendaftar, Anda menyetujui Ketentuan Layanan &amp; Kebijakan Privasi CircularCoffee.
+                      Transaksi diproses langsung secara instan &amp; aman melalui <strong>Midtrans Sandbox</strong>.
                     </p>
                   </div>
                 </form>

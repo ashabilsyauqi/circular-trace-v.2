@@ -4,6 +4,7 @@ import { useCoffee } from '../context/CoffeeContext';
 import { UserRole } from '../types/coffee';
 import { landingContent } from '../i18n/landingContent';
 import { ServicesShowcaseSection } from './landing/ServicesShowcaseSection';
+import { PricingSection } from './landing/PricingSection';
 import {
   Sprout,
   Cog,
@@ -723,6 +724,11 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* ------------------------------------------------------------- */}
+      {/* SECTION 4.5: PRICING & SUBSCRIPTION PACKAGES (Midtrans)       */}
+      {/* ------------------------------------------------------------- */}
+      <PricingSection id="pricing" />
 
       {/* ------------------------------------------------------------- */}
       {/* SECTION 5: CTA TO REGISTER (Call to Action & Onboarding)       */}

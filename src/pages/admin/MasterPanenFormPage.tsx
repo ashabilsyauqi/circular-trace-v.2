@@ -26,9 +26,37 @@ export const MasterPanenFormPage: React.FC = () => {
   const preselectedFarmId = searchParams.get('farmId');
   const preselectedFarmerId = searchParams.get('farmerId');
 
-  const { users, coffeeFarms, addFarmerHarvest } = useCoffee();
+  const { currentUser, users, coffeeFarms, addFarmerHarvest } = useCoffee();
 
-  const allFarmers = users.filter((u) => u.role === 'petani' || u.assignedService === 'petani');
+  // Scoped farmers: Multi-tenant pipeline per Kelompok Tani
+  const allFarmers = users.filter((u) => {
+    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
+    if (!isFarmer) return false;
+    if (currentUser?.role === 'super_admin') return true;
+
+    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
+    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+    const userOrg = (currentUser?.organization || '').trim().toLowerCase();
+    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
+
+    const isSameKtId = Boolean(
+      (userKtId && farmerKtId && userKtId === farmerKtId) ||
+      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
+    );
+    const isSameOrg = Boolean(userOrg && farmerOrg && (farmerOrg === userOrg || farmerOrg.includes(userOrg) || userOrg.includes(farmerOrg)));
+    const isSameId = Boolean(u.kelompokTaniId && (u.kelompokTaniId === currentUser?.id || u.kelompokTaniId === currentUser?.organization));
+    
+    // Fuzzy matching fallback for Bali / Kintamani / Tegal Sari
+    const userLoc = (currentUser?.location || '').trim().toLowerCase();
+    const farmerLoc = (u.location || '').trim().toLowerCase();
+    const isSameLoc = Boolean(userLoc && farmerLoc && (farmerLoc.includes('kintamani') && userLoc.includes('kintamani')));
+    const isSameTegalSari = Boolean(
+      (farmerOrg.includes('tegal sari') || farmerOrg.includes('572991')) &&
+      (userOrg.includes('tegal sari') || userOrg.includes('572991') || userKtId.includes('572991'))
+    );
+
+    return isSameKtId || isSameId || isSameOrg || isSameLoc || isSameTegalSari;
+  });
 
   const [formError, setFormError] = useState<string | null>(null);
 

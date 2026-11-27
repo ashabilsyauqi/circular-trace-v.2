@@ -32,16 +32,50 @@ export const MasterKebunPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialFarmerId = searchParams.get('farmerId') || 'all';
 
-  const { users, coffeeFarms, deleteCoffeeFarm, farmerLots, openBlankoModal } = useCoffee();
+  const { currentUser, users, coffeeFarms, deleteCoffeeFarm, farmerLots, openBlankoModal } = useCoffee();
 
-  const allFarmers = users.filter((u) => u.role === 'petani' || u.assignedService === 'petani');
+  // Scoped farmers: Multi-tenant pipeline per Kelompok Tani
+  const allFarmers = users.filter((u) => {
+    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
+    if (!isFarmer) return false;
+    if (currentUser?.role === 'super_admin') return true;
+
+    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
+    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+    const userOrg = (currentUser?.organization || '').trim().toLowerCase();
+    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
+
+    const isSameKtId = Boolean(
+      (userKtId && farmerKtId && userKtId === farmerKtId) ||
+      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
+    );
+    const isSameOrg = Boolean(userOrg && farmerOrg && (farmerOrg === userOrg || farmerOrg.includes(userOrg) || userOrg.includes(farmerOrg)));
+    const isSameId = Boolean(u.kelompokTaniId && (u.kelompokTaniId === currentUser?.id || u.kelompokTaniId === currentUser?.organization));
+    
+    // Fuzzy matching fallback for Bali / Kintamani / Tegal Sari
+    const userLoc = (currentUser?.location || '').trim().toLowerCase();
+    const farmerLoc = (u.location || '').trim().toLowerCase();
+    const isSameLoc = Boolean(userLoc && farmerLoc && (farmerLoc.includes('kintamani') && userLoc.includes('kintamani')));
+    const isSameTegalSari = Boolean(
+      (farmerOrg.includes('tegal sari') || farmerOrg.includes('572991')) &&
+      (userOrg.includes('tegal sari') || userOrg.includes('572991') || userKtId.includes('572991'))
+    );
+
+    return isSameKtId || isSameId || isSameOrg || isSameLoc || isSameTegalSari;
+  });
+
+  // Scoped Tenant Farms
+  const tenantFarms = coffeeFarms.filter((f) => {
+    if (currentUser?.role === 'super_admin') return true;
+    return allFarmers.some((farmer) => farmer.id === f.farmerId);
+  });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFarmerFilter, setSelectedFarmerFilter] = useState<string>(initialFarmerId);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   // Filtered farms list
-  const filteredFarms = coffeeFarms.filter((farm) => {
+  const filteredFarms = tenantFarms.filter((farm) => {
     const q = searchQuery.toLowerCase();
     const matchQuery =
       farm.farmName.toLowerCase().includes(q) ||
@@ -57,12 +91,12 @@ export const MasterKebunPage: React.FC = () => {
   });
 
   // KPI Metrics
-  const totalHectares = coffeeFarms.reduce((acc, f) => acc + (f.landAreaHectares || 0), 0);
-  const totalTrees = coffeeFarms.reduce((acc, f) => acc + (f.totalTreesCount || 0), 0);
-  const avgAltitude = coffeeFarms.length > 0
-    ? Math.round(coffeeFarms.reduce((acc, f) => acc + (f.altitudeMeters || 1500), 0) / coffeeFarms.length)
+  const totalHectares = tenantFarms.reduce((acc, f) => acc + (f.landAreaHectares || 0), 0);
+  const totalTrees = tenantFarms.reduce((acc, f) => acc + (f.totalTreesCount || 0), 0);
+  const avgAltitude = tenantFarms.length > 0
+    ? Math.round(tenantFarms.reduce((acc, f) => acc + (f.altitudeMeters || 1500), 0) / tenantFarms.length)
     : 1550;
-  const eudrVerifiedFarms = coffeeFarms.filter((f) => f.eudrCompliant).length;
+  const eudrVerifiedFarms = tenantFarms.filter((f) => f.eudrCompliant).length;
 
   const handleDeleteFarm = (id: string, name: string) => {
     if (confirm(`Apakah Anda yakin ingin menghapus data lahan kebun "${name}"?`)) {

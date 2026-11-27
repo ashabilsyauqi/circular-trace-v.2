@@ -617,6 +617,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ initialMode }) => {
                   <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 font-mono text-stone-600">
                     <button
                       type="button"
+                      onClick={() => { setEmail('ashabil@kopi.com'); setPassword('password123'); }}
+                      className="text-left hover:text-amber-900 font-bold text-amber-900 transition-colors cursor-pointer truncate bg-amber-100/80 px-1 py-0.5 rounded border border-amber-300"
+                      title="Klik untuk mengisi formulir login sebagai Ashabil Syauqi (KT Kintamani)"
+                    >
+                      • KT Kintamani: ashabil@kopi.com
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => { setEmail('admin.tegalsari@circularcoffee.id'); setPassword('password123'); }}
                       className="text-left hover:text-emerald-800 font-bold text-emerald-800 transition-colors cursor-pointer truncate bg-emerald-50 px-1 py-0.5 rounded border border-emerald-300"
                       title="Klik untuk mengisi formulir login sebagai Admin Kelompok Tani Tegal Sari (Bali)"

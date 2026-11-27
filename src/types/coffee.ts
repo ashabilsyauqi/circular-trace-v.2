@@ -52,6 +52,12 @@ export interface AppUser {
   isEmailVerified?: boolean;
   emailVerificationToken?: string;
   emailVerificationExpiresAt?: string;
+  subscriptionStatus?: 'active' | 'pending_payment' | 'trial' | 'expired';
+  subscriptionPlan?: string;
+  subscriptionBillingCycle?: 'monthly' | 'yearly';
+  subscriptionExpiresAt?: string;
+  lastPaymentOrderId?: string;
+  lastPaymentDate?: string;
 }
 
 // Evaluasi Uji Sensori Cupping SCA oleh Verifikator / Q-Grader

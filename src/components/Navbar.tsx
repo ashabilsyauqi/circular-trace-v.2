@@ -12,6 +12,7 @@ import {
   Warehouse,
   Flame,
   Sprout,
+  CreditCard,
 } from 'lucide-react';
 import { ProfileMenu } from './shared/ProfileMenu';
 import { LanguageSwitch } from './shared/LanguageSwitch';
@@ -349,6 +350,24 @@ export const Navbar: React.FC = () => {
               <Store className={`w-4 h-4 ${isDarkNav ? 'text-amber-400' : 'text-amber-600'}`} />
               <span className="hidden md:inline">Pasar Kopi</span>
               <ExternalLink className="w-3 h-3 text-stone-400" />
+            </a>
+
+            {/* 3. Pricing / Paket & Biaya */}
+            <a
+              href="#pricing"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavSectionClick('pricing');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                isDarkNav
+                  ? 'text-stone-200 hover:text-white hover:bg-white/10'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+              }`}
+              title="Lihat Paket Langganan & Biaya Layanan"
+            >
+              <CreditCard className={`w-4 h-4 ${isDarkNav ? 'text-amber-400' : 'text-amber-600'}`} />
+              <span>Pricing</span>
             </a>
           </nav>
 

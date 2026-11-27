@@ -169,6 +169,14 @@ const AdminOverviewDispatcher: React.FC = () => {
   return <KelompokTaniDashboard />;
 };
 
+const SuperAdminOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentUser } = useCoffee();
+  if (!currentUser || currentUser.role !== 'super_admin') {
+    return <Navigate to="/admin/overview" replace />;
+  }
+  return <>{children}</>;
+};
+
 /**
  * All Application Routes
  */
@@ -220,17 +228,59 @@ export const AppRoutes: React.FC = () => {
       <Route path="/admin" element={<AdminLTELayout />}>
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<AdminOverviewDispatcher />} />
-        <Route path="superadmin/dashboard" element={<SuperAdminDashboard />} />
-        <Route path="users" element={<MasterUsersView />} />
+        <Route
+          path="superadmin/dashboard"
+          element={
+            <SuperAdminOnlyRoute>
+              <SuperAdminDashboard />
+            </SuperAdminOnlyRoute>
+          }
+        />
+        <Route
+          path="users"
+          element={
+            <SuperAdminOnlyRoute>
+              <MasterUsersView />
+            </SuperAdminOnlyRoute>
+          }
+        />
 
         {/* Modul Super Admin SaaS: Manajemen Paket Layanan, Subscribed Users, Services, & Telemetri */}
-        <Route path="superadmin/packages" element={<PlatformPackagesPage />} />
+        <Route
+          path="superadmin/packages"
+          element={
+            <SuperAdminOnlyRoute>
+              <PlatformPackagesPage />
+            </SuperAdminOnlyRoute>
+          }
+        />
         <Route path="packages" element={<Navigate to="/admin/superadmin/packages" replace />} />
-        <Route path="superadmin/services/:serviceId?" element={<ServiceSettingsPage />} />
+        <Route
+          path="superadmin/services/:serviceId?"
+          element={
+            <SuperAdminOnlyRoute>
+              <ServiceSettingsPage />
+            </SuperAdminOnlyRoute>
+          }
+        />
         <Route path="superadmin/services" element={<Navigate to="/admin/superadmin/services/admin_kelompok_tani" replace />} />
-        <Route path="superadmin/subscriptions" element={<SubscribedUsersPage />} />
+        <Route
+          path="superadmin/subscriptions"
+          element={
+            <SuperAdminOnlyRoute>
+              <SubscribedUsersPage />
+            </SuperAdminOnlyRoute>
+          }
+        />
         <Route path="superadmin/subscribed-users" element={<Navigate to="/admin/superadmin/subscriptions" replace />} />
-        <Route path="superadmin/telemetry" element={<EcosystemTelemetryPage />} />
+        <Route
+          path="superadmin/telemetry"
+          element={
+            <SuperAdminOnlyRoute>
+              <EcosystemTelemetryPage />
+            </SuperAdminOnlyRoute>
+          }
+        />
 
         {/* Buku Transaksi: Rekapitulasi Penjualan Berhasil Marketplace */}
         <Route path="transaksi" element={<BukuTransaksiPage />} />

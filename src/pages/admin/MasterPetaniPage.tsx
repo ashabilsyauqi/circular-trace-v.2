@@ -29,14 +29,41 @@ import { FarmerIdCardModal } from '../../components/admin/FarmerIdCardModal';
 
 export const MasterPetaniPage: React.FC = () => {
   const navigate = useNavigate();
-  const { users, deleteUser, coffeeFarms, farmerLots, openBlankoModal } = useCoffee();
+  const { currentUser, users, deleteUser, coffeeFarms, farmerLots, openBlankoModal } = useCoffee();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVillageFilter, setSelectedVillageFilter] = useState<string>('all');
   const [selectedFarmerForCard, setSelectedFarmerForCard] = useState<AppUser | null>(null);
 
-  // All farmers registered in cooperative
-  const allFarmers = users.filter((u) => u.role === 'petani' || u.assignedService === 'petani');
+  // Scoped farmers: Multi-tenant pipeline per Kelompok Tani
+  const allFarmers = users.filter((u) => {
+    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
+    if (!isFarmer) return false;
+    if (currentUser?.role === 'super_admin') return true;
+
+    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
+    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+    const userOrg = (currentUser?.organization || '').trim().toLowerCase();
+    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
+
+    const isSameKtId = Boolean(
+      (userKtId && farmerKtId && userKtId === farmerKtId) ||
+      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
+    );
+    const isSameOrg = Boolean(userOrg && farmerOrg && (farmerOrg === userOrg || farmerOrg.includes(userOrg) || userOrg.includes(farmerOrg)));
+    const isSameId = Boolean(u.kelompokTaniId && (u.kelompokTaniId === currentUser?.id || u.kelompokTaniId === currentUser?.organization));
+    
+    // Fuzzy matching fallback for Bali / Kintamani / Tegal Sari
+    const userLoc = (currentUser?.location || '').trim().toLowerCase();
+    const farmerLoc = (u.location || '').trim().toLowerCase();
+    const isSameLoc = Boolean(userLoc && farmerLoc && (farmerLoc.includes('kintamani') && userLoc.includes('kintamani')));
+    const isSameTegalSari = Boolean(
+      (farmerOrg.includes('tegal sari') || farmerOrg.includes('572991')) &&
+      (userOrg.includes('tegal sari') || userOrg.includes('572991') || userKtId.includes('572991'))
+    );
+
+    return isSameKtId || isSameId || isSameOrg || isSameLoc || isSameTegalSari;
+  });
 
   // Extract unique villages
   const uniqueVillages = Array.from(
@@ -62,10 +89,21 @@ export const MasterPetaniPage: React.FC = () => {
     return matchQuery && matchVillage;
   });
 
+  // Scoped Tenant Farms & Lots
+  const tenantFarms = coffeeFarms.filter((f) => {
+    if (currentUser?.role === 'super_admin') return true;
+    return allFarmers.some((farmer) => farmer.id === f.farmerId);
+  });
+
+  const tenantLots = farmerLots.filter((lot) => {
+    if (currentUser?.role === 'super_admin') return true;
+    return allFarmers.some((farmer) => farmer.id === lot.farmerId);
+  });
+
   // Cooperative Summary Metrics
   const totalLandArea = allFarmers.reduce((acc, f) => acc + (f.totalLandAreaHa || 0), 0);
-  const totalFarmsCount = coffeeFarms.length;
-  const totalLotsCount = farmerLots.length;
+  const totalFarmsCount = tenantFarms.length;
+  const totalLotsCount = tenantLots.length;
   const certifiedCount = allFarmers.filter((f) => f.certification && f.certification.length > 0).length;
 
   const handleDeleteFarmer = (id: string, name: string) => {
@@ -246,8 +284,34 @@ export const MasterPetaniPage: React.FC = () => {
             <tbody className="divide-y divide-stone-200">
               {filteredFarmers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-stone-400 text-xs">
-                    Tidak ditemukan data petani yang cocok dengan pencarian.
+                  <td colSpan={7} className="text-center py-16 text-stone-500 text-xs">
+                    <div className="max-w-sm mx-auto space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto border border-emerald-200">
+                        <Users className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-extrabold text-stone-900 text-sm">
+                          {allFarmers.length === 0 
+                            ? `Belum Ada Petani Terdaftar di Organisasi "${currentUser?.organization || 'Kelompok Tani'}"`
+                            : 'Tidak ditemukan data petani yang cocok dengan pencarian.'}
+                        </p>
+                        <p className="text-stone-400 text-xs">
+                          {allFarmers.length === 0
+                            ? 'Mulai bangun pipeline perkebunan Anda dengan mendaftarkan petani binaan pertama beserta nomor KTA & lokasi lahan.'
+                            : 'Coba ubah kata kunci pencarian atau filter wilayah desa.'}
+                        </p>
+                      </div>
+                      {allFarmers.length === 0 && (
+                        <button
+                          type="button"
+                          onClick={() => navigate('/admin/petani/tambah')}
+                          className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>+ Daftarkan Petani Pertama</span>
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (

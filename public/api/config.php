@@ -109,17 +109,44 @@ function ensureCoreTablesAndColumns($pdo) {
         )");
     } catch (Exception $e) {}
 
-    // 3. Dynamic columns
+    // 3. subscriptions table (Midtrans audit log)
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS `subscriptions` (
+            `id` {$autoInc},
+            `order_id` VARCHAR(100) NOT NULL UNIQUE,
+            `user_id` VARCHAR(64) NOT NULL,
+            `user_email` VARCHAR(191) NOT NULL,
+            `service_role` VARCHAR(50) NOT NULL,
+            `plan_name` VARCHAR(100) NOT NULL,
+            `billing_cycle` VARCHAR(20) NOT NULL DEFAULT 'monthly',
+            `gross_amount` INT NOT NULL,
+            `snap_token` VARCHAR(100) DEFAULT NULL,
+            `transaction_status` VARCHAR(50) NOT NULL DEFAULT 'pending',
+            `payment_type` VARCHAR(50) DEFAULT NULL,
+            `midtrans_response` TEXT DEFAULT NULL,
+            `paid_at` DATETIME DEFAULT NULL,
+            `expires_at` DATETIME DEFAULT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )");
+    } catch (Exception $e) {}
+
+    // 4. Dynamic columns
     $tableCols = [
         'users' => [
-            'status'              => "VARCHAR(20) DEFAULT 'active'",
-            'kelompok_tani_id'    => "VARCHAR(64) DEFAULT NULL",
-            'kelompok_tani_name'  => "VARCHAR(200) DEFAULT NULL",
-            'verification_status' => "VARCHAR(20) DEFAULT 'pending'",
-            'verified_by'         => "VARCHAR(150) DEFAULT NULL",
-            'verified_at'         => "DATETIME DEFAULT NULL",
-            'verification_notes'  => "TEXT DEFAULT NULL",
-            'is_email_verified'   => "TINYINT(1) DEFAULT 0"
+            'status'                     => "VARCHAR(20) DEFAULT 'active'",
+            'kelompok_tani_id'           => "VARCHAR(64) DEFAULT NULL",
+            'kelompok_tani_name'         => "VARCHAR(200) DEFAULT NULL",
+            'verification_status'        => "VARCHAR(20) DEFAULT 'pending'",
+            'verified_by'                => "VARCHAR(150) DEFAULT NULL",
+            'verified_at'                => "DATETIME DEFAULT NULL",
+            'verification_notes'         => "TEXT DEFAULT NULL",
+            'is_email_verified'          => "TINYINT(1) DEFAULT 0",
+            'subscription_status'        => "VARCHAR(30) DEFAULT 'pending_payment'",
+            'subscription_plan'          => "VARCHAR(100) DEFAULT NULL",
+            'subscription_billing_cycle' => "VARCHAR(20) DEFAULT 'monthly'",
+            'subscription_expires_at'    => "DATETIME DEFAULT NULL",
+            'last_payment_order_id'      => "VARCHAR(100) DEFAULT NULL",
+            'last_payment_date'          => "DATETIME DEFAULT NULL"
         ],
         'coffee_farms' => [
             'kelompok_tani_id'    => "VARCHAR(64) DEFAULT NULL"
@@ -232,7 +259,13 @@ function sendError($message, $statusCode = 400, $details = null) {
 }
 
 function getJsonInput() {
+    if (!empty($GLOBALS['MOCK_INPUT'])) {
+        return is_array($GLOBALS['MOCK_INPUT']) ? $GLOBALS['MOCK_INPUT'] : json_decode($GLOBALS['MOCK_INPUT'], true);
+    }
     $raw = file_get_contents('php://input');
+    if (!$raw && PHP_SAPI === 'cli') {
+        $raw = file_get_contents('php://stdin');
+    }
     if (!$raw) return [];
     $decoded = json_decode($raw, true);
     return is_array($decoded) ? $decoded : [];

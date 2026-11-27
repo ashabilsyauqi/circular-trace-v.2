@@ -1,0 +1,196 @@
+/**
+ * CircularCoffee - Midtrans Snap Service
+ * Integrates Midtrans Sandbox Payment Gateway for instant checkout & subscriptions
+ */
+
+declare global {
+  interface Window {
+    snap?: {
+      pay: (
+        token: string,
+        options?: {
+          onSuccess?: (result: any) => void;
+          onPending?: (result: any) => void;
+          onError?: (result: any) => void;
+          onClose?: () => void;
+        }
+      ) => void;
+    };
+  }
+}
+
+export interface SnapTransactionParams {
+  userId?: string;
+  userEmail: string;
+  userName: string;
+  userPhone?: string;
+  serviceRole: 'admin_kelompok_tani' | 'gudang' | 'roaster' | 'cafe' | string;
+  billingCycle: 'monthly' | 'yearly';
+}
+
+export interface SnapTransactionResponse {
+  orderId: string;
+  snapToken: string;
+  redirectUrl?: string;
+  grossAmount: number;
+  planName: string;
+  clientKey: string;
+  isDemoFallback: boolean;
+  message: string;
+}
+
+// Client Key Midtrans Sandbox (Akun: circulartrace / novizarnazir25@gmail.com)
+export const MIDTRANS_SANDBOX_CLIENT_KEY = 'Mid-client-oAq9WPHW_0ihG4o4';
+
+/**
+ * Memastikan script Midtrans Snap JS termuat di browser window
+ */
+export const loadMidtransSnapScript = (clientKey = MIDTRANS_SANDBOX_CLIENT_KEY): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve(false);
+      return;
+    }
+
+    if (window.snap) {
+      resolve(true);
+      return;
+    }
+
+    // Cek apakah script tag sudah ada di DOM
+    const existingScript = document.getElementById('midtrans-snap-script');
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(true));
+      existingScript.addEventListener('error', () => resolve(false));
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'midtrans-snap-script';
+    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+    script.setAttribute('data-client-key', clientKey);
+    script.async = true;
+
+    script.onload = () => {
+      resolve(true);
+    };
+
+    script.onerror = () => {
+      console.warn('Gagal memuat Midtrans Snap script dari CDN, menggunakan mode fallback interaktif.');
+      resolve(false);
+    };
+
+    document.head.appendChild(script);
+  });
+};
+
+/**
+ * Memanggil backend API untuk membuat sesi Snap Token baru
+ */
+export const requestSnapToken = async (
+  params: SnapTransactionParams
+): Promise<SnapTransactionResponse> => {
+  try {
+    const res = await fetch('/api/create_snap_token.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`);
+    }
+
+    const data: SnapTransactionResponse = await res.json();
+    return data;
+  } catch (err: any) {
+    console.warn('Request Snap Token API gagal, menggunakan fallback token:', err);
+    // Client-side fallback token untuk pengujian offline/demo
+    const roleCode = params.serviceRole.replace('admin_', '').slice(0, 3).toUpperCase();
+    const mockOrderId = `CCT-${roleCode}-${Date.now().toString().slice(-6)}`;
+    const mockAmount = params.billingCycle === 'yearly' ? 2500000 : 250000;
+
+    return {
+      orderId: mockOrderId,
+      snapToken: `MOCK-SNAP-${Date.now()}`,
+      redirectUrl: `https://app.sandbox.midtrans.com/snap/v2/vtweb/mock-${Date.now()}`,
+      grossAmount: mockAmount,
+      planName: `Paket Layanan ${params.serviceRole} (${params.billingCycle === 'yearly' ? '1 Tahun' : '1 Bulan'})`,
+      clientKey: MIDTRANS_SANDBOX_CLIENT_KEY,
+      isDemoFallback: true,
+      message: 'Token simulasi berhasil dibuat',
+    };
+  }
+};
+
+/**
+ * Menampilkan modal Midtrans Snap atau Fallback Dialog jika offline
+ */
+export const triggerSnapCheckout = async (
+  token: string,
+  callbacks: {
+    onSuccess?: (result: any) => void;
+    onPending?: (result: any) => void;
+    onError?: (result: any) => void;
+    onClose?: () => void;
+  }
+): Promise<void> => {
+  await loadMidtransSnapScript();
+
+  if (window.snap && typeof window.snap.pay === 'function' && !token.startsWith('MOCK-SNAP-')) {
+    window.snap.pay(token, {
+      onSuccess: (result) => {
+        callbacks.onSuccess?.(result);
+      },
+      onPending: (result) => {
+        callbacks.onPending?.(result);
+      },
+      onError: (result) => {
+        callbacks.onError?.(result);
+      },
+      onClose: () => {
+        callbacks.onClose?.();
+      },
+    });
+  } else {
+    // Interactive Fallback Modal jika running di sandbox tanpa akses Snap live
+    const confirmed = window.confirm(
+      `[Midtrans Sandbox Simulator]\n\nSnap Token: ${token}\n\nIngin mensimulasikan status PEMBAYARAN BERHASIL (Settlement) sekarang?`
+    );
+    if (confirmed) {
+      callbacks.onSuccess?.({
+        transaction_status: 'settlement',
+        order_id: token,
+        status_code: '200',
+        payment_type: 'sandbox_simulation',
+      });
+    } else {
+      callbacks.onClose?.();
+    }
+  }
+};
+
+/**
+ * Simulasi penyelesaian pembayaran sandbox via backend API
+ */
+export const completeSandboxSimulation = async (
+  orderId: string,
+  emailOrUserId: string
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const res = await fetch('/api/payment_status.php?action=simulate_sandbox_payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        order_id: orderId,
+        email: emailOrUserId.includes('@') ? emailOrUserId : undefined,
+        user_id: !emailOrUserId.includes('@') ? emailOrUserId : undefined,
+      }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    return { success: true, message: 'Simulasi tersimpan lokal' };
+  }
+};

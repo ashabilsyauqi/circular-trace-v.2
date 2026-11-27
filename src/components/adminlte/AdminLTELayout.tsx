@@ -5,6 +5,8 @@ import { AdminLTENavbar } from './AdminLTENavbar';
 import { AdminLTESidebar } from './AdminLTESidebar';
 import { AdminLTEContentHeader } from './AdminLTEContentHeader';
 import { AdminLTEFooter } from './AdminLTEFooter';
+import { SubscriptionPaywallModal } from './SubscriptionPaywallModal';
+import { WelcomeCelebrationModal } from './WelcomeCelebrationModal';
 
 export const AdminLTELayout: React.FC = () => {
   const { currentUser } = useCoffee();
@@ -443,8 +445,33 @@ export const AdminLTELayout: React.FC = () => {
     breadcrumbs: sanitizeBreadcrumbs(rawHeaderMeta.breadcrumbs),
   };
 
+  const isPaidRole = ['admin_kelompok_tani', 'gudang', 'roaster', 'cafe'].includes(userRole);
+  const isPendingPayment = isPaidRole && currentUser.subscriptionStatus === 'pending_payment';
+
+  const [showWelcomeModal, setShowWelcomeModal] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('cct_show_welcome_modal') === 'true';
+    }
+    return false;
+  });
+
+  const handleCloseWelcomeModal = () => {
+    setShowWelcomeModal(false);
+    try {
+      sessionStorage.removeItem('cct_show_welcome_modal');
+    } catch (_) {}
+  };
+
   return (
     <div className="min-h-screen flex bg-[#FAF7F2] font-sans antialiased text-stone-900 print:bg-white print:block">
+      {/* 0. Subscription Paywall Guard (Active if pending payment) */}
+      {isPendingPayment && <SubscriptionPaywallModal />}
+
+      {/* 0.1 Welcome Celebration Modal on First Payment / Activation */}
+      {showWelcomeModal && !isPendingPayment && (
+        <WelcomeCelebrationModal user={currentUser} onClose={handleCloseWelcomeModal} />
+      )}
+
       {/* 1. AdminLTE Dark Sidebar (Hidden on Print) */}
       <div className="print:hidden no-print self-start sticky top-0 h-screen max-h-screen z-40 shrink-0">
         <AdminLTESidebar isCollapsed={isSidebarCollapsed} />

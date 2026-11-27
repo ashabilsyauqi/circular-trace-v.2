@@ -289,13 +289,13 @@ export const MasterUsersView: React.FC = () => {
     setDeletingUser(null);
   };
 
-  if (currentUser && currentUser.role !== 'admin_kelompok_tani') {
+  if (!currentUser || currentUser.role !== 'super_admin') {
     return (
       <div className="bg-white rounded-lg border border-amber-300 p-6 shadow-sm text-center space-y-3">
         <AlertCircle className="w-10 h-10 text-amber-600 mx-auto" />
-        <h3 className="text-lg font-bold text-stone-900">Akses Terbatas: Khusus Pengurus Kelompok Tani</h3>
+        <h3 className="text-lg font-bold text-stone-900">Akses Terbatas: Khusus Super Admin CircularTrace</h3>
         <p className="text-xs text-stone-600 max-w-md mx-auto">
-          Penugasan akun dan manajemen master users hanya dapat diakses oleh Admin Kelompok Tani.
+          Manajemen master users dan akun ekosistem hanya dapat diakses secara eksklusif oleh Super Admin CircularTrace.
         </p>
         <Link
           to="/admin/overview"

@@ -20,6 +20,46 @@ import {
 } from './mockTegalSariData';
 
 export const MOCK_USERS: AppUser[] = [
+  // --- 0. ADMIN KELOMPOK TANI KINTAMANI (Ashabil Syauqi) ---
+  {
+    id: 'user-ashabil-koptan',
+    name: 'Ashabil Syauqi',
+    email: 'ashabil@kopi.com',
+    password: 'password123',
+    role: 'admin_kelompok_tani',
+    kelompokTaniId: 'POKTAN-BALI-572991',
+    kelompokTaniName: 'Kelompok Tani Tegal Sari (Kintamani)',
+    organization: 'Kelompok Tani Tegal Sari (ID: 572991)',
+    location: 'Desa Awan, Kec. Kintamani, Kab. Bangli, Bali',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    phone: '0812-3456-7890',
+    balance: 50000000,
+    status: 'active',
+    subscriptionStatus: 'active',
+    registeredAt: '2026-11-26',
+    bio: 'Ketua Kelompok Tani Kintamani (ID SIMLUHTAN: 572991) - Membawahi 22 petani kopi Arabika Kintamani dengan terroir vulkanik Gunung Batur.',
+  },
+
+  // --- 0. ADMIN KELOMPOK TANI KINTAMANI (Novizar) ---
+  {
+    id: 'user-novizar-koptan',
+    name: 'Novizar',
+    email: 'novizarnazir25@gmail.com',
+    password: 'password123',
+    role: 'admin_kelompok_tani',
+    kelompokTaniId: 'POKTAN-BALI-572991',
+    kelompokTaniName: 'Kelompok Tani Tegal Sari (Kintamani)',
+    organization: 'Kelompok Tani Tegal Sari (ID: 572991)',
+    location: 'Desa Awan, Kec. Kintamani, Kab. Bangli, Bali',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    phone: '0812-3456-7890',
+    balance: 50000000,
+    status: 'active',
+    subscriptionStatus: 'active',
+    registeredAt: '2026-11-26',
+    bio: 'Pengurus Kelompok Tani Kintamani (ID SIMLUHTAN: 572991).',
+  },
+
   // --- 0. ADMIN KELOMPOK TANI TEGAL SARI (Kintamani, Bali) ---
   TEGAL_SARI_ADMIN,
 

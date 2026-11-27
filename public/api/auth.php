@@ -15,7 +15,7 @@ if ($action === 'verify-email') {
         sendError('Token verifikasi wajib disertakan.', 400);
     }
 
-    $stmt = $pdo->prepare("SELECT `id`, `name`, `email`, `role`, `verifier_domain` as verifierDomain, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status` as verificationStatus, `kelompok_tani_id` as kelompokTaniId, `kelompok_tani_name` as kelompokTaniName, `email_verification_token`, `email_verification_expires_at`, `is_email_verified` FROM `users` WHERE `email_verification_token` = :token LIMIT 1");
+    $stmt = $pdo->prepare("SELECT `id`, `name`, `email`, `role`, `verifier_domain` as verifierDomain, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status` as verificationStatus, `kelompok_tani_id` as kelompokTaniId, `kelompok_tani_name` as kelompokTaniName, `email_verification_token`, `email_verification_expires_at`, `is_email_verified`, `subscription_status` as subscriptionStatus, `subscription_plan` as subscriptionPlan, `subscription_expires_at` as subscriptionExpiresAt FROM `users` WHERE `email_verification_token` = :token LIMIT 1");
     $stmt->execute(['token' => $token]);
     $user = $stmt->fetch();
 
@@ -82,7 +82,7 @@ if ($method === 'POST') {
             sendError('Email dan password wajib diisi.', 400);
         }
 
-        $stmt = $pdo->prepare("SELECT `id`, `name`, `email`, `password`, `role`, `verifier_domain` as verifierDomain, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status` as verificationStatus, `kelompok_tani_id` as kelompokTaniId, `kelompok_tani_name` as kelompokTaniName, `verified_by` as verifiedBy, `verified_at` as verifiedAt, `verification_notes` as verificationNotes, `is_email_verified` as isEmailVerified, `status` FROM `users` WHERE `email` = :email LIMIT 1");
+        $stmt = $pdo->prepare("SELECT `id`, `name`, `email`, `password`, `role`, `verifier_domain` as verifierDomain, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status` as verificationStatus, `kelompok_tani_id` as kelompokTaniId, `kelompok_tani_name` as kelompokTaniName, `verified_by` as verifiedBy, `verified_at` as verifiedAt, `verification_notes` as verificationNotes, `is_email_verified` as isEmailVerified, `subscription_status` as subscriptionStatus, `subscription_plan` as subscriptionPlan, `subscription_billing_cycle` as subscriptionBillingCycle, `subscription_expires_at` as subscriptionExpiresAt, `last_payment_order_id` as lastPaymentOrderId, `status` FROM `users` WHERE `email` = :email LIMIT 1");
         $stmt->execute(['email' => $email]);
         $user = $stmt->fetch();
 
@@ -192,27 +192,32 @@ if ($method === 'POST') {
         $verificationToken = bin2hex(random_bytes(32));
         $verificationExpiresAt = date('Y-m-d H:i:s', strtotime('+24 hours'));
 
+        // Commercial services require subscription payment (pending_payment until Midtrans settlement)
+        $isPaidService = in_array($role, ['admin_kelompok_tani', 'gudang', 'roaster', 'cafe']);
+        $subscriptionStatus = $isPaidService ? 'pending_payment' : 'active';
+
         $stmt = $pdo->prepare("INSERT INTO `users` 
-            (`id`, `name`, `email`, `password`, `role`, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status`, `kelompok_tani_id`, `kelompok_tani_name`, `email_verification_token`, `email_verification_expires_at`, `is_email_verified`, `status`) 
+            (`id`, `name`, `email`, `password`, `role`, `organization`, `location`, `avatar`, `phone`, `balance`, `bio`, `verification_status`, `kelompok_tani_id`, `kelompok_tani_name`, `email_verification_token`, `email_verification_expires_at`, `is_email_verified`, `subscription_status`, `status`) 
             VALUES 
-            (:id, :name, :email, :password, :role, :org, :location, :avatar, :phone, 0, :bio, :vstatus, :ktid, :ktname, :token, :expires, 0, 'active')");
+            (:id, :name, :email, :password, :role, :org, :location, :avatar, :phone, 0, :bio, :vstatus, :ktid, :ktname, :token, :expires, 0, :sub_status, 'active')");
         
         $stmt->execute([
-            'id'       => $id,
-            'name'     => $name,
-            'email'    => $email,
-            'password' => $hashedPassword,
-            'role'     => $role,
-            'org'      => $org,
-            'location' => $location,
-            'avatar'   => $avatar,
-            'phone'    => $phone,
-            'bio'      => $bio,
-            'vstatus'  => $verificationStatus,
-            'ktid'     => $kelompokTaniId ?: null,
-            'ktname'   => $kelompokTaniName ?: null,
-            'token'    => $verificationToken,
-            'expires'  => $verificationExpiresAt
+            'id'         => $id,
+            'name'       => $name,
+            'email'      => $email,
+            'password'   => $hashedPassword,
+            'role'       => $role,
+            'org'        => $org,
+            'location'   => $location,
+            'avatar'     => $avatar,
+            'phone'      => $phone,
+            'bio'        => $bio,
+            'vstatus'    => $verificationStatus,
+            'ktid'       => $kelompokTaniId ?: null,
+            'ktname'     => $kelompokTaniName ?: null,
+            'token'      => $verificationToken,
+            'expires'    => $verificationExpiresAt,
+            'sub_status' => $subscriptionStatus
         ]);
 
         // Construct verification URL
@@ -236,6 +241,7 @@ if ($method === 'POST') {
             'balance'                   => 0,
             'bio'                       => $bio,
             'verificationStatus'        => $verificationStatus,
+            'subscriptionStatus'        => $subscriptionStatus,
             'kelompokTaniId'            => $kelompokTaniId,
             'kelompokTaniName'          => $kelompokTaniName,
             'isEmailVerified'           => false,
@@ -244,7 +250,7 @@ if ($method === 'POST') {
             'mailResult'                => $mailResult,
             'message'                   => $verificationStatus === 'pending'
                 ? 'Pendaftaran berhasil. Akun Anda sedang menunggu persetujuan Ketua Kelompok Tani dan verifikasi email.'
-                : 'Pendaftaran berhasil. Silakan periksa email Anda untuk mengaktifkan akun.'
+                : 'Pendaftaran berhasil. Silakan selesaikan pembayaran untuk mengaktifkan akun.'
         ], 201);
     }
 

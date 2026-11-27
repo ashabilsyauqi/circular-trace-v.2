@@ -351,12 +351,6 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                       Control Tower
                     </Link>
                     <Link
-                      to="/admin/users"
-                      className="hover:text-amber-800 transition-colors"
-                    >
-                      Master Users
-                    </Link>
-                    <Link
                       to="/admin/forms"
                       className="text-amber-800 font-bold hover:text-amber-950 transition-colors flex items-center gap-1 bg-amber-100/70 hover:bg-amber-100 px-2 py-1 rounded-md border border-amber-300"
                     >
@@ -511,14 +505,25 @@ export const AdminLTENavbar: React.FC<AdminLTENavbarProps> = ({
                   </div>
 
                 <div className="p-2 space-y-1">
-                  <Link
-                    to="/admin/users"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-50 font-medium transition-colors"
-                  >
-                    <User className="w-4 h-4 text-stone-400" />
-                    <span>Kelola Master Users</span>
-                  </Link>
+                  {currentUser?.role === 'super_admin' ? (
+                    <Link
+                      to="/admin/users"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-50 font-medium transition-colors"
+                    >
+                      <User className="w-4 h-4 text-stone-400" />
+                      <span>Kelola Master Users</span>
+                    </Link>
+                  ) : currentUser?.role === 'admin_kelompok_tani' ? (
+                    <Link
+                      to="/admin/petani"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-50 font-medium transition-colors"
+                    >
+                      <User className="w-4 h-4 text-emerald-600" />
+                      <span>Data Master Petani</span>
+                    </Link>
+                  ) : null}
 
                   <button
                     onClick={handleLogout}

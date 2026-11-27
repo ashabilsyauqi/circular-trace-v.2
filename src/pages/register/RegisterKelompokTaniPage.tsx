@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
+import { RegisterPaymentPlanBox } from '../../components/register/RegisterPaymentPlanBox';
+import { requestSnapToken, triggerSnapCheckout } from '../../services/midtransService';
 import {
   Building2,
   Sprout,
@@ -22,11 +24,18 @@ import {
   Layers,
   Award,
   Compass,
+  CreditCard,
+  Clock,
+  Zap,
 } from 'lucide-react';
+
+import { InlineSandboxPaymentSection } from '../../components/register/InlineSandboxPaymentSection';
 
 export const RegisterKelompokTaniPage: React.FC = () => {
   const navigate = useNavigate();
-  const { registerUser, currentUser } = useCoffee();
+  const [searchParams] = useSearchParams();
+  const initialPlan = searchParams.get('plan') === 'yearly' ? 'yearly' : 'monthly';
+  const { registerUser, activateUserSubscription, currentUser, login } = useCoffee();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -36,6 +45,7 @@ export const RegisterKelompokTaniPage: React.FC = () => {
   }, [currentUser, navigate]);
 
   // Form states
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(initialPlan);
   const [kelompokTaniName, setKelompokTaniName] = useState('');
   const [sentraRegion, setSentraRegion] = useState('');
   const [farmerCountEstimate, setFarmerCountEstimate] = useState('20 - 50');
@@ -51,8 +61,14 @@ export const RegisterKelompokTaniPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registeredData, setRegisteredData] = useState<{
     email: string;
+    password: string;
     name: string;
     org: string;
+    orderId?: string;
+    snapToken?: string;
+    isPaid?: boolean;
+    billingCycle?: 'monthly' | 'yearly';
+    amount?: number;
     verificationToken?: string;
     verificationLink?: string;
   } | null>(null);
@@ -97,10 +113,37 @@ export const RegisterKelompokTaniPage: React.FC = () => {
           bio: bioText,
         });
 
+        let orderId = '';
+        let snapToken = '';
+
+        try {
+          const snapRes = await requestSnapToken({
+            userId: result?.user?.id,
+            userEmail: email.trim().toLowerCase(),
+            userName: leaderName.trim(),
+            userPhone: phone.trim() || '0812-3456-7890',
+            serviceRole: 'admin_kelompok_tani',
+            billingCycle: billingCycle,
+          });
+
+          orderId = snapRes.orderId;
+          snapToken = snapRes.snapToken;
+        } catch (snapErr) {
+          console.warn('Gagal memproses sesi token Midtrans:', snapErr);
+          orderId = `CCT-KEL-${Date.now()}`;
+        }
+
+        const calculatedAmount = billingCycle === 'yearly' ? 2500000 : 250000;
+
         setRegisteredData({
           email: email.trim().toLowerCase(),
+          password: password,
           name: leaderName.trim(),
           org: kelompokTaniName.trim(),
+          orderId: orderId,
+          snapToken: snapToken,
+          billingCycle: billingCycle,
+          amount: calculatedAmount,
           verificationToken: result?.verificationToken,
           verificationLink: result?.verificationLink,
         });
@@ -111,6 +154,29 @@ export const RegisterKelompokTaniPage: React.FC = () => {
       setErrorMsg(err?.message || 'Gagal melakukan pendaftaran akun Kelompok Tani.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentSuccess = async () => {
+    if (!registeredData) return;
+    try {
+      if (activateUserSubscription && registeredData.email) {
+        await activateUserSubscription(registeredData.email, registeredData.orderId);
+      }
+      try {
+        sessionStorage.setItem('cct_show_welcome_modal', 'true');
+      } catch (_) {}
+
+      if (login) {
+        const loginRes = login(registeredData.email, registeredData.password);
+        if (loginRes.success) {
+          return;
+        }
+      }
+      navigate('/admin/overview');
+    } catch (e) {
+      console.error('Error on auto-login after payment:', e);
+      navigate('/admin/overview');
     }
   };
 
@@ -179,63 +245,20 @@ export const RegisterKelompokTaniPage: React.FC = () => {
       <main className="w-full py-8 sm:py-12 flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {isSuccess && registeredData ? (
-            /* Success State */
-            <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-[#E6DFD5] shadow-lg p-8 sm:p-12 text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
-              <div className="w-20 h-20 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto ring-8 ring-emerald-50 shadow-sm">
-                <CheckCircle2 className="w-10 h-10 stroke-[2.2]" />
-              </div>
-
-              <div className="space-y-2">
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Pendaftaran Kelompok Tani Berhasil
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
-                  Selamat Datang di CircularCoffee
-                </h2>
-                <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
-                  Organisasi <strong className="text-stone-900">{registeredData.org}</strong> telah terdaftar. Anda dapat langsung mengelola petani binaan, pengolahan, dan audit mutu.
-                </p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-[#F8F5F0] border border-[#E6DFD5] text-left space-y-2.5 text-xs">
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-                  <span className="text-stone-500">Nama Organisasi:</span>
-                  <span className="font-bold text-stone-900">{registeredData.org}</span>
-                </div>
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-                  <span className="text-stone-500">Ketua / PIC:</span>
-                  <span className="font-bold text-stone-900">{registeredData.name}</span>
-                </div>
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-                  <span className="text-stone-500">Email Akun:</span>
-                  <span className="font-bold text-stone-900 font-mono">{registeredData.email}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500">Paket Bundle:</span>
-                  <span className="font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-                    3-in-1 (Petani, Pengolah &amp; Verifikator)
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigate('/login')}
-                  className="flex-1 py-3.5 px-6 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>Masuk ke Panel Kelompok Tani</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <Link
-                  to="/"
-                  className="py-3.5 px-6 rounded-xl border border-stone-300 text-stone-700 hover:bg-white font-bold text-xs sm:text-sm transition-all block text-center"
-                >
-                  Ke Beranda
-                </Link>
-              </div>
-            </div>
+            /* Inline Midtrans Sandbox Payment Step (NO POPUPS) */
+            <InlineSandboxPaymentSection
+              userEmail={registeredData.email}
+              userName={registeredData.name}
+              organizationName={registeredData.org}
+              orderId={registeredData.orderId || `CCT-KEL-${Date.now()}`}
+              snapToken={registeredData.snapToken}
+              planRole="admin_kelompok_tani"
+              planName="Bundle 3-in-1 Kelompok Tani"
+              billingCycle={registeredData.billingCycle || 'monthly'}
+              amount={registeredData.amount || 250000}
+              onPaymentSuccess={handlePaymentSuccess}
+              onBackToForm={() => setIsSuccess(false)}
+            />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* LEFT COLUMN: FORM INPUTS (7 OF 12) */}
@@ -423,27 +446,37 @@ export const RegisterKelompokTaniPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* 7. Pilihan Siklus Pembayaran & Midtrans Plan Box */}
+                  <div className="pt-2">
+                    <RegisterPaymentPlanBox
+                      role="admin_kelompok_tani"
+                      billingCycle={billingCycle}
+                      onChangeCycle={setBillingCycle}
+                    />
+                  </div>
+
                   {/* Submit CTA */}
                   <div className="pt-2">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Mendaftarkan Kelompok Tani...</span>
+                          <span>Mempersiapkan Pembayaran Midtrans...</span>
                         </>
                       ) : (
                         <>
-                          <span>Daftarkan Kelompok Tani Sekarang</span>
+                          <CreditCard className="w-4 h-4" />
+                          <span>Daftar &amp; Bayar Sekarang (Midtrans Snap)</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
                     </button>
                     <p className="text-[11px] text-stone-500 text-center mt-2.5">
-                      Dengan mendaftar, Anda menyetujui Ketentuan Layanan &amp; Kebijakan Privasi CircularCoffee.
+                      Transaksi diproses langsung secara instan &amp; aman melalui <strong>Midtrans Sandbox</strong>.
                     </p>
                   </div>
                 </form>

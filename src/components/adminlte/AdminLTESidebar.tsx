@@ -93,6 +93,43 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   const cafeUsersCount = (users || []).filter((u) => u.role === 'cafe').length;
   const verifikatorUsersCount = (users || []).filter((u) => u.role === 'verifikator').length;
 
+  // Scoped farmers, farms, and lots for tenant isolation
+  const scopedFarmers = (users || []).filter((u) => {
+    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
+    if (!isFarmer) return false;
+    if (isSuperAdmin) return true;
+
+    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
+    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+    const isSameId = Boolean(
+      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
+      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
+    );
+
+    const userOrg = (currentUser?.organization || currentUser?.kelompokTaniName || '').trim().toLowerCase();
+    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
+    const userLoc = (currentUser?.location || '').trim().toLowerCase();
+    const farmerLoc = (u.location || '').trim().toLowerCase();
+
+    const isSameOrg = Boolean(
+      (userOrg && farmerOrg && (farmerOrg === userOrg || farmerOrg.includes(userOrg) || userOrg.includes(farmerOrg))) ||
+      (userOrg.includes('kintamani') && (farmerOrg.includes('kintamani') || farmerLoc.includes('kintamani') || farmerOrg.includes('tegal sari'))) ||
+      (userLoc.includes('kintamani') && (farmerLoc.includes('kintamani') || farmerOrg.includes('kintamani') || farmerOrg.includes('tegal sari'))) ||
+      (currentUser?.email?.toLowerCase() === 'ashabil@kopi.com' && (farmerKtId === 'poktan-bali-572991' || farmerOrg.includes('tegal sari') || farmerLoc.includes('kintamani')))
+    );
+    return isSameOrg || isSameId;
+  });
+
+  const scopedFarms = (coffeeFarms || []).filter((f) => {
+    if (isSuperAdmin) return true;
+    return scopedFarmers.some((farmer) => farmer.id === f.farmerId);
+  });
+
+  const scopedLots = (farmerLots || []).filter((lot) => {
+    if (isSuperAdmin) return true;
+    return scopedFarmers.some((farmer) => farmer.id === lot.farmerId);
+  });
+
   const getHomePath = () => {
     switch (userRole) {
       case 'super_admin':
@@ -630,58 +667,6 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
               </NavLink>
 
               <NavLink
-                to="/admin/users"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
-                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
-                  }`
-                }
-                title="Master Users"
-              >
-                {({ isActive }) => (
-                  <>
-                    <Users className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
-                    {!isCollapsed && <span className="flex-1 truncate">Master Users</span>}
-                    {!isCollapsed && (
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
-                        isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-emerald-700/80 text-emerald-100'
-                      }`}>
-                        {users.length}
-                      </span>
-                    )}
-                  </>
-                )}
-              </NavLink>
-
-              <NavLink
-                to="/admin/superadmin/packages"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black shadow-md shadow-amber-950/30'
-                      : 'text-stone-300 hover:bg-stone-800/80 hover:text-white'
-                  }`
-                }
-                title="Paket Layanan SaaS & Lisensi Fitur"
-              >
-                {({ isActive }) => (
-                  <>
-                    <Package className={`w-4 h-4 shrink-0 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
-                    {!isCollapsed && <span className="flex-1 truncate">Paket Layanan SaaS</span>}
-                    {!isCollapsed && (
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
-                        isActive ? 'bg-stone-950/20 text-stone-950' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
-                      }`}>
-                        Lisensi
-                      </span>
-                    )}
-                  </>
-                )}
-              </NavLink>
-
-              <NavLink
                 to="/admin/forms"
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 ${
@@ -749,7 +734,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                   {!isCollapsed && (
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-[9px] px-1.5 py-0.2 rounded-full text-white font-bold bg-emerald-600">
-                        {farmerLots.length}
+                        {scopedLots.length}
                       </span>
                       <button
                         type="button"
@@ -777,21 +762,21 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                         to: '/admin/petani',
                         label: 'Data Master Petani',
                         icon: Users,
-                        badge: users.filter((u) => u.role === 'petani' || u.assignedService === 'petani').length,
+                        badge: scopedFarmers.length,
                         isActive: location.pathname.startsWith('/admin/petani'),
                       },
                       {
                         to: '/admin/kebun',
                         label: 'Data Master Kebun',
                         icon: TreePine,
-                        badge: `${coffeeFarms.length} Blok`,
+                        badge: `${scopedFarms.length} Blok`,
                         isActive: location.pathname.startsWith('/admin/kebun'),
                       },
                       {
                         to: '/admin/panen',
                         label: 'Data Hasil Panen',
                         icon: Package,
-                        badge: `${farmerLots.length} Lot`,
+                        badge: `${scopedLots.length} Lot`,
                         isActive: location.pathname.startsWith('/admin/panen'),
                       },
                       {

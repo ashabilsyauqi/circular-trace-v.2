@@ -64,6 +64,7 @@ export const RegisterCoffeeShopPage: React.FC = () => {
     org: string;
     orderId?: string;
     snapToken?: string;
+    redirectUrl?: string;
     isPaid?: boolean;
     billingCycle?: 'monthly' | 'yearly';
     amount?: number;
@@ -113,6 +114,7 @@ export const RegisterCoffeeShopPage: React.FC = () => {
 
         let orderId = '';
         let snapToken = '';
+        let redirectUrl = '';
 
         try {
           const snapRes = await requestSnapToken({
@@ -126,6 +128,7 @@ export const RegisterCoffeeShopPage: React.FC = () => {
 
           orderId = snapRes.orderId;
           snapToken = snapRes.snapToken;
+          redirectUrl = snapRes.redirectUrl || '';
         } catch (snapErr) {
           console.warn('Gagal memproses sesi token Midtrans:', snapErr);
           orderId = `CCT-CFE-${Date.now()}`;
@@ -140,6 +143,7 @@ export const RegisterCoffeeShopPage: React.FC = () => {
           org: cafeName.trim(),
           orderId: orderId,
           snapToken: snapToken,
+          redirectUrl: redirectUrl,
           billingCycle: billingCycle,
           amount: calculatedAmount,
           verificationToken: result?.verificationToken,
@@ -250,6 +254,7 @@ export const RegisterCoffeeShopPage: React.FC = () => {
               organizationName={registeredData.org}
               orderId={registeredData.orderId || `CCT-CFE-${Date.now()}`}
               snapToken={registeredData.snapToken}
+              redirectUrl={registeredData.redirectUrl}
               planRole="cafe"
               planName="Coffee Shop & Barista Passport"
               billingCycle={registeredData.billingCycle || 'monthly'}

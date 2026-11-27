@@ -66,6 +66,7 @@ export const RegisterKelompokTaniPage: React.FC = () => {
     org: string;
     orderId?: string;
     snapToken?: string;
+    redirectUrl?: string;
     isPaid?: boolean;
     billingCycle?: 'monthly' | 'yearly';
     amount?: number;

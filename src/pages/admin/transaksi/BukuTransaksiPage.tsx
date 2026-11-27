@@ -20,13 +20,18 @@ import {
   Package,
   X,
 } from 'lucide-react';
+import { getScopedTenantData } from '../../../utils/tenantScoping';
 
 export const BukuTransaksiPage: React.FC = () => {
-  const { currentUser, sellerOrders } = useCoffee();
+  const { currentUser, users, sellerOrders } = useCoffee();
 
-  // Scope filter: 'my' (Penjualan Akun Ini) vs 'all' (Seluruh Ekosistem Marketplace)
-  const isInternalAdmin = currentUser?.role === 'admin_kelompok_tani';
-  const [scopeFilter, setScopeFilter] = useState<'my' | 'all'>(isInternalAdmin ? 'all' : 'my');
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const [scopeFilter, setScopeFilter] = useState<'my' | 'all'>('my');
+
+  // Scoped members for multi-tenant isolation
+  const { scopedFarmers, scopedProcessors } = useMemo(() => {
+    return getScopedTenantData(currentUser, { users });
+  }, [currentUser, users]);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,23 +53,34 @@ export const BukuTransaksiPage: React.FC = () => {
     return sellerOrders;
   }, [sellerOrders, statusViewMode]);
 
-  // Filter by user involvement (if scopeFilter is 'my')
+  // Filter by user / tenant involvement
   const scopedOrders = useMemo(() => {
-    if (scopeFilter === 'all' || !currentUser) {
+    if (scopeFilter === 'all' && isSuperAdmin) {
       return baseOrders;
     }
+    if (!currentUser) return [];
+
+    const userOrg = (currentUser.organization || currentUser.kelompokTaniName || '').toLowerCase();
+    const userName = (currentUser.name || '').toLowerCase();
+
     return baseOrders.filter((o) => {
       const isSeller =
         o.sellerId === currentUser.id ||
         o.sellerRole === currentUser.role ||
-        (o.sellerName && o.sellerName.toLowerCase().includes(currentUser.name.toLowerCase()));
+        (o.sellerName && (o.sellerName.toLowerCase().includes(userName) || (userOrg && o.sellerName.toLowerCase().includes(userOrg)))) ||
+        (o.sellerOrganization && userOrg && o.sellerOrganization.toLowerCase().includes(userOrg)) ||
+        scopedFarmers.some((f) => f.id === o.sellerId || (o.sellerName && f.name.toLowerCase() === o.sellerName.toLowerCase())) ||
+        scopedProcessors.some((p) => p.id === o.sellerId || (o.sellerName && p.name.toLowerCase() === o.sellerName.toLowerCase()));
+
       const isBuyer =
         o.buyerId === currentUser.id ||
         o.buyerRole === currentUser.role ||
-        (o.buyerName && o.buyerName.toLowerCase().includes(currentUser.name.toLowerCase()));
+        (o.buyerName && (o.buyerName.toLowerCase().includes(userName) || (userOrg && o.buyerName.toLowerCase().includes(userOrg)))) ||
+        (o.buyerOrganization && userOrg && o.buyerOrganization.toLowerCase().includes(userOrg));
+
       return isSeller || isBuyer;
     });
-  }, [baseOrders, scopeFilter, currentUser]);
+  }, [baseOrders, scopeFilter, currentUser, isSuperAdmin, scopedFarmers, scopedProcessors]);
 
   // Filter by search, category, and date
   const filteredOrders = useMemo(() => {
@@ -409,19 +425,21 @@ export const BukuTransaksiPage: React.FC = () => {
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
               }`}
             >
-              Penjualan Saya ({currentUser?.name?.split(' ')[0] || 'Toko'})
+              Penjualan Akun ({currentUser?.name?.split(' ')[0] || 'Unit'})
             </button>
-            <button
-              type="button"
-              onClick={() => setScopeFilter('all')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                scopeFilter === 'all'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-              }`}
-            >
-              Semua Penjualan Marketplace
-            </button>
+            {isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => setScopeFilter('all')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                  scopeFilter === 'all'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
+              >
+                Semua Penjualan Platform (Super Admin)
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2 text-xs">

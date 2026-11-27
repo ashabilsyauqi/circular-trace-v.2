@@ -115,9 +115,9 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
   const scopedFarms = useMemo(() => {
     return (coffeeFarms || []).filter((f) => {
       if (isSuperAdmin) return true;
-      return scopedFarmers.some((farmer) => farmer.id === f.farmerId);
+      return scopedFarmers.some((farmer) => farmer.id === f.farmerId) || f.farmerId === currentUser?.id;
     });
-  }, [coffeeFarms, scopedFarmers, isSuperAdmin]);
+  }, [coffeeFarms, scopedFarmers, currentUser, isSuperAdmin]);
 
   // Selected farm selection
   const [selectedFarmId, setSelectedFarmId] = useState<string>(

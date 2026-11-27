@@ -45,10 +45,12 @@ import {
   Globe,
 } from 'lucide-react';
 import { UploadProductModal } from '../../../components/seller/UploadProductModal';
+import { getScopedTenantData } from '../../../utils/tenantScoping';
 
 export const MarketplaceSellerPanelPage: React.FC = () => {
   const {
     currentUser,
+    users,
     sellerOrders,
     acceptSellerOrder,
     shipSellerOrder,
@@ -87,18 +89,45 @@ export const MarketplaceSellerPanelPage: React.FC = () => {
   const [cancelingOrder, setCancelingOrder] = useState<SellerOrder | null>(null);
   const [cancelReasonInput, setCancelReasonInput] = useState('Stok kemasan tidak mencukupi / gagal QC');
 
-  // Filter orders that belong to the current user (or show all if admin)
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  // Multi-tenant scoped data for this account
+  const {
+    scopedFarmers,
+    scopedProcessors,
+    scopedLots,
+    scopedProcessedLots,
+  } = useMemo(() => {
+    return getScopedTenantData(currentUser, {
+      users,
+      farmerLots,
+      processedLots,
+    });
+  }, [currentUser, users, farmerLots, processedLots]);
+
+  // Filter orders that belong to the current user / tenant
   const userOrders = useMemo(() => {
-    if (!currentUser || currentUser.role === 'admin_kelompok_tani') {
+    if (isSuperAdmin) {
       return sellerOrders;
     }
-    return sellerOrders.filter(
-      (o) =>
-        o.sellerId === currentUser.id ||
-        o.sellerRole === currentUser.role ||
-        (o.sellerName && o.sellerName.toLowerCase().includes(currentUser.name.toLowerCase()))
-    );
-  }, [sellerOrders, currentUser]);
+    if (!currentUser) return [];
+
+    const userOrg = (currentUser.organization || currentUser.kelompokTaniName || '').toLowerCase();
+    const userName = (currentUser.name || '').toLowerCase();
+
+    return sellerOrders.filter((o) => {
+      // Direct seller match
+      if (o.sellerId === currentUser.id || o.sellerRole === currentUser.role) return true;
+      if (o.sellerName && (o.sellerName.toLowerCase().includes(userName) || (userOrg && o.sellerName.toLowerCase().includes(userOrg)))) return true;
+      if (o.sellerOrganization && userOrg && o.sellerOrganization.toLowerCase().includes(userOrg)) return true;
+
+      // Scoped members match
+      const matchesFarmer = scopedFarmers.some((f) => f.id === o.sellerId || (o.sellerName && f.name.toLowerCase() === o.sellerName.toLowerCase()));
+      const matchesProcessor = scopedProcessors.some((p) => p.id === o.sellerId || (o.sellerName && p.name.toLowerCase() === o.sellerName.toLowerCase()));
+
+      return matchesFarmer || matchesProcessor;
+    });
+  }, [sellerOrders, currentUser, isSuperAdmin, scopedFarmers, scopedProcessors]);
 
   // Tab filtered orders
   const displayedOrders = useMemo(() => {
@@ -115,17 +144,35 @@ export const MarketplaceSellerPanelPage: React.FC = () => {
     });
   }, [userOrders, orderStatusFilter, orderSearchQuery]);
 
-  // Active listings belonging to this seller
+  // Active listings belonging to this seller / tenant
   const activeListings = useMemo(() => {
-    if (!currentUser || currentUser.role === 'admin_kelompok_tani') {
+    if (isSuperAdmin) {
       return unifiedMarketplaceItems;
     }
-    return unifiedMarketplaceItems.filter(
-      (item) =>
-        item.sellerRole === currentUser.role ||
-        (item.sellerName && item.sellerName.toLowerCase().includes(currentUser.name.toLowerCase()))
-    );
-  }, [unifiedMarketplaceItems, currentUser]);
+    if (!currentUser) return [];
+
+    const userOrg = (currentUser.organization || currentUser.kelompokTaniName || '').toLowerCase();
+    const userName = (currentUser.name || '').toLowerCase();
+
+    return unifiedMarketplaceItems.filter((item) => {
+      // Direct seller match
+      if (item.sellerName && (item.sellerName.toLowerCase().includes(userName) || (userOrg && item.sellerName.toLowerCase().includes(userOrg)))) return true;
+      if (item.sellerOrg && userOrg && item.sellerOrg.toLowerCase().includes(userOrg)) return true;
+      if (item.sourceKelompokTaniName && userOrg && item.sourceKelompokTaniName.toLowerCase().includes(userOrg)) return true;
+
+      // Source lots match via rawItem
+      const rawId = item.rawItem?.id;
+      if (rawId && (scopedLots.some((l) => l.id === rawId) || scopedProcessedLots.some((p) => p.id === rawId))) {
+        return true;
+      }
+
+      // Member seller match
+      const matchesFarmer = scopedFarmers.some((f) => item.sellerName && f.name.toLowerCase() === item.sellerName.toLowerCase());
+      const matchesProcessor = scopedProcessors.some((p) => item.sellerName && p.name.toLowerCase() === item.sellerName.toLowerCase());
+
+      return matchesFarmer || matchesProcessor;
+    });
+  }, [unifiedMarketplaceItems, currentUser, isSuperAdmin, scopedLots, scopedProcessedLots, scopedFarmers, scopedProcessors]);
 
   // Internal lots ready for release / Deploy Ready Drafts
   const readyDeployLots = useMemo(() => {
@@ -142,8 +189,8 @@ export const MarketplaceSellerPanelPage: React.FC = () => {
       photoUrl: string;
     }[] = [];
 
-    // Roaster lots
-    if (!currentUser || currentUser.role === 'admin_kelompok_tani' || currentUser.role === 'roaster') {
+    // Roaster lots (only for super_admin or roaster)
+    if (isSuperAdmin || currentUser?.role === 'roaster') {
       roastedLots.forEach((l) => {
         if (l.roastStatus !== 'cupping_pending' && (l.availablePacks || 0) > 0) {
           list.push({
@@ -162,8 +209,8 @@ export const MarketplaceSellerPanelPage: React.FC = () => {
       });
     }
 
-    // Warehouse lots
-    if (!currentUser || currentUser.role === 'admin_kelompok_tani' || currentUser.role === 'gudang') {
+    // Warehouse lots (only for super_admin or gudang)
+    if (isSuperAdmin || currentUser?.role === 'gudang') {
       warehouseLots.forEach((l) => {
         if (l.sortingStatus !== 'pending_sorting' && (l.availableWeightKg || 0) > 0) {
           list.push({
@@ -182,9 +229,10 @@ export const MarketplaceSellerPanelPage: React.FC = () => {
       });
     }
 
-    // Processor lots
-    if (!currentUser || currentUser.role === 'admin_kelompok_tani' || currentUser.role === 'pengolah') {
-      processedLots.forEach((l) => {
+    // Processor lots (scoped to tenant's processors or if super_admin / pengolah)
+    if (isSuperAdmin || currentUser?.role === 'admin_kelompok_tani' || currentUser?.role === 'pengolah') {
+      const targetProcessedLots = isSuperAdmin ? processedLots : scopedProcessedLots;
+      targetProcessedLots.forEach((l) => {
         if ((l.availableWeightKg || 0) > 0) {
           list.push({
             id: l.id,
@@ -202,9 +250,10 @@ export const MarketplaceSellerPanelPage: React.FC = () => {
       });
     }
 
-    // Farmer lots (for KT admin or farmer)
-    if (!currentUser || currentUser.role === 'admin_kelompok_tani' || currentUser.role === 'petani') {
-      farmerLots.forEach((l) => {
+    // Farmer lots (scoped to tenant's farmers or if super_admin / petani / KT)
+    if (isSuperAdmin || currentUser?.role === 'admin_kelompok_tani' || currentUser?.role === 'petani') {
+      const targetFarmerLots = isSuperAdmin ? farmerLots : scopedLots;
+      targetFarmerLots.forEach((l) => {
         if ((l.availableWeightKg || 0) > 0) {
           list.push({
             id: l.id,
@@ -223,7 +272,16 @@ export const MarketplaceSellerPanelPage: React.FC = () => {
     }
 
     return list;
-  }, [roastedLots, warehouseLots, processedLots, farmerLots, currentUser]);
+  }, [
+    roastedLots,
+    warehouseLots,
+    processedLots,
+    farmerLots,
+    scopedLots,
+    scopedProcessedLots,
+    currentUser,
+    isSuperAdmin,
+  ]);
 
   // ==============================================================
   // FINANCIAL & SALES KPI CALCULATIONS

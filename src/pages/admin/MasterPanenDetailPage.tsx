@@ -24,25 +24,29 @@ import {
   Lock,
 } from 'lucide-react';
 import { FarmerBarcodeModal } from '../../components/FarmerBarcodeModal';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 
 export const MasterPanenDetailPage: React.FC = () => {
   const { lotId } = useParams<{ lotId?: string }>();
   const {
     farmerLots,
     coffeeFarms,
+    users,
+    currentUser,
     toggleReleaseHarvestLotToMarketplace,
     sendHarvestLotToProcessor,
   } = useCoffee();
 
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
 
-  const lot = farmerLots.find((l) => l.id === lotId);
+  const { scopedLots, scopedFarms } = getScopedTenantData(currentUser, { users, farmerLots, coffeeFarms });
+  const lot = scopedLots.find((l) => l.id === lotId);
 
   if (!lot) {
     return <Navigate to="/admin/panen" replace />;
   }
 
-  const relatedFarm = coffeeFarms.find((f) => f.id === lot.farmId);
+  const relatedFarm = scopedFarms.find((f) => f.id === lot.farmId);
   const isReleased = Boolean(lot.isReleasedToMarketplace);
 
   return (

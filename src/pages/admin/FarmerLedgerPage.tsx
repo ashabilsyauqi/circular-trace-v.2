@@ -14,22 +14,26 @@ import {
   ChevronRight,
   Printer,
 } from 'lucide-react';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 
 export const FarmerLedgerPage: React.FC = () => {
   const { transactions, currentUser, users, openBlankoModal } = useCoffee();
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Transactions relating to farmers (either sold from farmer or purchase of cherry)
-  const cherryTransactions = transactions.filter(
-    (t) =>
-      t.itemName.toLowerCase().includes('ceri') ||
-      t.itemName.toLowerCase().includes('cherry') ||
-      t.fromRole === 'petani' ||
-      t.toRole === 'pengolah'
-  );
+  // Tenant-scoped transactions
+  const { isSuperAdmin, scopedTransactions } = getScopedTenantData(currentUser, { users, transactions });
 
-  const displayTransactions = cherryTransactions.length > 0 ? cherryTransactions : transactions;
+  // Transactions relating to farmers (either sold from farmer or purchase of cherry)
+  const displayTransactions = isSuperAdmin
+    ? scopedTransactions.filter(
+        (t) =>
+          t.itemName.toLowerCase().includes('ceri') ||
+          t.itemName.toLowerCase().includes('cherry') ||
+          t.fromRole === 'petani' ||
+          t.toRole === 'pengolah'
+      )
+    : scopedTransactions;
 
   const filteredTransactions = displayTransactions.filter((trx) => {
     const q = searchQuery.toLowerCase();

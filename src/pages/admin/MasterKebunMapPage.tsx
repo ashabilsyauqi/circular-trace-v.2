@@ -15,12 +15,14 @@ import {
   Users,
 } from 'lucide-react';
 import { FarmLocationMap } from '../../components/shared/FarmLocationMap';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 
 export const MasterKebunMapPage: React.FC = () => {
   const { farmId } = useParams<{ farmId?: string }>();
-  const { coffeeFarms } = useCoffee();
+  const { coffeeFarms, users, currentUser } = useCoffee();
 
-  const farm = coffeeFarms.find((f) => f.id === farmId);
+  const { scopedFarms } = getScopedTenantData(currentUser, { users, coffeeFarms });
+  const farm = scopedFarms.find((f) => f.id === farmId);
 
   if (!farm) {
     return <Navigate to="/admin/kebun" replace />;

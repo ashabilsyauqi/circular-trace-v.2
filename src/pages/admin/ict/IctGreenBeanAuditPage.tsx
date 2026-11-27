@@ -33,10 +33,13 @@ import {
   CheckSquare,
 } from 'lucide-react';
 import { ProcessorBarcodeModal } from '../../../components/ProcessorBarcodeModal';
+import { getScopedTenantData } from '../../../utils/tenantScoping';
 
 export const IctGreenBeanAuditPage: React.FC = () => {
   const {
     processedLots,
+    farmerLots,
+    users,
     currentUser,
     verifyProcessedLotByICS,
     openBlankoModal,
@@ -71,15 +74,11 @@ export const IctGreenBeanAuditPage: React.FC = () => {
   // Feedback Notification
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  const isSuperAdmin = currentUser?.role === 'super_admin';
-
-  // Scoped lots for tenant isolation
-  const scopedProcessedLots = processedLots.filter((lot) => {
-    if (isSuperAdmin) return true;
-    return (
-      lot.processorId === currentUser?.id ||
-      (currentUser?.kelompokTaniId && lot.processorId === currentUser?.kelompokTaniId)
-    );
+  // Scoped lots for multi-tenant isolation
+  const { scopedProcessedLots } = getScopedTenantData(currentUser, {
+    users,
+    farmerLots,
+    processedLots,
   });
 
   // Filtered lots computation

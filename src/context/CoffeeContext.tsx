@@ -2206,8 +2206,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ...farmData,
       photoUrl: farmData.photoUrl || DEFAULT_FARM_PHOTO_URL,
       id: newFarmId,
-      farmerId: currentUser?.id || farmData.farmerId || 'user-petani-1',
-      farmerName: currentUser?.name || farmData.farmerName || 'Asep Supriatna',
+      farmerId: farmData.farmerId || currentUser?.id || 'user-petani-1',
+      farmerName: farmData.farmerName || currentUser?.name || 'Asep Supriatna',
       patokList: defaultPatoks,
       createdAt: new Date().toISOString().split('T')[0],
       verificationStatus: 'pending',
@@ -2249,6 +2249,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const effectiveFarmerId = lotData.farmerId || linkedFarm?.farmerId || currentUser.id;
     const effectiveFarmerName = lotData.farmerName || linkedFarm?.farmerName || currentUser.name;
 
+    const effectiveKtId = currentUser.role === 'admin_kelompok_tani'
+      ? (currentUser.kelompokTaniId || currentUser.id)
+      : (currentUser.kelompokTaniId || (linkedFarm as any)?.kelompokTaniId);
+
     const newLot: FarmerHarvestLot = {
       ...lotData,
       id: newLotId,
@@ -2267,6 +2271,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       isReleasedToMarketplace: lotData.isReleasedToMarketplace ?? true,
       marketplacePricePerKg: lotData.marketplacePricePerKg || lotData.pricePerKg,
       verificationStatus: 'pending',
+      kelompokTaniId: effectiveKtId,
       photoUrl:
         lotData.photoUrl ||
         linkedFarm?.photoUrl ||

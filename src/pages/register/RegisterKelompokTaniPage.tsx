@@ -115,6 +115,7 @@ export const RegisterKelompokTaniPage: React.FC = () => {
 
         let orderId = '';
         let snapToken = '';
+        let redirectUrl = '';
 
         try {
           const snapRes = await requestSnapToken({
@@ -128,6 +129,7 @@ export const RegisterKelompokTaniPage: React.FC = () => {
 
           orderId = snapRes.orderId;
           snapToken = snapRes.snapToken;
+          redirectUrl = snapRes.redirectUrl || '';
         } catch (snapErr) {
           console.warn('Gagal memproses sesi token Midtrans:', snapErr);
           orderId = `CCT-KEL-${Date.now()}`;
@@ -142,6 +144,7 @@ export const RegisterKelompokTaniPage: React.FC = () => {
           org: kelompokTaniName.trim(),
           orderId: orderId,
           snapToken: snapToken,
+          redirectUrl: redirectUrl,
           billingCycle: billingCycle,
           amount: calculatedAmount,
           verificationToken: result?.verificationToken,
@@ -252,6 +255,7 @@ export const RegisterKelompokTaniPage: React.FC = () => {
               organizationName={registeredData.org}
               orderId={registeredData.orderId || `CCT-KEL-${Date.now()}`}
               snapToken={registeredData.snapToken}
+              redirectUrl={registeredData.redirectUrl}
               planRole="admin_kelompok_tani"
               planName="Bundle 3-in-1 Kelompok Tani"
               billingCycle={registeredData.billingCycle || 'monthly'}

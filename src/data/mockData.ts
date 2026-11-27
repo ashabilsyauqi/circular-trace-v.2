@@ -20,44 +20,44 @@ import {
 } from './mockTegalSariData';
 
 export const MOCK_USERS: AppUser[] = [
-  // --- 0. ADMIN KELOMPOK TANI KINTAMANI (Ashabil Syauqi) ---
+  // --- 0. ADMIN KELOMPOK TANI MANDIRI (Ashabil Syauqi) ---
   {
     id: 'user-ashabil-koptan',
     name: 'Ashabil Syauqi',
     email: 'ashabil@kopi.com',
     password: 'password123',
     role: 'admin_kelompok_tani',
-    kelompokTaniId: 'POKTAN-BALI-572991',
-    kelompokTaniName: 'Kelompok Tani Tegal Sari (Kintamani)',
-    organization: 'Kelompok Tani Tegal Sari (ID: 572991)',
-    location: 'Desa Awan, Kec. Kintamani, Kab. Bangli, Bali',
+    kelompokTaniId: 'POKTAN-ASHABIL-001',
+    kelompokTaniName: 'Kelompok Tani Mandiri (Ashabil)',
+    organization: 'Kelompok Tani Mandiri (Ashabil)',
+    location: 'Bandung, Jawa Barat',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     phone: '0812-3456-7890',
-    balance: 50000000,
+    balance: 0,
     status: 'active',
     subscriptionStatus: 'active',
     registeredAt: '2026-11-26',
-    bio: 'Ketua Kelompok Tani Kintamani (ID SIMLUHTAN: 572991) - Membawahi 22 petani kopi Arabika Kintamani dengan terroir vulkanik Gunung Batur.',
+    bio: 'Pengurus Kelompok Tani Mandiri (Pipeline Mandiri Baru - 0 Petani Terdaftar).',
   },
 
-  // --- 0. ADMIN KELOMPOK TANI KINTAMANI (Novizar) ---
+  // --- 0. ADMIN KELOMPOK TANI MANDIRI (Novizar) ---
   {
     id: 'user-novizar-koptan',
     name: 'Novizar',
     email: 'novizarnazir25@gmail.com',
     password: 'password123',
     role: 'admin_kelompok_tani',
-    kelompokTaniId: 'POKTAN-BALI-572991',
-    kelompokTaniName: 'Kelompok Tani Tegal Sari (Kintamani)',
-    organization: 'Kelompok Tani Tegal Sari (ID: 572991)',
-    location: 'Desa Awan, Kec. Kintamani, Kab. Bangli, Bali',
+    kelompokTaniId: 'POKTAN-NOVIZAR-001',
+    kelompokTaniName: 'Kelompok Tani Novizar',
+    organization: 'Kelompok Tani Novizar',
+    location: 'Padang, Sumatera Barat',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     phone: '0812-3456-7890',
-    balance: 50000000,
+    balance: 0,
     status: 'active',
     subscriptionStatus: 'active',
     registeredAt: '2026-11-26',
-    bio: 'Pengurus Kelompok Tani Kintamani (ID SIMLUHTAN: 572991).',
+    bio: 'Pengurus Kelompok Tani Novizar (Pipeline Mandiri Baru).',
   },
 
   // --- 0. ADMIN KELOMPOK TANI TEGAL SARI (Kintamani, Bali) ---

@@ -64,14 +64,13 @@ export const KelompokTaniDashboard: React.FC = () => {
 
     const userOrg = (currentUser?.organization || currentUser?.kelompokTaniName || '').trim().toLowerCase();
     const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-    const userLoc = (currentUser?.location || '').trim().toLowerCase();
-    const farmerLoc = (u.location || '').trim().toLowerCase();
 
     const isSameOrg = Boolean(
-      (userOrg && farmerOrg && (farmerOrg === userOrg || farmerOrg.includes(userOrg) || userOrg.includes(farmerOrg))) ||
-      (userOrg.includes('kintamani') && (farmerOrg.includes('kintamani') || farmerLoc.includes('kintamani') || farmerOrg.includes('tegal sari'))) ||
-      (userLoc.includes('kintamani') && (farmerLoc.includes('kintamani') || farmerOrg.includes('kintamani') || farmerOrg.includes('tegal sari'))) ||
-      (currentUser?.email?.toLowerCase() === 'ashabil@kopi.com' && (farmerKtId === 'poktan-bali-572991' || farmerOrg.includes('tegal sari') || farmerLoc.includes('kintamani')))
+      userOrg && farmerOrg && (
+        farmerOrg === userOrg ||
+        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
+        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
+      )
     );
     return isSameOrg || isSameId;
   });

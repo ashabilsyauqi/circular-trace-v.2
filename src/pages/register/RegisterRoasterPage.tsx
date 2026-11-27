@@ -114,6 +114,7 @@ export const RegisterRoasterPage: React.FC = () => {
 
         let orderId = '';
         let snapToken = '';
+        let redirectUrl = '';
 
         try {
           const snapRes = await requestSnapToken({
@@ -127,6 +128,7 @@ export const RegisterRoasterPage: React.FC = () => {
 
           orderId = snapRes.orderId;
           snapToken = snapRes.snapToken;
+          redirectUrl = snapRes.redirectUrl || '';
         } catch (snapErr) {
           console.warn('Gagal memproses sesi token Midtrans:', snapErr);
           orderId = `CCT-RST-${Date.now()}`;
@@ -141,6 +143,7 @@ export const RegisterRoasterPage: React.FC = () => {
           org: roasteryName.trim(),
           orderId: orderId,
           snapToken: snapToken,
+          redirectUrl: redirectUrl,
           billingCycle: billingCycle,
           amount: calculatedAmount,
           verificationToken: result?.verificationToken,
@@ -251,6 +254,7 @@ export const RegisterRoasterPage: React.FC = () => {
               organizationName={registeredData.org}
               orderId={registeredData.orderId || `CCT-RST-${Date.now()}`}
               snapToken={registeredData.snapToken}
+              redirectUrl={registeredData.redirectUrl}
               planRole="roaster"
               planName="Artisan Roastery & Lab Cupping"
               billingCycle={registeredData.billingCycle || 'monthly'}

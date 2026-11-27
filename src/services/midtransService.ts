@@ -15,6 +15,16 @@ declare global {
           onClose?: () => void;
         }
       ) => void;
+      embed?: (
+        token: string,
+        options: {
+          embedId: string;
+          onSuccess?: (result: any) => void;
+          onPending?: (result: any) => void;
+          onError?: (result: any) => void;
+          onClose?: () => void;
+        }
+      ) => void;
     };
   }
 }
@@ -85,48 +95,99 @@ export const loadMidtransSnapScript = (clientKey = MIDTRANS_SANDBOX_CLIENT_KEY):
 };
 
 /**
- * Memanggil backend API untuk membuat sesi Snap Token baru
+ * Memanggil endpoint backend API untuk membuat sesi Snap Token baru secara real-time
  */
 export const requestSnapToken = async (
   params: SnapTransactionParams
 ): Promise<SnapTransactionResponse> => {
-  try {
-    const res = await fetch('/api/create_snap_token.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
-    });
+  const endpoints = [
+    'https://tthpstudytrack.circulartrace.id/api/cct/create_snap_token',
+    '/api/create_snap_token.php'
+  ];
 
-    if (!res.ok) {
-      throw new Error(`HTTP error ${res.status}`);
+  for (const endpoint of endpoints) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        const data: SnapTransactionResponse = json.data || json;
+        if (data && data.snapToken && !data.snapToken.startsWith('MOCK-SNAP-')) {
+          return data;
+        }
+      }
+    } catch (err: any) {
+      console.warn(`Request Snap Token via ${endpoint} gagal:`, err?.message || err);
     }
-
-    const data: SnapTransactionResponse = await res.json();
-    return data;
-  } catch (err: any) {
-    console.warn('Request Snap Token API gagal, menggunakan fallback token:', err);
-    // Client-side fallback token untuk pengujian offline/demo
-    const roleCode = params.serviceRole.replace('admin_', '').slice(0, 3).toUpperCase();
-    const mockOrderId = `CCT-${roleCode}-${Date.now().toString().slice(-6)}`;
-    const mockAmount = params.billingCycle === 'yearly' ? 2500000 : 250000;
-
-    return {
-      orderId: mockOrderId,
-      snapToken: `MOCK-SNAP-${Date.now()}`,
-      redirectUrl: `https://app.sandbox.midtrans.com/snap/v2/vtweb/mock-${Date.now()}`,
-      grossAmount: mockAmount,
-      planName: `Paket Layanan ${params.serviceRole} (${params.billingCycle === 'yearly' ? '1 Tahun' : '1 Bulan'})`,
-      clientKey: MIDTRANS_SANDBOX_CLIENT_KEY,
-      isDemoFallback: true,
-      message: 'Token simulasi berhasil dibuat',
-    };
   }
+
+  // Fallback graceful jika kedua endpoint offline
+  console.warn('Endpoint Midtrans tidak dapat dijangkau, menggunakan token simulasi.');
+  const roleCode = params.serviceRole.replace('admin_', '').slice(0, 3).toUpperCase();
+  const mockOrderId = `CCT-${roleCode}-${Date.now().toString().slice(-6)}`;
+  const mockAmount = params.billingCycle === 'yearly' ? 2500000 : 250000;
+
+  return {
+    orderId: mockOrderId,
+    snapToken: `MOCK-SNAP-${Date.now()}`,
+    redirectUrl: `https://app.sandbox.midtrans.com/snap/v2/vtweb/mock-${Date.now()}`,
+    grossAmount: mockAmount,
+    planName: `Paket Layanan ${params.serviceRole} (${params.billingCycle === 'yearly' ? '1 Tahun' : '1 Bulan'})`,
+    clientKey: MIDTRANS_SANDBOX_CLIENT_KEY,
+    isDemoFallback: true,
+    message: 'Token simulasi berhasil dibuat',
+  };
 };
 
 /**
- * Menampilkan modal Midtrans Snap atau Fallback Dialog jika offline
+ * Menampilkan widget Midtrans Snap secara embedded di elemen container tertentu
+ */
+export const embedSnapCheckout = async (
+  token: string,
+  embedId: string,
+  callbacks: {
+    onSuccess?: (result: any) => void;
+    onPending?: (result: any) => void;
+    onError?: (result: any) => void;
+    onClose?: () => void;
+  }
+): Promise<boolean> => {
+  await loadMidtransSnapScript();
+
+  if (window.snap && typeof window.snap.embed === 'function' && !token.startsWith('MOCK-SNAP-')) {
+    try {
+      window.snap.embed(token, {
+        embedId,
+        onSuccess: (result) => {
+          callbacks.onSuccess?.(result);
+        },
+        onPending: (result) => {
+          callbacks.onPending?.(result);
+        },
+        onError: (result) => {
+          callbacks.onError?.(result);
+        },
+        onClose: () => {
+          callbacks.onClose?.();
+        },
+      });
+      return true;
+    } catch (e) {
+      console.warn('Gagal render snap.embed:', e);
+      return false;
+    }
+  }
+  return false;
+};
+
+/**
+ * Menampilkan modal Midtrans Snap Popup resmi
  */
 export const triggerSnapCheckout = async (
   token: string,

@@ -115,6 +115,7 @@ export const RegisterGudangPage: React.FC = () => {
 
         let orderId = '';
         let snapToken = '';
+        let redirectUrl = '';
 
         try {
           const snapRes = await requestSnapToken({
@@ -128,6 +129,7 @@ export const RegisterGudangPage: React.FC = () => {
 
           orderId = snapRes.orderId;
           snapToken = snapRes.snapToken;
+          redirectUrl = snapRes.redirectUrl || '';
         } catch (snapErr) {
           console.warn('Gagal memproses sesi token Midtrans:', snapErr);
           orderId = `CCT-GDG-${Date.now()}`;
@@ -142,6 +144,7 @@ export const RegisterGudangPage: React.FC = () => {
           org: warehouseName.trim(),
           orderId: orderId,
           snapToken: snapToken,
+          redirectUrl: redirectUrl,
           billingCycle: billingCycle,
           amount: calculatedAmount,
           verificationToken: result?.verificationToken,
@@ -252,6 +255,7 @@ export const RegisterGudangPage: React.FC = () => {
               organizationName={registeredData.org}
               orderId={registeredData.orderId || `CCT-GDG-${Date.now()}`}
               snapToken={registeredData.snapToken}
+              redirectUrl={registeredData.redirectUrl}
               planRole="gudang"
               planName="Gudang & QA Logistik Green Bean"
               billingCycle={registeredData.billingCycle || 'monthly'}

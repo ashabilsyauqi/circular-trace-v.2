@@ -404,7 +404,15 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const saved = localStorage.getItem('cct_currentUser');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: AppUser = JSON.parse(saved);
+        if (parsed.email?.toLowerCase() === 'ashabil@kopi.com' && parsed.kelompokTaniId !== 'POKTAN-ASHABIL-001') {
+          parsed.kelompokTaniId = 'POKTAN-ASHABIL-001';
+          parsed.kelompokTaniName = 'Kelompok Tani Mandiri (Ashabil)';
+          parsed.organization = 'Kelompok Tani Mandiri (Ashabil)';
+          parsed.location = 'Bandung, Jawa Barat';
+          localStorage.setItem('cct_currentUser', JSON.stringify(parsed));
+        }
+        return parsed;
       } catch {
         return null;
       }
@@ -447,14 +455,15 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const merged = [...parsed.filter((u) => !deletedIds.includes(u.id))];
           MOCK_USERS.forEach((mockUser) => {
             if (deletedIds.includes(mockUser.id)) return;
-            const idx = merged.findIndex((u) => u.id === mockUser.id);
+            const idx = merged.findIndex((u) => u.id === mockUser.id || (u.email && u.email.toLowerCase() === mockUser.email?.toLowerCase()));
             if (idx >= 0) {
               merged[idx] = {
-                ...mockUser,
                 ...merged[idx],
+                ...mockUser,
                 email: merged[idx].email || mockUser.email,
-                password: merged[idx].password || mockUser.password,
-                verifierDomain: merged[idx].verifierDomain || mockUser.verifierDomain,
+                kelompokTaniId: mockUser.kelompokTaniId || merged[idx].kelompokTaniId,
+                kelompokTaniName: mockUser.kelompokTaniName || merged[idx].kelompokTaniName,
+                organization: mockUser.organization || merged[idx].organization,
               };
             } else {
               merged.push(mockUser);

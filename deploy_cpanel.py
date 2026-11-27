@@ -192,9 +192,9 @@ def upload_tree(client: RobustFTPClient, local_path: str, remote_target: str):
         local_size = os.path.getsize(local_file)
         size_kb = local_size / 1024
 
-        # For files other than html/php, check if size already matches on remote
-        is_html_or_php = filename.endswith(".html") or filename.endswith(".php")
-        if not is_html_or_php:
+        # For files other than html/php/sqlite, check if size already matches on remote
+        is_dynamic = filename.endswith(".html") or filename.endswith(".php") or filename.endswith(".sqlite")
+        if not is_dynamic:
             remote_size = client.get_remote_size(target_dir, filename)
             if remote_size == local_size:
                 sys.stdout.write(f"  ⚡ [{idx}/{total}] {display_name} ({size_kb:.1f} KB) - Sama persis (Dilewati)\n")

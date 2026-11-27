@@ -73,22 +73,18 @@ export const MasterKebunTab: React.FC<MasterKebunTabProps> = ({
     const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
 
     const isSameKtId = Boolean(
-      (userKtId && farmerKtId && userKtId === farmerKtId) ||
+      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
       (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
     );
-    const isSameOrg = Boolean(userOrg && farmerOrg && (farmerOrg === userOrg || farmerOrg.includes(userOrg) || userOrg.includes(farmerOrg)));
-    const isSameId = Boolean(u.kelompokTaniId && (u.kelompokTaniId === currentUser?.id || u.kelompokTaniId === currentUser?.organization));
-    
-    // Fuzzy matching fallback for Bali / Kintamani / Tegal Sari
-    const userLoc = (currentUser?.location || '').trim().toLowerCase();
-    const farmerLoc = (u.location || '').trim().toLowerCase();
-    const isSameLoc = Boolean(userLoc && farmerLoc && (farmerLoc.includes('kintamani') && userLoc.includes('kintamani')));
-    const isSameTegalSari = Boolean(
-      (farmerOrg.includes('tegal sari') || farmerOrg.includes('572991')) &&
-      (userOrg.includes('tegal sari') || userOrg.includes('572991') || userKtId.includes('572991'))
+    const isSameOrg = Boolean(
+      userOrg && farmerOrg && (
+        farmerOrg === userOrg ||
+        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
+        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
+      )
     );
 
-    return isSameKtId || isSameId || isSameOrg || isSameLoc || isSameTegalSari;
+    return isSameKtId || isSameOrg;
   });
 
   const [searchQuery, setSearchQuery] = useState('');

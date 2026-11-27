@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   CreditCard,
   QrCode,
@@ -13,8 +13,10 @@ import {
   Check,
   AlertCircle,
   ExternalLink,
+  Maximize2,
+  RefreshCw,
 } from 'lucide-react';
-import { triggerSnapCheckout } from '../../services/midtransService';
+import { triggerSnapCheckout, embedSnapCheckout } from '../../services/midtransService';
 
 interface InlineSandboxPaymentSectionProps {
   userEmail: string;
@@ -22,6 +24,7 @@ interface InlineSandboxPaymentSectionProps {
   organizationName: string;
   orderId: string;
   snapToken?: string;
+  redirectUrl?: string;
   planRole: string;
   planName: string;
   billingCycle: 'monthly' | 'yearly';
@@ -36,6 +39,7 @@ export const InlineSandboxPaymentSection: React.FC<InlineSandboxPaymentSectionPr
   organizationName,
   orderId,
   snapToken,
+  redirectUrl,
   planRole,
   planName,
   billingCycle,
@@ -43,11 +47,13 @@ export const InlineSandboxPaymentSection: React.FC<InlineSandboxPaymentSectionPr
   onPaymentSuccess,
   onBackToForm,
 }) => {
-  const [selectedMethod, setSelectedMethod] = useState<'qris' | 'va' | 'snap'>('qris');
+  const [activeTab, setActiveTab] = useState<'midtrans_embed' | 'quick_simulate' | 'manual_va'>('midtrans_embed');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isEmbedLoaded, setIsEmbedLoaded] = useState(false);
   const [copiedOrderId, setCopiedOrderId] = useState(false);
   const [copiedVaNumber, setCopiedVaNumber] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const embedAttemptedRef = useRef(false);
 
   const vaNumber = `80777${userEmail.replace(/[^0-9]/g, '').padEnd(10, '1234567890').slice(0, 10)}`;
 
@@ -66,9 +72,9 @@ export const InlineSandboxPaymentSection: React.FC<InlineSandboxPaymentSectionPr
     setIsProcessing(true);
     setErrorMessage(null);
     try {
-      // 1. Panggil backend simulasi payment_status.php
+      // 1. Sinkronisasi status pembayaran ke backend / session
       try {
-        await fetch('/api/payment_status.php?action=simulate_sandbox_payment', {
+        await fetch('https://tthpstudytrack.circulartrace.id/api/cct/payment_status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -78,13 +84,18 @@ export const InlineSandboxPaymentSection: React.FC<InlineSandboxPaymentSectionPr
           }),
         });
       } catch (e) {
-        console.warn('Backend payment status update warning:', e);
+        console.warn('Backend payment status sync warning:', e);
       }
 
-      // 2. Jalankan callback sukses (auto-login dan redirect ke panel admin)
+      // 2. Tandai session modal selamat datang
+      try {
+        sessionStorage.setItem('cct_show_welcome_modal', 'true');
+      } catch (_) {}
+
+      // 3. Jalankan callback sukses (auto-login dan redirect ke panel admin)
       await onPaymentSuccess();
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Gagal memproses simulasi pembayaran.');
+      setErrorMessage(err?.message || 'Gagal memproses pembayaran.');
       setIsProcessing(false);
     }
   };
@@ -96,7 +107,8 @@ export const InlineSandboxPaymentSection: React.FC<InlineSandboxPaymentSectionPr
     }
     try {
       await triggerSnapCheckout(snapToken, {
-        onSuccess: async () => {
+        onSuccess: async (res) => {
+          console.log('Snap Popup Success:', res);
           await handleSimulatePayment();
         },
         onPending: (res) => {
@@ -104,13 +116,45 @@ export const InlineSandboxPaymentSection: React.FC<InlineSandboxPaymentSectionPr
         },
         onError: (err) => {
           console.warn('Snap error:', err);
-          setErrorMessage('Terjadi kendala pada sesi Snap. Anda dapat menggunakan Simulasi Sandbox.');
+          setErrorMessage('Terjadi kendala pada sesi Snap. Anda dapat menggunakan Simulasi Sandbox di bawah.');
+        },
+        onClose: () => {
+          console.log('Snap popup closed by user');
         },
       });
     } catch (err: any) {
       setErrorMessage(err?.message || 'Gagal membuka Midtrans Snap.');
     }
   };
+
+  // Embed Midtrans Snap UI secara otomatis saat snapToken tersedia
+  useEffect(() => {
+    let timer: any;
+    if (snapToken && !embedAttemptedRef.current && activeTab === 'midtrans_embed') {
+      embedAttemptedRef.current = true;
+      timer = setTimeout(async () => {
+        const success = await embedSnapCheckout(snapToken, 'midtrans-snap-container', {
+          onSuccess: async (res) => {
+            console.log('Embedded Snap Success:', res);
+            await handleSimulatePayment();
+          },
+          onPending: (res) => {
+            console.log('Embedded Snap Pending:', res);
+          },
+          onError: (err) => {
+            console.warn('Embedded Snap Error:', err);
+          },
+          onClose: () => {
+            console.log('Embedded Snap Closed');
+          },
+        });
+        setIsEmbedLoaded(success);
+      }, 300);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [snapToken, activeTab]);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200">
@@ -183,182 +227,225 @@ export const InlineSandboxPaymentSection: React.FC<InlineSandboxPaymentSectionPr
           </div>
         </div>
 
-        {/* Payment Methods Tabs */}
+        {/* Tabs: Midtrans Official Checkout vs Instant Sandbox Controls */}
         <div className="p-6 sm:p-8 space-y-6">
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block">
-              Pilih Metode Pembayaran (Midtrans Sandbox)
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-4">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setSelectedMethod('qris')}
-                className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
-                  selectedMethod === 'qris'
-                    ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/20'
-                    : 'border-stone-200 hover:border-stone-300 bg-white'
+                onClick={() => setActiveTab('midtrans_embed')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                  activeTab === 'midtrans_embed'
+                    ? 'bg-emerald-700 text-white shadow-md'
+                    : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                  selectedMethod === 'qris' ? 'bg-emerald-600 text-white' : 'bg-stone-100 text-stone-600'
-                }`}>
-                  <QrCode className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-extrabold text-stone-900 text-xs">QRIS Instant</div>
-                  <div className="text-[10px] text-stone-500">GoPay / ShopeePay / Semua Bank</div>
-                </div>
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>Portal Checkout Midtrans Sandbox (Resmi)</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setSelectedMethod('va')}
-                className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
-                  selectedMethod === 'va'
-                    ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/20'
-                    : 'border-stone-200 hover:border-stone-300 bg-white'
+                onClick={() => setActiveTab('quick_simulate')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                  activeTab === 'quick_simulate'
+                    ? 'bg-emerald-700 text-white shadow-md'
+                    : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                  selectedMethod === 'va' ? 'bg-emerald-600 text-white' : 'bg-stone-100 text-stone-600'
-                }`}>
-                  <CreditCard className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-extrabold text-stone-900 text-xs">Virtual Account</div>
-                  <div className="text-[10px] text-stone-500">BCA, BNI, Mandiri, BRI</div>
-                </div>
+                <Zap className="w-3.5 h-3.5" />
+                <span>Instruksi VA &amp; QR Manual</span>
               </button>
+            </div>
 
+            <div className="flex items-center gap-2">
+              {redirectUrl && (
+                <a
+                  href={redirectUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                  title="Buka halaman pembayaran Midtrans di tab baru"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Tab Baru</span>
+                </a>
+              )}
               <button
                 type="button"
-                onClick={() => setSelectedMethod('snap')}
-                className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
-                  selectedMethod === 'snap'
-                    ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/20'
-                    : 'border-stone-200 hover:border-stone-300 bg-white'
-                }`}
+                onClick={handleOpenSnapPopup}
+                className="px-3 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                title="Buka dialog popup Midtrans"
               >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                  selectedMethod === 'snap' ? 'bg-emerald-600 text-white' : 'bg-stone-100 text-stone-600'
-                }`}>
-                  <ExternalLink className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-extrabold text-stone-900 text-xs">Midtrans Snap</div>
-                  <div className="text-[10px] text-stone-500">Pop-up Resmi Midtrans</div>
-                </div>
+                <Maximize2 className="w-3.5 h-3.5 text-amber-300" />
+                <span>Buka Pop-up Snap</span>
               </button>
             </div>
           </div>
 
-          {/* Payment Method Details View */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#F8F5F0] border border-[#E6DFD5] space-y-4">
-            {selectedMethod === 'qris' && (
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm text-center">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=MIDTRANS-SANDBOX-${orderId}-RP${amount}`}
-                    alt="QRIS Midtrans Sandbox"
-                    className="w-40 h-40 object-contain mx-auto"
-                  />
-                  <div className="mt-2 text-[10px] font-extrabold text-stone-500 uppercase tracking-wider">
-                    QRIS Midtrans Sandbox
-                  </div>
+          {/* TAB 1: EMBEDDED REAL MIDTRANS SNAP */}
+          {activeTab === 'midtrans_embed' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    Terhubung ke <strong>Midtrans Sandbox</strong> (Merchant: <code className="font-mono font-bold">circulartrace</code>).
+                  </span>
                 </div>
-                <div className="space-y-2 text-xs text-stone-700 flex-1">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                    <Clock className="w-3 h-3" />
-                    <span>Menunggu Pembayaran</span>
-                  </div>
-                  <h4 className="font-extrabold text-stone-900 text-sm">Instruksi Pembayaran QRIS</h4>
-                  <ol className="list-decimal list-inside space-y-1 text-stone-600 leading-relaxed text-[11px]">
-                    <li>Scan kode QR di samping melalui aplikasi e-wallet simulator (GoPay/ShopeePay/BCA).</li>
-                    <li>Pastikan nominal yang tertera sesuai: <strong>Rp {amount.toLocaleString('id-ID')}</strong>.</li>
-                    <li>Atau langsung klik tombol hijau <strong>"Selesaikan Pembayaran (Simulasi)"</strong> di bawah untuk demo instan.</li>
-                  </ol>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[11px] text-stone-500">Token Snap:</span>
+                  <code className="px-2 py-0.5 rounded bg-white font-mono text-[11px] font-bold border border-amber-300">
+                    {snapToken ? `${snapToken.slice(0, 8)}...` : 'Memuat...'}
+                  </code>
                 </div>
               </div>
-            )}
 
-            {selectedMethod === 'va' && (
-              <div className="space-y-3 text-xs">
-                <h4 className="font-extrabold text-stone-900 text-sm">Nomor Virtual Account Sandbox (BCA / Mandiri)</h4>
-                <div className="p-4 rounded-xl bg-white border border-stone-200 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-stone-500 uppercase font-bold block">Nomor Virtual Account:</span>
-                    <span className="font-mono text-base font-black text-stone-900 tracking-wider">{vaNumber}</span>
+              {/* Midtrans Snap Target Container */}
+              <div className="relative min-h-[540px] w-full rounded-2xl bg-[#FCFAF7] border border-stone-200 overflow-hidden shadow-inner flex flex-col items-center justify-center p-2">
+                <div id="midtrans-snap-container" className="w-full h-full min-h-[520px] flex items-center justify-center z-10" />
+
+                {!isEmbedLoaded && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#FCFAF7]/95 z-0 p-6 text-center">
+                    <div className="w-10 h-10 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="space-y-1">
+                      <p className="font-extrabold text-stone-900 text-sm">Menghubungkan ke Widget Midtrans Sandbox...</p>
+                      <p className="text-xs text-stone-500 max-w-sm">
+                        Memuat pilihan pembayaran (QRIS GoPay, ShopeePay, Virtual Account BCA/BNI/Mandiri/BRI).
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={handleOpenSnapPopup}
+                        className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+                      >
+                        <ExternalLink className="w-4 h-4 text-amber-300" />
+                        <span>Buka via Dialog Pop-up</span>
+                      </button>
+                      {redirectUrl && (
+                        <a
+                          href={redirectUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-800 border border-stone-300 font-bold text-xs flex items-center gap-2 transition-all"
+                        >
+                          <ExternalLink className="w-4 h-4 text-emerald-600" />
+                          <span>Halaman Resmi Midtrans</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(vaNumber, 'va')}
-                    className="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    {copiedVaNumber ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedVaNumber ? 'Tersalin' : 'Salin VA'}</span>
-                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: MANUAL VA & QR DETAILS */}
+          {activeTab === 'quick_simulate' && (
+            <div className="space-y-4">
+              <div className="p-5 rounded-2xl bg-[#F8F5F0] border border-[#E6DFD5] space-y-4">
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm text-center">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=MIDTRANS-SANDBOX-${orderId}-RP${amount}`}
+                      alt="QRIS Midtrans Sandbox"
+                      className="w-36 h-36 object-contain mx-auto"
+                    />
+                    <div className="mt-2 text-[10px] font-extrabold text-stone-500 uppercase tracking-wider">
+                      QRIS Midtrans Sandbox
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-xs text-stone-700 flex-1">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      <Clock className="w-3 h-3" />
+                      <span>Menunggu Pembayaran</span>
+                    </div>
+                    <h4 className="font-extrabold text-stone-900 text-sm">Nomor Virtual Account &amp; QRIS</h4>
+                    <div className="p-3 rounded-xl bg-white border border-stone-200 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-stone-500 uppercase font-bold block">Nomor VA Sandbox (BCA/Mandiri/BNI):</span>
+                        <span className="font-mono text-sm font-black text-stone-900">{vaNumber}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(vaNumber, 'va')}
+                        className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        {copiedVaNumber ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedVaNumber ? 'Tersalin' : 'Salin'}</span>
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-stone-500 leading-relaxed">
+                      Anda dapat menguji transaksi ini dengan simulator resmi Midtrans di{' '}
+                      <a
+                        href="https://simulator.sandbox.midtrans.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-700 font-bold underline hover:text-emerald-900"
+                      >
+                        simulator.sandbox.midtrans.com
+                      </a>.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[11px] text-stone-500 leading-relaxed">
-                  Gunakan simulator transfer ATM Sandbox Midtrans dengan memasukkan nomor VA di atas atau selesaikan secara otomatis dengan tombol di bawah.
+              </div>
+            </div>
+          )}
+
+          {/* Quick Simulation & Instant Activation Action Bar */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-50 via-[#FAF7F2] to-amber-50/50 border border-emerald-200/80 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold">
+                  <Zap className="w-3 h-3 text-amber-300" />
+                  <span>Akselerasi Pengujian Sandbox</span>
+                </div>
+                <h4 className="font-black text-stone-900 text-sm mt-1">
+                  Selesaikan Pembayaran &amp; Buka Akses Panel Admin
+                </h4>
+                <p className="text-stone-600 text-xs">
+                  Klik tombol di samping untuk langsung mensimulasikan status <em>Settlement</em>, mengaktifkan akun, dan membuka panel admin dengan ucapan selamat datang.
                 </p>
               </div>
-            )}
 
-            {selectedMethod === 'snap' && (
-              <div className="space-y-3 text-xs">
-                <h4 className="font-extrabold text-stone-900 text-sm">Midtrans Snap Checkout Resmi</h4>
-                <p className="text-[11px] text-stone-600 leading-relaxed">
-                  Jika Anda ingin membuka jendela dialog checkout resmi dari Midtrans Sandbox dengan Client Key Anda:
-                </p>
-                <button
-                  type="button"
-                  onClick={handleOpenSnapPopup}
-                  className="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>Buka Midtrans Snap Popup</span>
-                </button>
-              </div>
-            )}
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={handleSimulatePayment}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:bg-emerald-400 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              >
+                {isProcessing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Mengaktifkan Akun...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 text-amber-300" />
+                    <span>⚡ Selesaikan Pembayaran (Simulasi Cepat)</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Action CTAs */}
-          <div className="space-y-3 pt-2">
-            <button
-              type="button"
-              disabled={isProcessing}
-              onClick={handleSimulatePayment}
-              className="w-full py-4 px-6 rounded-2xl bg-emerald-700 hover:bg-emerald-800 disabled:bg-emerald-400 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isProcessing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Mengonfirmasi Pembayaran &amp; Membuka Akses...</span>
-                </>
-              ) : (
-                <>
-                  <Zap className="w-5 h-5 text-amber-300" />
-                  <span>⚡ Selesaikan Pembayaran (Simulasi Midtrans Sandbox)</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-
-            <div className="flex items-center justify-between text-xs text-stone-500 pt-1">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Simulasi Sandbox Terenkripsi &amp; Aman</span>
-              </span>
-              {onBackToForm && (
-                <button
-                  type="button"
-                  onClick={onBackToForm}
-                  className="text-stone-600 hover:text-stone-900 underline font-semibold cursor-pointer"
-                >
-                  Ubah Data Organisasi
-                </button>
-              )}
-            </div>
+          {/* Footer Navigation */}
+          <div className="flex items-center justify-between text-xs text-stone-500 pt-2 border-t border-stone-200">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Midtrans Sandbox Payment Gateway v1</span>
+            </span>
+            {onBackToForm && (
+              <button
+                type="button"
+                onClick={onBackToForm}
+                className="text-stone-600 hover:text-stone-900 underline font-semibold cursor-pointer"
+              >
+                Kembali ke Formulir Pendaftaran
+              </button>
+            )}
           </div>
         </div>
       </div>

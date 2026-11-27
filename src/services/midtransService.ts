@@ -186,6 +186,9 @@ export const embedSnapCheckout = async (
   return false;
 };
 
+// Global lock untuk mencegah pop-up Midtrans terpanggil ganda (2x bayar)
+let isSnapPopupOpen = false;
+
 /**
  * Menampilkan modal Midtrans Snap Popup resmi
  */
@@ -198,24 +201,35 @@ export const triggerSnapCheckout = async (
     onClose?: () => void;
   }
 ): Promise<void> => {
+  if (isSnapPopupOpen) {
+    console.warn('Midtrans Snap pop-up sudah aktif di layar, mencegah pemanggilan ganda.');
+    return;
+  }
+  isSnapPopupOpen = true;
+
   await loadMidtransSnapScript();
 
   if (window.snap && typeof window.snap.pay === 'function' && !token.startsWith('MOCK-SNAP-')) {
     window.snap.pay(token, {
       onSuccess: (result) => {
+        isSnapPopupOpen = false;
         callbacks.onSuccess?.(result);
       },
       onPending: (result) => {
+        isSnapPopupOpen = false;
         callbacks.onPending?.(result);
       },
       onError: (result) => {
+        isSnapPopupOpen = false;
         callbacks.onError?.(result);
       },
       onClose: () => {
+        isSnapPopupOpen = false;
         callbacks.onClose?.();
       },
     });
   } else {
+    isSnapPopupOpen = false;
     // Interactive Fallback Modal jika running di sandbox tanpa akses Snap live
     const confirmed = window.confirm(
       `[Midtrans Sandbox Simulator]\n\nSnap Token: ${token}\n\nIngin mensimulasikan status PEMBAYARAN BERHASIL (Settlement) sekarang?`

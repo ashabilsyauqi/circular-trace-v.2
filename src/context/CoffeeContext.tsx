@@ -1212,7 +1212,19 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }).catch(() => {});
 
+    // If user has just registered and completed payment, ensure subscriptionStatus is active
+    const hasJustPaid = typeof window !== 'undefined' && sessionStorage.getItem('cct_show_welcome_modal') === 'true';
+    if (hasJustPaid) {
+      matched = {
+        ...matched,
+        subscriptionStatus: 'active' as const,
+      };
+    }
+
     setCurrentUser(matched);
+    try {
+      localStorage.setItem('cct_currentUser', JSON.stringify(matched));
+    } catch (_) {}
     setActiveViewState('dashboard');
     if (matched.role === 'admin_kelompok_tani') {
       navigate('/admin/overview');
@@ -2048,19 +2060,23 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.warn('Gagal sinkronisasi pembayaran ke server:', err);
     }
 
-    setUsers((prev) =>
-      prev.map((u) => {
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
         if (u.id === userIdentifier || (u.email && u.email.toLowerCase() === userIdentifier.toLowerCase())) {
           return {
             ...u,
-            subscriptionStatus: 'active',
+            subscriptionStatus: 'active' as const,
             lastPaymentOrderId: orderId || u.lastPaymentOrderId,
             lastPaymentDate: new Date().toISOString(),
           };
         }
         return u;
-      })
-    );
+      });
+      try {
+        localStorage.setItem('cct_users', JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
 
     if (
       currentUser &&

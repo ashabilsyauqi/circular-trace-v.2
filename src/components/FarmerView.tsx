@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useCoffee } from '../context/CoffeeContext';
+import { getScopedTenantData } from '../utils/tenantScoping';
 import {
   Sprout,
   PlusCircle,
@@ -178,16 +179,27 @@ export const FarmerView: React.FC = () => {
     'Suhu malam sejuk berkabut tebal memperlambat pematangan ceri, memaksimalkan sintesis gula & rasa specialty.'
   );
 
+  // Scoped multi-tenant pipeline per Kelompok Tani
+  const {
+    scopedFarmers,
+    scopedFarms,
+    scopedLots,
+    scopedTransactions,
+  } = useMemo(
+    () =>
+      getScopedTenantData(currentUser, {
+        users,
+        coffeeFarms,
+        farmerLots,
+        transactions,
+      }),
+    [currentUser, users, coffeeFarms, farmerLots, transactions]
+  );
+
   // Form State for uploading new harvest lot
   const myFarms = coffeeFarms.filter((f) => f.farmerId === currentUser?.id);
   const myLots = farmerLots.filter((l) => l.farmerId === currentUser?.id);
-  const myTransactions = transactions.filter(
-    (t) =>
-      t.fromName === currentUser?.name ||
-      t.toName === currentUser?.name ||
-      t.fromName === currentUser?.organization ||
-      t.toName === currentUser?.organization
-  );
+  const myTransactions = scopedTransactions;
 
   const [selectedFarmIdForHarvest, setSelectedFarmIdForHarvest] = useState<string>(
     myFarms.length > 0 ? myFarms[0].id : ''
@@ -537,7 +549,7 @@ export const FarmerView: React.FC = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               title="Total Anggota Petani"
-              value={`${users.filter((u) => u.role === 'petani' || u.assignedService === 'petani').length} Petani`}
+              value={`${scopedFarmers.length} Petani`}
               subtitle="Terdaftar di Kelompok Tani"
               icon={<Users className="w-5 h-5 text-emerald-600" />}
               color="emerald"
@@ -546,8 +558,8 @@ export const FarmerView: React.FC = () => {
 
             <MetricCard
               title="Lahan &amp; Kebun Terdaftar"
-              value={`${coffeeFarms.length} Blok`}
-              subtitle={`${coffeeFarms.reduce((acc, f) => acc + f.landAreaHectares, 0).toFixed(1)} Ha • ${coffeeFarms.reduce((acc, f) => acc + f.totalTreesCount, 0).toLocaleString()} Pohon`}
+              value={`${scopedFarms.length} Blok`}
+              subtitle={`${scopedFarms.reduce((acc, f) => acc + f.landAreaHectares, 0).toFixed(1)} Ha • ${scopedFarms.reduce((acc, f) => acc + f.totalTreesCount, 0).toLocaleString()} Pohon`}
               icon={<TreePine className="w-5 h-5 text-emerald-600" />}
               color="emerald"
               badge="EUDR Polygon"
@@ -555,16 +567,16 @@ export const FarmerView: React.FC = () => {
 
             <MetricCard
               title="Total Panen Ceri"
-              value={`${farmerLots.reduce((acc, l) => acc + l.totalWeightKg, 0).toLocaleString()} kg`}
+              value={`${scopedLots.reduce((acc, l) => acc + l.totalWeightKg, 0).toLocaleString()} kg`}
               subtitle="Cherry merah segar"
               icon={<Package className="w-5 h-5 text-emerald-600" />}
               color="emerald"
-              trend={{ value: `${farmerLots.filter((l) => l.isReleasedToMarketplace ?? true).length} Lot Rilis`, isPositive: true }}
+              trend={{ value: `${scopedLots.filter((l) => l.isReleasedToMarketplace ?? true).length} Lot Rilis`, isPositive: true }}
             />
 
             <MetricCard
               title="Stok Ceri Tersedia"
-              value={`${farmerLots.reduce((acc, l) => acc + l.availableWeightKg, 0).toLocaleString()} kg`}
+              value={`${scopedLots.reduce((acc, l) => acc + l.availableWeightKg, 0).toLocaleString()} kg`}
               subtitle="Siap Olah / Jual Pasar"
               icon={<Sprout className="w-5 h-5 text-amber-600" />}
               color="amber"
@@ -592,10 +604,10 @@ export const FarmerView: React.FC = () => {
           <FarmerStageStepper
             activeTab={activeTab}
             onSelectTab={(tab) => setActiveTab(tab)}
-            farmerCount={users.filter((u) => u.role === 'petani' || u.assignedService === 'petani').length}
-            farmCount={coffeeFarms.length}
-            lotCount={farmerLots.length}
-            releasedCount={farmerLots.filter((l) => l.isReleasedToMarketplace ?? true).length}
+            farmerCount={scopedFarmers.length}
+            farmCount={scopedFarms.length}
+            lotCount={scopedLots.length}
+            releasedCount={scopedLots.filter((l) => l.isReleasedToMarketplace ?? true).length}
             transactionCount={myTransactions.length}
             onOpenFormsModal={() => setFormsModalOpen(true)}
           />

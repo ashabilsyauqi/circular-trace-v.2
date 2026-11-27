@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import { IctGreenBeanAuditPage } from './ict/IctGreenBeanAuditPage';
 import {
   ShieldCheck,
@@ -76,59 +77,23 @@ export const IctVerificationPage: React.FC = () => {
   const isSuperAdmin = currentUser?.role === 'super_admin';
 
   // Scoped farmers, farms, lots, and processed lots for tenant isolation
-  const farmersList = users.filter((u) => {
-    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
-    if (!isFarmer) return false;
-    if (isSuperAdmin) return true;
-
-    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
-    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
-    const isSameId = Boolean(
-      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
-      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
-    );
-
-    const userOrg = (currentUser?.organization || currentUser?.kelompokTaniName || '').trim().toLowerCase();
-    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-
-    const isSameOrg = Boolean(
-      userOrg && farmerOrg && (
-        farmerOrg === userOrg ||
-        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
-        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
-      )
-    );
-    return isSameOrg || isSameId;
-  });
-
-  const scopedFarms = coffeeFarms.filter((farm) => {
-    if (isSuperAdmin) return true;
-    return farmersList.some((farmer) => farmer.id === farm.farmerId);
-  });
-
-  const scopedLots = farmerLots.filter((lot) => {
-    if (isSuperAdmin) return true;
-    return farmersList.some((farmer) => farmer.id === lot.farmerId);
-  });
-
-  const scopedProcessedLots = processedLots.filter((lot) => {
-    if (isSuperAdmin) return true;
-    return (
-      lot.processorId === currentUser?.id ||
-      (currentUser?.kelompokTaniId && lot.processorId === currentUser?.kelompokTaniId)
-    );
-  });
-
-  const scopedStamps = verificationStamps.filter((stamp) => {
-    if (isSuperAdmin) return true;
-    return (
-      stamp.verifierId === currentUser?.id ||
-      farmersList.some((f) => f.id === stamp.targetId) ||
-      scopedFarms.some((farm) => farm.id === stamp.targetId) ||
-      scopedLots.some((lot) => lot.id === stamp.targetId) ||
-      scopedProcessedLots.some((p) => p.id === stamp.targetId)
-    );
-  });
+  const {
+    scopedFarmers: farmersList,
+    scopedFarms,
+    scopedLots,
+    scopedProcessedLots,
+    scopedStamps,
+  } = useMemo(
+    () =>
+      getScopedTenantData(currentUser, {
+        users,
+        coffeeFarms,
+        farmerLots,
+        processedLots,
+        verificationStamps,
+      }),
+    [currentUser, users, coffeeFarms, farmerLots, processedLots, verificationStamps]
+  );
 
   // Filtered farmers
   const filteredFarmers = farmersList.filter((f) => {
@@ -321,7 +286,7 @@ export const IctVerificationPage: React.FC = () => {
         <div className="bg-white rounded-lg border border-[#d2d6de] shadow-xs overflow-hidden">
           <div className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-xl font-black text-stone-900">{verifiedFarms} / {coffeeFarms.length}</div>
+              <div className="text-xl font-black text-stone-900">{verifiedFarms} / {scopedFarms.length}</div>
               <div className="text-[11px] font-bold text-stone-600 mt-0.5">Lahan EUDR Lolos</div>
               <div className="text-[10px] text-amber-700 font-semibold mt-0.5">
                 {pendingFarms} menunggu GPS
@@ -344,7 +309,7 @@ export const IctVerificationPage: React.FC = () => {
         <div className="bg-white rounded-lg border border-[#d2d6de] shadow-xs overflow-hidden">
           <div className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-xl font-black text-stone-900">{verifiedLots} / {farmerLots.length}</div>
+              <div className="text-xl font-black text-stone-900">{verifiedLots} / {scopedLots.length}</div>
               <div className="text-[11px] font-bold text-stone-600 mt-0.5">Panen Ceri (Brix)</div>
               <div className="text-[10px] text-amber-700 font-semibold mt-0.5">
                 {pendingLots} menunggu QC

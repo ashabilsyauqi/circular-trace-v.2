@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import { AppUser } from '../../types/coffee';
 import {
   Users,
@@ -35,31 +36,15 @@ export const MasterPetaniPage: React.FC = () => {
   const [selectedVillageFilter, setSelectedVillageFilter] = useState<string>('all');
   const [selectedFarmerForCard, setSelectedFarmerForCard] = useState<AppUser | null>(null);
 
-  // Scoped farmers: Multi-tenant pipeline per Kelompok Tani
-  const allFarmers = users.filter((u) => {
-    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
-    if (!isFarmer) return false;
-    if (currentUser?.role === 'super_admin') return true;
-
-    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
-    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
-    const userOrg = (currentUser?.organization || '').trim().toLowerCase();
-    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-
-    const isSameKtId = Boolean(
-      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
-      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
-    );
-    const isSameOrg = Boolean(
-      userOrg && farmerOrg && (
-        farmerOrg === userOrg ||
-        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
-        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
-      )
-    );
-
-    return isSameKtId || isSameOrg;
-  });
+  // Scoped farmers, farms, and lots: Multi-tenant pipeline per Kelompok Tani
+  const {
+    scopedFarmers: allFarmers,
+    scopedFarms: tenantFarms,
+    scopedLots: tenantLots,
+  } = useMemo(
+    () => getScopedTenantData(currentUser, { users, coffeeFarms, farmerLots }),
+    [currentUser, users, coffeeFarms, farmerLots]
+  );
 
   // Extract unique villages
   const uniqueVillages = Array.from(
@@ -83,17 +68,6 @@ export const MasterPetaniPage: React.FC = () => {
       farmer.location === selectedVillageFilter;
 
     return matchQuery && matchVillage;
-  });
-
-  // Scoped Tenant Farms & Lots
-  const tenantFarms = coffeeFarms.filter((f) => {
-    if (currentUser?.role === 'super_admin') return true;
-    return allFarmers.some((farmer) => farmer.id === f.farmerId);
-  });
-
-  const tenantLots = farmerLots.filter((lot) => {
-    if (currentUser?.role === 'super_admin') return true;
-    return allFarmers.some((farmer) => farmer.id === lot.farmerId);
   });
 
   // Cooperative Summary Metrics

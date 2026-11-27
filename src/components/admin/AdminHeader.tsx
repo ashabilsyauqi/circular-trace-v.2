@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCoffee } from '../../context/CoffeeContext';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import { ROLE_DETAILS } from '../../constants/roles';
 import {
   ShieldCheck,
@@ -458,6 +459,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
     },
   ];
 
+  const { scopedLots, scopedProcessedLots } = useMemo(
+    () =>
+      getScopedTenantData(currentUser, {
+        users,
+        coffeeFarms,
+        farmerLots,
+        processedLots,
+      }),
+    [currentUser, users, coffeeFarms, farmerLots, processedLots]
+  );
+
   const kelompokTaniStages: PipelineStageItem[] = [
     {
       id: 'overview',
@@ -474,8 +486,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
       label: '1. Petani',
       subtitle: 'Kebun Kopi, Lahan & Panen Ceri',
       icon: Sprout,
-      badge: farmerLots.length,
-      badgeLabel: `${farmerLots.length} Lot`,
+      badge: scopedLots.length,
+      badgeLabel: `${scopedLots.length} Lot`,
     },
     {
       id: 'pengolah',
@@ -483,8 +495,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = () => {
       label: '2. Pengolah',
       subtitle: 'Stasiun Wet Mill & 7 Metode Olah',
       icon: Cog,
-      badge: processedLots.length,
-      badgeLabel: `${processedLots.length} Lot`,
+      badge: scopedProcessedLots.length,
+      badgeLabel: `${scopedProcessedLots.length} Lot`,
     },
     {
       id: 'gudang',

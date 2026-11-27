@@ -446,7 +446,8 @@ export const AdminLTELayout: React.FC = () => {
   };
 
   const isPaidRole = ['admin_kelompok_tani', 'gudang', 'roaster', 'cafe'].includes(userRole);
-  const isPendingPayment = isPaidRole && currentUser.subscriptionStatus === 'pending_payment';
+  const hasJustPaid = typeof window !== 'undefined' && sessionStorage.getItem('cct_show_welcome_modal') === 'true';
+  const isPendingPayment = !hasJustPaid && isPaidRole && currentUser.subscriptionStatus === 'pending_payment';
 
   const [showWelcomeModal, setShowWelcomeModal] = useState(() => {
     if (typeof window !== 'undefined') {

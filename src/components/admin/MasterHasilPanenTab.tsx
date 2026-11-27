@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCoffee } from '../../context/CoffeeContext';
 import { FarmerHarvestLot } from '../../types/coffee';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import {
   Package,
   PlusCircle,
@@ -46,30 +47,11 @@ export const MasterHasilPanenTab: React.FC = () => {
     sendHarvestLotToProcessor,
   } = useCoffee();
 
-  const allFarmers = users.filter((u) => {
-    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
-    if (!isFarmer) return false;
-    if (currentUser?.role === 'super_admin') return true;
-
-    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
-    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
-    const userOrg = (currentUser?.organization || '').trim().toLowerCase();
-    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-
-    const isSameKtId = Boolean(
-      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
-      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
-    );
-    const isSameOrg = Boolean(
-      userOrg && farmerOrg && (
-        farmerOrg === userOrg ||
-        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
-        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
-      )
-    );
-
-    return isSameKtId || isSameOrg;
-  });
+  // Scoped farmers and lots: Multi-tenant pipeline per Kelompok Tani
+  const { scopedFarmers: allFarmers, scopedLots: tenantLots } = useMemo(
+    () => getScopedTenantData(currentUser, { users, coffeeFarms, farmerLots }),
+    [currentUser, users, coffeeFarms, farmerLots]
+  );
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFarmerFilter, setSelectedFarmerFilter] = useState<string>('all');
@@ -165,7 +147,7 @@ export const MasterHasilPanenTab: React.FC = () => {
   };
 
   // Filtered Harvest Lots by Search, Farmer, and Stage
-  const filteredLots = farmerLots
+  const filteredLots = tenantLots
     .filter((lot) => {
       if (selectedFarmerFilter === 'all') return true;
       return lot.farmerId === selectedFarmerFilter;
@@ -189,17 +171,17 @@ export const MasterHasilPanenTab: React.FC = () => {
       );
     });
 
-  const totalCherryHarvestKg = farmerLots.reduce((acc, l) => acc + (l.totalWeightKg || 0), 0);
-  const totalCherryInventoryKg = farmerLots
+  const totalCherryHarvestKg = tenantLots.reduce((acc, l) => acc + (l.totalWeightKg || 0), 0);
+  const totalCherryInventoryKg = tenantLots
     .filter((l) => !(l.isReleasedToMarketplace ?? true) && !l.sentToProcessor)
     .reduce((acc, l) => acc + (l.availableWeightKg || 0), 0);
-  const totalCherryInventoryLots = farmerLots.filter(
+  const totalCherryInventoryLots = tenantLots.filter(
     (l) => !(l.isReleasedToMarketplace ?? true) && !l.sentToProcessor
   ).length;
-  const totalCherryReleased = farmerLots.filter(
+  const totalCherryReleased = tenantLots.filter(
     (l) => (l.isReleasedToMarketplace ?? true) && !l.sentToProcessor
   ).length;
-  const totalCherryToProcessor = farmerLots.filter((l) => l.sentToProcessor === true).length;
+  const totalCherryToProcessor = tenantLots.filter((l) => l.sentToProcessor === true).length;
 
   // =========================================================================
   // VIEW MODE 1: FORMULIR WIZARD DEDIKASI IN-PAGE (BUKAN POP-UP MODAL)
@@ -1000,7 +982,7 @@ export const MasterHasilPanenTab: React.FC = () => {
                 : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             }`}
           >
-            Semua Lot ({farmerLots.length})
+            Semua Lot ({tenantLots.length})
           </button>
 
           <button

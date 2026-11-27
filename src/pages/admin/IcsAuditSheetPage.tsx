@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import { IcsChecklistItem, IcsAuditReport } from '../../types/coffee';
 import {
   ClipboardCheck,
@@ -743,10 +744,19 @@ export const IcsAuditSheetPage: React.FC = () => {
     }
   }, [routeTargetType, routeTargetId, searchParams]);
 
-  // Farmers list
-  const farmersList = useMemo(
-    () => users.filter((u) => u.role === 'petani' || u.assignedService === 'petani'),
-    [users]
+  // Scoped multi-tenant pipeline per Kelompok Tani
+  const {
+    scopedFarmers: farmersList,
+    scopedFarms,
+    scopedLots,
+  } = useMemo(
+    () =>
+      getScopedTenantData(currentUser, {
+        users,
+        coffeeFarms,
+        farmerLots,
+      }),
+    [currentUser, users, coffeeFarms, farmerLots]
   );
 
   // Validate target ID and ensure it corresponds to the current targetType
@@ -760,23 +770,23 @@ export const IcsAuditSheetPage: React.FC = () => {
         }
       }
     } else if (targetType === 'farm') {
-      if (!targetId || !coffeeFarms.some((f) => f.id === targetId)) {
-        if (coffeeFarms.length > 0) {
-          const fallback = coffeeFarms[0].id;
+      if (!targetId || !scopedFarms.some((f) => f.id === targetId)) {
+        if (scopedFarms.length > 0) {
+          const fallback = scopedFarms[0].id;
           setTargetId(fallback);
           navigate(`/admin/ict/audit/farm/${fallback}`, { replace: true });
         }
       }
     } else if (targetType === 'harvest') {
-      if (!targetId || !farmerLots.some((l) => l.id === targetId)) {
-        if (farmerLots.length > 0) {
-          const fallback = farmerLots[0].id;
+      if (!targetId || !scopedLots.some((l) => l.id === targetId)) {
+        if (scopedLots.length > 0) {
+          const fallback = scopedLots[0].id;
           setTargetId(fallback);
           navigate(`/admin/ict/audit/harvest/${fallback}`, { replace: true });
         }
       }
     }
-  }, [targetType, targetId, farmersList, coffeeFarms, farmerLots, navigate]);
+  }, [targetType, targetId, farmersList, scopedFarms, scopedLots, navigate]);
 
   // Current object being audited
   const selectedFarmer = useMemo(
@@ -784,26 +794,26 @@ export const IcsAuditSheetPage: React.FC = () => {
     [targetType, targetId, farmersList]
   );
   const selectedFarm = useMemo(
-    () => (targetType === 'farm' ? coffeeFarms.find((f) => f.id === targetId) : null),
-    [targetType, targetId, coffeeFarms]
+    () => (targetType === 'farm' ? scopedFarms.find((f) => f.id === targetId) : null),
+    [targetType, targetId, scopedFarms]
   );
   const selectedLot = useMemo(
-    () => (targetType === 'harvest' ? farmerLots.find((l) => l.id === targetId) : null),
-    [targetType, targetId, farmerLots]
+    () => (targetType === 'harvest' ? scopedLots.find((l) => l.id === targetId) : null),
+    [targetType, targetId, scopedLots]
   );
 
   // Associated farms & harvest lots of selected farmer
   const farmerAssociatedFarms = useMemo(() => {
     if (!selectedFarmer) return [];
-    return coffeeFarms.filter((f) => f.farmerId === selectedFarmer.id);
-  }, [selectedFarmer, coffeeFarms]);
+    return scopedFarms.filter((f) => f.farmerId === selectedFarmer.id);
+  }, [selectedFarmer, scopedFarms]);
 
   const farmerAssociatedLots = useMemo(() => {
     if (!selectedFarmer) return [];
-    return farmerLots.filter(
+    return scopedLots.filter(
       (l) => l.farmerId === selectedFarmer.id || l.farmerName === selectedFarmer.name
     );
-  }, [selectedFarmer, farmerLots]);
+  }, [selectedFarmer, scopedLots]);
 
   // Active Checklists for current category
   const activeChecklist = useMemo(
@@ -940,22 +950,22 @@ export const IcsAuditSheetPage: React.FC = () => {
       if (!nextId) nextId = farmersList[0]?.id || '';
     } else if (newType === 'farm') {
       if (targetType === 'farmer' && selectedFarmer) {
-        const farm = coffeeFarms.find((f) => f.farmerId === selectedFarmer.id);
+        const farm = scopedFarms.find((f) => f.farmerId === selectedFarmer.id);
         if (farm) nextId = farm.id;
       } else if (targetType === 'harvest' && selectedLot) {
-        const farm = coffeeFarms.find((f) => f.id === selectedLot.farmId || f.farmName === selectedLot.farmName);
+        const farm = scopedFarms.find((f) => f.id === selectedLot.farmId || f.farmName === selectedLot.farmName);
         if (farm) nextId = farm.id;
       }
-      if (!nextId) nextId = coffeeFarms[0]?.id || '';
+      if (!nextId) nextId = scopedFarms[0]?.id || '';
     } else if (newType === 'harvest') {
       if (targetType === 'farmer' && selectedFarmer) {
-        const lot = farmerLots.find((l) => l.farmerId === selectedFarmer.id || l.farmerName === selectedFarmer.name);
+        const lot = scopedLots.find((l) => l.farmerId === selectedFarmer.id || l.farmerName === selectedFarmer.name);
         if (lot) nextId = lot.id;
       } else if (targetType === 'farm' && selectedFarm) {
-        const lot = farmerLots.find((l) => l.farmId === selectedFarm.id || l.farmerId === selectedFarm.farmerId);
+        const lot = scopedLots.find((l) => l.farmId === selectedFarm.id || l.farmerId === selectedFarm.farmerId);
         if (lot) nextId = lot.id;
       }
-      if (!nextId) nextId = farmerLots[0]?.id || '';
+      if (!nextId) nextId = scopedLots[0]?.id || '';
     }
 
     setTargetType(newType);
@@ -1233,7 +1243,7 @@ export const IcsAuditSheetPage: React.FC = () => {
                   onChange={(e) => handleTargetChange(e.target.value)}
                   className="w-full bg-white border border-stone-300 rounded-md px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
-                  {coffeeFarms.map((farm) => (
+                  {scopedFarms.map((farm) => (
                     <option key={farm.id} value={farm.id}>
                       {farm.farmName} — Petani: {farm.farmerName} ({farm.landAreaHectares} Ha)
                     </option>
@@ -1247,7 +1257,7 @@ export const IcsAuditSheetPage: React.FC = () => {
                   onChange={(e) => handleTargetChange(e.target.value)}
                   className="w-full bg-white border border-stone-300 rounded-md px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
-                  {farmerLots.map((lot) => (
+                  {scopedLots.map((lot) => (
                     <option key={lot.id} value={lot.id}>
                       Lot {lot.id} — {lot.farmerName} ({lot.totalWeightKg} kg, {lot.brix || 21.5}° Bx)
                     </option>

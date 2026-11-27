@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import { VerificationStampBadge } from '../shared/VerificationStampBadge';
 import {
   ShieldCheck,
@@ -88,9 +89,27 @@ export const VerifierView: React.FC = () => {
   const [newNoteInput, setNewNoteInput] = useState('');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  const {
+    scopedFarmers,
+    scopedFarms,
+    scopedLots,
+  } = useMemo(
+    () =>
+      getScopedTenantData(currentUser, {
+        users,
+        coffeeFarms,
+        farmerLots,
+        processedLots,
+        verificationStamps,
+      }),
+    [currentUser, users, coffeeFarms, farmerLots, processedLots, verificationStamps]
+  );
+
   // Harvest & Farmer Verification States (Petani Domain)
   const [farmerSubSection, setFarmerSubSection] = useState<'farmers' | 'harvest' | 'farms'>('farmers');
-  const farmersList = users.filter((u) => u.role === 'petani' || u.assignedService === 'petani');
+  const farmersList = scopedFarmers;
+  const targetFarms = scopedFarms;
+  const targetLots = scopedLots;
   const [harvestModalOpen, setHarvestModalOpen] = useState(false);
   const [selectedHarvestLot, setSelectedHarvestLot] = useState<FarmerHarvestLot | null>(null);
   const [harvestBrix, setHarvestBrix] = useState<number>(22.0);
@@ -102,8 +121,8 @@ export const VerifierView: React.FC = () => {
   const [showCircularIndicesPanel, setShowCircularIndicesPanel] = useState<boolean>(true);
 
   const activeSelectedFarm = useMemo(() => {
-    return coffeeFarms.find((f) => f.id === selectedVerifierFarmId) || coffeeFarms[0];
-  }, [coffeeFarms, selectedVerifierFarmId]);
+    return targetFarms.find((f) => f.id === selectedVerifierFarmId) || targetFarms[0];
+  }, [targetFarms, selectedVerifierFarmId]);
 
   // General Stamp Issuance Modal (for non-roast domains: Petani, Pengolah, Gudang, Cafe)
   const [genericModalOpen, setGenericModalOpen] = useState(false);
@@ -323,16 +342,16 @@ export const VerifierView: React.FC = () => {
 
   // Quick stats calculation
   const stats = useMemo(() => {
-    const verifiedFarms = coffeeFarms.filter((f) => f.verificationStatus === 'verified').length;
-    const verifiedHarvests = farmerLots.filter((h) => h.verificationStatus === 'verified').length;
+    const verifiedFarms = targetFarms.filter((f) => f.verificationStatus === 'verified').length;
+    const verifiedHarvests = targetLots.filter((h) => h.verificationStatus === 'verified').length;
     const verifiedMills = processedLots.filter((p) => p.verificationStatus === 'verified').length;
     const verifiedWarehouses = warehouseLots.filter((w) => w.verificationStatus === 'verified').length;
     const verifiedRoasts = roastedLots.filter((r) => r.verificationStatus === 'verified').length;
     const verifiedCafes = cafeProducts.filter((c) => c.verificationStatus === 'verified').length;
 
     const pendingRoasts = roastedLots.filter((r) => r.verificationStatus === 'pending').length;
-    const pendingFarms = coffeeFarms.filter((f) => f.verificationStatus === 'pending').length;
-    const pendingHarvests = farmerLots.filter((h) => h.verificationStatus === 'pending').length;
+    const pendingFarms = targetFarms.filter((f) => f.verificationStatus === 'pending').length;
+    const pendingHarvests = targetLots.filter((h) => h.verificationStatus === 'pending').length;
 
     const roastScores = roastedLots
       .filter((r) => r.verificationStamp?.cuppingEvaluation)
@@ -346,7 +365,7 @@ export const VerifierView: React.FC = () => {
       avgCuppingScore,
       totalStamps: verificationStamps.length,
     };
-  }, [coffeeFarms, farmerLots, processedLots, warehouseLots, roastedLots, cafeProducts, verificationStamps]);
+  }, [targetFarms, targetLots, processedLots, warehouseLots, roastedLots, cafeProducts, verificationStamps]);
 
   // Auditor domain badge / header info
   const domainInfo: Record<
@@ -818,7 +837,7 @@ export const VerifierView: React.FC = () => {
                     : 'bg-stone-200 text-stone-700'
                 }`}
               >
-                {coffeeFarms.length}
+                {targetFarms.length}
               </span>
             </button>
 
@@ -840,7 +859,7 @@ export const VerifierView: React.FC = () => {
                     : 'bg-stone-200 text-stone-700'
                 }`}
               >
-                {farmerLots.length}
+                {targetLots.length}
               </span>
             </button>
           </div>
@@ -1139,7 +1158,7 @@ export const VerifierView: React.FC = () => {
                         onChange={(e) => setSelectedVerifierFarmId(e.target.value)}
                         className="font-bold bg-stone-50 border border-stone-300 rounded-md px-2.5 py-1.5 text-stone-800 text-xs"
                       >
-                        {coffeeFarms.map((farm) => (
+                        {targetFarms.map((farm) => (
                           <option key={farm.id} value={farm.id}>
                             {farm.farmName} ({farm.farmerName})
                           </option>
@@ -1185,12 +1204,12 @@ export const VerifierView: React.FC = () => {
                   </p>
                 </div>
                 <span className="text-xs font-bold text-stone-600 bg-stone-100 border border-stone-200 px-3 py-1 rounded-full">
-                  Total {coffeeFarms.length} Lahan
+                  Total {targetFarms.length} Lahan
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {coffeeFarms
+                {targetFarms
                   .filter((farm) => {
                     const matchesSearch =
                       farm.id.toLowerCase().includes(searchTerm.toLowerCase()) ||

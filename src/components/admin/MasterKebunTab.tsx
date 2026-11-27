@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useCoffee } from '../../context/CoffeeContext';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import {
   CoffeeFarm,
   FarmWeatherData,
@@ -61,31 +62,11 @@ export const MasterKebunTab: React.FC<MasterKebunTabProps> = ({
 }) => {
   const { currentUser, users, coffeeFarms, addCoffeeFarm, updateCoffeeFarm, deleteCoffeeFarm } = useCoffee();
 
-  // All registered farmers in the cooperative
-  const allFarmers = users.filter((u) => {
-    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
-    if (!isFarmer) return false;
-    if (currentUser?.role === 'super_admin') return true;
-
-    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
-    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
-    const userOrg = (currentUser?.organization || '').trim().toLowerCase();
-    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-
-    const isSameKtId = Boolean(
-      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
-      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
-    );
-    const isSameOrg = Boolean(
-      userOrg && farmerOrg && (
-        farmerOrg === userOrg ||
-        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
-        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
-      )
-    );
-
-    return isSameKtId || isSameOrg;
-  });
+  // All registered farmers and scoped farms in the cooperative
+  const { scopedFarmers: allFarmers, scopedFarms } = useMemo(
+    () => getScopedTenantData(currentUser, { users, coffeeFarms }),
+    [currentUser, users, coffeeFarms]
+  );
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFarmerFilter, setSelectedFarmerFilter] = useState<string>(
@@ -303,7 +284,7 @@ export const MasterKebunTab: React.FC<MasterKebunTabProps> = ({
   };
 
   // Filtered farms list
-  const filteredFarms = coffeeFarms
+  const filteredFarms = scopedFarms
     .filter((f) => {
       if (selectedFarmerFilter === 'all') return true;
       return f.farmerId === selectedFarmerFilter;
@@ -319,8 +300,8 @@ export const MasterKebunTab: React.FC<MasterKebunTabProps> = ({
       );
     });
 
-  const totalHectares = coffeeFarms.reduce((acc, f) => acc + (f.landAreaHectares || 0), 0);
-  const totalTrees = coffeeFarms.reduce((acc, f) => acc + (f.totalTreesCount || 0), 0);
+  const totalHectares = scopedFarms.reduce((acc, f) => acc + (f.landAreaHectares || 0), 0);
+  const totalTrees = scopedFarms.reduce((acc, f) => acc + (f.totalTreesCount || 0), 0);
 
   const handleOpenAddPage = () => {
     setEditingFarmId(null);
@@ -1255,7 +1236,7 @@ export const MasterKebunTab: React.FC<MasterKebunTabProps> = ({
               Total Lahan Terdaftar
             </span>
             <span className="text-2xl font-black text-stone-900 mt-1 block">
-              {coffeeFarms.length} <span className="text-xs font-normal text-stone-500">Kebun</span>
+              {scopedFarms.length} <span className="text-xs font-normal text-stone-500">Kebun</span>
             </span>
           </div>
           <div className="w-11 h-11 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">

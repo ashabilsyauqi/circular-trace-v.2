@@ -30,14 +30,14 @@ export const MOCK_USERS: AppUser[] = [
     kelompokTaniId: 'POKTAN-ASHABIL-001',
     kelompokTaniName: 'Kelompok Tani Mandiri (Ashabil)',
     organization: 'Kelompok Tani Mandiri (Ashabil)',
-    location: 'Bandung, Jawa Barat',
+    location: 'Desa Awan, Kintamani, Bangli, Bali',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     phone: '0812-3456-7890',
     balance: 0,
     status: 'active',
     subscriptionStatus: 'active',
     registeredAt: '2026-11-26',
-    bio: 'Pengurus Kelompok Tani Mandiri (Pipeline Mandiri Baru - 0 Petani Terdaftar).',
+    bio: 'Ketua Kelompok Tani Mandiri (Ashabil) - Membawahi 22 Petani Binaan & 44 Ha Lahan (Desa Awan, Kintamani, Bali).',
   },
 
   // --- 0. ADMIN KELOMPOK TANI MANDIRI (Novizar) ---

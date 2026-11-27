@@ -835,22 +835,24 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
       {/* --------------------------------------------------------------------- */}
       {/* 1. TOP TOOLBAR & COMPLIANCE BADGE                                     */}
       {/* --------------------------------------------------------------------- */}
-      <div className="bg-[#FAF7F2] px-4 sm:px-5 py-3.5 border-b border-stone-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
-            <Compass className="w-5 h-5" />
+      <div className="bg-[#FAF7F2] px-3 sm:px-5 py-3 border-b border-stone-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+            <Compass className="w-4 h-4" />
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 font-bold text-stone-900 truncate">
-              <span className="text-sm font-black truncate">{farmName}</span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1 shrink-0 border border-emerald-300">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                EUDR Polygon Georeferenced
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5 font-bold text-stone-900">
+              <span className="text-sm font-black truncate max-w-[200px] sm:max-w-none">{farmName}</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold inline-flex items-center gap-1 border border-emerald-300 shrink-0">
+                <ShieldCheck className="w-3 h-3 text-emerald-700" />
+                EUDR Georeferenced
               </span>
             </div>
-            <div className="text-[11px] text-stone-500 truncate flex items-center gap-1.5 mt-0.5">
-              <MapPin className="w-3 h-3 text-stone-400 shrink-0" />
-              <span>{locationName || 'Plot Lahan Terpetakan'}</span>
+            <div className="text-[11px] text-stone-500 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
+              <span className="flex items-center gap-1 truncate max-w-[150px] sm:max-w-none">
+                <MapPin className="w-3 h-3 text-stone-400 shrink-0" />
+                <span className="truncate">{locationName || 'Plot Lahan Terpetakan'}</span>
+              </span>
               <span>&bull;</span>
               <span className="font-bold text-emerald-800">{computedAreaHa || landAreaHectares} Ha ({((computedAreaHa || landAreaHectares) * 10000).toLocaleString()} m²)</span>
               <span>&bull;</span>
@@ -862,12 +864,12 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
         </div>
 
         {/* Action Controls & Export */}
-        <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+        <div className="flex items-center gap-1.5 w-full sm:w-auto">
           {allowEdit && (
             <button
               type="button"
               onClick={() => setIsClickToAddMode(!isClickToAddMode)}
-              className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold inline-flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer ${
+              className={`px-2 py-1.5 rounded-xl border text-[11px] font-bold inline-flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer flex-1 sm:flex-initial ${
                 isClickToAddMode
                   ? 'bg-amber-500 border-amber-600 text-white animate-pulse'
                   : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-800'
@@ -875,7 +877,7 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
               title="Klik pada peta untuk menancapkan patok batas baru"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{isClickToAddMode ? 'Klik Peta untuk Patok (+)' : '+ Patok via Klik'}</span>
+              <span>{isClickToAddMode ? 'Klik Peta' : '+ Patok Klik'}</span>
             </button>
           )}
 
@@ -883,18 +885,18 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
             <button
               type="button"
               onClick={handleOpenAddModal}
-              className="px-2.5 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-[11px] font-bold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+              className="px-2 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-[11px] font-bold inline-flex items-center justify-center gap-1 shadow-2xs transition-colors cursor-pointer flex-1 sm:flex-initial"
               title="Formulir tambah patok manual"
             >
               <Plus className="w-3.5 h-3.5 text-stone-500" />
-              <span>+ Form Patok</span>
+              <span>Form Patok</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={handleCopyCoords}
-            className="px-2.5 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-[11px] font-bold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-[11px] font-bold inline-flex items-center justify-center gap-1 shadow-2xs transition-colors cursor-pointer text-center"
             title="Salin Koordinat GPS Titik Pusat"
           >
             {copied ? (
@@ -913,7 +915,7 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
           <button
             type="button"
             onClick={handleCopyGeoJson}
-            className="px-2.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold inline-flex items-center justify-center gap-1 shadow-2xs transition-colors cursor-pointer text-center"
             title="Salin Poligon GeoJSON EUDR"
           >
             {copiedGeoJson ? (
@@ -933,7 +935,7 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold inline-flex items-center gap-1 shadow-2xs transition-colors"
+            className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold inline-flex items-center justify-center gap-1 shadow-2xs transition-colors text-center"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             <span>Google Maps</span>
@@ -952,18 +954,18 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
           style={{ height: '100%', width: '100%' }}
         />
 
-        {/* Floating Farm Polygon Info Badge (Top Center) */}
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-stone-950/90 backdrop-blur-md text-white px-3.5 py-1.5 rounded-2xl text-xs border border-emerald-500/40 shadow-xl flex items-center gap-2 pointer-events-auto">
-          <TreePine className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="font-bold">{farmName}</span>
-          <span className="text-stone-400">&bull;</span>
-          <span className="text-emerald-300 font-bold">{computedAreaHa || landAreaHectares} Ha</span>
-          <span className="text-stone-400">&bull;</span>
-          <span className="text-amber-300 font-mono text-[11px]">{altitude}</span>
+        {/* Floating Farm Polygon Info Badge (Top Center) - Compact on Mobile */}
+        <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-[1000] bg-stone-950/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[11px] border border-emerald-500/40 shadow-xl flex items-center gap-1.5 pointer-events-auto max-w-[calc(100%-80px)] truncate">
+          <TreePine className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <span className="font-bold truncate hidden sm:inline">{farmName}</span>
+          <span className="text-stone-400 hidden sm:inline">&bull;</span>
+          <span className="text-emerald-300 font-bold shrink-0">{computedAreaHa || landAreaHectares} Ha</span>
+          <span className="text-stone-400 shrink-0">&bull;</span>
+          <span className="text-amber-300 font-mono shrink-0">{altitude}</span>
           <button
             type="button"
             onClick={handleRecenterMap}
-            className="ml-1 text-stone-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+            className="ml-1 text-stone-300 hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors shrink-0"
             title="Pusatkan Tampilan Peta pada Lahan"
           >
             <Maximize2 className="w-3 h-3" />
@@ -972,15 +974,15 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
 
         {/* Floating Mode Hint when Click-to-add is active */}
         {isClickToAddMode && (
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 z-[1000] bg-amber-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg animate-bounce flex items-center gap-1.5">
-            <Plus className="w-4 h-4" />
-            Klik di mana saja pada peta untuk menancapkan patok batas baru!
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 z-[1000] bg-amber-600 text-white px-3 py-1 rounded-full text-[11px] font-bold shadow-lg animate-bounce flex items-center gap-1 max-w-[calc(100%-32px)] text-center">
+            <Plus className="w-3.5 h-3.5 shrink-0" />
+            Klik peta untuk patok batas baru!
           </div>
         )}
 
-        {/* Floating Layer Switcher & Plot Overlay Controls (Bottom Right) */}
-        <div className="absolute bottom-3 right-3 z-[1000] bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border border-stone-200 shadow-md flex items-center gap-1.5 text-[10px] font-bold text-stone-700 pointer-events-auto flex-wrap">
-          <div className="flex items-center gap-1 border-r border-stone-200 pr-1.5">
+        {/* Floating Layer Switcher & Plot Overlay Controls (Desktop Only - Bottom Right) */}
+        <div className="hidden sm:flex absolute bottom-2.5 right-2.5 z-[1000] bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border border-stone-200 shadow-md items-center gap-1 text-[10px] font-bold text-stone-700 pointer-events-auto">
+          <div className="flex items-center gap-1 border-r border-stone-200 pr-1">
             <button
               type="button"
               onClick={() => setShowPolygon(!showPolygon)}
@@ -1022,18 +1024,7 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
                 : 'hover:bg-stone-100 text-stone-600'
             }`}
           >
-            Peta Jalan (OSM)
-          </button>
-          <button
-            type="button"
-            onClick={() => setMapLayer('terrain')}
-            className={`px-2 py-1 rounded-lg transition-all cursor-pointer ${
-              mapLayer === 'terrain'
-                ? 'bg-stone-900 text-white font-black shadow-xs'
-                : 'hover:bg-stone-100 text-stone-600'
-            }`}
-          >
-            Kontur Elevasi
+            Peta
           </button>
           <button
             type="button"
@@ -1044,20 +1035,70 @@ export const FarmLocationMap: React.FC<FarmLocationMapProps> = ({
                 : 'hover:bg-stone-100 text-stone-600'
             }`}
           >
-            Satelit Foto
+            Satelit
           </button>
         </div>
 
-        {/* Floating Coordinate & Perimeter Pill (Bottom Left) */}
-        <div className="absolute bottom-3 left-3 z-[1000] bg-stone-950/90 backdrop-blur-md text-white px-3.5 py-1.5 rounded-2xl text-[11px] font-mono border border-emerald-500/30 shadow-md flex items-center gap-2 pointer-events-auto">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>{currentLat.toFixed(4)}° S, {currentLng.toFixed(4)}° E</span>
-          <span className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
-            &bull; Perimeter: ~{computedPerimeterM}m
-          </span>
-          <span className="text-amber-300 text-[10px] font-bold">
-            &bull; {patoks.length} Patok Batas
-          </span>
+        {/* Floating Coordinate & Perimeter Pill (Bottom Left - Non-overlapping) */}
+        <div className="absolute bottom-2 left-2 z-[1000] bg-stone-950/90 backdrop-blur-md text-white px-2.5 py-1 rounded-xl text-[10px] font-mono border border-emerald-500/30 shadow-md flex items-center gap-1.5 pointer-events-auto max-w-[calc(100%-16px)] truncate">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <span className="truncate">{currentLat.toFixed(4)}° S, {currentLng.toFixed(4)}° E</span>
+          <span className="text-emerald-400 font-bold shrink-0">&bull; ~{computedPerimeterM}m</span>
+          <span className="text-amber-300 font-bold shrink-0 hidden sm:inline">&bull; {patoks.length} Patok</span>
+        </div>
+      </div>
+
+      {/* Mobile-Only Dedicated Plot & Layer Toolbar (Zero Overlap on Mobile) */}
+      <div className="sm:hidden bg-stone-50 px-3 py-1.5 border-t border-stone-200 flex items-center justify-between gap-1 text-[10px] font-bold text-stone-700">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setShowPolygon(!showPolygon)}
+            className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+              showPolygon ? 'bg-emerald-700 text-white font-black' : 'bg-white border border-stone-200 text-stone-600'
+            }`}
+          >
+            Poligon
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowRadiusBuffer(!showRadiusBuffer)}
+            className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+              showRadiusBuffer ? 'bg-emerald-700 text-white font-black' : 'bg-white border border-stone-200 text-stone-600'
+            }`}
+          >
+            Buffer
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowPatokMarkers(!showPatokMarkers)}
+            className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+              showPatokMarkers ? 'bg-emerald-700 text-white font-black' : 'bg-white border border-stone-200 text-stone-600'
+            }`}
+          >
+            Patok ({patoks.length})
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1 border-l border-stone-200 pl-1.5">
+          <button
+            type="button"
+            onClick={() => setMapLayer('osm')}
+            className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+              mapLayer === 'osm' ? 'bg-stone-900 text-white font-black' : 'text-stone-600'
+            }`}
+          >
+            Peta
+          </button>
+          <button
+            type="button"
+            onClick={() => setMapLayer('satellite')}
+            className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+              mapLayer === 'satellite' ? 'bg-stone-900 text-white font-black' : 'text-stone-600'
+            }`}
+          >
+            Satelit
+          </button>
         </div>
       </div>
 

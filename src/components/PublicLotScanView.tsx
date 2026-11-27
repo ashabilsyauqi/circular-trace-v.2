@@ -1045,7 +1045,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8 selection:bg-amber-500 selection:text-stone-950">
+    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col justify-between p-3 sm:p-6 lg:p-8 w-full max-w-full overflow-x-hidden selection:bg-amber-500 selection:text-stone-950">
       {/* Top Header Navigation — warm, story-driven, consumer-facing */}
       <header className="max-w-5xl mx-auto w-full flex items-center justify-between py-4 border-b border-stone-200">
         <div className="flex items-center gap-3">
@@ -1073,12 +1073,12 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
       </header>
 
       {/* Main Verified Specification Card */}
-      <main className="max-w-5xl mx-auto w-full my-8 space-y-6">
+      <main className="max-w-5xl mx-auto w-full my-6 sm:my-8 space-y-6 overflow-x-hidden">
         {/* ==================================================================== */}
         {/* CASE 0: GELAS KOPI PELANGGAN CAFE (FARM-TO-CUP CONSUMER EXPERIENCE) */}
         {/* ==================================================================== */}
         {isCafeCup ? (
-          <div className="space-y-10 max-w-4xl mx-auto">
+          <div className="space-y-10 max-w-4xl mx-auto w-full overflow-x-hidden">
             {/* 1. HERO SEDUHAN — Flat, warm specialty paper tone, zero nested boxes */}
             <div className="py-6 border-b border-stone-200/80 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">

@@ -3,6 +3,7 @@ import {
   Sparkles,
   Flame,
   Award,
+  ChevronDown,
 } from 'lucide-react';
 
 export interface SensoryAttribute {
@@ -250,61 +251,28 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
         </div>
       </div>
 
-      {/* Preset Simulator Switcher (Optional Interactive Filter) */}
+      {/* Preset Simulator Switcher (Compact Single-Row Non-sliding & Non-stacking Dropdown) */}
       {interactive && (
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-white/80 p-2.5 rounded-2xl border border-amber-200/80">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-3 bg-white/90 p-2.5 rounded-2xl border border-amber-200/80 shadow-2xs">
+          <div className="flex items-center gap-2 shrink-0">
             <Flame className="w-4 h-4 text-amber-600" />
             <span className="text-xs font-black uppercase tracking-wider text-amber-950">
-              Profil Profil Sangrai:
+              Profil Sangrai:
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setSelectedRoastPreset('actual')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1 ${
-                selectedRoastPreset === 'actual'
-                  ? 'bg-amber-600 text-white shadow-xs font-black'
-                  : 'text-stone-600 hover:bg-amber-100/60'
-              }`}
+          <div className="relative shrink-0 max-w-[200px] sm:max-w-none">
+            <select
+              value={selectedRoastPreset}
+              onChange={(e) => setSelectedRoastPreset(e.target.value as any)}
+              className="appearance-none bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-1.5 pl-3 pr-8 rounded-xl shadow-xs transition-colors cursor-pointer border border-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 truncate"
             >
-              ⭐ Profil Aktual ({roastLevel})
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedRoastPreset('light')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1 ${
-                selectedRoastPreset === 'light'
-                  ? 'bg-amber-600 text-white shadow-xs font-black'
-                  : 'text-stone-600 hover:bg-amber-100/60'
-              }`}
-            >
-              🍋 Light Filter (Cerah)
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedRoastPreset('medium')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1 ${
-                selectedRoastPreset === 'medium'
-                  ? 'bg-amber-600 text-white shadow-xs font-black'
-                  : 'text-stone-600 hover:bg-amber-100/60'
-              }`}
-            >
-              🍯 Medium Balance (Seimbang)
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedRoastPreset('dark')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1 ${
-                selectedRoastPreset === 'dark'
-                  ? 'bg-amber-600 text-white shadow-xs font-black'
-                  : 'text-stone-600 hover:bg-amber-100/60'
-              }`}
-            >
-              🍫 Dark Bold (Mantap)
-            </button>
+              <option value="actual">⭐ Profil Aktual ({roastLevel})</option>
+              <option value="light">🍋 Light Filter (Cerah)</option>
+              <option value="medium">🍯 Medium Balance (Seimbang)</option>
+              <option value="dark">🍫 Dark Bold (Mantap)</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-white absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
       )}

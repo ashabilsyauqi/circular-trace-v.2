@@ -848,8 +848,8 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
       <div className="bg-white/75 rounded-2xl p-4 border border-stone-200/80 space-y-3 shadow-2xs">
         {/* Auditor Profile Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/60 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0 border border-emerald-300">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0 border border-emerald-300 mt-0.5">
               <UserCheck className="w-5 h-5 text-emerald-700" />
             </div>
             <div>

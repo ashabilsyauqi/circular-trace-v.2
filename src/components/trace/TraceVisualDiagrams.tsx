@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Flame,
   Droplets,
@@ -26,6 +27,9 @@ import {
   Check,
   AlertCircle,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  BarChart3,
   HelpCircle,
 } from 'lucide-react';
 
@@ -626,6 +630,28 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
 }) => {
   const [selectedFormulaId, setSelectedFormulaId] = useState<'ct4ci' | 'environmental' | 'social' | 'economic' | null>(null);
   const [activeModalTab, setActiveModalTab] = useState<'rumus' | 'faktor' | 'standar'>('rumus');
+  const [expandedFactors, setExpandedFactors] = useState<Record<string, boolean>>({});
+
+  const toggleExpanded = (id: string) => {
+    setExpandedFactors((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  useEffect(() => {
+    if (!selectedFormulaId) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedFormulaId(null);
+    };
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedFormulaId]);
 
   // Complete breakdown configurations for all 4 indexes
   const indexConfigs: Record<'ct4ci' | 'environmental' | 'social' | 'economic', IndexDetailConfig> = {
@@ -982,6 +1008,7 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
   }) => {
     const config = indexConfigs[configId];
     const clamped = Math.min(100, Math.max(0, config.score));
+    const isExpanded = !!expandedFactors[configId];
 
     return (
       <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/95 border border-stone-200/80 hover:border-emerald-400 hover:shadow-md transition-all shadow-2xs space-y-2">
@@ -1028,41 +1055,76 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
           {config.subLabel}
         </span>
 
-        {/* Mini Factor Progress Bars */}
-        <div className="w-full space-y-1.5 pt-2 pb-1 border-t border-stone-200/60 text-left">
-          {config.factors.slice(0, 3).map((factor, idx) => (
-            <div key={idx} className="space-y-0.5">
-              <div className="flex items-center justify-between text-[9px]">
-                <span className="text-stone-600 truncate max-w-[110px] sm:max-w-[125px] font-medium" title={factor.name}>
-                  {factor.name}
-                </span>
-                <span className="font-mono font-bold text-stone-800 shrink-0">
-                  {factor.scorePct.toFixed(0)}%
-                </span>
-              </div>
-              <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${config.progressColor}`}
-                  style={{ width: `${Math.min(100, Math.max(0, factor.scorePct))}%` }}
-                />
-              </div>
-            </div>
-          ))}
+        {/* Action Buttons: Detail Faktor (Toggle) & Rumus (Modal) */}
+        <div className="w-full pt-2 border-t border-stone-200/60 flex items-center gap-1.5 mt-1">
+          <button
+            type="button"
+            onClick={() => toggleExpanded(configId)}
+            className={`flex-1 py-1.5 px-2 rounded-xl text-[10px] font-bold border transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer ${
+              isExpanded
+                ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                : 'bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 border-stone-200 hover:border-emerald-300'
+            }`}
+            title="Klik untuk melihat / menyembunyikan detail progress bar faktor penentu"
+          >
+            <BarChart3 className="w-3 h-3 text-emerald-700 shrink-0" />
+            <span>Detail Faktor</span>
+            {isExpanded ? <ChevronUp className="w-3 h-3 ml-0.5" /> : <ChevronDown className="w-3 h-3 ml-0.5" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedFormulaId(configId);
+              setActiveModalTab('rumus');
+            }}
+            className="py-1.5 px-2.5 rounded-xl bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 text-[10px] font-bold border border-stone-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0"
+            title={`Buka rincian rumus matematis & acuan regulasi untuk ${config.title}`}
+          >
+            <Calculator className="w-3 h-3 text-stone-500 shrink-0" />
+            <span>Rumus</span>
+          </button>
         </div>
 
-        {/* Clickable Formula & Standard Reference Button */}
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedFormulaId(configId);
-            setActiveModalTab('rumus');
-          }}
-          className="w-full py-1.5 px-2.5 rounded-xl bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 text-[10px] font-bold border border-stone-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer group mt-1"
-          title={`Buka rincian rumus matematis, faktor penentu, dan standar referensi untuk ${config.title}`}
-        >
-          <Calculator className="w-3.5 h-3.5 text-stone-500 group-hover:text-emerald-700 shrink-0" />
-          <span>Rumus &amp; Referensi</span>
-        </button>
+        {/* Mini Factor Progress Bars: ONLY SHOWN WHEN CLICKED */}
+        {isExpanded && (
+          <div className="w-full space-y-2 pt-2.5 pb-1 border-t border-emerald-100 text-left animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="flex items-center justify-between text-[9px] font-bold text-stone-500 uppercase tracking-wider">
+              <span>Sub-Faktor Penentu</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedFormulaId(configId);
+                  setActiveModalTab('faktor');
+                }}
+                className="text-emerald-700 hover:underline flex items-center gap-0.5 font-bold cursor-pointer"
+              >
+                Audit Lengkap <ExternalLink className="w-2.5 h-2.5" />
+              </button>
+            </div>
+
+            <div className="space-y-1.5">
+              {config.factors.map((factor, idx) => (
+                <div key={idx} className="space-y-0.5">
+                  <div className="flex items-center justify-between text-[9px]">
+                    <span className="text-stone-600 truncate max-w-[115px] sm:max-w-[130px] font-medium" title={factor.name}>
+                      {factor.name}
+                    </span>
+                    <span className="font-mono font-bold text-stone-800 shrink-0">
+                      {factor.scorePct.toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${config.progressColor}`}
+                      style={{ width: `${Math.min(100, Math.max(0, factor.scorePct))}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -1096,11 +1158,16 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
       </div>
 
       {/* ==================================================================== */}
-      {/* INTERACTIVE FORMULA & REGULATORY REFERENCE MODAL                      */}
+      {/* INTERACTIVE FORMULA & REGULATORY REFERENCE MODAL (PORTAL TO BODY)    */}
       {/* ==================================================================== */}
-      {selectedConfig && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl border border-stone-200 shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden text-left">
+      {selectedConfig && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[99999] overflow-y-auto bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedFormulaId(null);
+          }}
+        >
+          <div className="relative bg-white rounded-3xl border border-stone-200 shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden text-left my-auto">
             {/* Modal Header */}
             <div className="p-5 sm:p-6 bg-[#FAF7F2] border-b border-stone-200 flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
@@ -1182,20 +1249,97 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
               {/* ================= TAB 1: RUMUS MATEMATIS ================= */}
               {activeModalTab === 'rumus' && (
                 <div className="space-y-4">
-                  {/* Formula LaTeX Display Box */}
+                  {/* Formula Visual Display Box */}
                   <div className="p-4 rounded-2xl bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 text-white shadow-inner space-y-3">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 flex items-center gap-1.5">
-                      <Calculator className="w-3.5 h-3.5" />
-                      Formula Matematis Perhitungan Indeks:
-                    </span>
-                    <div className="bg-black/40 p-3.5 rounded-xl border border-white/10 font-mono text-center text-sm sm:text-base text-emerald-300 font-bold tracking-wide overflow-x-auto">
-                      {selectedConfig.formulaLatex}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 flex items-center gap-1.5">
+                        <Calculator className="w-3.5 h-3.5" />
+                        Formula Matematis Perhitungan Indeks:
+                      </span>
+                      <span className="text-[9px] font-mono font-bold text-stone-400 bg-stone-800/80 px-2 py-0.5 rounded">
+                        Standar CAS &amp; ISO/IEC 17065
+                      </span>
                     </div>
-                    {selectedConfig.id === 'ct4ci' && (
-                      <div className="bg-black/30 p-2.5 rounded-lg border border-white/5 font-mono text-center text-xs text-stone-300">
-                        Evidence Coverage: EC = 100 × [ Σ (Ai · Vi) / Σ Ai ] = 100.0%
-                      </div>
-                    )}
+
+                    {/* Clean Visual Math Fraction Box */}
+                    <div className="bg-black/50 p-4 rounded-xl border border-white/10 flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
+                      {selectedConfig.id === 'ct4ci' && (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-emerald-400 text-sm sm:text-base">CT-4CI</span>
+                            <span className="text-stone-400 font-bold">=</span>
+                            <span className="font-mono font-bold text-white text-sm sm:text-base">100</span>
+                            <span className="text-stone-400 font-bold">×</span>
+                          </div>
+                          <div className="inline-flex flex-col items-center">
+                            <div className="pb-1 px-3 border-b-2 border-emerald-400/70 text-emerald-300 font-mono text-xs sm:text-sm font-bold">
+                              ∑<sub>i=1</sub><sup>N</sup> (A<sub>i</sub> · C<sub>i</sub> · V<sub>i</sub>)
+                            </div>
+                            <div className="pt-1 px-3 text-stone-300 font-mono text-xs sm:text-sm font-bold">
+                              ∑<sub>i=1</sub><sup>N</sup> A<sub>i</sub>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {selectedConfig.id === 'environmental' && (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-teal-400 text-sm sm:text-base">Skor Lingkungan</span>
+                            <span className="text-stone-400 font-bold">=</span>
+                            <span className="font-mono font-bold text-white text-sm sm:text-base">100</span>
+                            <span className="text-stone-400 font-bold">×</span>
+                          </div>
+                          <div className="inline-flex flex-col items-center">
+                            <div className="pb-1 px-3 border-b-2 border-teal-400/70 text-teal-300 font-mono text-xs sm:text-sm font-bold">
+                              ∑<sub>i ∈ Env</sub> (A<sub>i</sub> · C<sub>i</sub> · V<sub>i</sub>)
+                            </div>
+                            <div className="pt-1 px-3 text-stone-300 font-mono text-xs sm:text-sm font-bold">
+                              ∑<sub>i ∈ Env</sub> A<sub>i</sub>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {selectedConfig.id === 'social' && (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-cyan-400 text-sm sm:text-base">Skor Sosial &amp; K3</span>
+                            <span className="text-stone-400 font-bold">=</span>
+                            <span className="font-mono font-bold text-white text-sm sm:text-base">100</span>
+                            <span className="text-stone-400 font-bold">×</span>
+                          </div>
+                          <div className="inline-flex flex-col items-center">
+                            <div className="pb-1 px-3 border-b-2 border-cyan-400/70 text-cyan-300 font-mono text-xs sm:text-sm font-bold">
+                              ∑<sub>i ∈ Soc</sub> (A<sub>i</sub> · C<sub>i</sub> · V<sub>i</sub>)
+                            </div>
+                            <div className="pt-1 px-3 text-stone-300 font-mono text-xs sm:text-sm font-bold">
+                              ∑<sub>i ∈ Soc</sub> A<sub>i</sub>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {selectedConfig.id === 'economic' && (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-amber-400 text-sm sm:text-base">Skor Ekonomi GAP</span>
+                            <span className="text-stone-400 font-bold">=</span>
+                            <span className="font-mono font-bold text-white text-sm sm:text-base">100</span>
+                            <span className="text-stone-400 font-bold">×</span>
+                          </div>
+                          <div className="inline-flex flex-col items-center">
+                            <div className="pb-1 px-3 border-b-2 border-amber-400/70 text-amber-300 font-mono text-xs sm:text-sm font-bold">
+                              ∑<sub>i ∈ Econ</sub> (A<sub>i</sub> · C<sub>i</sub> · V<sub>i</sub>)
+                            </div>
+                            <div className="pt-1 px-3 text-stone-300 font-mono text-xs sm:text-sm font-bold">
+                              ∑<sub>i ∈ Econ</sub> A<sub>i</sub>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="bg-black/30 p-2.5 rounded-lg border border-white/5 font-mono text-center text-[11px] text-stone-300">
+                      Evidence Coverage: EC = 100 × [ Σ (A<sub>i</sub> · V<sub>i</sub>) / Σ A<sub>i</sub> ] = 100.0%
+                    </div>
                   </div>
 
                   {/* Variable Definitions Table */}
@@ -1375,7 +1519,8 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Official ICS Officer Inspection Record */}

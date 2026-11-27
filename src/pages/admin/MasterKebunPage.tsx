@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import {
   TreePine,
   PlusCircle,
@@ -34,37 +35,11 @@ export const MasterKebunPage: React.FC = () => {
 
   const { currentUser, users, coffeeFarms, deleteCoffeeFarm, farmerLots, openBlankoModal } = useCoffee();
 
-  // Scoped farmers: Multi-tenant pipeline per Kelompok Tani
-  const allFarmers = users.filter((u) => {
-    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
-    if (!isFarmer) return false;
-    if (currentUser?.role === 'super_admin') return true;
-
-    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
-    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
-    const userOrg = (currentUser?.organization || '').trim().toLowerCase();
-    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-
-    const isSameKtId = Boolean(
-      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
-      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
-    );
-    const isSameOrg = Boolean(
-      userOrg && farmerOrg && (
-        farmerOrg === userOrg ||
-        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
-        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
-      )
-    );
-
-    return isSameKtId || isSameOrg;
-  });
-
-  // Scoped Tenant Farms
-  const tenantFarms = coffeeFarms.filter((f) => {
-    if (currentUser?.role === 'super_admin') return true;
-    return allFarmers.some((farmer) => farmer.id === f.farmerId);
-  });
+  // Scoped farmers and farms: Multi-tenant pipeline per Kelompok Tani
+  const { scopedFarmers: allFarmers, scopedFarms: tenantFarms } = useMemo(
+    () => getScopedTenantData(currentUser, { users, coffeeFarms }),
+    [currentUser, users, coffeeFarms]
+  );
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFarmerFilter, setSelectedFarmerFilter] = useState<string>(initialFarmerId);
@@ -91,7 +66,7 @@ export const MasterKebunPage: React.FC = () => {
   const totalTrees = tenantFarms.reduce((acc, f) => acc + (f.totalTreesCount || 0), 0);
   const avgAltitude = tenantFarms.length > 0
     ? Math.round(tenantFarms.reduce((acc, f) => acc + (f.altitudeMeters || 1500), 0) / tenantFarms.length)
-    : 1550;
+    : 0;
   const eudrVerifiedFarms = tenantFarms.filter((f) => f.eudrCompliant).length;
 
   const handleDeleteFarm = (id: string, name: string) => {
@@ -152,7 +127,7 @@ export const MasterKebunPage: React.FC = () => {
               Total Blok Kebun
             </span>
             <div className="text-2xl font-black text-stone-900 leading-tight">
-              {coffeeFarms.length}{' '}
+              {tenantFarms.length}{' '}
               <span className="text-xs font-normal text-stone-500">Blok</span>
             </div>
             <span className="text-[10px] text-amber-600 font-medium">Terdaftar di Sistem</span>
@@ -205,7 +180,7 @@ export const MasterKebunPage: React.FC = () => {
               EUDR Deforestation
             </span>
             <div className="text-2xl font-black text-stone-900 leading-tight">
-              {eudrVerifiedFarms}/{coffeeFarms.length}{' '}
+              {eudrVerifiedFarms}/{tenantFarms.length}{' '}
               <span className="text-xs font-normal text-stone-500">Lahan</span>
             </div>
             <span className="text-[10px] text-teal-600 font-medium">Batas Koordinat Lolos</span>
@@ -223,9 +198,9 @@ export const MasterKebunPage: React.FC = () => {
               onChange={(e) => setSelectedFarmerFilter(e.target.value)}
               className="bg-white text-xs border border-stone-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-amber-500 font-medium text-stone-700"
             >
-              <option value="all">Semua Petani Pemilik ({coffeeFarms.length} Lahan)</option>
+              <option value="all">Semua Petani Pemilik ({tenantFarms.length} Lahan)</option>
               {allFarmers.map((farmer) => {
-                const count = coffeeFarms.filter((f) => f.farmerId === farmer.id).length;
+                const count = tenantFarms.filter((f) => f.farmerId === farmer.id).length;
                 return (
                   <option key={farmer.id} value={farmer.id}>
                     {farmer.name} ({count} Blok)

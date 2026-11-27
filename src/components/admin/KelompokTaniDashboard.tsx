@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import {
   Building2,
   Users,
@@ -49,54 +50,39 @@ export const KelompokTaniDashboard: React.FC = () => {
   } = useCoffee();
   const navigate = useNavigate();
 
-  // Scoped farmers: Multi-tenant pipeline per Kelompok Tani
-  const scopedFarmers = users.filter((u) => {
-    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
-    if (!isFarmer) return false;
-    if (currentUser?.role === 'super_admin') return true;
-
-    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
-    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
-    const isSameId = Boolean(
-      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
-      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
-    );
-
-    const userOrg = (currentUser?.organization || currentUser?.kelompokTaniName || '').trim().toLowerCase();
-    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-
-    const isSameOrg = Boolean(
-      userOrg && farmerOrg && (
-        farmerOrg === userOrg ||
-        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
-        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
-      )
-    );
-    return isSameOrg || isSameId;
-  });
-
-  const scopedFarms = coffeeFarms.filter((f) => {
-    if (currentUser?.role === 'super_admin') return true;
-    return scopedFarmers.some((farmer) => farmer.id === f.farmerId);
-  });
-
-  const scopedLots = farmerLots.filter((lot) => {
-    if (currentUser?.role === 'super_admin') return true;
-    return scopedFarmers.some((farmer) => farmer.id === lot.farmerId);
-  });
+  // Scoped multi-tenant pipeline per Kelompok Tani
+  const {
+    scopedFarmers,
+    scopedFarms,
+    scopedLots,
+    scopedProcessors,
+    scopedBatches,
+    scopedProcessedLots,
+    scopedIctOfficers,
+    scopedTransactions,
+  } = useMemo(
+    () =>
+      getScopedTenantData(currentUser, {
+        users,
+        coffeeFarms,
+        farmerLots,
+        processingBatches,
+        processedLots,
+        transactions,
+      }),
+    [currentUser, users, coffeeFarms, farmerLots, processingBatches, processedLots, transactions]
+  );
 
   // Permohonan pendaftaran anggota petani baru (menunggu verifikasi)
   const pendingFarmers = scopedFarmers.filter((u) => u.verificationStatus === 'pending');
 
   // Metrics calculations for this specific Kelompok Tani's pipeline
   const totalFarmers = scopedFarmers.length;
-  const totalProcessors = users.filter((u) => u.assignedService === 'pengolah' || u.role === 'pengolah').length;
-  const totalIcsOfficers = users.filter((u) => u.role === 'ict' || (u.assignedService as unknown) === 'ict').length;
+  const totalProcessors = scopedProcessors.length;
+  const totalIcsOfficers = scopedIctOfficers.length;
 
   const totalCherryKg = scopedLots.reduce((acc, l) => acc + (l.totalWeightKg || 0), 0);
-  const totalGreenBeanKg = processedLots.length > 0 
-    ? processedLots.reduce((acc, l) => acc + (l.greenBeanWeightKg || 0), 0)
-    : Math.round(totalCherryKg * 0.185);
+  const totalGreenBeanKg = scopedProcessedLots.reduce((acc, l) => acc + (l.greenBeanWeightKg || 0), 0);
   const totalFarmsCount = scopedFarms.length;
 
   return (
@@ -369,7 +355,7 @@ export const KelompokTaniDashboard: React.FC = () => {
               <h4 className="text-2xl font-black tracking-tight">{totalGreenBeanKg.toLocaleString()} <span className="text-xs font-normal">kg</span></h4>
               <p className="text-xs text-amber-100 font-semibold mt-0.5">2. Stasiun Pengolah (Wet Mill)</p>
               <div className="text-[10px] text-amber-200 mt-2 font-medium">
-                {totalProcessors} Operator • {processingBatches.length} Batch Olah (7 Metode)
+                {totalProcessors} Operator • {scopedBatches.length} Batch Olah (7 Metode)
               </div>
               <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-800/80 text-[9px] text-blue-100 font-bold">
                 <Globe className="w-2.5 h-2.5" />
@@ -390,8 +376,8 @@ export const KelompokTaniDashboard: React.FC = () => {
           <div className="bg-blue-600 rounded-lg shadow-sm text-white overflow-hidden relative flex flex-col justify-between">
             <div className="p-4 relative z-10">
               <h4 className="text-2xl font-black tracking-tight">
-                {farmerLots.filter((l) => l.isReleasedToMarketplace ?? true).length +
-                  processedLots.filter((l) => l.availableWeightKg > 0).length}{' '}
+                {scopedLots.filter((l) => l.isReleasedToMarketplace ?? true).length +
+                  scopedProcessedLots.filter((l) => l.availableWeightKg > 0).length}{' '}
                 <span className="text-xs font-normal">Lot Live</span>
               </h4>
               <p className="text-xs text-blue-100 font-semibold mt-0.5">3. Rilis Marketplace Terpadu</p>
@@ -417,13 +403,13 @@ export const KelompokTaniDashboard: React.FC = () => {
               <h4 className="text-2xl font-black tracking-tight font-mono">
                 Rp{' '}
                 {Math.round(
-                  transactions.reduce((acc, t) => acc + (t.totalAmount || 0), 0) / 1000
+                  scopedTransactions.reduce((acc, t) => acc + (t.totalAmount || 0), 0) / 1000
                 ).toLocaleString()}{' '}
                 <span className="text-xs font-normal">rb</span>
               </h4>
               <p className="text-xs text-stone-300 font-semibold mt-0.5">4. Buku Kas &amp; Ledger</p>
               <div className="text-[10px] text-stone-400 mt-2 font-medium">
-                {transactions.length} Mutasi Transaksi Rantai Pasok
+                {scopedTransactions.length} Mutasi Transaksi Rantai Pasok
               </div>
             </div>
             <TrendingUp className="w-16 h-16 text-white/20 absolute top-2 right-2 z-0 pointer-events-none" />

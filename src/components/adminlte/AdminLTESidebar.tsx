@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import {
   Building2,
   Users,
@@ -93,49 +94,22 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
   const cafeUsersCount = (users || []).filter((u) => u.role === 'cafe').length;
   const verifikatorUsersCount = (users || []).filter((u) => u.role === 'verifikator').length;
 
-  // Scoped farmers, farms, and lots for tenant isolation
-  const scopedFarmers = (users || []).filter((u) => {
-    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
-    if (!isFarmer) return false;
-    if (isSuperAdmin) return true;
-
-    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
-    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
-    const isSameId = Boolean(
-      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
-      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
-    );
-
-    const userOrg = (currentUser?.organization || currentUser?.kelompokTaniName || '').trim().toLowerCase();
-    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-
-    const isSameOrg = Boolean(
-      userOrg && farmerOrg && (
-        farmerOrg === userOrg ||
-        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
-        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
-      )
-    );
-    return isSameOrg || isSameId;
-  });
-
-  const scopedFarms = (coffeeFarms || []).filter((f) => {
-    if (isSuperAdmin) return true;
-    return scopedFarmers.some((farmer) => farmer.id === f.farmerId);
-  });
-
-  const scopedLots = (farmerLots || []).filter((lot) => {
-    if (isSuperAdmin) return true;
-    return scopedFarmers.some((farmer) => farmer.id === lot.farmerId);
-  });
-
-  const scopedProcessedLots = (processedLots || []).filter((lot) => {
-    if (isSuperAdmin) return true;
-    return (
-      lot.processorId === currentUser?.id ||
-      (currentUser?.kelompokTaniId && lot.processorId === currentUser?.kelompokTaniId)
-    );
-  });
+  // Scoped multi-tenant pipeline per Kelompok Tani
+  const {
+    scopedFarmers,
+    scopedFarms,
+    scopedLots,
+    scopedProcessedLots,
+  } = useMemo(
+    () =>
+      getScopedTenantData(currentUser, {
+        users,
+        coffeeFarms,
+        farmerLots,
+        processedLots,
+      }),
+    [currentUser, users, coffeeFarms, farmerLots, processedLots]
+  );
 
   const getHomePath = () => {
     switch (userRole) {

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
 import { FarmerHarvestLot } from '../../types/coffee';
+import { getScopedTenantData } from '../../utils/tenantScoping';
 import {
   Package,
   PlusCircle,
@@ -40,36 +41,11 @@ export const MasterPanenPage: React.FC = () => {
     openBlankoModal,
   } = useCoffee();
 
-  // Scoped farmers: Multi-tenant pipeline per Kelompok Tani
-  const allFarmers = users.filter((u) => {
-    const isFarmer = u.role === 'petani' || u.assignedService === 'petani';
-    if (!isFarmer) return false;
-    if (currentUser?.role === 'super_admin') return true;
-
-    const userKtId = (currentUser?.kelompokTaniId || currentUser?.id || '').trim().toLowerCase();
-    const farmerKtId = (u.kelompokTaniId || '').trim().toLowerCase();
-    const userOrg = (currentUser?.organization || '').trim().toLowerCase();
-    const farmerOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-
-    const isSameKtId = Boolean(
-      (userKtId && farmerKtId && (userKtId === farmerKtId || userKtId === u.id?.toLowerCase() || farmerKtId === currentUser?.id?.toLowerCase())) ||
-      (currentUser?.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
-    );
-    const isSameOrg = Boolean(
-      userOrg && farmerOrg && (
-        farmerOrg === userOrg ||
-        (userOrg.length > 5 && farmerOrg.includes(userOrg)) ||
-        (farmerOrg.length > 5 && userOrg.includes(farmerOrg))
-      )
-    );
-
-    return isSameKtId || isSameOrg;
-  });
-
-  const tenantLots = farmerLots.filter((lot) => {
-    if (currentUser?.role === 'super_admin') return true;
-    return allFarmers.some((farmer) => farmer.id === lot.farmerId);
-  });
+  // Scoped farmers and lots: Multi-tenant pipeline per Kelompok Tani
+  const { scopedFarmers: allFarmers, scopedLots: tenantLots } = useMemo(
+    () => getScopedTenantData(currentUser, { users, coffeeFarms, farmerLots }),
+    [currentUser, users, coffeeFarms, farmerLots]
+  );
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFarmerFilter, setSelectedFarmerFilter] = useState<string>('all');
@@ -169,7 +145,7 @@ export const MasterPanenPage: React.FC = () => {
               <span className="text-xs font-normal text-stone-500">kg</span>
             </div>
             <span className="text-[10px] text-emerald-600 font-medium">
-              Dari {farmerLots.length} Lot Tercatat
+              Dari {tenantLots.length} Lot Tercatat
             </span>
           </div>
         </div>
@@ -247,7 +223,7 @@ export const MasterPanenPage: React.FC = () => {
                 : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             }`}
           >
-            Semua Lot ({farmerLots.length})
+            Semua Lot ({tenantLots.length})
           </button>
 
           <button
@@ -285,7 +261,7 @@ export const MasterPanenPage: React.FC = () => {
                 : 'bg-blue-50 text-blue-800 hover:bg-blue-100'
             }`}
           >
-            <span>Terkirim ke Pengolah ({farmerLots.filter((l) => l.sentToProcessor).length})</span>
+            <span>Terkirim ke Pengolah ({tenantLots.filter((l) => l.sentToProcessor).length})</span>
           </button>
         </div>
 

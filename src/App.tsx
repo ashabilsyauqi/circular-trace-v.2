@@ -178,6 +178,14 @@ const SuperAdminOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children
   return <>{children}</>;
 };
 
+const AdminOrSuperAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentUser } = useCoffee();
+  if (!currentUser || (currentUser.role !== 'super_admin' && currentUser.role !== 'admin_kelompok_tani')) {
+    return <Navigate to="/admin/overview" replace />;
+  }
+  return <>{children}</>;
+};
+
 /**
  * All Application Routes
  */
@@ -240,9 +248,17 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="users"
           element={
-            <SuperAdminOnlyRoute>
+            <AdminOrSuperAdminRoute>
               <MasterUsersView />
-            </SuperAdminOnlyRoute>
+            </AdminOrSuperAdminRoute>
+          }
+        />
+        <Route
+          path="anggota"
+          element={
+            <AdminOrSuperAdminRoute>
+              <MasterUsersView />
+            </AdminOrSuperAdminRoute>
           }
         />
 

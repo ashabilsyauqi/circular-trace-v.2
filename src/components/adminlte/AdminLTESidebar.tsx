@@ -99,7 +99,9 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
     scopedFarmers,
     scopedFarms,
     scopedLots,
+    scopedProcessors,
     scopedProcessedLots,
+    scopedIctOfficers,
   } = useMemo(
     () =>
       getScopedTenantData(currentUser, {
@@ -110,6 +112,11 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
       }),
     [currentUser, users, coffeeFarms, farmerLots, processedLots]
   );
+
+  // Scoped members count for Kelompok Tani (excludes other tenants)
+  const poktanMembersCount = isSuperAdmin
+    ? kelompokTaniUsersCount
+    : scopedFarmers.length + (scopedProcessors?.length || 0) + (scopedIctOfficers?.length || 0) + 1;
 
   const getHomePath = () => {
     switch (userRole) {
@@ -690,7 +697,7 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
                 {!isCollapsed && <span className="flex-1 truncate">Master Anggota &amp; Akun</span>}
                 {!isCollapsed && (
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-stone-800 text-amber-300 border border-stone-700">
-                    {kelompokTaniUsersCount}
+                    {poktanMembersCount}
                   </span>
                 )}
               </NavLink>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCoffee } from '../../context/CoffeeContext';
 import { AppUser, OperationalService, UserRole } from '../../types/coffee';
@@ -37,7 +37,6 @@ import {
   ExternalLink,
   QrCode,
 } from 'lucide-react';
-import { ACTIVE_OPERATIONAL_SERVICES, KELOMPOK_TANI_SERVICES, ROLE_DETAILS } from '../../constants/roles';
 import {
   MemberCredentialCardModal,
   formatWhatsAppCredentialMessage,
@@ -85,9 +84,122 @@ export const MasterUsersView: React.FC = () => {
     }));
   };
 
-  // Form states
+  // Access Control: Allow admin_kelompok_tani and super_admin
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const isAdminKelompok = currentUser?.role === 'admin_kelompok_tani';
+
   const defaultOrg = currentUser?.organization || currentUser?.kelompokTaniName || 'Kelompok Tani Mandiri (Ashabil)';
   const defaultLoc = currentUser?.location || 'Desa Awan, Kintamani, Bangli, Bali';
+  const currentKtId = (currentUser?.kelompokTaniId || '').trim().toLowerCase();
+  const currentOrg = (currentUser?.organization || currentUser?.kelompokTaniName || '').trim().toLowerCase();
+
+  // 1. Deduplicate users by ID and email (prevents duplicate entries from localStorage)
+  const uniqueUsers = useMemo(() => {
+    const seenIds = new Set<string>();
+    const seenEmails = new Set<string>();
+    const result: AppUser[] = [];
+
+    (users || []).forEach((u) => {
+      if (!u || !u.id) return;
+      const emailKey = u.email ? u.email.trim().toLowerCase() : '';
+      if (seenIds.has(u.id)) return;
+      if (emailKey && seenEmails.has(emailKey)) return;
+
+      seenIds.add(u.id);
+      if (emailKey) seenEmails.add(emailKey);
+      result.push(u);
+    });
+
+    return result;
+  }, [users]);
+
+  // 2. Multi-Tenant Scoping: Exclusively return members belonging to THIS Kelompok Tani pipeline
+  const baseUsers = useMemo(() => {
+    if (isSuperAdmin) {
+      return uniqueUsers.filter((u) => {
+        const srv = u.assignedService || u.role;
+        return (
+          u.role === 'admin_kelompok_tani' ||
+          srv === 'petani' ||
+          srv === 'pengolah' ||
+          srv === 'ict'
+        );
+      });
+    }
+
+    return uniqueUsers.filter((u) => {
+      // 1. Current admin themself is always included
+      if (u.id === currentUser?.id) return true;
+
+      // 2. Only allow roles belonging to Kelompok Tani scope
+      const srv = u.assignedService || u.role;
+      const isPoktanRole =
+        srv === 'petani' ||
+        srv === 'pengolah' ||
+        srv === 'ict' ||
+        u.role === 'admin_kelompok_tani';
+      if (!isPoktanRole) return false;
+
+      // Other admin_kelompok_tani from other poktans MUST NEVER appear in this pipeline
+      if (u.role === 'admin_kelompok_tani' && u.id !== currentUser?.id) {
+        if (!currentKtId || !u.kelompokTaniId || u.kelompokTaniId.toLowerCase() !== currentKtId) {
+          return false;
+        }
+      }
+
+      // 3. Strict match by kelompokTaniId or organization name
+      const uKtId = (u.kelompokTaniId || '').trim().toLowerCase();
+      const uOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
+
+      const matchesKtId = Boolean(
+        currentKtId &&
+          uKtId &&
+          (currentKtId === uKtId || uKtId === currentUser?.id?.toLowerCase())
+      );
+
+      const matchesOrg = Boolean(
+        currentOrg &&
+          uOrg &&
+          (uOrg === currentOrg ||
+            (currentOrg.length > 5 && uOrg.includes(currentOrg)) ||
+            (uOrg.length > 5 && currentOrg.includes(uOrg)))
+      );
+
+      return matchesKtId || matchesOrg;
+    });
+  }, [uniqueUsers, isSuperAdmin, currentUser, currentKtId, currentOrg]);
+
+  // Counts by role within THIS Kelompok Tani
+  const petaniUsers = baseUsers.filter((u) => (u.assignedService || u.role) === 'petani');
+  const pengolahUsers = baseUsers.filter((u) => (u.assignedService || u.role) === 'pengolah');
+  const ictUsers = baseUsers.filter((u) => (u.assignedService || u.role) === 'ict');
+  const adminUsers = baseUsers.filter((u) => u.role === 'admin_kelompok_tani');
+
+  const activeCount = baseUsers.filter((u) => u.status !== 'inactive').length;
+  const inactiveCount = baseUsers.filter((u) => u.status === 'inactive').length;
+
+  // Filtered list by active tab and search query
+  const filteredUsers = baseUsers
+    .filter((u) => {
+      if (selectedRoleFilter === 'all') return true;
+      if (selectedRoleFilter === 'admin_kelompok_tani') return u.role === 'admin_kelompok_tani';
+      if (selectedRoleFilter === 'ict') return u.role === 'ict' || (u.assignedService as unknown) === 'ict';
+      const effectiveRole = u.assignedService || u.role;
+      return effectiveRole === selectedRoleFilter;
+    })
+    .filter((u) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase().trim();
+      return (
+        u.name.toLowerCase().includes(q) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.phone && u.phone.includes(q)) ||
+        (u.nik && u.nik.includes(q)) ||
+        (u.organization && u.organization.toLowerCase().includes(q)) ||
+        (u.location && u.location.toLowerCase().includes(q)) ||
+        u.id.toLowerCase().includes(q)
+      );
+    });
 
   const [formData, setFormData] = useState<{
     name: string;
@@ -111,10 +223,6 @@ export const MasterUsersView: React.FC = () => {
     status: 'active',
   });
 
-  // Access Control: Allow admin_kelompok_tani and super_admin
-  const isSuperAdmin = currentUser?.role === 'super_admin';
-  const isAdminKelompok = currentUser?.role === 'admin_kelompok_tani';
-
   if (!currentUser || (!isSuperAdmin && !isAdminKelompok)) {
     return (
       <div className="bg-white rounded-xl border border-amber-300 p-8 shadow-sm text-center space-y-4 max-w-lg mx-auto my-12">
@@ -133,82 +241,10 @@ export const MasterUsersView: React.FC = () => {
     );
   }
 
-  // Tenant Scoping: Get users belonging to Kelompok Tani scope
-  const userKtId = (currentUser.kelompokTaniId || currentUser.id || '').trim().toLowerCase();
-  const userOrg = (currentUser.organization || currentUser.kelompokTaniName || '').trim().toLowerCase();
-
-  const allPoktanUsers = users.filter((u) => {
-    const roleOrSrv = u.assignedService || u.role;
-    return (
-      u.role === 'admin_kelompok_tani' ||
-      roleOrSrv === 'petani' ||
-      roleOrSrv === 'pengolah' ||
-      roleOrSrv === 'ict'
-    );
-  });
-
-  const tenantFilteredUsers = isSuperAdmin
-    ? allPoktanUsers
-    : allPoktanUsers.filter((u) => {
-        if (u.id === currentUser.id) return true;
-        const uKtId = (u.kelompokTaniId || '').trim().toLowerCase();
-        const uOrg = (u.organization || u.kelompokTaniName || '').trim().toLowerCase();
-
-        const isSameKtId = Boolean(
-          (userKtId && uKtId && (userKtId === uKtId || userKtId === u.id?.toLowerCase() || uKtId === currentUser.id?.toLowerCase())) ||
-          (currentUser.kelompokTaniId && u.kelompokTaniId === currentUser.kelompokTaniId)
-        );
-
-        const isSameOrg = Boolean(
-          userOrg && uOrg && (
-            uOrg === userOrg ||
-            (userOrg.length > 5 && uOrg.includes(userOrg)) ||
-            (uOrg.length > 5 && userOrg.includes(uOrg))
-          )
-        );
-
-        return isSameKtId || isSameOrg;
-      });
-
-  // Base active user pool: fallback to all Poktan users if tenant filter has fewer than 2 to avoid blank screens
-  const baseUsers = tenantFilteredUsers.length > 1 ? tenantFilteredUsers : allPoktanUsers;
-
-  // Counts by role
-  const petaniUsers = baseUsers.filter((u) => (u.assignedService || u.role) === 'petani');
-  const pengolahUsers = baseUsers.filter((u) => (u.assignedService || u.role) === 'pengolah');
-  const ictUsers = baseUsers.filter((u) => (u.assignedService || u.role) === 'ict');
-  const adminUsers = baseUsers.filter((u) => u.role === 'admin_kelompok_tani');
-
-  const activeCount = baseUsers.filter((u) => u.status !== 'inactive').length;
-  const inactiveCount = baseUsers.filter((u) => u.status === 'inactive').length;
-
-  // Filtered list
-  const filteredUsers = baseUsers
-    .filter((u) => {
-      if (selectedRoleFilter === 'all') return true;
-      if (selectedRoleFilter === 'admin_kelompok_tani') return u.role === 'admin_kelompok_tani';
-      if (selectedRoleFilter === 'ict') return u.role === 'ict' || (u.assignedService as unknown) === 'ict';
-      const effectiveRole = u.assignedService || u.role;
-      return effectiveRole === selectedRoleFilter;
-    })
-    .filter((u) => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase().trim();
-      return (
-        u.name.toLowerCase().includes(q) ||
-        (u.email && u.email.toLowerCase().includes(q)) ||
-        (u.phone && u.phone.includes(q)) ||
-        (u.nik && u.nik.includes(q)) ||
-        (u.organization && u.organization.toLowerCase().includes(q)) ||
-        (u.location && u.location.toLowerCase().includes(q)) ||
-        u.id.toLowerCase().includes(q)
-      );
-    });
-
   const getServiceBadge = (user: AppUser) => {
     if (user.role === 'admin_kelompok_tani') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-purple-50 text-purple-900 border border-purple-200 shadow-2xs">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-purple-100 text-purple-900 border border-purple-200 shadow-2xs">
           <Building2 className="w-3.5 h-3.5 text-purple-700" />
           <span>Pengurus Poktan</span>
         </span>
@@ -217,7 +253,7 @@ export const MasterUsersView: React.FC = () => {
 
     if (user.role === 'ict' || (user.assignedService as unknown) === 'ict') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-blue-50 text-blue-900 border border-blue-200 shadow-2xs">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-blue-100 text-blue-900 border border-blue-200 shadow-2xs">
           <ShieldCheck className="w-3.5 h-3.5 text-blue-700" />
           <span>Petugas Lapangan (ICS)</span>
         </span>
@@ -226,7 +262,7 @@ export const MasterUsersView: React.FC = () => {
 
     if (user.role === 'pengolah' || user.assignedService === 'pengolah') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-200 shadow-2xs">
           <Factory className="w-3.5 h-3.5 text-amber-700" />
           <span>Operator Pengolah (Mill)</span>
         </span>
@@ -234,7 +270,7 @@ export const MasterUsersView: React.FC = () => {
     }
 
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200 shadow-2xs">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200 shadow-2xs">
         <Sprout className="w-3.5 h-3.5 text-emerald-700" />
         <span>Petani Kopi (Hulu)</span>
       </span>
@@ -385,7 +421,7 @@ export const MasterUsersView: React.FC = () => {
       });
       showToast(`Data dan akun anggota "${formData.name.trim()}" berhasil diperbarui.`);
     } else {
-      // Create new user
+      // Create new user locked to current Poktan
       const defaultAvatar = isIct
         ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
         : formData.assignedService === 'pengolah'
@@ -474,7 +510,7 @@ export const MasterUsersView: React.FC = () => {
             </button>
             <span className="text-stone-300">•</span>
             <span className="text-xs font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-              {currentUser?.kelompokTaniName || defaultOrg}
+              Pipeline: {currentUser?.kelompokTaniName || defaultOrg}
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight flex items-center gap-2.5">
@@ -482,7 +518,7 @@ export const MasterUsersView: React.FC = () => {
             <span>Master Anggota &amp; Akun Kelompok Tani</span>
           </h1>
           <p className="text-xs text-stone-500 mt-1 max-w-2xl">
-            Satu pintu registrasi anggota, penugasan stasiun kerja, dan pembagian kredensial login (Email &amp; Password) via <strong>WhatsApp (1 Klik)</strong> atau <strong>Cetak Kartu Fisik</strong>.
+            Satu pintu registrasi anggota khusus pipeline <strong>{currentUser?.kelompokTaniName || defaultOrg}</strong>. Distribusikan kredensial login (Email &amp; Password) via <strong>WhatsApp (1 Klik)</strong> atau <strong>Cetak Kartu Fisik</strong>.
           </p>
         </div>
 
@@ -693,7 +729,7 @@ export const MasterUsersView: React.FC = () => {
         {/* Quick Summary Status Line */}
         <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1.5 border-t border-stone-100">
           <div>
-            Menampilkan <strong className="text-stone-800">{filteredUsers.length}</strong> anggota dari total <strong>{baseUsers.length}</strong> anggota terdata
+            Menampilkan <strong className="text-stone-800">{filteredUsers.length}</strong> anggota dari total <strong>{baseUsers.length}</strong> anggota pipeline ini
           </div>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
@@ -706,19 +742,17 @@ export const MasterUsersView: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Interactive Users & Credentials Table */}
+      {/* 4. Interactive Users & Credentials Table (Clean 5-Column Non-Overlapping Layout) */}
       <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs min-w-[1020px]">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-stone-50/90 border-b border-stone-200 text-stone-600 font-bold text-[11px] uppercase tracking-wider whitespace-nowrap">
                 <th className="py-3 px-4 w-12 text-center">No</th>
-                <th className="py-3 px-4">Anggota / Pengguna</th>
-                <th className="py-3 px-4">Posisi &amp; Tugas</th>
-                <th className="py-3 px-4">Kredensial Login Resmi (Email &amp; Pass)</th>
-                <th className="py-3 px-4">Kontak WhatsApp &amp; Domisili</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center sticky right-0 bg-stone-50/95 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] z-10 font-bold">
+                <th className="py-3 px-4 min-w-[220px]">Anggota / Pengguna</th>
+                <th className="py-3 px-4 min-w-[160px]">Posisi &amp; Status</th>
+                <th className="py-3 px-4 min-w-[280px]">Kredensial Login &amp; Kontak</th>
+                <th className="py-3 px-4 text-center min-w-[220px]">
                   Bagikan Kredensial &amp; Aksi
                 </th>
               </tr>
@@ -726,7 +760,7 @@ export const MasterUsersView: React.FC = () => {
             <tbody className="divide-y divide-stone-100">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-stone-400">
+                  <td colSpan={5} className="py-12 text-center text-stone-400">
                     <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
                     <p className="font-medium text-xs">Tidak ada data anggota yang sesuai pencarian atau filter peran.</p>
                     {(searchQuery || selectedRoleFilter !== 'all') && (
@@ -751,18 +785,18 @@ export const MasterUsersView: React.FC = () => {
 
                   return (
                     <tr key={user.id} className="group hover:bg-amber-50/25 transition-colors">
-                      {/* No */}
-                      <td className="py-3.5 px-4 text-center text-stone-400 font-mono text-[11px]">
+                      {/* 1. No */}
+                      <td className="py-3.5 px-4 text-center text-stone-400 font-mono text-[11px] align-top">
                         {idx + 1}
                       </td>
 
-                      {/* Anggota Profile */}
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
+                      {/* 2. Anggota Profile */}
+                      <td className="py-3.5 px-4 align-top">
+                        <div className="flex items-start gap-3">
                           <img
                             src={user.avatar}
                             alt={user.name}
-                            className="w-10 h-10 rounded-full object-cover border border-stone-200 shadow-2xs shrink-0"
+                            className="w-10 h-10 rounded-full object-cover border border-stone-200 shadow-2xs shrink-0 mt-0.5"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src =
                                 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
@@ -772,29 +806,44 @@ export const MasterUsersView: React.FC = () => {
                             <strong className="text-stone-900 font-bold block truncate text-xs sm:text-sm">
                               {user.name}
                             </strong>
-                            <div className="text-[11px] text-stone-400 flex items-center gap-1.5 flex-wrap">
+                            <div className="text-[11px] text-stone-500 flex items-center gap-1.5 flex-wrap mt-0.5">
                               {user.nik && (
-                                <span className="font-mono text-stone-600 bg-stone-100 px-1.5 py-0.2 rounded text-[10px]">
+                                <span className="font-mono text-stone-700 bg-stone-100 px-1.5 py-0.2 rounded text-[10px] border border-stone-200">
                                   NIK: {user.nik}
                                 </span>
                               )}
-                              <span className="font-mono text-[10px]">ID: {user.id}</span>
+                              <span className="font-mono text-[10px] text-stone-400">ID: {user.id}</span>
+                            </div>
+                            <div className="text-[11px] text-stone-400 flex items-center gap-1 mt-1 truncate max-w-[200px]">
+                              <MapPin className="w-3 h-3 shrink-0 text-stone-400" />
+                              <span className="truncate">{user.location || user.village || 'Desa Awan, Kintamani'}</span>
                             </div>
                           </div>
                         </div>
                       </td>
 
-                      {/* Posisi & Tugas */}
-                      <td className="py-3.5 px-4">
+                      {/* 3. Posisi & Status */}
+                      <td className="py-3.5 px-4 align-top space-y-1.5">
                         <div>{getServiceBadge(user)}</div>
-                        <div className="text-[10px] text-stone-400 mt-1 truncate max-w-[160px]">
+                        <div>
+                          {user.status === 'inactive' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-500 border border-stone-200">
+                              <XCircle className="w-2.5 h-2.5 text-stone-400" /> Nonaktif
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> Aktif
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-stone-400 truncate max-w-[180px]">
                           {user.kelompokTaniName || user.organization || '-'}
                         </div>
                       </td>
 
-                      {/* Kredensial Login Resmi */}
-                      <td className="py-3.5 px-4">
-                        <div className="bg-stone-50 group-hover:bg-white p-2 rounded-xl border border-stone-200 space-y-1 max-w-[240px] transition-colors">
+                      {/* 4. Kredensial Login & Kontak */}
+                      <td className="py-3.5 px-4 align-top">
+                        <div className="bg-stone-50 group-hover:bg-white p-2.5 rounded-xl border border-stone-200 space-y-1.5 max-w-[280px] transition-colors shadow-2xs">
                           {/* Email */}
                           <div className="flex items-center justify-between gap-1 text-[11px]">
                             <div className="flex items-center gap-1.5 min-w-0 truncate">
@@ -817,7 +866,7 @@ export const MasterUsersView: React.FC = () => {
                           </div>
 
                           {/* Password */}
-                          <div className="flex items-center justify-between gap-1 text-[11px] pt-0.5 border-t border-stone-200/60">
+                          <div className="flex items-center justify-between gap-1 text-[11px] pt-1 border-t border-stone-200/60">
                             <div className="flex items-center gap-1.5">
                               <Key className="w-3 h-3 text-stone-400 shrink-0" />
                               <span className="font-mono text-amber-900 font-bold">
@@ -846,47 +895,31 @@ export const MasterUsersView: React.FC = () => {
                               </button>
                             </div>
                           </div>
+
+                          {/* WhatsApp / Phone */}
+                          <div className="flex items-center justify-between gap-1 text-[11px] pt-1 border-t border-stone-200/60 text-stone-600">
+                            <div className="flex items-center gap-1.5 font-mono">
+                              <Phone className="w-3 h-3 text-stone-400 shrink-0" />
+                              <span>{user.phone || '-'}</span>
+                            </div>
+                            {user.phone && user.phone.startsWith('08') && (
+                              <a
+                                href={`https://wa.me/62${user.phone.slice(1).replace(/[^0-9]/g, '')}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] text-emerald-600 hover:underline inline-flex items-center gap-0.5 font-semibold"
+                                title="Buka Chat WhatsApp"
+                              >
+                                <span>Kirim WA</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </td>
 
-                      {/* Kontak WhatsApp & Lokasi */}
-                      <td className="py-3.5 px-4 space-y-1">
-                        <div className="flex items-center gap-1.5 text-stone-700">
-                          <Phone className="w-3 h-3 text-stone-400 shrink-0" />
-                          <span className="font-mono">{user.phone || '-'}</span>
-                          {user.phone && user.phone.startsWith('08') && (
-                            <a
-                              href={`https://wa.me/62${user.phone.slice(1).replace(/[^0-9]/g, '')}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[10px] text-emerald-600 hover:underline inline-flex items-center gap-0.5"
-                              title="Buka Chat WhatsApp"
-                            >
-                              <ExternalLink className="w-2.5 h-2.5" />
-                            </a>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-stone-400 flex items-center gap-1 truncate max-w-[180px]">
-                          <MapPin className="w-2.5 h-2.5 shrink-0" />
-                          <span className="truncate">{user.location || user.village || 'Kintamani, Bangli'}</span>
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                        {user.status === 'inactive' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-500 border border-stone-200">
-                            <XCircle className="w-3 h-3 shrink-0" /> Nonaktif
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" /> Aktif
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Actions: Salin WA, Cetak Slip, Edit, Hapus */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap sticky right-0 bg-white group-hover:bg-amber-50/40 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] z-10">
+                      {/* 5. Actions: Salin WA, Cetak Slip, Edit, Hapus */}
+                      <td className="py-3.5 px-4 text-center align-top whitespace-nowrap">
                         <div className="inline-flex items-center justify-center gap-1.5 flex-nowrap shrink-0">
                           {/* 1-Click WhatsApp Credential Share */}
                           <button
@@ -971,7 +1004,7 @@ export const MasterUsersView: React.FC = () => {
                   <p className="text-xs text-stone-500">
                     {editingUserId
                       ? `ID Anggota: ${editingUserId}`
-                      : 'Daftarkan anggota baru ke dalam ekosistem kelompok tani'}
+                      : `Daftarkan anggota baru ke dalam ${currentUser?.kelompokTaniName || defaultOrg}`}
                   </p>
                 </div>
               </div>
@@ -1165,17 +1198,16 @@ export const MasterUsersView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Row 5: Organization */}
+              {/* Row 5: Organization (Locked to current Poktan) */}
               <div>
-                <label className="block font-bold text-stone-700 mb-1">Nama Kelompok Tani / Organisasi</label>
+                <label className="block font-bold text-stone-700 mb-1">Nama Kelompok Tani / Pipeline</label>
                 <div className="relative">
                   <Building2 className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
+                    disabled
                     value={formData.organization}
-                    onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                    placeholder="Kelompok Tani Mandiri (Ashabil)"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-300 text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-200 bg-stone-100 text-stone-600 cursor-not-allowed font-medium"
                   />
                 </div>
               </div>

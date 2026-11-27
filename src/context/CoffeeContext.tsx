@@ -452,24 +452,44 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try {
         const parsed: AppUser[] = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const merged = [...parsed.filter((u) => !deletedIds.includes(u.id))];
+          const userMap = new Map<string, AppUser>();
+          parsed
+            .filter((u) => u && u.id && !deletedIds.includes(u.id))
+            .forEach((u) => {
+              if (!userMap.has(u.id)) {
+                userMap.set(u.id, u);
+              }
+            });
+
           MOCK_USERS.forEach((mockUser) => {
             if (deletedIds.includes(mockUser.id)) return;
-            const idx = merged.findIndex((u) => u.id === mockUser.id || (u.email && u.email.toLowerCase() === mockUser.email?.toLowerCase()));
-            if (idx >= 0) {
-              merged[idx] = {
-                ...merged[idx],
+            if (userMap.has(mockUser.id)) {
+              const existing = userMap.get(mockUser.id)!;
+              userMap.set(mockUser.id, {
+                ...existing,
                 ...mockUser,
-                email: merged[idx].email || mockUser.email,
-                kelompokTaniId: mockUser.kelompokTaniId || merged[idx].kelompokTaniId,
-                kelompokTaniName: mockUser.kelompokTaniName || merged[idx].kelompokTaniName,
-                organization: mockUser.organization || merged[idx].organization,
-              };
+                email: existing.email || mockUser.email,
+                kelompokTaniId: mockUser.kelompokTaniId || existing.kelompokTaniId,
+                kelompokTaniName: mockUser.kelompokTaniName || existing.kelompokTaniName,
+                organization: mockUser.organization || existing.organization,
+              });
             } else {
-              merged.push(mockUser);
+              const existingKey = Array.from(userMap.keys()).find((k) => {
+                const u = userMap.get(k);
+                return Boolean(u?.email && mockUser.email && u.email.toLowerCase() === mockUser.email.toLowerCase());
+              });
+              if (existingKey) {
+                const existing = userMap.get(existingKey)!;
+                userMap.set(existingKey, {
+                  ...existing,
+                  ...mockUser,
+                });
+              } else {
+                userMap.set(mockUser.id, mockUser);
+              }
             }
           });
-          return merged;
+          return Array.from(userMap.values());
         }
       } catch (e) {
         console.error('Failed to parse cct_users', e);

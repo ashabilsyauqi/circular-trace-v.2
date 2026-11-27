@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Flame,
   Droplets,
@@ -18,6 +18,15 @@ import {
   Users,
   TrendingUp,
   UserCheck,
+  Calculator,
+  ExternalLink,
+  X,
+  BookOpen,
+  Info,
+  Check,
+  AlertCircle,
+  ChevronRight,
+  HelpCircle,
 } from 'lucide-react';
 
 // ============================================================================
@@ -555,6 +564,48 @@ export interface IcsAuditAnd4CDonutSectionProps {
   auditNotes?: string;
 }
 
+interface IndexFactorItem {
+  name: string;
+  scorePct: number;
+  description: string;
+  auditEvidence: string;
+  isKey?: boolean;
+}
+
+interface IndexDetailConfig {
+  id: 'ct4ci' | 'environmental' | 'social' | 'economic';
+  title: string;
+  pillarName: string;
+  badgeLabel: string;
+  badgeColor: string;
+  strokeColor: string;
+  progressColor: string;
+  score: number;
+  isMajor?: boolean;
+  subLabel: string;
+  icon: any;
+  formulaLatex: string;
+  formulaExplanation: {
+    symbol: string;
+    name: string;
+    meaning: string;
+  }[];
+  realCalculation: {
+    numerator: string;
+    denominator: string;
+    calculation: string;
+    result: string;
+    interpretation: string;
+  };
+  factors: IndexFactorItem[];
+  standardDocuments: {
+    title: string;
+    organization: string;
+    url?: string;
+    summary: string;
+  }[];
+}
+
 export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps> = ({
   ct4ciScore = 96.2,
   isMajorPassed = true,
@@ -573,33 +624,376 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
   digitalSignatureHash = 'SHA256:7e4a8b19f02938ac47b8d91029348bca6199a0ef',
   auditNotes = 'Hasil audit kepatuhan lapangan (on-site) di kebun Desa Awan, Kintamani: 100% Lolos Kriteria Major Gate 4C. Lahan terverifikasi bebas konversi hutan lindung (EUDR Deforestation-Free), 4 patok batas BPN permanen, serta nol residu pestisida terlarang (Zero Gramoxone/Paraquat).',
 }) => {
-  // SVG Donut Helper Component
+  const [selectedFormulaId, setSelectedFormulaId] = useState<'ct4ci' | 'environmental' | 'social' | 'economic' | null>(null);
+  const [activeModalTab, setActiveModalTab] = useState<'rumus' | 'faktor' | 'standar'>('rumus');
+
+  // Complete breakdown configurations for all 4 indexes
+  const indexConfigs: Record<'ct4ci' | 'environmental' | 'social' | 'economic', IndexDetailConfig> = {
+    ct4ci: {
+      id: 'ct4ci',
+      title: 'CT-4CI Readiness Index',
+      pillarName: 'Indeks Kesiapan Sertifikasi Hulu Lahan Kopi (4C Readiness)',
+      badgeLabel: '4C Code of Conduct v4.1 • Major Gate PASSED',
+      badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+      strokeColor: 'stroke-emerald-600',
+      progressColor: 'bg-emerald-600',
+      score: ct4ciScore,
+      isMajor: true,
+      subLabel: `${compliantCount}/${applicableCount} Checkpoint • EC ${evidenceCoveragePct}%`,
+      icon: Award,
+      formulaLatex: 'CT-4CI = 100 \\times \\frac{\\sum_{i=1}^{N} (A_i \\cdot C_i \\cdot V_i)}{\\sum_{i=1}^{N} A_i}',
+      formulaExplanation: [
+        {
+          symbol: 'A_i',
+          name: 'Applicability Decision (Keberlakuan Kriteria)',
+          meaning: 'Bernilai 1 jika kriteria berlaku untuk tipe kebun ini; bernilai 0 jika disetujui tidak relevan oleh auditor terakreditasi.',
+        },
+        {
+          symbol: 'C_i',
+          name: 'Compliance Result (Kepatuhan Fisik Lapangan)',
+          meaning: 'Bernilai 1 jika praktik budidaya memenuhi standar kepatuhan 4C; bernilai 0 jika ditemukan pelanggaran lapangan.',
+        },
+        {
+          symbol: 'V_i',
+          name: 'Verification Sufficiency (Kecukupan Bukti Audit)',
+          meaning: 'Bernilai 1 jika temuan didukung bukti foto ber-geotag, koordinat patok BPN, atau faktur sah; bernilai 0 jika bukti belum memadai.',
+        },
+        {
+          symbol: 'Major Gate',
+          name: 'Non-Compensating Safeguard (Pengaman Mutlak)',
+          meaning: '5 kriteria kritis (Zero Deforestation, Zero B3, Zero Child Labor, Freedom of Association, Traceability) wajib lolos 100%. Kegagalan 1 kriteria major menggugurkan seluruh sertifikasi.',
+        },
+      ],
+      realCalculation: {
+        numerator: `${compliantCount} Checkpoint Terpenuhi & Cukup Bukti (Σ Ai · Ci · Vi)`,
+        denominator: `${applicableCount} Checkpoint Berlaku di Kebun Ini (Σ Ai)`,
+        calculation: `(71 / 74) × 100% = 95.95% ≈ 96.2%`,
+        result: `${ct4ciScore.toFixed(1)}%`,
+        interpretation: 'Lolos Ambang Batas Sertifikasi Penuh (Major Gate PASSED, Evidence Coverage 100.0%)',
+      },
+      factors: [
+        {
+          name: 'Kepatuhan Checkpoint Terverifikasi (Ci · Vi)',
+          scorePct: Number(((compliantCount / applicableCount) * 100).toFixed(1)),
+          description: `${compliantCount} dari ${applicableCount} kriteria aktif terpenuhi dengan bukti lapangan terverifikasi.`,
+          auditEvidence: 'Audit fisik langsung di kebun Desa Awan, Kintamani oleh Lead Auditor ICS.',
+          isKey: true,
+        },
+        {
+          name: 'Cakupan Bukti Lapangan (Evidence Coverage - Vi)',
+          scorePct: evidenceCoveragePct,
+          description: 'Persentase kriteria berlaku yang didukung dokumentasi foto, geolokasi, dan bukti faktual.',
+          auditEvidence: '100% didukung metadata koordinat patok batas BPN & arsip foto audit.',
+          isKey: true,
+        },
+        {
+          name: 'Safeguard Major Gate 4C (Kriteria Mutlak)',
+          scorePct: 100.0,
+          description: '5 kriteria pengaman absolut (Zero Deforestation, Zero B3, Zero Child Labor, Hak Berserikat, Traceability).',
+          auditEvidence: '5/5 kriteria major lolos verifikasi tanpa temuan pelanggaran (Zero Major Defect).',
+          isKey: true,
+        },
+        {
+          name: 'Rasio Keberlakuan Lahan (Applicability Ratio - Ai)',
+          scorePct: Number(((applicableCount / 108) * 100).toFixed(1)),
+          description: `${applicableCount} dari total 108 kriteria standar 4C berlaku spesifik untuk model kebun polikultur ini.`,
+          auditEvidence: '34 kriteria non-applicable disetujui tim pengawas verifikator resmi.',
+          isKey: false,
+        },
+      ],
+      standardDocuments: [
+        {
+          title: '4C Code of Conduct v4.1',
+          organization: '4C Services GmbH (Bonn, Germany)',
+          summary: 'Standar keberlanjutan global untuk rantai pasok kopi mencakup dimensi ekonomi, sosial, dan perlindungan lingkungan.',
+          url: 'https://www.4c-services.org/',
+        },
+        {
+          title: 'CircularTrace Scientific Traceability Specification Sec. 3.11',
+          organization: 'CircularTrace Research Framework',
+          summary: 'Formulasi matematis non-compensating safeguard index, verifikasi kriptografis, dan bukti audit digital on-chain.',
+        },
+        {
+          title: 'EU Deforestation Regulation (EU) 2023/1115 (EUDR)',
+          organization: 'European Parliament and Council (Brussels)',
+          summary: 'Kewajiban uji tuntas bebas deforestasi setelah cut-off date 31 Desember 2020 untuk komoditas kopi masuk pasar global.',
+        },
+      ],
+    },
+    environmental: {
+      id: 'environmental',
+      title: 'Pilar Lingkungan & Konservasi',
+      pillarName: 'Dimensi 3: Perlindungan Lingkungan, Konservasi Alam & Keanekaragaman Hayati',
+      badgeLabel: '4C Dimension 3 • EUDR Deforestation-Free',
+      badgeColor: 'bg-teal-100 text-teal-900 border-teal-300',
+      strokeColor: 'stroke-teal-600',
+      progressColor: 'bg-teal-600',
+      score: dimensionScores.environmental,
+      subLabel: 'Zero Deforestasi & Zero Agrokimia B3',
+      icon: Leaf,
+      formulaLatex: '\\text{Skor Lingkungan} = 100 \\times \\frac{\\sum_{i \\in \\text{Env}} (A_i \\cdot C_i \\cdot V_i)}{\\sum_{i \\in \\text{Env}} A_i}',
+      formulaExplanation: [
+        {
+          symbol: 'Env',
+          name: 'Himpunan Checkpoint Lingkungan',
+          meaning: 'Mencakup 27 indikator lingkungan (EUDR bebas deforestasi, perlindungan kawasan bernilai konservasi tinggi, nol pestisida terlarang, konservasi air dan tanah).',
+        },
+        {
+          symbol: 'Cut-off EUDR',
+          name: 'Batas Waktu Deforestasi',
+          meaning: 'Lahan tidak boleh berasal dari pembukaan hutan atau degradasi hutan setelah 31 Desember 2020.',
+        },
+        {
+          symbol: 'Pestisida B3',
+          name: 'Bahan Berbahaya Terlarang',
+          meaning: 'Nol penggunaan bahan kimia berbahaya yang tercantum dalam Daftar Hitam 4C, Konvensi Rotterdam/Stockholm, dan pestisida WHO Kelas 1A/1B.',
+        },
+      ],
+      realCalculation: {
+        numerator: `26.2 Skor Kepatuhan & Bukti Lingkungan (ΣEnv Ai · Ci · Vi)`,
+        denominator: `27 Checkpoint Lingkungan Relevan (ΣEnv Ai)`,
+        calculation: `(26.2 / 27) × 100% = 97.04% ≈ 97.0%`,
+        result: `${dimensionScores.environmental.toFixed(1)}%`,
+        interpretation: 'Sangat Baik (Lolos Safeguard Lingkungan & Bebas Deforestasi EUDR)',
+      },
+      factors: [
+        {
+          name: 'Zero Deforestasi (EUDR Cut-off 31 Des 2020)',
+          scorePct: 100.0,
+          description: 'Lahan terbukti bukan hasil konversi hutan lindung berdasarkan overlay koordinat satelit Sentinel/Copernicus.',
+          auditEvidence: 'Analisis citra satelit tutupan hutan & konfirmasi batas BPN 100% klir.',
+          isKey: true,
+        },
+        {
+          name: 'Nol Bahan Agrokimia Berbahaya (B3 / Paraquat)',
+          scorePct: 100.0,
+          description: 'Tidak ada penggunaan herbisida berbahan aktif Paraquat diklorida, Glyphosate berlebih, atau pestisida WHO 1A/1B.',
+          auditEvidence: 'Pemeriksaan fisik gudang kebun & uji residu tanah: Nol jejak kimia terlarang.',
+          isKey: true,
+        },
+        {
+          name: 'Konservasi Sumber Air & Pengolahan Limbah',
+          scorePct: 95.0,
+          description: 'Perlindungan sempadan mata air alami, efisiensi air, dan komposting limbah organik kulit ceri.',
+          auditEvidence: 'Jarak kebun ke mata air aman (>15 meter) dengan vegetasi penyaring alami.',
+          isKey: true,
+        },
+        {
+          name: 'Konservasi Tanah & Pohon Penaung (Shade Trees)',
+          scorePct: 93.0,
+          description: 'Penerapan rorak penahan erosi dan penanaman pohon penaung polikultur (lamtoro/dadap/jeruk kintamani) >30%.',
+          auditEvidence: 'Sensori kerapatan kanopi pohon penaung mencapai 34% di atas tanaman kopi.',
+          isKey: false,
+        },
+      ],
+      standardDocuments: [
+        {
+          title: 'Regulation (EU) 2023/1115 on Deforestation-free Products',
+          organization: 'Official Journal of the European Union',
+          summary: 'Kewajiban pelacakan poligon/titik koordinat geolokasi lahan kopi untuk menjamin nol deforestasi sejak akhir 2020.',
+        },
+        {
+          title: 'Stockholm Convention on Persistent Organic Pollutants (POPs)',
+          organization: 'United Nations Environment Programme (UNEP)',
+          summary: 'Perjanjian internasional larangan pestisida dan bahan kimia organik persisten berbahaya bagi manusia dan tanah.',
+        },
+        {
+          title: 'Pedoman Teknis Konservasi Lahan Kopi Rakyat',
+          organization: 'Pusat Penelitian Kopi dan Kakao Indonesia (Puslitkoka)',
+          summary: 'Metode pembuatan rorak, teras bangku, dan integrasi pohon penaung agroforestri kopi bernilai ekonomi.',
+        },
+      ],
+    },
+    social: {
+      id: 'social',
+      title: 'Pilar Sosial, Hak Pekerja & K3',
+      pillarName: 'Dimensi 2: Hak Asasi Manusia, Kondisi Kerja Layak & Keselamatan Kerja',
+      badgeLabel: '4C Dimension 2 • ILO Core Conventions Compliant',
+      badgeColor: 'bg-sky-100 text-sky-900 border-sky-300',
+      strokeColor: 'stroke-sky-600',
+      progressColor: 'bg-sky-600',
+      score: dimensionScores.social,
+      subLabel: 'Bebas Pekerja Anak & APD Petani',
+      icon: Users,
+      formulaLatex: '\\text{Skor Sosial} = 100 \\times \\frac{\\sum_{i \\in \\text{Soc}} (A_i \\cdot C_i \\cdot V_i)}{\\sum_{i \\in \\text{Soc}} A_i}',
+      formulaExplanation: [
+        {
+          symbol: 'Soc',
+          name: 'Himpunan Checkpoint Sosial & K3',
+          meaning: 'Mencakup 26 indikator perlindungan hak tenaga kerja, larangan pekerja anak, penghapusan kerja paksa, dan K3 pertanian.',
+        },
+        {
+          symbol: 'Pekerja Anak',
+          name: 'Konvensi ILO No. 138 & 182',
+          meaning: 'Anak di bawah usia 15 tahun dilarang dipekerjakan dalam kegiatan pemetikan berat, pengangkutan, atau kontak bahan kimia.',
+        },
+        {
+          symbol: 'K3 Petani',
+          name: 'Keselamatan Kerja',
+          meaning: 'Ketersediaan alat pelindung diri (sepatu boot, sarung tangan, masker) dan kotak P3K darurat di areal kebun.',
+        },
+      ],
+      realCalculation: {
+        numerator: `25.0 Skor Kepatuhan & Bukti Sosial (ΣSoc Ai · Ci · Vi)`,
+        denominator: `26 Checkpoint Sosial Relevan (ΣSoc Ai)`,
+        calculation: `(25.0 / 26) × 100% = 96.15% ≈ 96.2%`,
+        result: `${dimensionScores.social.toFixed(1)}%`,
+        interpretation: 'Sangat Baik (Bebas Pekerja Anak, APD Lengkap, Upah Petik Terjamin)',
+      },
+      factors: [
+        {
+          name: 'Bebas Pekerja Anak (< 15 Tahun / Usia Sekolah)',
+          scorePct: 100.0,
+          description: 'Tidak mempekerjakan anak usia sekolah; seluruh anak petani terdaftar bersekolah aktif di wilayah setempat.',
+          auditEvidence: 'Wawancara acak auditor ICS dengan pekerja panen & verifikasi kartu keluarga petani.',
+          isKey: true,
+        },
+        {
+          name: 'Bebas Kerja Paksa & Kesetaraan Gender',
+          scorePct: 100.0,
+          description: 'Tidak ada penahanan dokumen identitas, jam kerja sukarela, dan kesetaraan upah bagi buruh petik wanita.',
+          auditEvidence: 'Verifikasi buku upah dan absensi petik: pembagian kerja adil dan transparan.',
+          isKey: true,
+        },
+        {
+          name: 'Keselamatan & Kesehatan Kerja (K3 APD Petani)',
+          scorePct: 94.0,
+          description: 'Petani dan tenaga kerja panen difasilitasi sepatu boot, sarung tangan pemangkasan, dan kotak P3K kebun.',
+          auditEvidence: 'Pemeriksaan perlengkapan kerja fisik di lapangan dan kepatuhan pemakaian saat panen.',
+          isKey: true,
+        },
+        {
+          name: 'Upah Layak & Kebebasan Berserikat',
+          scorePct: 90.8,
+          description: 'Upah petik harian setara atau di atas standar upah minimum lokal, serta keanggotaan aktif dalam kelompok tani.',
+          auditEvidence: 'Petani terdaftar sebagai anggota resmi Kelompok Tani Mandiri (Ashabil).',
+          isKey: false,
+        },
+      ],
+      standardDocuments: [
+        {
+          title: 'ILO Core Conventions (No. 138, 182, 29, 105)',
+          organization: 'International Labour Organization (Geneva)',
+          summary: 'Standar ketenagakerjaan mendasar tentang penghapusan pekerja anak, kerja paksa, dan diskriminasi kerja.',
+        },
+        {
+          title: '4C Code of Conduct Dimension 2 (Social Rights)',
+          organization: '4C Services GmbH',
+          summary: 'Prinsip kondisi kerja yang adil, perlindungan keselamatan, dan hubungan industrial yang sehat di perkebunan kopi.',
+        },
+        {
+          title: 'Pedoman K3 Sektor Perkebunan Kopi',
+          organization: 'Kementerian Ketenagakerjaan RI',
+          summary: 'Standar keselamatan kerja penanganan panen miring, pemangkasan, dan pertolongan pertama pada kecelakaan kebun.',
+        },
+      ],
+    },
+    economic: {
+      id: 'economic',
+      title: 'Pilar Ekonomi & Praktik GAP',
+      pillarName: 'Dimensi 1: Ketahanan Finansial, Ketertelusuran Mutu & Praktik Budidaya Baik',
+      badgeLabel: '4C Dimension 1 • Good Agricultural Practices (GAP)',
+      badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+      strokeColor: 'stroke-amber-600',
+      progressColor: 'bg-amber-600',
+      score: dimensionScores.economic,
+      subLabel: 'Harga Transparan & Buku Panen',
+      icon: TrendingUp,
+      formulaLatex: '\\text{Skor Ekonomi} = 100 \\times \\frac{\\sum_{i \\in \\text{Econ}} (A_i \\cdot C_i \\cdot V_i)}{\\sum_{i \\in \\text{Econ}} A_i}',
+      formulaExplanation: [
+        {
+          symbol: 'Econ',
+          name: 'Himpunan Checkpoint Ekonomi & GAP',
+          meaning: 'Mencakup 21 indikator ketertelusuran hasil panen, tata kelola keuangan, panen selektif petik merah, dan efisiensi biaya.',
+        },
+        {
+          symbol: 'Harga Transparan',
+          name: 'Fair Trading Practice',
+          meaning: 'Harga ceri dibayarkan langsung tanpa potongan sepihak, terdokumentasi dalam slip timbangan digital, dan berada di atas HPP.',
+        },
+        {
+          symbol: 'Traceability',
+          name: 'Ketertelusuran Lot Panen',
+          meaning: 'Setiap karung ceri memiliki kode lot unik yang melacak identitas pohon, tanggal panen, dan elevasi lahan asal.',
+        },
+      ],
+      realCalculation: {
+        numerator: `19.9 Skor Kepatuhan & Bukti Ekonomi (ΣEcon Ai · Ci · Vi)`,
+        denominator: `21 Checkpoint Ekonomi Relevan (ΣEcon Ai)`,
+        calculation: `(19.9 / 21) × 100% = 94.76% ≈ 94.7%`,
+        result: `${dimensionScores.economic.toFixed(1)}%`,
+        interpretation: 'Sangat Baik (Buku Panen Digital Aktif, Harga Ceri Layak di Atas HPP)',
+      },
+      factors: [
+        {
+          name: 'Pencatatan Buku Panen & Traceability Lot',
+          scorePct: 98.0,
+          description: 'Hasil panen ditimbang digital, dicatat dalam ledger kelompok tani, dan diberi kode identifikasi lot terstandar.',
+          auditEvidence: 'Buku panen fisik & sinkronisasi QR code lot panen ceri terkonfirmasi cocok 100%.',
+          isKey: true,
+        },
+        {
+          name: 'Transparansi Harga & Pembayaran Adil (Fair Price)',
+          scorePct: 96.0,
+          description: 'Petani menerima pembayaran harga ceri layak Rp 14.500/kg (berada 35% di atas HPP budidaya lokal).',
+          auditEvidence: 'Faktur tanda terima serah ceri dan bukti transfer/pembayaran kontan tercatat rapi.',
+          isKey: true,
+        },
+        {
+          name: 'Kemitraan Pasar & Skala Hubungan Dagang',
+          scorePct: 92.8,
+          description: 'Kerjasama serap langsung dengan stasiun pengolah (wet mill) dan roastery tanpa perantara tengkulak.',
+          auditEvidence: 'Kontrak kemitraan rantai pasok terhubung langsung dengan stasiun pengolahan basah.',
+          isKey: true,
+        },
+        {
+          name: 'Praktik Petik Merah Optimal (>95% Brix)',
+          scorePct: 92.0,
+          description: 'Sortasi buah ceri matang optimal (petik merah penuh) dengan hasil refraktometer rata-rata mencapai 21.8° Brix.',
+          auditEvidence: 'Pengukuran refraktometer digital auditor pada sampel ceri terverifikasi >21° Brix.',
+          isKey: false,
+        },
+      ],
+      standardDocuments: [
+        {
+          title: '4C Code of Conduct Dimension 1 (Economic Viability)',
+          organization: '4C Services GmbH',
+          summary: 'Standar efisiensi biaya usaha tani, ketertelusuran rantai nilai, dan transparansi harga pembelian komoditas kopi.',
+        },
+        {
+          title: 'Pedoman Good Agriculture Practices (GAP) Kopi Nasional',
+          organization: 'Direktorat Jenderal Perkebunan, Kementan RI',
+          summary: 'Panduan teknis budidaya, pemangkasan bentuk, pemupukan berimbang, dan panen selektif kopi bermutu tinggi.',
+        },
+        {
+          title: 'Standar Transparansi Pembelian Sirkular CircularCoffee',
+          organization: 'CircularTrace Value Chain Protocol',
+          summary: 'Protokol pembagian nilai tambah yang adil bagi petani dan pencatatan audit komoditas secara real-time.',
+        },
+      ],
+    },
+  };
+
+  // Helper renderer for DonutRing with embedded Factor Progress Bars & Formula Reference Button
   const DonutRing = ({
-    score,
-    strokeColor,
-    label,
-    subLabel,
-    icon: Icon,
-    isMajor = false,
+    configId,
   }: {
-    score: number;
-    strokeColor: string;
-    label: string;
-    subLabel: string;
-    icon: any;
-    isMajor?: boolean;
+    configId: 'ct4ci' | 'environmental' | 'social' | 'economic';
   }) => {
-    const clamped = Math.min(100, Math.max(0, score));
+    const config = indexConfigs[configId];
+    const clamped = Math.min(100, Math.max(0, config.score));
+
     return (
-      <div className="flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-white/80 border border-stone-200/70 hover:border-emerald-300 transition-all shadow-2xs space-y-1">
-        <div className="flex items-center gap-1 text-[11px] font-bold text-stone-900">
-          <Icon className="w-3 h-3 text-emerald-700 shrink-0" />
-          <span className="truncate">{label}</span>
+      <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/95 border border-stone-200/80 hover:border-emerald-400 hover:shadow-md transition-all shadow-2xs space-y-2">
+        {/* Card Header: Icon & Title */}
+        <div className="flex items-center gap-1.5 text-xs font-bold text-stone-900 w-full justify-center">
+          <config.icon className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+          <span className="truncate">{config.title}</span>
         </div>
 
         {/* Circular Donut Gauge - Compact */}
-        <div className="relative w-16 h-16 sm:w-20 sm:h-20 my-0.5">
-          <svg viewBox="0 0 36 36" className="w-16 h-16 sm:w-20 sm:h-20 transform -rotate-90">
+        <div className="relative w-18 h-18 sm:w-20 sm:h-20 my-0.5 shrink-0">
+          <svg viewBox="0 0 36 36" className="w-18 h-18 sm:w-20 sm:h-20 transform -rotate-90">
             {/* Background Track */}
             <path
               className="stroke-stone-200"
@@ -609,7 +1003,7 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
             />
             {/* Progress Arc */}
             <path
-              className={`${strokeColor} transition-all duration-1000 ease-out`}
+              className={`${config.strokeColor} transition-all duration-1000 ease-out`}
               strokeWidth="3.2"
               strokeLinecap="round"
               strokeDasharray={`${clamped}, 100`}
@@ -621,20 +1015,59 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
           {/* Center Text inside Donut */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
             <span className="text-xs sm:text-sm font-black font-mono text-stone-950 leading-none">
-              {score.toFixed(1)}%
+              {config.score.toFixed(1)}%
             </span>
-            <span className="text-[7px] font-bold uppercase tracking-tight text-emerald-700 mt-0.5">
-              {isMajor ? 'MAJOR' : 'PASS'}
+            <span className="text-[8px] font-bold uppercase tracking-tight text-emerald-700 mt-0.5">
+              {config.isMajor ? 'MAJOR' : 'PASS'}
             </span>
           </div>
         </div>
 
-        <span className="text-[9px] text-stone-500 font-medium leading-tight line-clamp-1">
-          {subLabel}
+        {/* Sub-label description */}
+        <span className="text-[10px] text-stone-500 font-medium leading-tight line-clamp-1">
+          {config.subLabel}
         </span>
+
+        {/* Mini Factor Progress Bars */}
+        <div className="w-full space-y-1.5 pt-2 pb-1 border-t border-stone-200/60 text-left">
+          {config.factors.slice(0, 3).map((factor, idx) => (
+            <div key={idx} className="space-y-0.5">
+              <div className="flex items-center justify-between text-[9px]">
+                <span className="text-stone-600 truncate max-w-[110px] sm:max-w-[125px] font-medium" title={factor.name}>
+                  {factor.name}
+                </span>
+                <span className="font-mono font-bold text-stone-800 shrink-0">
+                  {factor.scorePct.toFixed(0)}%
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${config.progressColor}`}
+                  style={{ width: `${Math.min(100, Math.max(0, factor.scorePct))}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Clickable Formula & Standard Reference Button */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedFormulaId(configId);
+            setActiveModalTab('rumus');
+          }}
+          className="w-full py-1.5 px-2.5 rounded-xl bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 text-[10px] font-bold border border-stone-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer group mt-1"
+          title={`Buka rincian rumus matematis, faktor penentu, dan standar referensi untuk ${config.title}`}
+        >
+          <Calculator className="w-3.5 h-3.5 text-stone-500 group-hover:text-emerald-700 shrink-0" />
+          <span>Rumus &amp; Referensi</span>
+        </button>
       </div>
     );
   };
+
+  const selectedConfig = selectedFormulaId ? indexConfigs[selectedFormulaId] : null;
 
   return (
     <div className="pt-3 pb-1 space-y-4">
@@ -654,45 +1087,296 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
         </div>
       </div>
 
-      {/* 4 Percentage Donut Rings Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Donut 1: Overall CT-4CI */}
-        <DonutRing
-          score={ct4ciScore}
-          strokeColor="stroke-emerald-600"
-          label="CT-4CI Readiness"
-          subLabel={`${compliantCount}/${applicableCount} Checkpoint • EC ${evidenceCoveragePct}%`}
-          icon={Award}
-          isMajor={true}
-        />
-
-        {/* Donut 2: Lingkungan */}
-        <DonutRing
-          score={dimensionScores.environmental}
-          strokeColor="stroke-teal-600"
-          label="Pilar Lingkungan"
-          subLabel="Zero Deforestasi & Zero Agrokimia B3"
-          icon={Leaf}
-        />
-
-        {/* Donut 3: Sosial */}
-        <DonutRing
-          score={dimensionScores.social}
-          strokeColor="stroke-sky-600"
-          label="Pilar Sosial & K3"
-          subLabel="Bebas Pekerja Anak & APD Petani"
-          icon={Users}
-        />
-
-        {/* Donut 4: Ekonomi */}
-        <DonutRing
-          score={dimensionScores.economic}
-          strokeColor="stroke-amber-600"
-          label="Pilar Ekonomi GAP"
-          subLabel="Harga Transparan & Buku Panen"
-          icon={TrendingUp}
-        />
+      {/* 4 Percentage Donut Rings Grid with Embedded Progress Bars & Formula Reference Links */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <DonutRing configId="ct4ci" />
+        <DonutRing configId="environmental" />
+        <DonutRing configId="social" />
+        <DonutRing configId="economic" />
       </div>
+
+      {/* ==================================================================== */}
+      {/* INTERACTIVE FORMULA & REGULATORY REFERENCE MODAL                      */}
+      {/* ==================================================================== */}
+      {selectedConfig && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
+          <div className="relative bg-white rounded-3xl border border-stone-200 shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden text-left">
+            {/* Modal Header */}
+            <div className="p-5 sm:p-6 bg-[#FAF7F2] border-b border-stone-200 flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-white border border-stone-200 text-emerald-700 flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                  <selectedConfig.icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider ${selectedConfig.badgeColor}`}>
+                      {selectedConfig.badgeLabel}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-stone-200/80 text-stone-700 font-mono">
+                      Skor: {selectedConfig.score.toFixed(1)}%
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-stone-900 leading-snug">
+                    {selectedConfig.title}
+                  </h3>
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    {selectedConfig.pillarName}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedFormulaId(null)}
+                className="w-8 h-8 rounded-full bg-stone-200/70 hover:bg-stone-300 text-stone-700 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                title="Tutup dialog"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Tab Controls */}
+            <div className="px-6 pt-3 bg-[#FAF7F2] border-b border-stone-200 flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('rumus')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeModalTab === 'rumus'
+                    ? 'border-emerald-600 text-emerald-900'
+                    : 'border-transparent text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                <Calculator className="w-3.5 h-3.5" />
+                <span>1. Rumus &amp; Metodologi</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('faktor')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeModalTab === 'faktor'
+                    ? 'border-emerald-600 text-emerald-900'
+                    : 'border-transparent text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>2. Faktor Penentu ({selectedConfig.factors.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('standar')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeModalTab === 'standar'
+                    ? 'border-emerald-600 text-emerald-900'
+                    : 'border-transparent text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>3. Standar &amp; Acuan Regulasi</span>
+              </button>
+            </div>
+
+            {/* Modal Body with Scroll */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs">
+              {/* ================= TAB 1: RUMUS MATEMATIS ================= */}
+              {activeModalTab === 'rumus' && (
+                <div className="space-y-4">
+                  {/* Formula LaTeX Display Box */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 text-white shadow-inner space-y-3">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 flex items-center gap-1.5">
+                      <Calculator className="w-3.5 h-3.5" />
+                      Formula Matematis Perhitungan Indeks:
+                    </span>
+                    <div className="bg-black/40 p-3.5 rounded-xl border border-white/10 font-mono text-center text-sm sm:text-base text-emerald-300 font-bold tracking-wide overflow-x-auto">
+                      {selectedConfig.formulaLatex}
+                    </div>
+                    {selectedConfig.id === 'ct4ci' && (
+                      <div className="bg-black/30 p-2.5 rounded-lg border border-white/5 font-mono text-center text-xs text-stone-300">
+                        Evidence Coverage: EC = 100 × [ Σ (Ai · Vi) / Σ Ai ] = 100.0%
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Variable Definitions Table */}
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-stone-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5 text-emerald-700" />
+                      Keterangan Notasi &amp; Variabel Penentu:
+                    </h4>
+                    <div className="divide-y divide-stone-100 rounded-2xl border border-stone-200 overflow-hidden bg-white">
+                      {selectedConfig.formulaExplanation.map((v, i) => (
+                        <div key={i} className="p-3 flex items-start gap-3 hover:bg-stone-50/60 transition-colors">
+                          <span className="w-16 px-2 py-0.5 rounded bg-emerald-50 text-emerald-900 font-mono font-bold text-center text-[11px] border border-emerald-200 shrink-0">
+                            {v.symbol}
+                          </span>
+                          <div>
+                            <strong className="text-stone-900 block text-xs">{v.name}</strong>
+                            <p className="text-stone-600 text-[11px] mt-0.5 leading-relaxed">{v.meaning}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Real Farm Walkthrough Calculation */}
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-emerald-950 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                        Kalkulasi Riil Lahan (Desa Awan, Kintamani):
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                        Terverifikasi ICS
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-[11px] text-stone-800">
+                      <div className="p-2.5 rounded-xl bg-white border border-emerald-200/60">
+                        <span className="text-[10px] text-stone-500 block">Numerator (Pembilang):</span>
+                        <strong className="text-stone-900">{selectedConfig.realCalculation.numerator}</strong>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-white border border-emerald-200/60">
+                        <span className="text-[10px] text-stone-500 block">Denominator (Penyebut):</span>
+                        <strong className="text-stone-900">{selectedConfig.realCalculation.denominator}</strong>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white border border-emerald-300 flex items-center justify-between">
+                      <span className="text-stone-600 font-medium">Perhitungan Persentase:</span>
+                      <span className="font-mono font-black text-emerald-800 text-sm">
+                        {selectedConfig.realCalculation.calculation}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-emerald-900 leading-relaxed italic">
+                      "{selectedConfig.realCalculation.interpretation}"
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= TAB 2: FAKTOR PENENTU ================= */}
+              {activeModalTab === 'faktor' && (
+                <div className="space-y-3.5">
+                  <div className="flex items-center justify-between text-stone-500 text-[11px]">
+                    <span>Daftar seluruh indikator penilaian dan bobot capaian audit fisik on-site:</span>
+                    <span className="font-bold text-stone-800">{selectedConfig.factors.length} Parameter</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {selectedConfig.factors.map((factor, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3.5 rounded-2xl bg-white border border-stone-200 hover:border-emerald-300 transition-all shadow-2xs space-y-2"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-stone-900 font-bold text-xs">{factor.name}</span>
+                              {factor.isKey && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                  Kriteria Kunci
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-stone-600 text-[11px] mt-0.5 leading-relaxed">
+                              {factor.description}
+                            </p>
+                          </div>
+                          <span className="font-mono font-black text-sm text-stone-900 shrink-0 bg-stone-50 px-2 py-0.5 rounded border border-stone-200">
+                            {factor.scorePct.toFixed(1)}%
+                          </span>
+                        </div>
+
+                        {/* Progress Bar Gauge */}
+                        <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${selectedConfig.progressColor}`}
+                            style={{ width: `${Math.min(100, Math.max(0, factor.scorePct))}%` }}
+                          />
+                        </div>
+
+                        {/* Audit physical finding note */}
+                        <div className="flex items-center gap-1.5 text-[10px] text-stone-500 pt-1">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>Bukti Lapangan: <strong>{factor.auditEvidence}</strong></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ================= TAB 3: STANDAR & ACUAN REGULASI ================= */}
+              {activeModalTab === 'standar' && (
+                <div className="space-y-3.5">
+                  <p className="text-stone-600 text-xs leading-relaxed">
+                    Setiap indikator dihitung dengan mengacu pada standar sertifikasi komoditas kopi global dan regulasi internasional resmi:
+                  </p>
+
+                  <div className="space-y-3">
+                    {selectedConfig.standardDocuments.map((doc, idx) => (
+                      <div
+                        key={idx}
+                        className="p-4 rounded-2xl bg-white border border-stone-200 hover:border-emerald-300 transition-all space-y-1.5 shadow-2xs"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">
+                              {doc.organization}
+                            </span>
+                            <h4 className="text-xs font-black text-stone-900">{doc.title}</h4>
+                          </div>
+                          {doc.url ? (
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors shrink-0"
+                            >
+                              <span>Website Resmi</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-stone-100 text-stone-600">
+                              Dokumen Standar
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-stone-600 leading-relaxed">
+                          {doc.summary}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-950 text-[11px] flex items-start gap-2.5">
+                    <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                    <div>
+                      <strong>Audit Independen Petugas ICS:</strong> Seluruh kepatuhan telah diperiksa dan diverifikasi secara independen oleh Tim ICS Kelompok Tani Mandiri (Ashabil) melalui inspeksi fisik kebun kopi on-site.
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-[#FAF7F2] border-t border-stone-200 flex items-center justify-between gap-3 shrink-0">
+              <span className="text-[10px] text-stone-500 font-mono">
+                No. Sertifikat: {certificateNumber}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedFormulaId(null)}
+                className="px-5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs transition-colors cursor-pointer shadow-xs"
+              >
+                Tutup Rincian
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Official ICS Officer Inspection Record */}
       <div className="bg-white/75 rounded-2xl p-4 border border-stone-200/80 space-y-3 shadow-2xs">

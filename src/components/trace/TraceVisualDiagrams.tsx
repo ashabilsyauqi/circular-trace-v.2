@@ -657,7 +657,7 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
   const indexConfigs: Record<'ct4ci' | 'environmental' | 'social' | 'economic', IndexDetailConfig> = {
     ct4ci: {
       id: 'ct4ci',
-      title: 'CT-4CI Readiness Index',
+      title: 'CT-4CI Readiness',
       pillarName: 'Indeks Kesiapan Sertifikasi Hulu Lahan Kopi (4C Readiness)',
       badgeLabel: '4C Code of Conduct v4.1 • Major Gate PASSED',
       badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
@@ -748,14 +748,14 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
     },
     environmental: {
       id: 'environmental',
-      title: 'Pilar Lingkungan & Konservasi',
+      title: 'Pilar Lingkungan',
       pillarName: 'Dimensi 3: Perlindungan Lingkungan, Konservasi Alam & Keanekaragaman Hayati',
       badgeLabel: '4C Dimension 3 • EUDR Deforestation-Free',
       badgeColor: 'bg-teal-100 text-teal-900 border-teal-300',
       strokeColor: 'stroke-teal-600',
       progressColor: 'bg-teal-600',
       score: dimensionScores.environmental,
-      subLabel: 'Zero Deforestasi & Zero Agrokimia B3',
+      subLabel: 'Bebas Deforestasi & Kimia B3',
       icon: Leaf,
       formulaLatex: '\\text{Skor Lingkungan} = 100 \\times \\frac{\\sum_{i \\in \\text{Env}} (A_i \\cdot C_i \\cdot V_i)}{\\sum_{i \\in \\text{Env}} A_i}',
       formulaExplanation: [
@@ -832,14 +832,14 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
     },
     social: {
       id: 'social',
-      title: 'Pilar Sosial, Hak Pekerja & K3',
+      title: 'Pilar Sosial & K3',
       pillarName: 'Dimensi 2: Hak Asasi Manusia, Kondisi Kerja Layak & Keselamatan Kerja',
       badgeLabel: '4C Dimension 2 • ILO Core Conventions Compliant',
       badgeColor: 'bg-sky-100 text-sky-900 border-sky-300',
       strokeColor: 'stroke-sky-600',
       progressColor: 'bg-sky-600',
       score: dimensionScores.social,
-      subLabel: 'Bebas Pekerja Anak & APD Petani',
+      subLabel: 'Bebas Pekerja Anak & APD',
       icon: Users,
       formulaLatex: '\\text{Skor Sosial} = 100 \\times \\frac{\\sum_{i \\in \\text{Soc}} (A_i \\cdot C_i \\cdot V_i)}{\\sum_{i \\in \\text{Soc}} A_i}',
       formulaExplanation: [
@@ -916,14 +916,14 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
     },
     economic: {
       id: 'economic',
-      title: 'Pilar Ekonomi & Praktik GAP',
+      title: 'Pilar Ekonomi & GAP',
       pillarName: 'Dimensi 1: Ketahanan Finansial, Ketertelusuran Mutu & Praktik Budidaya Baik',
       badgeLabel: '4C Dimension 1 • Good Agricultural Practices (GAP)',
       badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
       strokeColor: 'stroke-amber-600',
       progressColor: 'bg-amber-600',
       score: dimensionScores.economic,
-      subLabel: 'Harga Transparan & Buku Panen',
+      subLabel: 'Harga Transparan & GAP',
       icon: TrendingUp,
       formulaLatex: '\\text{Skor Ekonomi} = 100 \\times \\frac{\\sum_{i \\in \\text{Econ}} (A_i \\cdot C_i \\cdot V_i)}{\\sum_{i \\in \\text{Econ}} A_i}',
       formulaExplanation: [
@@ -1015,7 +1015,7 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
         {/* Card Header: Icon & Title */}
         <div className="flex items-center gap-1.5 text-xs font-bold text-stone-900 w-full justify-center">
           <config.icon className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-          <span className="truncate">{config.title}</span>
+          <span className="truncate whitespace-nowrap">{config.title}</span>
         </div>
 
         {/* Circular Donut Gauge - Compact */}
@@ -1051,25 +1051,29 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
         </div>
 
         {/* Sub-label description */}
-        <span className="text-[10px] text-stone-500 font-medium leading-tight line-clamp-1">
+        <span className="text-[10px] text-stone-500 font-medium leading-tight truncate whitespace-nowrap w-full">
           {config.subLabel}
         </span>
 
-        {/* Action Buttons: Detail Faktor (Toggle) & Rumus (Modal) */}
-        <div className="w-full pt-2 border-t border-stone-200/60 flex items-center gap-1.5 mt-1">
+        {/* Action Buttons: Faktor (Toggle) & Rumus (Modal) - Strict Single Line, Zero Stacking */}
+        <div className="w-full pt-2 border-t border-stone-200/60 grid grid-cols-2 gap-1.5 mt-1">
           <button
             type="button"
             onClick={() => toggleExpanded(configId)}
-            className={`flex-1 py-1.5 px-2 rounded-xl text-[10px] font-bold border transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer ${
+            className={`h-7 px-1.5 rounded-xl text-[10px] font-bold border transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap select-none overflow-hidden ${
               isExpanded
                 ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
                 : 'bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 border-stone-200 hover:border-emerald-300'
             }`}
-            title="Klik untuk melihat / menyembunyikan detail progress bar faktor penentu"
+            title="Klik untuk melihat / menyembunyikan detail faktor penentu"
           >
             <BarChart3 className="w-3 h-3 text-emerald-700 shrink-0" />
-            <span>Detail Faktor</span>
-            {isExpanded ? <ChevronUp className="w-3 h-3 ml-0.5" /> : <ChevronDown className="w-3 h-3 ml-0.5" />}
+            <span className="whitespace-nowrap">Faktor</span>
+            {isExpanded ? (
+              <ChevronUp className="w-2.5 h-2.5 text-stone-500 shrink-0" />
+            ) : (
+              <ChevronDown className="w-2.5 h-2.5 text-stone-500 shrink-0" />
+            )}
           </button>
 
           <button
@@ -1078,11 +1082,11 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
               setSelectedFormulaId(configId);
               setActiveModalTab('rumus');
             }}
-            className="py-1.5 px-2.5 rounded-xl bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 text-[10px] font-bold border border-stone-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0"
+            className="h-7 px-1.5 rounded-xl bg-stone-50 hover:bg-emerald-50 text-stone-700 hover:text-emerald-900 text-[10px] font-bold border border-stone-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap select-none overflow-hidden"
             title={`Buka rincian rumus matematis & acuan regulasi untuk ${config.title}`}
           >
             <Calculator className="w-3 h-3 text-stone-500 shrink-0" />
-            <span>Rumus</span>
+            <span className="whitespace-nowrap">Rumus</span>
           </button>
         </div>
 

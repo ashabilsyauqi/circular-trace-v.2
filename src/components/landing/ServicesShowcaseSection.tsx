@@ -20,7 +20,8 @@ import {
   Globe2,
   Thermometer,
   Cpu,
-  BadgeCheck
+  BadgeCheck,
+  ExternalLink
 } from 'lucide-react';
 
 // Custom Intersection Observer Hook for on-scroll reveal
@@ -573,12 +574,37 @@ export const ServicesShowcaseSection: React.FC = () => {
               </div>
 
               {/* Image Frame */}
-              <div className="relative w-full max-w-md aspect-square flex items-center justify-center p-4 z-10">
+              <div className="relative w-full max-w-md aspect-square flex items-center justify-center p-4 z-10 group">
                 <img
-                  src="/images/coffee_cup.png"
-                  alt="Cangkir Kopi Keramik dengan Latte Art Specialty"
-                  className="w-full h-auto max-h-[340px] object-contain drop-shadow-[0_20px_45px_rgba(244,63,94,0.30)] animate-cct-float-slow"
+                  src="/images/coffee_cup_passport.png"
+                  alt="Cangkir Kopi Keramik dengan QR Code Farm-to-Cup (CAFE-ST-001)"
+                  className="w-full h-auto max-h-[340px] object-contain drop-shadow-[0_20px_45px_rgba(244,63,94,0.30)] animate-cct-float-slow transition-transform group-hover:scale-105 duration-300"
                 />
+              </div>
+
+              {/* Direct interactive scan trigger & sample link badge */}
+              <div className="mt-2 w-full max-w-md bg-stone-900/90 rounded-2xl p-3 border border-rose-500/30 flex items-center justify-between gap-3 shadow-lg z-20">
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                  <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                    <QrCode className="w-4 h-4" />
+                  </div>
+                  <div className="text-left truncate">
+                    <span className="text-[10px] text-stone-400 uppercase font-bold block">Pindai QR Cangkir (Format URL):</span>
+                    <span className="text-xs font-mono font-bold text-rose-300 truncate block">
+                      /?cupId=CAFE-ST-001
+                    </span>
+                  </div>
+                </div>
+                <a
+                  href="/?cupId=CAFE-ST-001"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shrink-0 transition-all shadow-xs hover:shadow-rose-500/25 cursor-pointer"
+                  title="Uji coba buka riwayat silsilah cangkir kopi CAFE-ST-001"
+                >
+                  <span>Buka Silsilah Cangkir</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
               </div>
 
               {/* Metadata Chip */}

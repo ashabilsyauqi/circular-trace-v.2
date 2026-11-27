@@ -76,9 +76,11 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
       (c?.sourceRoastedBeanId && safeLotId && c.sourceRoastedBeanId.toLowerCase() === safeLotId.toLowerCase())
   );
 
-  // 1b. Check if the scanned ID is a Roasted bean lot (from Roastery ERP)
+  // 1b. Check if the scanned ID is a Roasted bean lot (from Roastery ERP) or linked from Cafe item
   const matchedRoastedLot = roastedLots.find(
-    (r) => r?.id && safeLotId && r.id.toLowerCase() === safeLotId.toLowerCase()
+    (r) =>
+      (r?.id && safeLotId && r.id.toLowerCase() === safeLotId.toLowerCase()) ||
+      (cafeItem?.sourceRoastedBeanId && r?.id && r.id.toLowerCase() === cafeItem.sourceRoastedBeanId.toLowerCase())
   );
 
   // 2. Check if the scanned ID is a warehouse lot
@@ -237,18 +239,16 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
   const matchedFarm =
     coffeeFarms?.find(
       (f) =>
-        (currentFarmerLot?.farmId && f.id === currentFarmerLot.farmId) ||
-        (currentFarmerLot?.farmerId && f.farmerId === currentFarmerLot.farmerId) ||
         (farmerLot?.farmId && f.id === farmerLot.farmId) ||
         (farmerLot?.farmerId && f.farmerId === farmerLot.farmerId) ||
+        (currentFarmerLot?.farmId && f.id === currentFarmerLot.farmId) ||
+        (currentFarmerLot?.farmerId && f.farmerId === currentFarmerLot.farmerId) ||
+        (currentCafeItem?.lineage?.farmLocation?.toLowerCase().includes('kintamani') && f.location?.toLowerCase().includes('kintamani')) ||
+        (currentCafeItem?.lineage?.farmLocation?.toLowerCase().includes('bangli') && f.location?.toLowerCase().includes('bangli')) ||
         (currentCafeItem?.lineage?.farmerName &&
-          f.farmerName
-            .toLowerCase()
-            .includes(currentCafeItem.lineage.farmerName.toLowerCase().split(' ')[0])) ||
+          (currentCafeItem.lineage.farmerName.toLowerCase().includes('adiarta') && f.farmerName.toLowerCase().includes('adiarta'))) ||
         (currentWarehouseLot?.sourceFarmerName &&
-          f.farmerName
-            .toLowerCase()
-            .includes(currentWarehouseLot.sourceFarmerName.toLowerCase().split(' ')[0]))
+          (currentWarehouseLot.sourceFarmerName.toLowerCase().includes('adiarta') && f.farmerName.toLowerCase().includes('adiarta')))
     ) || coffeeFarms?.[0];
 
   const snapshot = matchedFarm?.ctCertificationSnapshot;

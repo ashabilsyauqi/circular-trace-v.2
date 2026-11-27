@@ -673,6 +673,29 @@ export const AdminLTESidebar: React.FC<AdminLTESidebarProps> = ({ isCollapsed })
           )}
 
           <div className="space-y-1 mt-0.5">
+            {/* MASTER ANGGOTA & AKUN POKTAN (USER REQUEST Q1: A) */}
+            {(isAdminKelompok || isSuperAdmin) && (
+              <NavLink
+                to="/admin/users"
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors mb-1.5 ${
+                    isActive || location.pathname === '/admin/anggota'
+                      ? 'bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30 shadow-2xs'
+                      : 'text-stone-300 hover:bg-white/[0.04] hover:text-white'
+                  }`
+                }
+                title="Data Master Anggota & Akun Kelompok Tani"
+              >
+                <Users className="w-4 h-4 shrink-0 text-amber-400" />
+                {!isCollapsed && <span className="flex-1 truncate">Master Anggota &amp; Akun</span>}
+                {!isCollapsed && (
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-stone-800 text-amber-300 border border-stone-700">
+                    {kelompokTaniUsersCount}
+                  </span>
+                )}
+              </NavLink>
+            )}
+
             {/* 1. LAYANAN PETANI (COLLAPSIBLE DROPDOWN) */}
             {canSeePetani && (
               <div>

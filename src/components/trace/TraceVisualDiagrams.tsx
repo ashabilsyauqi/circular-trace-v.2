@@ -39,109 +39,70 @@ export const BrixCherryMeter: React.FC<BrixCherryMeterProps> = ({
   const brixPct = ((clampedBrix - minBrix) / (maxBrix - minBrix)) * 100;
 
   return (
-    <div className="pt-2 pb-1 space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200/60 pb-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-emerald-700" />
-          <span className="text-xs font-black uppercase tracking-wider text-stone-900">
-            Refraktometer Digital &amp; Indeks Kematangan Ceri
+    <div className="pt-1 pb-1 space-y-2">
+      {/* 1. Micro Brix Sparkline */}
+      <div className="bg-stone-50/80 p-2.5 rounded-xl border border-stone-200/60 space-y-1.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-stone-600 font-medium flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            Kadar Gula Alami Ceri (Brix)
+          </span>
+          <span className="font-mono text-xs font-semibold text-emerald-800">
+            {brixScore}° Bx • Puncak Manis
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-black font-mono text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-300">
-            {brixScore}° Bx • Puncak Manis Optimal
-          </span>
-          <span className="text-[11px] font-black font-mono text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-md border border-amber-300">
+
+        {/* Slim 3.5px Calibrated Line */}
+        <div className="relative pt-1 pb-0.5">
+          <div className="h-1.5 w-full rounded-full bg-stone-200 relative overflow-hidden flex">
+            <div className="h-full bg-stone-300 w-[28.5%]" title="12-16° Mengkal" />
+            <div className="h-full bg-amber-300 w-[21.4%]" title="16-19° Cukup" />
+            <div className="h-full bg-emerald-500 w-[35.7%]" title="19-24° Optimal Specialty" />
+            <div className="h-full bg-orange-400 w-[14.4%]" title="24-26° Lewat Matang" />
+          </div>
+
+          {/* Indicator Dot */}
+          <div
+            className="absolute top-0 -translate-x-1/2 flex flex-col items-center pointer-events-none"
+            style={{ left: `${brixPct}%` }}
+          >
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-700 ring-2 ring-white shadow-xs" />
+          </div>
+        </div>
+
+        <div className="flex justify-between text-[10px] text-stone-400 font-mono">
+          <span>12° Mengkal</span>
+          <span className="text-emerald-700 font-semibold">Optimal Specialty (20–24°)</span>
+          <span>&gt;24°</span>
+        </div>
+      </div>
+
+      {/* 2. Micro Cherry Ripeness Bar */}
+      <div className="bg-stone-50/80 p-2.5 rounded-xl border border-stone-200/60 space-y-1.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-stone-600 font-medium">Sortasi Kematangan Ceri</span>
+          <span className="font-mono text-xs font-semibold text-emerald-800">
             {cherryRipePercent}% Petik Merah
           </span>
         </div>
-      </div>
 
-      {/* SVG Brix Meter Horizontal Calibrated Gauge */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-[11px] text-stone-500 font-medium">
-          <span>Skala Kadar Gula Alami Buah (Refraktometer Brix)</span>
-          <span className="font-mono text-emerald-800 font-bold">Optimal Specialty: 20 - 24° Bx</span>
+        {/* Slim 3.5px Dual Bar */}
+        <div className="h-1.5 w-full bg-stone-200 rounded-full overflow-hidden flex">
+          <div className="bg-red-500 h-full" style={{ width: `${cherryRipePercent}%` }} />
+          <div className="bg-amber-400 h-full" style={{ width: `${100 - cherryRipePercent}%` }} />
         </div>
 
-        <div className="relative pt-6 pb-2">
-          {/* Calibrated Gradient Bar */}
-          <div className="h-4 w-full rounded-full bg-stone-200 relative overflow-hidden flex">
-            {/* 12-16: Mengkal */}
-            <div className="h-full bg-stone-300/80 w-[28.5%]" title="12 - 16° Bx: Mengkal" />
-            {/* 16-19: Matang Standar */}
-            <div className="h-full bg-amber-300/80 w-[21.4%]" title="16 - 19° Bx: Matang Cukup" />
-            {/* 19-24: Puncak Manis Optimal Specialty */}
-            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 w-[35.7%]" title="19 - 24° Bx: Specialty Peak Sweetness" />
-            {/* 24-26: Lewat Matang */}
-            <div className="h-full bg-orange-400/80 w-[14.4%]" title="24 - 26° Bx: Lewat Matang" />
-          </div>
-
-          {/* Calibrated Tick Marks */}
-          <div className="flex justify-between text-[10px] font-mono text-stone-400 mt-1 px-1">
-            <span>12°</span>
-            <span>16°</span>
-            <span>19°</span>
-            <span className="text-emerald-700 font-bold">22.5° Bx</span>
-            <span>24°</span>
-            <span>26°</span>
-          </div>
-
-          {/* Current Needle Indicator Pin */}
-          <div
-            className="absolute top-0 -translate-x-1/2 flex flex-col items-center transition-all duration-700"
-            style={{ left: `${brixPct}%` }}
-          >
-            <div className="bg-emerald-900 text-white text-[10px] font-mono font-black px-2 py-0.5 rounded shadow-sm flex items-center gap-1 border border-emerald-400">
-              <Sparkles className="w-2.5 h-2.5 text-amber-300" />
-              {brixScore}° Bx
-            </div>
-            <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-emerald-900" />
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 ring-2 ring-white shadow-xs mt-0.5" />
-          </div>
-        </div>
-
-        {/* Qualitative Zone Labels */}
-        <div className="grid grid-cols-4 gap-1 text-center text-[10px] text-stone-500 pt-0.5">
-          <div className="py-1 px-1 bg-stone-100 rounded text-stone-500 font-medium">12-16° Mengkal</div>
-          <div className="py-1 px-1 bg-amber-50 rounded text-amber-800 font-medium">16-19° Cukup</div>
-          <div className="py-1 px-1 bg-emerald-50 rounded text-emerald-800 font-bold border border-emerald-200">
-            20-24° Super Sweet ★
-          </div>
-          <div className="py-1 px-1 bg-orange-50 rounded text-orange-800 font-medium">&gt;24° Lewat Matang</div>
-        </div>
-      </div>
-
-      {/* Cherry Picking Sortation Bar */}
-      <div className="pt-2 border-t border-stone-200/60 space-y-1.5">
-        <div className="flex items-center justify-between text-[11px]">
-          <span className="text-stone-600 font-medium">Rasio Sortasi Kematangan Ceri di Kebun:</span>
-          <span className="font-mono text-emerald-800 font-bold">96.5% Lolos Sortasi Petik Merah</span>
-        </div>
-        <div className="h-3 w-full bg-stone-200 rounded-full overflow-hidden flex shadow-2xs">
-          <div
-            className="bg-red-600 h-full transition-all duration-500"
-            style={{ width: `${cherryRipePercent}%` }}
-            title="96.5% Ceri Merah Matang Sempurna"
-          />
-          <div
-            className="bg-amber-400 h-full transition-all duration-500"
-            style={{ width: `${100 - cherryRipePercent}%` }}
-            title="3.5% Ceri Oranye (Toleransi Sortasi)"
-          />
-        </div>
-        <div className="flex items-center justify-between text-[10px] text-stone-500 pt-0.5">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
-            Petik Merah Segar ({cherryRipePercent}%)
+        <div className="flex items-center justify-between text-[10px] text-stone-500">
+          <span className="flex items-center gap-1 text-red-700 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            Petik Merah ({cherryRipePercent}%)
           </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-            Kuning / Oranye ({(100 - cherryRipePercent).toFixed(1)}%)
+          <span className="flex items-center gap-1 text-amber-700 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            Kuning ({(100 - cherryRipePercent).toFixed(1)}%)
           </span>
-          <span className="flex items-center gap-1 text-emerald-700 font-bold">
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-            0% Ceri Hijau (Ditolak)
+          <span className="text-emerald-700 font-medium">
+            ✓ 0% Hijau
           </span>
         </div>
       </div>
@@ -170,24 +131,24 @@ export const WetMillProcessAndCircularity: React.FC<WetMillProcessProps> = ({
   const steps = [
     {
       step: '01',
-      title: 'Sortasi Rambang (Floating)',
-      desc: 'Ceri direndam dalam bak air pegunungan Kintamani. Ceri padat tenggelam (96.5%), ceri hampa otomatis terapung dan dipisahkan.',
-      badge: '96.5% Ceri Padat',
+      title: 'Sortasi Rambang',
+      desc: 'Perendaman air alami, ceri hampa dipisahkan.',
+      badge: '96.5% Padat',
       icon: Droplets,
       color: 'border-blue-200 bg-blue-50/60 text-blue-900',
     },
     {
       step: '02',
       title: 'Eco-Pulper Mekanis',
-      desc: 'Pengupasan kulit merah dengan mesin pulper presisi tanpa memecah biji bertanduk. Hemat konsumsi air hingga 85% dibanding mesin lama.',
-      badge: '1.2 L Air / Kg',
+      desc: 'Pengupasan presisi hemat air 85% tanpa pecah biji.',
+      badge: '1.2 L / Kg',
       icon: RotateCcw,
       color: 'border-amber-200 bg-amber-50/60 text-amber-900',
     },
     {
       step: '03',
-      title: 'Fermentasi Ganda 36 Jam',
-      desc: 'Fermentasi basah dua tahap terkontrol memecah lendir mucilage alami secara higienis, membentuk keasaman sitrun jeruk Kintamani.',
+      title: 'Fermentasi 36 Jam',
+      desc: 'Fermentasi dingin 18°C pembentuk note jeruk Bali.',
       badge: 'Suhu 18-20°C',
       icon: Activity,
       color: 'border-orange-200 bg-orange-50/60 text-orange-900',
@@ -195,49 +156,49 @@ export const WetMillProcessAndCircularity: React.FC<WetMillProcessProps> = ({
     {
       step: '04',
       title: 'Solar Raised Bed',
-      desc: 'Penjemuran di atas rak meja jaring para-para dengan sirkulasi udara 360° terlindung hujan hingga MC turun perlahan ke batas aman 11.4%.',
-      badge: 'MC 11.4% Target',
+      desc: 'Penjemuran meja para-para hingga MC aman 11.4%.',
+      badge: 'MC 11.4%',
       icon: Sun,
       color: 'border-emerald-200 bg-emerald-50/60 text-emerald-900',
     },
   ];
 
   return (
-    <div className="pt-2 pb-1 space-y-6">
+    <div className="pt-1 pb-1 space-y-4">
       {/* 4 Steps Timeline Flow */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between border-b border-stone-200/60 pb-2">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-amber-700" />
-            <span className="text-xs font-black uppercase tracking-wider text-stone-900">
-              Alur 4 Langkah Pengolahan Basah Terstandarisasi
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between border-b border-stone-200/60 pb-1.5">
+          <div className="flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5 text-amber-700" />
+            <span className="text-xs font-bold text-stone-900">
+              4 Langkah Pengolahan Basah Terstandarisasi
             </span>
           </div>
-          <span className="text-[10px] text-stone-500 font-mono">Specialty Washed Protocol</span>
+          <span className="text-[10px] text-stone-400 font-mono">Specialty Washed</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {steps.map((st, i) => {
             const IconComp = st.icon;
             return (
               <div
                 key={i}
-                className="p-3 rounded-2xl bg-white/70 border border-stone-200/80 space-y-2 hover:border-amber-300 transition-all shadow-2xs"
+                className="p-2.5 rounded-xl bg-white/80 border border-stone-200/70 space-y-1 hover:border-amber-300 transition-all shadow-2xs"
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-7 h-7 rounded-lg bg-stone-100 text-stone-800 font-mono font-black text-xs flex items-center justify-center">
+                  <div className="w-5 h-5 rounded bg-stone-100 text-stone-800 font-mono font-bold text-[10px] flex items-center justify-center">
                     {st.step}
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${st.color}`}>
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${st.color}`}>
                     {st.badge}
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
-                    <IconComp className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <h4 className="text-[11px] font-bold text-stone-900 flex items-center gap-1">
+                    <IconComp className="w-3 h-3 text-amber-700 shrink-0" />
                     {st.title}
                   </h4>
-                  <p className="text-[11px] text-stone-600 leading-relaxed mt-1">
+                  <p className="text-[10px] text-stone-500 leading-snug mt-0.5">
                     {st.desc}
                   </p>
                 </div>
@@ -343,162 +304,75 @@ export const WarehouseScreenAndClimateLog: React.FC<WarehouseScreenAndClimateLog
   waterActivityAw = 0.54,
 }) => {
   return (
-    <div className="pt-2 pb-1 space-y-6">
-      {/* 1. Screen Size Distribution Histogram */}
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200/60 pb-2">
-          <div className="flex items-center gap-2">
-            <Scale className="w-4 h-4 text-blue-700" />
-            <span className="text-xs font-black uppercase tracking-wider text-stone-900">
-              Histogram Distribusi Ukuran Biji (Screen Size Grading)
-            </span>
-          </div>
-          <span className="text-[11px] font-bold text-blue-900 bg-blue-100/70 px-2.5 py-0.5 rounded-full border border-blue-300">
-            Total Defect: {defectCount} / 350g (Grade 1 Super Screen)
+    <div className="pt-1 pb-1 space-y-3">
+      {/* 1. Screen Size Distribution Micro Segmented Bar */}
+      <div className="bg-stone-50/80 p-2.5 rounded-xl border border-stone-200/60 space-y-1.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-stone-700 font-medium flex items-center gap-1.5">
+            <Scale className="w-3.5 h-3.5 text-blue-700" />
+            Distribusi Ukuran Biji (Screen Size)
+          </span>
+          <span className="font-mono text-xs font-semibold text-blue-900">
+            Defect: {defectCount} / 350g (Grade 1)
           </span>
         </div>
 
-        {/* Clean Vector Bars */}
-        <div className="space-y-2.5 pt-1">
-          {/* Screen 18+ */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-stone-900 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded bg-blue-600 inline-block" />
-                Screen 18+ (Super Screen • &gt;7.14 mm)
-              </span>
-              <span className="font-mono font-black text-blue-900 text-xs">{screen18Percent}%</span>
-            </div>
-            <div className="h-2.5 w-full bg-stone-200 rounded-full overflow-hidden">
-              <div
-                className="bg-blue-600 h-full rounded-full transition-all duration-700"
-                style={{ width: `${screen18Percent}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-stone-500">
-              Keseragaman biji 92% menjamin transfer panas konveksi merata saat sangrai (zero scorching).
-            </p>
-          </div>
+        {/* Single Segmented Bar */}
+        <div className="h-2 w-full bg-stone-200 rounded-full overflow-hidden flex shadow-2xs">
+          <div className="bg-blue-600 h-full" style={{ width: `${screen18Percent}%` }} title={`Screen 18+ (${screen18Percent}%)`} />
+          <div className="bg-blue-400 h-full" style={{ width: `${screen17Percent * 2}%` }} title={`Screen 17 (${screen17Percent}%)`} />
+          <div className="bg-stone-400 h-full" style={{ width: `${screen16Percent * 2}%` }} title={`Screen 16 (${screen16Percent}%)`} />
+        </div>
 
-          {/* Screen 17 */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-stone-700 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded bg-blue-400 inline-block" />
-                Screen 17 (Large Screen • 6.75 mm)
-              </span>
-              <span className="font-mono font-bold text-stone-800 text-xs">{screen17Percent}%</span>
-            </div>
-            <div className="h-2 w-full bg-stone-200 rounded-full overflow-hidden">
-              <div
-                className="bg-blue-400 h-full rounded-full transition-all duration-700"
-                style={{ width: `${screen17Percent * 5}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Screen 16 */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-stone-700 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded bg-stone-400 inline-block" />
-                Screen 16 (Medium Screen • 6.35 mm)
-              </span>
-              <span className="font-mono font-bold text-stone-800 text-xs">{screen16Percent}%</span>
-            </div>
-            <div className="h-2 w-full bg-stone-200 rounded-full overflow-hidden">
-              <div
-                className="bg-stone-400 h-full rounded-full transition-all duration-700"
-                style={{ width: `${screen16Percent * 5}%` }}
-              />
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center justify-between text-[10px] text-stone-500 pt-0.5">
+          <span className="flex items-center gap-1 font-medium text-blue-900">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+            Screen 18+ ({screen18Percent}%)
+          </span>
+          <span className="flex items-center gap-1 font-medium text-blue-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+            Screen 17 ({screen17Percent}%)
+          </span>
+          <span className="flex items-center gap-1 font-medium text-stone-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
+            Screen 16 ({screen16Percent}%)
+          </span>
         </div>
       </div>
 
-      {/* 2. Climate Control Log SVG Sparkline (Suhu 19.2°C & RH 58% GrainPro) */}
-      <div className="space-y-3 pt-3 border-t border-stone-200/70">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200/60 pb-2">
-          <div className="flex items-center gap-2">
-            <Thermometer className="w-4 h-4 text-teal-700" />
-            <span className="text-xs font-black uppercase tracking-wider text-stone-900">
-              Grafik Stabilitas Suhu &amp; Kelembaban Silo (Climate Log 30 Hari)
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-stone-600 bg-stone-100 px-2 py-0.5 rounded border border-stone-300">
-              GrainPro™ Hermetic Barrier
-            </span>
-            <span className="text-[10px] font-black font-mono text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-300">
-              Aw: {waterActivityAw} (Aman dari Jamur)
-            </span>
-          </div>
+      {/* 2. Climate Control Log SVG Micro Sparkline */}
+      <div className="bg-stone-50/80 p-2.5 rounded-xl border border-stone-200/60 space-y-1.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-stone-700 font-medium flex items-center gap-1.5">
+            <Thermometer className="w-3.5 h-3.5 text-teal-700" />
+            Stabilitas Silo GrainPro™ (30 Hari)
+          </span>
+          <span className="font-mono text-[11px] font-semibold text-teal-800">
+            Aw: {waterActivityAw} • Bebas Jamur
+          </span>
         </div>
 
-        {/* Clean SVG Graph */}
-        <div className="bg-white/70 p-3 rounded-2xl border border-stone-200/80 space-y-2 shadow-2xs">
-          <svg className="w-full h-24 overflow-visible" viewBox="0 0 460 90">
-            <defs>
-              <linearGradient id="climateTempGlow" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0284c7" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
+        {/* Compact SVG Graph */}
+        <div className="bg-white/80 p-2 rounded-lg border border-stone-200/60">
+          <svg className="w-full h-14 overflow-visible" viewBox="0 0 460 60">
+            <rect x="0" y="10" width="460" height="38" fill="#f0fdf4" rx="3" />
+            <line x1="0" y1="10" x2="460" y2="10" stroke="#e2e8f0" strokeDasharray="3 3" />
+            <line x1="0" y1="48" x2="460" y2="48" stroke="#e2e8f0" strokeDasharray="3 3" />
 
-            {/* Safe Envelope Band (Y: 20 to 65) */}
-            <rect x="0" y="20" width="460" height="45" fill="#f0fdf4" rx="4" />
-            <text x="8" y="32" className="text-[8px] fill-emerald-700 font-semibold">
-              Zona Aman Kopi Specialty (18-21°C • RH 55-62%)
-            </text>
+            {/* Stable Temp Line */}
+            <path d="M 10 24 Q 60 22, 120 23 T 240 22 T 360 23 L 450 22" fill="none" stroke="#0284c7" strokeWidth="2" />
+            {/* Stable RH Line */}
+            <path d="M 10 36 Q 70 34, 140 37 T 270 35 T 390 36 L 450 35" fill="none" stroke="#0d9488" strokeWidth="1.5" strokeDasharray="3 3" />
 
-            {/* Horizontal Grid lines */}
-            <line x1="0" y1="20" x2="460" y2="20" stroke="#e2e8f0" strokeDasharray="3 3" />
-            <line x1="0" y1="45" x2="460" y2="45" stroke="#e2e8f0" strokeDasharray="3 3" />
-            <line x1="0" y1="65" x2="460" y2="65" stroke="#e2e8f0" strokeDasharray="3 3" />
-
-            {/* Stable Temp Line (~19.2°C at y=36) */}
-            <path
-              d="M 10 38 Q 60 36, 120 37 T 240 36 T 360 37 L 450 36"
-              fill="none"
-              stroke="#0284c7"
-              strokeWidth="2.4"
-            />
-
-            {/* Stable RH Line (~58% at y=52) */}
-            <path
-              d="M 10 53 Q 70 51, 140 54 T 270 52 T 390 53 L 450 52"
-              fill="none"
-              stroke="#0d9488"
-              strokeWidth="2"
-              strokeDasharray="4 3"
-            />
-
-            {/* Current Datapoints */}
-            <circle cx="450" cy="36" r="4" fill="#ffffff" stroke="#0284c7" strokeWidth="2.5" />
-            <circle cx="450" cy="52" r="3.5" fill="#ffffff" stroke="#0d9488" strokeWidth="2" />
-
-            {/* Callout Badges on Right Edge */}
-            <text x="445" y="27" textAnchor="end" className="text-[9px] font-mono font-black fill-sky-800">
-              Suhu: {temperatureCelsius}°C
-            </text>
-            <text x="445" y="70" textAnchor="end" className="text-[9px] font-mono font-black fill-teal-800">
-              RH: {humidityPercent}%
-            </text>
+            <circle cx="450" cy="22" r="3" fill="#ffffff" stroke="#0284c7" strokeWidth="2" />
+            <circle cx="450" cy="35" r="2.5" fill="#ffffff" stroke="#0d9488" strokeWidth="1.5" />
           </svg>
 
-          {/* Graph Legend */}
-          <div className="flex flex-wrap items-center justify-between text-[11px] pt-1 border-t border-stone-100">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 font-bold text-sky-900">
-                <span className="w-3.5 h-1 rounded bg-sky-600 inline-block" />
-                <span>Suhu Ruang ({temperatureCelsius}°C)</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-bold text-teal-800">
-                <span className="w-3.5 h-0.5 border-t-2 border-dashed border-teal-600 inline-block" />
-                <span>Kelembaban Relatif ({humidityPercent}% RH)</span>
-              </div>
+          <div className="flex items-center justify-between text-[10px] pt-1 text-stone-500 border-t border-stone-100">
+            <div className="flex items-center gap-3">
+              <span className="text-sky-800 font-medium">● Suhu {temperatureCelsius}°C</span>
+              <span className="text-teal-800 font-medium">--- RH {humidityPercent}%</span>
             </div>
-            <span className="text-[10px] text-stone-500">Sensor IoT Telemetri Real-Time</span>
           </div>
         </div>
       </div>
@@ -717,15 +591,15 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
   }) => {
     const clamped = Math.min(100, Math.max(0, score));
     return (
-      <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/70 border border-stone-200/80 hover:border-emerald-300 transition-all shadow-2xs space-y-1.5">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-stone-900">
-          <Icon className="w-3.5 h-3.5 text-emerald-700" />
-          <span>{label}</span>
+      <div className="flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-white/80 border border-stone-200/70 hover:border-emerald-300 transition-all shadow-2xs space-y-1">
+        <div className="flex items-center gap-1 text-[11px] font-bold text-stone-900">
+          <Icon className="w-3 h-3 text-emerald-700 shrink-0" />
+          <span className="truncate">{label}</span>
         </div>
 
-        {/* Circular Donut Gauge */}
-        <div className="relative w-24 h-24 my-1">
-          <svg viewBox="0 0 36 36" className="w-24 h-24 transform -rotate-90">
+        {/* Circular Donut Gauge - Compact */}
+        <div className="relative w-16 h-16 sm:w-20 sm:h-20 my-0.5">
+          <svg viewBox="0 0 36 36" className="w-16 h-16 sm:w-20 sm:h-20 transform -rotate-90">
             {/* Background Track */}
             <path
               className="stroke-stone-200"
@@ -746,16 +620,16 @@ export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps>
 
           {/* Center Text inside Donut */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-            <span className="text-base font-black font-mono text-stone-950 leading-none">
+            <span className="text-xs sm:text-sm font-black font-mono text-stone-950 leading-none">
               {score.toFixed(1)}%
             </span>
-            <span className="text-[8px] font-black uppercase tracking-tight text-emerald-700 mt-0.5">
-              {isMajor ? 'MAJOR PASS' : 'COMPLIANT'}
+            <span className="text-[7px] font-bold uppercase tracking-tight text-emerald-700 mt-0.5">
+              {isMajor ? 'MAJOR' : 'PASS'}
             </span>
           </div>
         </div>
 
-        <span className="text-[10px] text-stone-500 font-medium leading-tight">
+        <span className="text-[9px] text-stone-500 font-medium leading-tight line-clamp-1">
           {subLabel}
         </span>
       </div>

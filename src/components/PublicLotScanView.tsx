@@ -1079,84 +1079,110 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
         {/* ==================================================================== */}
         {isCafeCup ? (
           <div className="space-y-10 max-w-4xl mx-auto w-full overflow-x-hidden">
-            {/* 1. HERO SEDUHAN — Flat, warm specialty paper tone, zero nested boxes */}
-            <div className="py-6 border-b border-stone-200/80 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/80 text-amber-950 text-xs font-bold border border-amber-300/80">
-                  <Coffee className="w-3.5 h-3.5 text-amber-700" />
-                  PASPOR DIGITAL SEDUHAN • 100% KOPI ASLI KINTAMANI
-                </div>
+            {/* 1. DIGITAL COFFEE PASSPORT — Boarding Pass Ticket Minimalist Aesthetic */}
+            <div className="relative bg-gradient-to-br from-[#FAF8F5] via-white to-[#F5EFEB] rounded-3xl border border-stone-300/80 shadow-xs overflow-hidden text-stone-900">
+              {/* Header Strip */}
+              <div className="bg-stone-950 text-amber-300 px-4 sm:px-6 py-2.5 flex items-center justify-between text-xs font-mono">
                 <div className="flex items-center gap-2">
-                  <span className="px-3.5 py-1 rounded-full bg-stone-900 text-amber-300 text-xs font-black shadow-2xs">
-                    SCA {currentCafeItem.scaScore} Specialty
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-amber-100/90 text-amber-900 text-xs font-bold">
-                    {currentCafeItem.processMethod}
+                  <Coffee className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="font-bold tracking-wider text-[11px] text-amber-200">
+                    CIRCULAR COFFEE PASSPORT • TIKET SEDUHAN RESMI
                   </span>
                 </div>
+                <span className="text-[10px] text-stone-400 font-bold">
+                  CUP ID: {currentCafeItem.id || lotId || 'CAFE-ST-001'}
+                </span>
               </div>
 
-              <div className="space-y-1">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-stone-950 tracking-tight">
-                  {currentCafeItem.beanName}
-                </h1>
-                <p className="text-xs sm:text-sm text-stone-600 flex flex-wrap items-center gap-2 pt-0.5">
-                  <span className="flex items-center gap-1 font-semibold text-emerald-800">
-                    <MapPin className="w-4 h-4 text-emerald-700 shrink-0" />
-                    {currentCafeItem.origin}
-                  </span>
-                  <span>•</span>
-                  <span>{currentCafeItem.variety}</span>
-                  <span>•</span>
-                  <span className="text-amber-900 font-medium">Disajikan oleh {currentCafeItem.cafeName}</span>
-                </p>
-              </div>
+              {/* Main Ticket Area */}
+              <div className="p-4 sm:p-6 space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded">
+                      SINGLE ORIGIN KINTAMANI SPECIALTY
+                    </span>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-stone-950 tracking-tight mt-1">
+                      {currentCafeItem.beanName}
+                    </h1>
+                    <p className="text-xs text-stone-600 flex flex-wrap items-center gap-1.5 mt-0.5 font-medium">
+                      <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                      <span>{currentCafeItem.origin}</span>
+                      <span>•</span>
+                      <span>{currentCafeItem.lineage.altitude}</span>
+                      <span>•</span>
+                      <span className="text-amber-900 font-semibold">{currentCafeItem.cafeName}</span>
+                    </p>
+                  </div>
 
-              {/* Dominant Tasting Notes Pills */}
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <span className="text-xs font-bold text-stone-500 mr-1">Profil Rasa:</span>
-                {currentCafeItem.tastingNotes.map((note, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50/90 text-amber-950 border border-amber-200/90 flex items-center gap-1"
-                  >
-                    <Sparkles className="w-3 h-3 text-amber-600" />
-                    {note}
-                  </span>
-                ))}
-              </div>
+                  {/* SCA Stamp Seal */}
+                  <div className="self-start sm:self-center shrink-0 bg-stone-900 text-amber-300 px-4 py-2 sm:p-3 rounded-2xl text-center shadow-xs border border-amber-400/30">
+                    <span className="text-[9px] font-mono uppercase tracking-wider block text-stone-400">Cupping Score</span>
+                    <span className="text-xl sm:text-2xl font-black font-mono leading-none block my-0.5 text-amber-300">
+                      {currentCafeItem.scaScore}
+                    </span>
+                    <span className="text-[8px] font-bold uppercase tracking-tight block text-emerald-400">
+                      ★ Specialty Grade 1
+                    </span>
+                  </div>
+                </div>
 
-              {/* Hero Clean Editorial Metadata Grid */}
-              <div className="pt-4 border-t border-stone-200/70 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                <div className="space-y-0.5">
-                  <span className="text-[11px] text-stone-400 block font-normal">Petani Produsen Asal</span>
-                  <span className="text-xs font-semibold text-stone-900 block">{currentCafeItem.lineage.farmerName}</span>
+                {/* Farmer & Process Quick Badges */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-stone-200/60 text-xs">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100/90 text-stone-800 font-medium">
+                    <Sprout className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Petani: <strong className="text-stone-950">{currentCafeItem.lineage.farmerName}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100/90 text-stone-800 font-medium">
+                    <Cog className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Proses: <strong className="text-stone-950">{currentCafeItem.processMethod}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100/90 text-stone-800 font-medium">
+                    <Flame className="w-3.5 h-3.5 text-orange-700" />
+                    <span>Roast: <strong className="text-stone-950">{currentCafeItem.roastLevel}</strong></span>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[11px] text-stone-400 block font-normal">Ketinggian Lahan</span>
-                  <span className="text-xs font-semibold text-stone-900 block">{currentCafeItem.lineage.altitude}</span>
+
+                {/* Tasting Notes */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <span className="text-[11px] font-bold text-stone-400 mr-1">Flavor Notes:</span>
+                  {currentCafeItem.tastingNotes.map((note, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-950 border border-amber-200/80 flex items-center gap-1"
+                    >
+                      <Sparkles className="w-2.5 h-2.5 text-amber-600" />
+                      {note}
+                    </span>
+                  ))}
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[11px] text-stone-400 block font-normal">Kadar Manis Ceri</span>
-                  <span className="text-xs font-semibold text-emerald-800 block font-mono">{currentCafeItem.lineage.brix}° Bx (Petik Merah)</span>
-                </div>
-                <div className="space-y-0.5">
-                  <span className="text-[11px] text-stone-400 block font-normal">Profil Roasting</span>
-                  <span className="text-xs font-semibold text-amber-900 block">{currentCafeItem.roastLevel} (Agtron #68)</span>
+
+                {/* Perforated Stub Divider */}
+                <div className="relative pt-2">
+                  <div className="border-t border-dashed border-stone-300 flex items-center justify-between pt-2.5 text-[10px] text-stone-500 font-mono">
+                    <span className="flex items-center gap-1 text-emerald-800 font-semibold">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      100% Direct-Trade Verified
+                    </span>
+                    <span>Tgl Panen: {currentCafeItem.lineage.harvestDate}</span>
+                    <span className="hidden sm:inline">Roast: {currentCafeItem.lineage.roastDate}</span>
+                  </div>
+                  {/* Left & Right Notch Circles for Boarding Pass Look */}
+                  <div className="absolute -left-6 sm:-left-8 top-1 w-3.5 h-3.5 rounded-full bg-[#FAF7F2] border-r border-stone-300" />
+                  <div className="absolute -right-6 sm:-right-8 top-1 w-3.5 h-3.5 rounded-full bg-[#FAF7F2] border-l border-stone-300" />
                 </div>
               </div>
             </div>
 
-            {/* 2. SENSORY RADAR & PANDUAN RASA — Flat, borderless, clean key-value progress bars */}
-            <div className="space-y-6">
+            {/* 2. SENSORY RADAR — Cupping SCA Score */}
+            <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-stone-200 pb-2">
                 <div>
                   <h2 className="text-lg sm:text-xl font-black text-stone-950 tracking-tight flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-amber-600" />
-                    Karakter Cita Rasa & Panduan Seduhan
+                    Karakter Cita Rasa & Sensori Cupping
                   </h2>
                   <p className="text-xs text-stone-500 mt-0.5">
-                    Evaluasi sensori protokol cupping SCA dan panduan menikmati di setiap rentang suhu.
+                    Evaluasi sensori 6 dimensi protokol SCA Specialty Coffee Association.
                   </p>
                 </div>
               </div>
@@ -1181,39 +1207,6 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                 interactive={true}
                 flat={true}
               />
-
-              {/* Barista Temperature Guide: Clean 3 columns with subtle divider */}
-              <div className="pt-2 border-t border-stone-200/70">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-950 block mb-3">
-                  Panduan Suhu Menikmati Cangkir Ini:
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                  <div className="space-y-1">
-                    <span className="font-bold text-amber-900 flex items-center gap-1.5">
-                      🔥 Suhu Panas (70°C+)
-                    </span>
-                    <p className="text-stone-600 leading-relaxed text-[11px]">
-                      Hirup uap aroma floral semerbak bunga melati dan teh putih yang elegan.
-                    </p>
-                  </div>
-                  <div className="space-y-1 sm:border-l sm:border-stone-200/80 sm:pl-4">
-                    <span className="font-bold text-amber-900 flex items-center gap-1.5">
-                      ✨ Suhu Hangat (55-65°C)
-                    </span>
-                    <p className="text-stone-600 leading-relaxed text-[11px]">
-                      Karakter segar jeruk Kintamani dan manis juicy buah peach mulai dominan di lidah.
-                    </p>
-                  </div>
-                  <div className="space-y-1 sm:border-l sm:border-stone-200/80 sm:pl-4">
-                    <span className="font-bold text-amber-900 flex items-center gap-1.5">
-                      🍯 Suhu Sejuk (35-45°C)
-                    </span>
-                    <p className="text-stone-600 leading-relaxed text-[11px]">
-                      Manis lembut gula tebu alami dengan aftertaste bersih yang panjang di tenggorokan.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* 3. SEAMLESS VERTICAL TIMELINE: SILSILAH RANTAI PASOK HULU KE HILIR */}
@@ -1302,7 +1295,7 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                         landAreaHectares={matchedFarm?.landAreaHectares || 1.43}
                         totalTreesCount={matchedFarm?.totalTreesCount || 1450}
                         patokList={matchedFarm?.patokList || []}
-                        height="280px"
+                        height="190px"
                         showPresets={false}
                         showPlotDetailsTable={false}
                         allowEdit={false}
@@ -1527,6 +1520,45 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                       <span className="text-xs font-semibold text-emerald-700 block">100% Single Origin Direct-Trade</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Barista Temperature Tasting Guide (Experiential Climax for Cup Drinkers) */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  Panduan Suhu Menikmati Cangkir Ini:
+                </span>
+                <span className="text-[10px] font-mono text-amber-800 font-bold bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300">
+                  Barista Recommendation
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                <div className="space-y-0.5 bg-white/80 p-2.5 rounded-xl border border-amber-200/50 shadow-2xs">
+                  <span className="font-bold text-amber-950 flex items-center gap-1 text-[11px]">
+                    🔥 Suhu Panas (70°C+)
+                  </span>
+                  <p className="text-stone-600 leading-snug text-[10px]">
+                    Hirup uap aroma floral semerbak bunga melati dan teh putih yang elegan.
+                  </p>
+                </div>
+                <div className="space-y-0.5 bg-white/80 p-2.5 rounded-xl border border-amber-200/50 shadow-2xs">
+                  <span className="font-bold text-amber-950 flex items-center gap-1 text-[11px]">
+                    ✨ Suhu Hangat (55–65°C)
+                  </span>
+                  <p className="text-stone-600 leading-snug text-[10px]">
+                    Karakter segar jeruk Kintamani dan manis juicy buah peach mulai dominan di lidah.
+                  </p>
+                </div>
+                <div className="space-y-0.5 bg-white/80 p-2.5 rounded-xl border border-amber-200/50 shadow-2xs">
+                  <span className="font-bold text-amber-950 flex items-center gap-1 text-[11px]">
+                    🍯 Suhu Sejuk (35–45°C)
+                  </span>
+                  <p className="text-stone-600 leading-snug text-[10px]">
+                    Manis lembut gula tebu alami dengan aftertaste bersih yang panjang di tenggorokan.
+                  </p>
                 </div>
               </div>
             </div>

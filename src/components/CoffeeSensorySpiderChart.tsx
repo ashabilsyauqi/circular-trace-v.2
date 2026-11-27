@@ -32,6 +32,7 @@ export interface CoffeeSensorySpiderChartProps {
     aftertaste?: number;
   };
   interactive?: boolean;
+  flat?: boolean;
 }
 
 export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> = ({
@@ -44,6 +45,7 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
   tastingNotes = ['Jasmine Floral', 'Lemon Zest', 'Peach Blossom', 'Cane Sugar Sweetness'],
   customAttributes,
   interactive = true,
+  flat = false,
 }) => {
   const [selectedRoastPreset, setSelectedRoastPreset] = useState<'actual' | 'light' | 'medium' | 'dark'>('actual');
   const [activeHoverAxis, setActiveHoverAxis] = useState<number | null>(null);
@@ -185,7 +187,13 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
   );
 
   return (
-    <div className="bg-gradient-to-br from-amber-950/10 via-stone-50 to-amber-50/40 rounded-3xl p-5 sm:p-7 border border-amber-200/80 shadow-sm space-y-6">
+    <div
+      className={
+        flat
+          ? 'space-y-6 pt-2'
+          : 'bg-gradient-to-br from-amber-950/10 via-stone-50 to-amber-50/40 rounded-3xl p-5 sm:p-7 border border-amber-200/80 shadow-sm space-y-6'
+      }
+    >
       {/* Header Profile Info */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-200/60 pb-4">
         <div className="space-y-1">
@@ -208,14 +216,14 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
           </p>
         </div>
 
-        {/* Roasting Spec Badges */}
+        {/* Roasting Spec Badges / Clean Row */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="bg-white px-3.5 py-2 rounded-2xl border border-amber-200 text-center shadow-2xs">
+          <div className={flat ? 'text-right' : 'bg-white px-3.5 py-2 rounded-2xl border border-amber-200 text-center shadow-2xs'}>
             <span className="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">Agtron Tile</span>
             <span className="text-base font-black text-stone-900 font-mono">#{agtronNumber}</span>
             <span className="text-[9px] text-amber-700 font-semibold block">{roastLevel}</span>
           </div>
-          <div className="bg-white px-3.5 py-2 rounded-2xl border border-amber-200 text-center shadow-2xs">
+          <div className={flat ? 'text-right pl-3 border-l border-stone-200' : 'bg-white px-3.5 py-2 rounded-2xl border border-amber-200 text-center shadow-2xs'}>
             <span className="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">DTR Ratio</span>
             <span className="text-base font-black text-amber-900 font-mono">{dtrPercent}%</span>
             <span className="text-[9px] text-stone-500 font-semibold block">Dev. Time</span>
@@ -285,7 +293,7 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
       {/* Main Chart & Attribute Details Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         {/* Left Spider Chart SVG Graphic (7 Cols) */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-4 sm:p-6 border border-amber-200/70 shadow-2xs flex flex-col items-center justify-center relative overflow-hidden">
+        <div className={flat ? 'lg:col-span-6 flex flex-col items-center justify-center relative overflow-hidden py-2' : 'lg:col-span-7 bg-white rounded-3xl p-4 sm:p-6 border border-amber-200/70 shadow-2xs flex flex-col items-center justify-center relative overflow-hidden'}>
           <svg
             className="w-full max-w-[380px] h-auto aspect-square overflow-visible"
             viewBox="0 0 380 340"
@@ -457,18 +465,57 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
           </div>
         </div>
 
-        {/* Right Attribute Breakdown Cards (5 Cols) */}
-        <div className="lg:col-span-5 space-y-2.5">
-          <div className="flex items-center justify-between border-b border-amber-200 pb-2">
+        {/* Right Attribute Breakdown Cards / Key-Value List */}
+        <div className={flat ? 'lg:col-span-6 space-y-3' : 'lg:col-span-5 space-y-2.5'}>
+          <div className="flex items-center justify-between border-b border-stone-200/80 pb-2">
             <span className="text-xs font-black uppercase tracking-wider text-amber-950">
               Rincian 6 Parameter Cita Rasa:
             </span>
             <span className="text-[10px] text-stone-500 font-mono">Protokol SCA / WCE</span>
           </div>
 
-          <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+          <div className="space-y-2.5 pt-1">
             {attributes.map((attr, idx) => {
               const isHovered = activeHoverAxis === idx;
+              const pct = Math.max(0, Math.min(100, ((attr.score - 5) / 5) * 100));
+
+              if (flat) {
+                return (
+                  <div
+                    key={idx}
+                    onMouseEnter={() => setActiveHoverAxis(idx)}
+                    onMouseLeave={() => setActiveHoverAxis(null)}
+                    className={`py-2 px-3 rounded-xl transition-all cursor-pointer ${
+                      isHovered ? 'bg-amber-100/70' : 'hover:bg-stone-100/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span>{attr.icon}</span>
+                        <strong className="text-stone-900 font-bold">{attr.name}</strong>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-20 sm:w-28 bg-stone-200/80 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="bg-amber-600 h-full rounded-full transition-all duration-300"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="font-mono text-xs font-black text-amber-900 w-11 text-right">
+                          {attr.score.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-stone-500 mt-1">
+                      <span className="truncate pr-2">{attr.description}</span>
+                      <span className="text-amber-800 font-semibold shrink-0 text-[10px]">
+                        {attr.flavorTones.slice(0, 2).join(', ')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={idx}
@@ -512,15 +559,15 @@ export const CoffeeSensorySpiderChart: React.FC<CoffeeSensorySpiderChartProps> =
       </div>
 
       {/* Tasting Notes Chips */}
-      <div className="bg-white/90 rounded-2xl p-4 border border-amber-200/80 space-y-2">
+      <div className={flat ? 'pt-2 space-y-2' : 'bg-white/90 rounded-2xl p-4 border border-amber-200/80 space-y-2'}>
         <span className="text-xs font-black text-stone-800 uppercase tracking-wider block">
-          🎯 Dominan Flavour Notes & Karakter Cup:
+          🎯 Dominan Flavour Notes &amp; Karakter Cup:
         </span>
         <div className="flex flex-wrap gap-2">
           {tastingNotes.map((note, idx) => (
             <span
               key={idx}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-50 to-orange-50 text-amber-950 border border-amber-300 shadow-2xs flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-100/70 text-amber-950 border border-amber-300/80 shadow-2xs flex items-center gap-1.5"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
               {note}

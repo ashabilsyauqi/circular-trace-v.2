@@ -1071,59 +1071,90 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
         {/* CASE 0: GELAS KOPI PELANGGAN CAFE (FARM-TO-CUP CONSUMER EXPERIENCE) */}
         {/* ==================================================================== */}
         {isCafeCup ? (
-          <>
-            {/* Customer Greeting Banner */}
-            <div className="bg-gradient-to-r from-amber-950 via-stone-900 to-amber-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-              <div className="relative z-10 max-w-xl">
-                <div className="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-400/30 px-3.5 py-1 rounded-full text-xs font-bold mb-3">
-                  <Coffee className="w-4 h-4 text-amber-400" />
-                  PANDUAN RASA & SILSILAH SEDUHAN RESMI • VERIFIED FARM-TO-CUP
+          <div className="space-y-10 max-w-4xl mx-auto">
+            {/* 1. HERO SEDUHAN — Flat, warm specialty paper tone, zero nested boxes */}
+            <div className="py-6 border-b border-stone-200/80 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/80 text-amber-950 text-xs font-bold border border-amber-300/80">
+                  <Coffee className="w-3.5 h-3.5 text-amber-700" />
+                  PASPOR DIGITAL SEDUHAN • 100% KOPI ASLI KINTAMANI
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-                  Nikmati Seduhan Asli Specialty Coffee
-                </h1>
-                <p className="mt-2 text-stone-300 text-xs sm:text-sm leading-relaxed">
-                  Selamat menikmati! Cangkir kopi yang sedang Anda nikmati di <strong className="text-amber-300 font-bold">{currentCafeItem.cafeName}</strong> terhubung langsung ke petani dan roastery melalui sistem ketertelusuran CircularCoffee.
-                </p>
-              </div>
-
-              <div className="absolute right-4 -bottom-6 opacity-10 text-white pointer-events-none">
-                <Coffee className="w-56 h-56" />
-              </div>
-            </div>
-
-            {/* Lifecycle Stage Indicator */}
-            {renderStageLifecycleBanner(4)}
-
-            {/* Main Cup Experience Container */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm space-y-6">
-              {/* Cup Header & SCA Score */}
-              <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-stone-100">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">
-                    MENU SEDUHAN AKTIF • {currentCafeItem.cafeName}
-                  </span>
-                  <h2 className="font-black text-xl sm:text-2xl text-stone-950 mt-0.5">
-                    {currentCafeItem.beanName}
-                  </h2>
-                  <p className="text-xs text-stone-600 flex items-center gap-1 mt-1">
-                    <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-                    {currentCafeItem.origin} • {currentCafeItem.variety}
-                  </p>
-                </div>
-
                 <div className="flex items-center gap-2">
-                  <span className="px-3.5 py-1.5 rounded-full bg-stone-900 text-amber-300 text-xs font-black shadow-xs flex items-center gap-1.5">
-                    <Award className="w-4 h-4 text-amber-400" />
-                    SCA {currentCafeItem.scaScore} (Specialty)
+                  <span className="px-3.5 py-1 rounded-full bg-stone-900 text-amber-300 text-xs font-black shadow-2xs">
+                    SCA {currentCafeItem.scaScore} Specialty
                   </span>
-                  <span className="px-3.5 py-1.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300">
+                  <span className="px-3 py-1 rounded-full bg-amber-100/90 text-amber-900 text-xs font-bold">
                     {currentCafeItem.processMethod}
                   </span>
                 </div>
               </div>
 
-              {/* SECTION 1: SENSORY SPIDER CHART & TASTING GUIDE FOR CUSTOMER */}
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-stone-950 tracking-tight">
+                  {currentCafeItem.beanName}
+                </h1>
+                <p className="text-xs sm:text-sm text-stone-600 flex flex-wrap items-center gap-2 pt-0.5">
+                  <span className="flex items-center gap-1 font-semibold text-emerald-800">
+                    <MapPin className="w-4 h-4 text-emerald-700 shrink-0" />
+                    {currentCafeItem.origin}
+                  </span>
+                  <span>•</span>
+                  <span>{currentCafeItem.variety}</span>
+                  <span>•</span>
+                  <span className="text-amber-900 font-medium">Disajikan oleh {currentCafeItem.cafeName}</span>
+                </p>
+              </div>
+
+              {/* Dominant Tasting Notes Pills */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="text-xs font-bold text-stone-500 mr-1">Profil Rasa:</span>
+                {currentCafeItem.tastingNotes.map((note, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50/90 text-amber-950 border border-amber-200/90 flex items-center gap-1"
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-600" />
+                    {note}
+                  </span>
+                ))}
+              </div>
+
+              {/* Hero Clean Key-Value Rows */}
+              <div className="pt-4 border-t border-stone-200/70 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs">
+                <div className="flex items-center justify-between py-2 border-b border-stone-200/50">
+                  <span className="text-stone-500 font-medium">Petani Produsen Asal</span>
+                  <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.farmerName}</strong>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-stone-200/50">
+                  <span className="text-stone-500 font-medium">Ketinggian Lahan</span>
+                  <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.altitude}</strong>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-stone-200/50">
+                  <span className="text-stone-500 font-medium">Kadar Manis Ceri (Brix)</span>
+                  <strong className="text-emerald-800 font-bold">{currentCafeItem.lineage.brix}° Bx (Petik Merah 95%+)</strong>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-stone-200/50">
+                  <span className="text-stone-500 font-medium">Profil Roasting Artisan</span>
+                  <strong className="text-amber-900 font-bold">{currentCafeItem.roastLevel} (Agtron #68 • DTR 14.5%)</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. SENSORY RADAR & PANDUAN RASA — Flat, borderless, clean key-value progress bars */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-black text-stone-950 tracking-tight flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-amber-600" />
+                    Karakter Cita Rasa & Panduan Seduhan
+                  </h2>
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    Evaluasi sensori protokol cupping SCA dan panduan menikmati di setiap rentang suhu.
+                  </p>
+                </div>
+              </div>
+
+              {/* Spider Chart with flat=true (Zero nested cards) */}
               <CoffeeSensorySpiderChart
                 scaScore={currentCafeItem.scaScore}
                 roastLevel={currentCafeItem.roastLevel}
@@ -1133,527 +1164,345 @@ export const PublicLotScanView: React.FC<PublicLotScanViewProps> = ({
                 roasterName={currentCafeItem.roasterName}
                 tastingNotes={currentCafeItem.tastingNotes}
                 interactive={true}
+                flat={true}
               />
 
-              {/* Barista Tasting Tips by Temperature */}
-              <div className="bg-gradient-to-br from-amber-50/80 via-stone-50 to-amber-50/40 rounded-2xl p-5 border border-amber-200/80 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-600" />
-                  <h3 className="text-xs font-black uppercase tracking-wider text-amber-950">
-                    Panduan Sensori: Cara Terbaik Menikmati Cangkir Ini
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs">
-                  <div className="bg-white/90 p-3 rounded-xl border border-amber-200/70">
-                    <span className="text-amber-800 font-bold block text-[11px] mb-0.5">🔥 Saat Suhu Panas (70°C+):</span>
-                    <p className="text-stone-600 text-[11px] leading-relaxed">
+              {/* Barista Temperature Guide: Clean 3 columns with subtle divider */}
+              <div className="pt-2 border-t border-stone-200/70">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-950 block mb-3">
+                  Panduan Suhu Menikmati Cangkir Ini:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div className="space-y-1">
+                    <span className="font-bold text-amber-900 flex items-center gap-1.5">
+                      🔥 Suhu Panas (70°C+)
+                    </span>
+                    <p className="text-stone-600 leading-relaxed text-[11px]">
                       Hirup uap aroma floral semerbak bunga melati dan teh putih yang elegan.
                     </p>
                   </div>
-                  <div className="bg-white/90 p-3 rounded-xl border border-amber-200/70">
-                    <span className="text-amber-800 font-bold block text-[11px] mb-0.5">✨ Saat Suhu Hangat (55-65°C):</span>
-                    <p className="text-stone-600 text-[11px] leading-relaxed">
-                      Rasakan kesegaran sitrun lemon zest dan manis juicy buah peach yang cerah.
-                    </p>
-                  </div>
-                  <div className="bg-white/90 p-3 rounded-xl border border-amber-200/70">
-                    <span className="text-amber-800 font-bold block text-[11px] mb-0.5">🍯 Saat Suhu Sejuk (35-45°C):</span>
-                    <p className="text-stone-600 text-[11px] leading-relaxed">
-                      Nikmati manis lembut gula tebu alami dengan sensasi akhir yang bersih di tenggorokan.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* ============================================================ */}
-              {/* 4-STAGE TRACEABILITY REPORT (STRUCTURE MATCHING USER DIAGRAM) */}
-              {/* ============================================================ */}
-              <div className="space-y-6 pt-4 border-t border-stone-200">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-black text-stone-950 tracking-tight flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-amber-700" />
-                      Laporan Rantai Pasok Lengkap (4 Tahap Silsilah)
-                    </h2>
-                    <p className="text-xs text-stone-500 mt-0.5">
-                      Transparansi end-to-end dari kebun petani, stasiun olah, gudang ekspor, hingga artisan roastery.
-                    </p>
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 bg-emerald-50 text-emerald-800 rounded-full border border-emerald-300 flex items-center gap-1.5 shrink-0 shadow-xs">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    Direct-Trade Verified
-                  </span>
-                </div>
-
-                {/* ------------------------------------------------------------ */}
-                {/* TAHAP 1: RIWAYAT PETANI -> LAPORAN ANGKA 4C LENGKAP          */}
-                {/* ------------------------------------------------------------ */}
-                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-emerald-300 shadow-sm space-y-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600" />
-
-                  {/* Header Riwayat Petani */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-stone-100">
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0 border border-emerald-200">
-                        <Sprout className="w-6 h-6 text-emerald-700" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-300">
-                            TAHAP 1 • HULU PERKEBUNAN
-                          </span>
-                          <span className="text-[11px] font-semibold text-stone-400">
-                            Panen: {currentCafeItem.lineage.harvestDate}
-                          </span>
-                        </div>
-                        <h3 className="text-lg sm:text-xl font-black text-stone-900 mt-0.5">
-                          Riwayat Petani &amp; Lahan Asal
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                        4C Code of Conduct v4.1 Certified
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Ringkasan Data Riwayat Petani */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/90">
-                      <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">
-                        Petani Produsen Asal
-                      </span>
-                      <strong className="text-sm font-bold text-stone-900 block mt-1">
-                        {currentCafeItem.lineage.farmerName}
-                      </strong>
-                      <span className="text-[11px] text-stone-600 block mt-0.5">
-                        {matchedFarm?.farmName || 'Kebun Blok Pasir Kunci'}
-                      </span>
-                    </div>
-
-                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/90">
-                      <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">
-                        Lokasi &amp; Ketinggian Kebun
-                      </span>
-                      <strong className="text-sm font-bold text-stone-900 block mt-1 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        {currentCafeItem.lineage.altitude}
-                      </strong>
-                      <span className="text-[11px] text-stone-600 block mt-0.5 truncate">
-                        {currentCafeItem.lineage.farmLocation}
-                      </span>
-                    </div>
-
-                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/90">
-                      <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">
-                        Varietas &amp; Standar Petik
-                      </span>
-                      <strong className="text-sm font-bold text-stone-900 block mt-1">
-                        {currentCafeItem.variety}
-                      </strong>
-                      <span className="text-[11px] text-emerald-700 font-bold block mt-0.5">
-                        Kadar Brix: {currentCafeItem.lineage.brix}° Bx (Petik Merah Optimal)
-                      </span>
-                    </div>
-
-                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/90">
-                      <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">
-                        Konservasi Lahan &amp; EUDR
-                      </span>
-                      <strong className="text-sm font-bold text-emerald-800 block mt-1 flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        100% Bebas Deforestasi
-                      </strong>
-                      <span className="text-[11px] text-stone-600 block mt-0.5">
-                        Andosol Vulkanik • Naungan Sengon
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Peta Interaktif Kebun & Patok Batas Tanah Asal */}
-                  {renderFarmAndPatokSection(
-                    matchedFarm,
-                    currentCafeItem.lineage.farmerName,
-                    currentCafeItem.variety
-                  )}
-
-                  {/* Akumulasi Audit ICS Verifikator Gapoktan Asal */}
-                  {renderIcsAuditCard(matchedFarm?.id, currentCafeItem.lineage.harvestDate)}
-
-                  {/* Laporan Angka 4C Lengkap (GAMBAR 2: VISUALISASI LINGKARAN TERPADU) */}
-                  <div className="pt-2">
-                    <div className="flex items-center gap-2 mb-3.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
-                        Laporan Angka 4C Lengkap • Visualisasi Diagram Lingkaran Terpadu
-                      </h4>
-                    </div>
-
-                    {/* IntegratedCircularIndicesView Component (PERSIS SEPERTI GAMBAR 2) */}
-                    <IntegratedCircularIndicesView
-                      ct4ciResult={ct4ciResultData}
-                      cciBreakdown={cciBreakdownData}
-                      sdiBreakdown={sdiBreakdownData}
-                      fairtradeResult={fairtradeResultData}
-                      isMajorPassed={isMajorGatePassed}
-                      farmName={matchedFarm?.farmName || 'Kebun Blok Pasir Kunci (Lereng Gn. Tilu)'}
-                      farmCode={matchedFarm?.id || 'FARM-PGL-01'}
-                    />
-                  </div>
-                </div>
-
-                {/* ------------------------------------------------------------ */}
-                {/* TAHAP 2: RIWAYAT PENGOLAH -> LOGS OLAHAN, METODE DLL.        */}
-                {/* ------------------------------------------------------------ */}
-                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-amber-300 shadow-sm space-y-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600" />
-
-                  {/* Header Riwayat Pengolah */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-stone-100">
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold shrink-0 border border-amber-200">
-                        <Cog className="w-6 h-6 text-amber-700" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-300">
-                            TAHAP 2 • WET &amp; DRY MILL
-                          </span>
-                          <span className="text-[11px] font-semibold text-stone-400">
-                            Metode: {currentCafeItem.processMethod}
-                          </span>
-                        </div>
-                        <h3 className="text-lg sm:text-xl font-black text-stone-900 mt-0.5">
-                          Riwayat Pengolah &amp; LOGS Olahan, Metode dll.
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-300">
-                        Eco-Mill Station
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Profil Stasiun Pengolah */}
-                  <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-amber-800 block">Stasiun Olah Terverifikasi</span>
-                      <strong className="text-sm font-black text-stone-900 block mt-0.5">
-                        {currentCafeItem.lineage.processorName}
-                      </strong>
-                      <span className="text-[11px] text-stone-600 block mt-0.5">
-                        Pangalengan, Jawa Barat • Penanggung Jawab Unit: Budi Santoso
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-amber-800 block">Nomor Batch Green Bean</span>
-                      <span className="font-mono text-xs font-black text-stone-900 block mt-0.5">
-                        GB-PGL-001 (Full Washed)
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* LOGS Parameter Olahan */}
-                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-stone-600 mb-3">
-                      LOGS Parameter Fisik, Waktu &amp; Kontrol Mutu Olahan
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Metode Pengolahan</span>
-                        <strong className="text-sm font-bold text-stone-900 block mt-0.5">
-                          {currentCafeItem.processMethod}
-                        </strong>
-                        <span className="text-[10px] text-stone-500">Air Mata Air Alami</span>
-                      </div>
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Durasi Fermentasi</span>
-                        <strong className="text-sm font-black text-amber-700 block mt-0.5">
-                          36 Jam Fermentasi
-                        </strong>
-                        <span className="text-[10px] text-stone-500">Suhu 19.2°C • pH 4.35</span>
-                      </div>
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Metode Pengeringan</span>
-                        <strong className="text-sm font-bold text-stone-900 block mt-0.5">
-                          Solar Dome Raised Bed
-                        </strong>
-                        <span className="text-[10px] text-stone-500">14 Hari Terkontrol</span>
-                      </div>
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Rendemen Olahan</span>
-                        <strong className="text-sm font-black text-emerald-700 block mt-0.5">
-                          18.5% Green Bean
-                        </strong>
-                        <span className="text-[10px] text-stone-500">1.200 kg Ceri $\rightarrow$ 240 kg GB</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Audit Trail Timeline Logs */}
-                  <div className="bg-stone-50 rounded-2xl p-4.5 border border-stone-200 space-y-2 text-xs">
-                    <span className="text-[10px] uppercase font-bold text-stone-500 block">
-                      Audit Trail: Timeline Logs Tahapan Pengolahan Ceri
+                  <div className="space-y-1 sm:border-l sm:border-stone-200/80 sm:pl-4">
+                    <span className="font-bold text-amber-900 flex items-center gap-1.5">
+                      ✨ Suhu Hangat (55-65°C)
                     </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-[11px]">
-                      <div className="p-3 bg-white rounded-xl border border-stone-200">
-                        <span className="font-bold text-amber-900 block">1. Sortasi Rendam (Floating)</span>
-                        <span className="text-stone-600 block mt-0.5">Pemisahan buah rambang, tingkat petik merah lolos 96.5%</span>
-                      </div>
-                      <div className="p-3 bg-white rounded-xl border border-stone-200">
-                        <span className="font-bold text-amber-900 block">2. Pulper &amp; Fermentasi</span>
-                        <span className="text-stone-600 block mt-0.5">Pengupasan mekanis, fermentasi terkontrol degradasi mucilage</span>
-                      </div>
-                      <div className="p-3 bg-white rounded-xl border border-stone-200">
-                        <span className="font-bold text-amber-900 block">3. Penjemuran &amp; Hulling</span>
-                        <span className="text-stone-600 block mt-0.5">Meja raised bed higienis anti-kontaminasi tanah hingga KA 10.8%</span>
-                      </div>
-                    </div>
+                    <p className="text-stone-600 leading-relaxed text-[11px]">
+                      Karakter segar jeruk Kintamani dan manis juicy buah peach mulai dominan di lidah.
+                    </p>
                   </div>
-
-                  {/* Valorisasi Limbah Sirkular (Material Balance) */}
-                  {renderEcoRatingSection(
-                    {
-                      wasteType: 'Kulit Ceri (Pulp / Cascara Kering)',
-                      utilization: 'Bahan Baku Minuman Teh Cascara & Kompos Sirkular Kebun Petani',
-                      weightKgOrLiters: 480,
-                      recipientOrLocation: `${currentCafeItem.lineage.farmerName} (Kelompok Tani Tilu Lestari)`,
-                      processingMethod: 'Solar Dryer Raised Bed (Food Grade) & Kompos Aerobik 30 Hari',
-                      ecoCertificate: 'CircularCoffee Zero-Waste Circular Standard',
-                      notes: 'Limbah ceri dari seduhan ini telah dikembalikan sebagai pupuk kompos organik ke kebun petani asal dan diolah jadi teh cascara artisan.',
-                    },
-                    1200,
-                    240,
-                    currentCafeItem.lineage.processorName,
-                    matchedFarm
-                  )}
-                </div>
-
-                {/* ------------------------------------------------------------ */}
-                {/* TAHAP 3: RIWAYAT GUDANG -> DETAIL SORTINGAN                  */}
-                {/* ------------------------------------------------------------ */}
-                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-blue-300 shadow-sm space-y-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600" />
-
-                  {/* Header Riwayat Gudang */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-stone-100">
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-900 flex items-center justify-center font-bold shrink-0 border border-blue-200">
-                        <Warehouse className="w-6 h-6 text-blue-700" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-blue-900 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-300">
-                            TAHAP 3 • QA &amp; PERGUDANGAN
-                          </span>
-                          <span className="text-[11px] font-semibold text-stone-400">
-                            Lot: WH-2026-09-12-PGL
-                          </span>
-                        </div>
-                        <h3 className="text-lg sm:text-xl font-black text-stone-900 mt-0.5">
-                          Riwayat Gudang &amp; Detail Sortingan
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-300 flex items-center gap-1.5">
-                        <Crown className="w-3.5 h-3.5 text-blue-700" />
-                        Specialty Grade 1
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Info Gudang */}
-                  <div className="bg-blue-50/60 p-4 rounded-2xl border border-blue-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-blue-800 block">Fasilitas Pergudangan Mutu</span>
-                      <strong className="text-sm font-black text-stone-900 block mt-0.5">
-                        {currentCafeItem.lineage.warehouseName}
-                      </strong>
-                      <span className="text-[11px] text-stone-600 block mt-0.5">
-                        Cold Room A-02 • Suhu 18.5°C - 20.4°C, RH 54%, GrainPro Hermetic Bag
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-blue-800 block">Skor SCA Terverifikasi Gudang</span>
-                      <span className="font-mono text-base font-black text-amber-700 block mt-0.5">
-                        SCA {currentCafeItem.lineage.warehouseScaScore}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Detail Sortingan Fisik & Uji Lab */}
-                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-stone-600 mb-3">
-                      Detail Sortingan Fisik &amp; Analisis Green Bean (Standar SCA)
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Cacat Primer (Primary Defect)</span>
-                        <strong className="text-base font-black text-emerald-700 block mt-0.5">
-                          0 Defect
-                        </strong>
-                        <span className="text-[10px] text-stone-500">Nol biji hitam / asam</span>
-                      </div>
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Cacat Sekunder</span>
-                        <strong className="text-base font-black text-stone-900 block mt-0.5">
-                          2 Defect
-                        </strong>
-                        <span className="text-[10px] text-stone-500">Batas SCA Specialty: 5</span>
-                      </div>
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Ukuran Biji (Screen Size)</span>
-                        <strong className="text-base font-black text-stone-900 block mt-0.5">
-                          Size 17-18
-                        </strong>
-                        <span className="text-[10px] text-stone-500">&gt;92% Biji Besar Seragam</span>
-                      </div>
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Kadar Air &amp; Densitas</span>
-                        <strong className="text-base font-black text-emerald-700 block mt-0.5">
-                          10.8% • 720 g/L
-                        </strong>
-                        <span className="text-[10px] text-stone-500">Water Activity 0.55 $a_w$</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* EUDR & Storage Safety Badge */}
-                  <div className="p-3.5 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-                      <span className="text-emerald-950 font-bold">
-                        Verifikasi EUDR Geolocation &amp; Sentinel-2 Satelit: Bebas Deforestasi 100%
-                      </span>
-                    </div>
-                    <span className="font-mono text-[10px] font-bold text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-300">
-                      PASSED
+                  <div className="space-y-1 sm:border-l sm:border-stone-200/80 sm:pl-4">
+                    <span className="font-bold text-amber-900 flex items-center gap-1.5">
+                      🍯 Suhu Sejuk (35-45°C)
                     </span>
+                    <p className="text-stone-600 leading-relaxed text-[11px]">
+                      Manis lembut gula tebu alami dengan aftertaste bersih yang panjang di tenggorokan.
+                    </p>
                   </div>
                 </div>
-
-                {/* ------------------------------------------------------------ */}
-                {/* TAHAP 4: RIWAYAT ROASTING -> ANGKA ANGKA HASIL ROASTING      */}
-                {/* ------------------------------------------------------------ */}
-                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-orange-300 shadow-sm space-y-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600" />
-
-                  {/* Header Riwayat Roasting */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-stone-100">
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-2xl bg-orange-100 text-orange-900 flex items-center justify-center font-bold shrink-0 border border-orange-200">
-                        <Flame className="w-6 h-6 text-orange-600" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-orange-900 px-2.5 py-0.5 rounded-full bg-orange-50 border border-orange-300">
-                            TAHAP 4 • ARTISAN ROASTERY
-                          </span>
-                          <span className="text-[11px] font-semibold text-stone-400">
-                            Resting Optimal
-                          </span>
-                        </div>
-                        <h3 className="text-lg sm:text-xl font-black text-stone-900 mt-0.5">
-                          Riwayat Roasting &amp; Angka-angka Hasil Roasting
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="px-3.5 py-1.5 rounded-full bg-stone-900 text-amber-300 text-xs font-black shadow-xs flex items-center gap-1.5">
-                        <Award className="w-4 h-4 text-amber-400" />
-                        SCA {currentCafeItem.scaScore} (Specialty)
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Info Roastery & Mesin */}
-                  <div className="bg-orange-50/60 p-4 rounded-2xl border border-orange-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-orange-800 block">Artisan Roastery &amp; Profil Mesin</span>
-                      <strong className="text-sm font-black text-stone-900 block mt-0.5">
-                        {currentCafeItem.lineage.roasterName}
-                      </strong>
-                      <span className="text-[11px] text-stone-600 block mt-0.5">
-                        Giesen W6A Artisan • Master Roaster: Dimas Pratama • Batch: RST-KRS-001
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-orange-800 block">Tanggal Sangrai</span>
-                      <span className="font-bold text-xs text-stone-900 block mt-0.5">
-                        {currentCafeItem.lineage.roastDate}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Angka-angka Telemetri Hasil Roasting */}
-                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-stone-600 mb-3">
-                      Angka-angka Telemetri Hasil Roasting
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Tingkat Sangrai</span>
-                        <strong className="text-sm font-bold text-stone-900 block mt-0.5">
-                          {currentCafeItem.roastLevel}
-                        </strong>
-                        <span className="text-[10px] text-stone-500">Filter Specialty Profile</span>
-                      </div>
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Agtron Gourmet Score</span>
-                        <strong className="text-base font-black text-amber-700 block mt-0.5">
-                          #68
-                        </strong>
-                        <span className="text-[10px] text-stone-500">Commercial Standard</span>
-                      </div>
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Development Time (DTR)</span>
-                        <strong className="text-base font-black text-stone-900 block mt-0.5">
-                          14.5%
-                        </strong>
-                        <span className="text-[10px] text-stone-500">Total Waktu: 10m 15s</span>
-                      </div>
-                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                        <span className="text-[10px] text-stone-400 block">Suhu &amp; Weight Loss</span>
-                        <strong className="text-base font-black text-orange-700 block mt-0.5">
-                          Drop 208°C • -14.8%
-                        </strong>
-                        <span className="text-[10px] text-stone-500">Charge 200°C • FC 196°C</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Direct-Trade Integrity Statement */}
-              <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 text-xs text-stone-600 space-y-1">
-                <div className="flex items-center gap-1.5 font-bold text-stone-900">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Jaminan Transparansi & Keadilan Rantai Pasok (Direct Trade)</span>
-                </div>
-                <p className="text-[11px] text-stone-500 leading-relaxed">
-                  Biji kopi pada cangkir ini dibeli langsung oleh <strong className="text-stone-800">{currentCafeItem.cafeName}</strong> melalui platform CircularCoffee tanpa perantara spekulan. Memastikan nilai tambah terbaik dinikmati petani dan kualitas seduhan terbaik disajikan untuk Anda.
-                </p>
-              </div>
-
-              {/* Verification Ledger Footer */}
-              <div className="pt-4 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span>Tersertifikasi Rantai Pasok CircularCoffee • Tahap 5 (End-User Cafe Cup Tier)</span>
-                </div>
-                <span>Disajikan: {currentCafeItem.purchaseDate}</span>
               </div>
             </div>
-          </>
+
+            {/* 3. SEAMLESS VERTICAL TIMELINE: SILSILAH RANTAI PASOK HULU KE HILIR */}
+            <div className="pt-6 border-t border-stone-200/80 space-y-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-stone-950 tracking-tight flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-amber-700" />
+                    Silsilah Rantai Pasok Terpadu
+                  </h2>
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    Transparansi hulu ke hilir dari perkebunan Kintamani, wet mill, gudang, hingga roastery.
+                  </p>
+                </div>
+                <span className="text-xs font-bold px-3 py-1 bg-emerald-100/70 text-emerald-900 rounded-full border border-emerald-300 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                  Direct-Trade Terverifikasi
+                </span>
+              </div>
+
+              {/* The Timeline Track */}
+              <div className="relative border-l-2 border-stone-300/80 ml-3.5 sm:ml-5 pl-6 sm:pl-8 space-y-12">
+                {/* TAHAP 1: KEBUN & PETANI ASAL */}
+                <div className="relative space-y-3">
+                  {/* Timeline Node Icon */}
+                  <div className="absolute -left-[37px] sm:-left-[45px] top-0 w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-xs ring-4 ring-[#FAF7F2] shadow-2xs">
+                    <Sprout className="w-4 h-4" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 px-2.5 py-0.5 rounded-md bg-emerald-100/70">
+                        TAHAP 1 • HULU PERKEBUNAN
+                      </span>
+                      <span className="text-xs text-stone-400">Panen: {currentCafeItem.lineage.harvestDate}</span>
+                    </div>
+                    <h3 className="text-lg font-black text-stone-950">
+                      Kebun Asal & Identitas Petani Produsen
+                    </h3>
+                    <p className="text-xs text-stone-600">
+                      Ditanam di lereng kaldera Gunung Batur bersama tumpang sari jeruk Kintamani.
+                    </p>
+                  </div>
+
+                  {/* Clean Key-Value List */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Petani Produsen</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.farmerName}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Nama Blok Lahan</span>
+                      <strong className="text-stone-900 font-bold">{matchedFarm?.farmName || 'Kebun Kintamani Mandiri (Ashabil) Blok 10'}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Lokasi Geografis</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.farmLocation}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Ketinggian Lahan</span>
+                      <strong className="text-emerald-800 font-bold">{currentCafeItem.lineage.altitude}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Varietas Pohon</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.variety}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Standar Kematangan</span>
+                      <strong className="text-amber-800 font-bold">{currentCafeItem.lineage.brix}° Bx (Petik Merah 95%+)</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Tanah & Naungan</span>
+                      <strong className="text-stone-900 font-bold">Andosol Vulkanik • Jeruk Kintamani & Sengon</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">EUDR Deforestation-Free</span>
+                      <strong className="text-emerald-700 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        100% Bebas Deforestasi (Sentinel-2)
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Interactive Map: Clean single frame */}
+                  <div className="pt-2 space-y-2">
+                    <span className="text-xs font-bold text-stone-700 block">
+                      Peta Kebun & 4 Titik Patok Batas BPN (Desa Awan, Kintamani):
+                    </span>
+                    <div className="rounded-2xl overflow-hidden border border-stone-300/80 shadow-xs">
+                      <FarmLocationMap
+                        latitude={matchedFarm?.coordinates?.latitude || -8.24917}
+                        longitude={matchedFarm?.coordinates?.longitude || 115.28707}
+                        farmName={matchedFarm?.farmName || 'Kebun Kintamani Mandiri (Ashabil) Blok 10'}
+                        altitude={matchedFarm?.altitudeMeters || 1420}
+                        locationName={matchedFarm?.location || 'Desa Awan, Kec. Kintamani, Kab. Bangli'}
+                        landAreaHectares={matchedFarm?.landAreaHectares || 1.43}
+                        totalTreesCount={matchedFarm?.totalTreesCount || 1450}
+                        patokList={matchedFarm?.patokList || []}
+                        height="280px"
+                        showPresets={false}
+                        showPlotDetailsTable={false}
+                        allowEdit={false}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* TAHAP 2: PENGOLAHAN WET MILL */}
+                <div className="relative space-y-3">
+                  {/* Timeline Node Icon */}
+                  <div className="absolute -left-[37px] sm:-left-[45px] top-0 w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs ring-4 ring-[#FAF7F2] shadow-2xs">
+                    <Cog className="w-4 h-4" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 px-2.5 py-0.5 rounded-md bg-amber-100/70">
+                        TAHAP 2 • WET & DRY MILL
+                      </span>
+                      <span className="text-xs text-stone-400">Metode: {currentCafeItem.processMethod}</span>
+                    </div>
+                    <h3 className="text-lg font-black text-stone-950">
+                      Stasiun Olah Basah Kelompok Tani
+                    </h3>
+                    <p className="text-xs text-stone-600">
+                      {currentCafeItem.lineage.processorName}
+                    </p>
+                  </div>
+
+                  {/* Clean Key-Value List */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Stasiun Pengolah</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.processorName}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Metode Fermentasi</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.fermentationTime || '36 Jam Double Ferment'}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Sumber Air Olah</span>
+                      <strong className="text-stone-900 font-bold">Mata Air Alami Pegunungan Kintamani</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Metode Pengeringan</span>
+                      <strong className="text-stone-900 font-bold">Solar Dryer Raised Bed Kintamani</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Kadar Air Green Bean</span>
+                      <strong className="text-emerald-700 font-bold">{currentCafeItem.lineage.moisturePercent}% MC (Standar Ekspor: 10-12%)</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Grade & Defect Fisik</span>
+                      <strong className="text-stone-900 font-bold">Specialty Grade 1 • Defect 1/350g</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50 sm:col-span-2">
+                      <span className="text-stone-500 font-medium">Sirkularitas Zero-Waste</span>
+                      <strong className="text-stone-900 font-bold">400 kg Kulit Ceri (Cascara) diolah jadi Teh Organik & Kompos Kebun</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* TAHAP 3: GUDANG & KONTROL MUTU */}
+                <div className="relative space-y-3">
+                  {/* Timeline Node Icon */}
+                  <div className="absolute -left-[37px] sm:-left-[45px] top-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs ring-4 ring-[#FAF7F2] shadow-2xs">
+                    <Warehouse className="w-4 h-4" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-blue-900 px-2.5 py-0.5 rounded-md bg-blue-100/70">
+                        TAHAP 3 • QA & PERGUDANGAN
+                      </span>
+                      <span className="text-xs text-stone-400">SCA Score: {currentCafeItem.lineage.warehouseScaScore}</span>
+                    </div>
+                    <h3 className="text-lg font-black text-stone-950">
+                      Penyimpanan Silo & Sertifikasi SCA Green Bean
+                    </h3>
+                    <p className="text-xs text-stone-600">
+                      {currentCafeItem.lineage.warehouseName}
+                    </p>
+                  </div>
+
+                  {/* Clean Key-Value List */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Fasilitas Gudang</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.warehouseName}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Kondisi Penyimpanan</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.storageConditions}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">SCA Cupping Score</span>
+                      <strong className="text-amber-800 font-bold">{currentCafeItem.lineage.warehouseScaScore} (Verified CQI Q-Grader)</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Health Certificate</span>
+                      <strong className="text-emerald-700 font-bold">HC-EXP-2026-BLI-01 (Passed & Certified)</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* TAHAP 4: ARTISAN ROASTING */}
+                <div className="relative space-y-3">
+                  {/* Timeline Node Icon */}
+                  <div className="absolute -left-[37px] sm:-left-[45px] top-0 w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold text-xs ring-4 ring-[#FAF7F2] shadow-2xs">
+                    <Flame className="w-4 h-4" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-orange-900 px-2.5 py-0.5 rounded-md bg-orange-100/70">
+                        TAHAP 4 • ARTISAN ROASTERY
+                      </span>
+                      <span className="text-xs text-stone-400">Sangrai: {currentCafeItem.lineage.roastDate}</span>
+                    </div>
+                    <h3 className="text-lg font-black text-stone-950">
+                      Pemanggangan Artisan & Kalibrasi Profil
+                    </h3>
+                    <p className="text-xs text-stone-600">
+                      {currentCafeItem.lineage.roasterName}
+                    </p>
+                  </div>
+
+                  {/* Clean Key-Value List */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Rumah Sangrai</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.roasterName}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Profil & Mesin Sangrai</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.lineage.roastProfile}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Agtron Color Number</span>
+                      <strong className="text-stone-900 font-bold">#68 (Light-Medium Specialty)</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Rekomendasi Seduh</span>
+                      <strong className="text-stone-900 font-bold">V60 Ceramic, Kalita Wave, Aeropress, Origami</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* TAHAP 5: PENYAJIAN CAFE */}
+                <div className="relative space-y-3">
+                  {/* Timeline Node Icon */}
+                  <div className="absolute -left-[37px] sm:-left-[45px] top-0 w-8 h-8 rounded-full bg-stone-900 text-amber-400 flex items-center justify-center font-bold text-xs ring-4 ring-[#FAF7F2] shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-stone-900 px-2.5 py-0.5 rounded-md bg-stone-200/80">
+                        TAHAP 5 • SEDUHAN AKHIR
+                      </span>
+                      <span className="text-xs text-emerald-700 font-bold">Siap Dinikmati</span>
+                    </div>
+                    <h3 className="text-lg font-black text-stone-950">
+                      Kedai Kopi Penyajian
+                    </h3>
+                    <p className="text-xs text-stone-600">
+                      {currentCafeItem.cafeName}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1 text-xs py-1">
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Kedai Penyaji</span>
+                      <strong className="text-stone-900 font-bold">{currentCafeItem.cafeName}</strong>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-stone-200/50">
+                      <span className="text-stone-500 font-medium">Jaminan Keaslian</span>
+                      <strong className="text-emerald-800 font-bold">100% Kopi Asli Kintamani Single Origin Direct-Trade</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Direct-Trade Integrity Statement */}
+            <div className="py-4 border-t border-stone-200/70 text-xs text-stone-600 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-stone-900">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Jaminan Transparansi & Keadilan Rantai Pasok (Direct Trade)</span>
+              </div>
+              <p className="text-[11px] text-stone-500 leading-relaxed">
+                Biji kopi pada cangkir ini dibeli langsung oleh <strong className="text-stone-800">{currentCafeItem.cafeName}</strong> melalui platform CircularCoffee tanpa perantara spekulan. Memastikan nilai tambah terbaik dinikmati petani dan kualitas seduhan terbaik disajikan untuk Anda.
+              </p>
+            </div>
+
+            {/* Verification Ledger Footer */}
+            <div className="pt-3 border-t border-stone-200/50 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>Tersertifikasi Rantai Pasok CircularCoffee • Tahap 5 (End-User Cafe Cup Tier)</span>
+              </div>
+              <span>Disajikan: {currentCafeItem.purchaseDate}</span>
+            </div>
+          </div>
         ) : isWarehouse ? (
           <>
             {/* Verification Status Banner for Warehouse */}

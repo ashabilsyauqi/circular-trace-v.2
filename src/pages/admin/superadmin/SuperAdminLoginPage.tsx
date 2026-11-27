@@ -309,16 +309,13 @@ export const SuperAdminLoginPage: React.FC = () => {
 
             {/* Input Password */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="mb-1.5">
                 <label
                   htmlFor="superadmin-password"
                   className="block text-xs font-bold text-stone-800 uppercase tracking-wider"
                 >
                   Kata Sandi Master
                 </label>
-                <span className="text-[11px] text-stone-500 font-mono">
-                  Default: password123
-                </span>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
@@ -355,10 +352,6 @@ export const SuperAdminLoginPage: React.FC = () => {
                 />
                 <span>Ingat sesi master ini di peramban ini</span>
               </label>
-
-              <span className="text-[11px] text-stone-400 font-mono font-medium">
-                ID: user-super-admin
-              </span>
             </div>
 
             {/* Submit Button */}
@@ -382,32 +375,6 @@ export const SuperAdminLoginPage: React.FC = () => {
               </button>
             </div>
           </form>
-
-          {/* Quick Credential Reference Card */}
-          <div className="mt-6 p-4 rounded-2xl bg-stone-100/90 border border-stone-200 text-[11px] text-stone-600 space-y-2">
-            <div className="font-bold text-stone-800 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-amber-600" />
-                <span>Kredensial Resmi Super Admin:</span>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                Akses Penuh
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-stone-700">
-              <div className="bg-white p-2 rounded-lg border border-stone-200">
-                <span className="text-[10px] text-stone-500 block">Email Akun:</span>
-                <span className="font-bold text-stone-900 select-all">superadmin@circulartrace.id</span>
-              </div>
-              <div className="bg-white p-2 rounded-lg border border-stone-200">
-                <span className="text-[10px] text-stone-500 block">Kata Sandi:</span>
-                <span className="font-bold text-stone-900 select-all">password123</span>
-              </div>
-            </div>
-            <p className="text-[10px] text-stone-500 pt-1 leading-relaxed border-t border-stone-200/80">
-              Setelah masuk, Anda akan diarahkan ke konsol konfigurasi paket layanan SaaS di <span className="font-mono text-amber-800 font-semibold">/admin/superadmin/packages</span>.
-            </p>
-          </div>
 
           {/* Alternate Navigation */}
           <div className="mt-5 pt-4 border-t border-stone-200 text-center space-y-2 text-xs">

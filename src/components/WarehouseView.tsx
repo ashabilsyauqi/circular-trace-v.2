@@ -222,10 +222,12 @@ export const WarehouseView: React.FC = () => {
   const [detailLot, setDetailLot] = useState<WarehouseLot | null>(null);
 
   // Data lot & transactions
+  const isSuperAdmin = currentUser?.role === 'super_admin';
   const availableGreenBeans = processedLots.filter((lot) => lot.availableWeightKg > 0);
-  const myWarehouseLots = warehouseLots.filter(
-    (lot) => !lot.warehouseId || lot.warehouseId === currentUser?.id
-  );
+  const myWarehouseLots = warehouseLots.filter((lot) => {
+    if (isSuperAdmin) return true;
+    return lot.warehouseId === currentUser?.id;
+  });
 
   const myWarehouseTransactions = transactions.filter(
     (t) =>

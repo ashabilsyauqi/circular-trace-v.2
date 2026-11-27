@@ -43,9 +43,10 @@ export const WarehouseInventoryPage: React.FC = () => {
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
   const [barcodeLot, setBarcodeLot] = useState<WarehouseLot | null>(null);
 
-  // Filter lots belonging to current warehouse operator or show all if admin
+  // Filter lots belonging to current warehouse operator or show all if super admin
+  const isSuperAdmin = currentUser?.role === 'super_admin';
   const userWarehouseLots = warehouseLots.filter(
-    (lot) => !currentUser || currentUser.role === 'admin_kelompok_tani' || lot.warehouseId === currentUser.id
+    (lot) => isSuperAdmin ? true : lot.warehouseId === currentUser?.id
   );
 
   // Segregated categories

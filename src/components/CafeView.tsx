@@ -92,13 +92,16 @@ export const CafeView: React.FC = () => {
   const [calcCupPrice, setCalcCupPrice] = useState<number>(32000);
   const [calcExtraCost, setCalcExtraCost] = useState<number>(4500); // cup, milk, ice, sleeve
 
-  const myCafeInventory = cafeInventory.filter(
-    (item) => !item.cafeId || item.cafeId === currentUser?.id
-  );
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const myCafeInventory = cafeInventory.filter((item) => {
+    if (isSuperAdmin) return true;
+    return item.cafeId === currentUser?.id;
+  });
 
-  const myCafeProducts = cafeProducts.filter(
-    (prod) => !prod.cafeId || prod.cafeId === currentUser?.id
-  );
+  const myCafeProducts = cafeProducts.filter((prod) => {
+    if (isSuperAdmin) return true;
+    return prod.cafeId === currentUser?.id;
+  });
 
   const myCafeTransactions = transactions.filter(
     (t) =>

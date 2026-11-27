@@ -484,11 +484,15 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
                   }}
                   className="w-full bg-transparent font-bold text-xs sm:text-sm text-stone-900 focus:outline-none cursor-pointer truncate"
                 >
-                  {coffeeFarms.map((farm) => (
-                    <option key={farm.id} value={farm.id}>
-                      {farm.farmName} ({farm.farmerName} - {farm.landAreaHectares} Ha)
-                    </option>
-                  ))}
+                  {scopedFarms.length === 0 ? (
+                    <option value="">(Belum ada kebun terdaftar)</option>
+                  ) : (
+                    scopedFarms.map((farm) => (
+                      <option key={farm.id} value={farm.id}>
+                        {farm.farmName} ({farm.farmerName} - {farm.landAreaHectares} Ha)
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
             </div>
@@ -554,7 +558,24 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
         )}
       </div>
 
-      {/* Success Banner if newly issued */}
+      {scopedFarms.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center shadow-xs">
+          <TreePine className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-stone-800">Belum ada kebun kopi terdaftar</h3>
+          <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto mb-5 leading-relaxed">
+            Kelompok tani Anda belum memiliki kebun kopi yang didaftarkan. Tambahkan kebun terlebih dahulu di Layanan Petani untuk dapat melakukan audit kepatuhan 4C dan sertifikasi kesiapan kebun.
+          </p>
+          <Link
+            to="/admin/kebun/tambah"
+            className="px-5 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md transition-all cursor-pointer"
+          >
+            <TreePine className="w-4 h-4" />
+            <span>+ Daftarkan Kebun Kopi Baru</span>
+          </Link>
+        </div>
+      ) : (
+        <>
+          {/* Success Banner if newly issued */}
       {certSuccessBanner && (
         <div className="bg-emerald-50 border-2 border-emerald-500 rounded-2xl p-4 text-emerald-900 flex items-start justify-between gap-3 shadow-md animate-fade-in">
           <div className="flex items-start gap-3">
@@ -2203,6 +2224,8 @@ export const CtFarmCertificationDashboardPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

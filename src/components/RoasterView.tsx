@@ -38,13 +38,16 @@ export const RoasterView: React.FC = () => {
   const [selectedQcWO, setSelectedQcWO] = useState<WorkOrder | null>(null);
   const [traceModalLot, setTraceModalLot] = useState<RoastedBeanLot | null>(null);
 
-  const myRoasterTransactions = transactions.filter(
-    (trx) =>
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const myRoasterTransactions = transactions.filter((trx) => {
+    if (isSuperAdmin) return true;
+    return (
       trx.fromName === currentUser?.name ||
       trx.toName === currentUser?.name ||
-      trx.fromRole === 'roaster' ||
-      trx.toRole === 'roaster'
-  );
+      trx.fromName === currentUser?.organization ||
+      trx.toName === currentUser?.organization
+    );
+  });
 
   const TAB_TITLES: Record<string, { title: string; subtitle: string; icon: any }> = {
     dashboard: {

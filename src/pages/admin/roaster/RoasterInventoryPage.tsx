@@ -58,9 +58,10 @@ export const RoasterInventoryPage: React.FC = () => {
   // Available Green Beans ready for roasting (from Warehouse lots / Marketplace purchases)
   const availableGreenBeans = warehouseLots.filter((lot) => (lot.availableWeightKg || 0) > 0);
 
-  // Filter lots belonging to current roaster or all if admin
+  // Filter lots belonging to current roaster or all if super admin
+  const isSuperAdmin = currentUser?.role === 'super_admin';
   const userRoastedLots = roastedLots.filter(
-    (lot) => !currentUser || currentUser.role === 'admin_kelompok_tani' || lot.roasterId === currentUser.id
+    (lot) => isSuperAdmin ? true : lot.roasterId === currentUser?.id
   );
 
   // Segregated categories with robust boolean coercion

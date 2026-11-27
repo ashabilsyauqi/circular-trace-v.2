@@ -25,6 +25,7 @@ import {
   Award,
   TreePine,
   Package,
+  Eye,
 } from 'lucide-react';
 import { FarmerIdCardModal } from '../../components/admin/FarmerIdCardModal';
 
@@ -242,7 +243,7 @@ export const MasterPetaniPage: React.FC = () => {
           <table className="w-full text-left text-xs border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-[#f4f6f9] text-stone-600 border-b border-[#d2d6de] font-bold text-[11px] uppercase tracking-wider whitespace-nowrap">
-                <th className="py-3 px-4 whitespace-nowrap">Petani & KTA</th>
+                <th className="py-3 px-4 whitespace-nowrap">Nama Petani</th>
                 <th className="py-3 px-4 whitespace-nowrap">NIK & Kontak</th>
                 <th className="py-3 px-4 whitespace-nowrap">Wilayah & Kelompok</th>
                 <th className="py-3 px-4 text-center whitespace-nowrap">Lahan (Ha) & Buruh</th>
@@ -294,26 +295,28 @@ export const MasterPetaniPage: React.FC = () => {
                       key={farmer.id}
                       className="hover:bg-emerald-50/40 transition-colors group"
                     >
-                      {/* 1. Petani & KTA */}
+                      {/* 1. Nama Petani (Klik untuk membuka Halaman Detail Petani) */}
                       <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
+                        <Link
+                          to={`/admin/petani/detail/${farmer.id}`}
+                          className="flex items-center gap-3 group/name cursor-pointer"
+                          title="Klik untuk membuka halaman detail petani"
+                        >
                           <img
                             src={farmer.avatar}
                             alt={farmer.name}
-                            className="w-10 h-10 rounded-full object-cover border border-stone-300 shrink-0 shadow-2xs"
+                            className="w-10 h-10 rounded-full object-cover border border-stone-300 shrink-0 shadow-2xs group-hover/name:border-emerald-500 group-hover/name:ring-2 group-hover/name:ring-emerald-200 transition-all"
                           />
                           <div>
-                            <span className="font-bold text-stone-900 block group-hover:text-emerald-700">
+                            <span className="font-bold text-stone-900 block group-hover/name:text-emerald-700 transition-colors">
                               {farmer.name}
                             </span>
-                            <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-stone-500 font-mono">
-                              <span className="px-1.5 py-0.2 bg-stone-100 rounded text-stone-600 border border-stone-200">
-                                {farmer.farmerCardNumber || 'KTA-PENDING'}
-                              </span>
-                              <span>• ID: {farmer.id}</span>
-                            </div>
+                            <span className="text-[11px] text-stone-400 group-hover/name:text-emerald-600 transition-colors inline-flex items-center gap-0.5">
+                              <span>Detail Petani</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </span>
                           </div>
-                        </div>
+                        </Link>
                       </td>
 
                       {/* 2. NIK & Kontak */}
@@ -413,6 +416,15 @@ export const MasterPetaniPage: React.FC = () => {
                       {/* 7. Action Buttons */}
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <div className="inline-flex items-center justify-end gap-1 flex-nowrap shrink-0">
+                          {/* Detail Petani */}
+                          <Link
+                            to={`/admin/petani/detail/${farmer.id}`}
+                            title="Lihat Detail Profil Petani"
+                            className="p-1.5 text-stone-500 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors shrink-0"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+
                           {/* Cetak KTA Modal */}
                           <button
                             type="button"

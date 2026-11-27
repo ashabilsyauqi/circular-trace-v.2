@@ -26,6 +26,7 @@ import { LandingPage } from './components/LandingPage';
 import { KelompokTaniDashboard } from './components/admin/KelompokTaniDashboard';
 import { MasterUsersView } from './components/admin/MasterUsersView';
 import { MasterPetaniPage } from './pages/admin/MasterPetaniPage';
+import { MasterPetaniDetailPage } from './pages/admin/MasterPetaniDetailPage';
 import { MasterPetaniFormPage } from './pages/admin/MasterPetaniFormPage';
 import { MasterKebunPage } from './pages/admin/MasterKebunPage';
 import { MasterKebunFormPage } from './pages/admin/MasterKebunFormPage';
@@ -288,6 +289,7 @@ export const AppRoutes: React.FC = () => {
 
         {/* Layanan Petani: Standalone Pages & Dedicated Routes */}
         <Route path="petani" element={<MasterPetaniPage />} />
+        <Route path="petani/detail/:farmerId" element={<MasterPetaniDetailPage />} />
         <Route path="petani/tambah" element={<MasterPetaniFormPage />} />
         <Route path="petani/edit/:farmerId" element={<MasterPetaniFormPage />} />
 

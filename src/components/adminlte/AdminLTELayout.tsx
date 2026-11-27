@@ -240,6 +240,17 @@ export const AdminLTELayout: React.FC = () => {
         breadcrumbs: [rootBreadcrumb, { label: 'Master Users' }],
       };
     }
+    if (path.includes('/admin/petani/detail')) {
+      return {
+        title: 'Detail Profil Petani Anggota',
+        subtitle: 'Informasi lengkap biodata petani, kode ID & KTA, sertifikasi, serta kepemilikan lahan kebun.',
+        breadcrumbs: [
+          rootBreadcrumb,
+          { label: 'Data Master Petani', path: '/admin/petani' },
+          { label: 'Detail Petani' },
+        ],
+      };
+    }
     if (path.includes('/admin/petani/tambah')) {
       return {
         title: 'Pendaftaran Petani Baru',

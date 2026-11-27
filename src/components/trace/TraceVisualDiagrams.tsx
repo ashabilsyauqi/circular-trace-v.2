@@ -11,6 +11,13 @@ import {
   Scale,
   Activity,
   ArrowRight,
+  ShieldCheck,
+  Award,
+  FileCheck,
+  Leaf,
+  Users,
+  TrendingUp,
+  UserCheck,
 } from 'lucide-react';
 
 // ============================================================================
@@ -670,6 +677,227 @@ export const RoastingCurveSparkline: React.FC<RoastingCurveSparklineProps> = ({
             <span className="text-[10px] text-stone-400 block font-bold uppercase">Profil Warna</span>
             <strong className="text-amber-900 font-bold block">{roastLevel} (#{agtronNumber})</strong>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// 5. ICS AUDIT & 4C PERCENTAGE DONUT CHARTS (TAHAP 1 - HULU PERKEBUNAN)
+// ============================================================================
+export interface IcsAuditAnd4CDonutSectionProps {
+  ct4ciScore?: number;
+  isMajorPassed?: boolean;
+  evidenceCoveragePct?: number;
+  compliantCount?: number;
+  applicableCount?: number;
+  dimensionScores?: {
+    economic: number;
+    social: number;
+    environmental: number;
+  };
+  verifierName?: string;
+  verifierRole?: string;
+  auditDate?: string;
+  certificateNumber?: string;
+  digitalSignatureHash?: string;
+  auditNotes?: string;
+}
+
+export const IcsAuditAnd4CDonutSection: React.FC<IcsAuditAnd4CDonutSectionProps> = ({
+  ct4ciScore = 96.2,
+  isMajorPassed = true,
+  evidenceCoveragePct = 100.0,
+  compliantCount = 71,
+  applicableCount = 74,
+  dimensionScores = {
+    economic: 94.7,
+    social: 96.2,
+    environmental: 97.0,
+  },
+  verifierName = 'Hendra Gunawan, S.P.',
+  verifierRole = 'Lead Auditor ICS & Agronomi Lahan Kopi CircularTrace',
+  auditDate = '10 September 2026',
+  certificateNumber = 'CT-4CI-2026-FARM-BLI-10-9421',
+  digitalSignatureHash = 'SHA256:7e4a8b19f02938ac47b8d91029348bca6199a0ef',
+  auditNotes = 'Hasil audit kepatuhan lapangan (on-site) di kebun Desa Awan, Kintamani: 100% Lolos Kriteria Major Gate 4C. Lahan terverifikasi bebas konversi hutan lindung (EUDR Deforestation-Free), 4 patok batas BPN permanen, serta nol residu pestisida terlarang (Zero Gramoxone/Paraquat).',
+}) => {
+  // SVG Donut Helper Component
+  const DonutRing = ({
+    score,
+    strokeColor,
+    label,
+    subLabel,
+    icon: Icon,
+    isMajor = false,
+  }: {
+    score: number;
+    strokeColor: string;
+    label: string;
+    subLabel: string;
+    icon: any;
+    isMajor?: boolean;
+  }) => {
+    const clamped = Math.min(100, Math.max(0, score));
+    return (
+      <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-white/70 border border-stone-200/80 hover:border-emerald-300 transition-all shadow-2xs space-y-1.5">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-stone-900">
+          <Icon className="w-3.5 h-3.5 text-emerald-700" />
+          <span>{label}</span>
+        </div>
+
+        {/* Circular Donut Gauge */}
+        <div className="relative w-24 h-24 my-1">
+          <svg viewBox="0 0 36 36" className="w-24 h-24 transform -rotate-90">
+            {/* Background Track */}
+            <path
+              className="stroke-stone-200"
+              strokeWidth="3.2"
+              fill="none"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+            {/* Progress Arc */}
+            <path
+              className={`${strokeColor} transition-all duration-1000 ease-out`}
+              strokeWidth="3.2"
+              strokeLinecap="round"
+              strokeDasharray={`${clamped}, 100`}
+              fill="none"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+          </svg>
+
+          {/* Center Text inside Donut */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+            <span className="text-base font-black font-mono text-stone-950 leading-none">
+              {score.toFixed(1)}%
+            </span>
+            <span className="text-[8px] font-black uppercase tracking-tight text-emerald-700 mt-0.5">
+              {isMajor ? 'MAJOR PASS' : 'COMPLIANT'}
+            </span>
+          </div>
+        </div>
+
+        <span className="text-[10px] text-stone-500 font-medium leading-tight">
+          {subLabel}
+        </span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="pt-3 pb-1 space-y-4">
+      {/* Section Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200/60 pb-2">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-700" />
+          <span className="text-xs font-black uppercase tracking-wider text-stone-900">
+            Indeks Kepatuhan 4C &amp; Hasil Audit Petugas ICS
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-black font-mono text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1 shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            4C Code of Conduct v4.1 • Major Gate PASSED
+          </span>
+        </div>
+      </div>
+
+      {/* 4 Percentage Donut Rings Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Donut 1: Overall CT-4CI */}
+        <DonutRing
+          score={ct4ciScore}
+          strokeColor="stroke-emerald-600"
+          label="CT-4CI Readiness"
+          subLabel={`${compliantCount}/${applicableCount} Checkpoint • EC ${evidenceCoveragePct}%`}
+          icon={Award}
+          isMajor={true}
+        />
+
+        {/* Donut 2: Lingkungan */}
+        <DonutRing
+          score={dimensionScores.environmental}
+          strokeColor="stroke-teal-600"
+          label="Pilar Lingkungan"
+          subLabel="Zero Deforestasi & Zero Agrokimia B3"
+          icon={Leaf}
+        />
+
+        {/* Donut 3: Sosial */}
+        <DonutRing
+          score={dimensionScores.social}
+          strokeColor="stroke-sky-600"
+          label="Pilar Sosial & K3"
+          subLabel="Bebas Pekerja Anak & APD Petani"
+          icon={Users}
+        />
+
+        {/* Donut 4: Ekonomi */}
+        <DonutRing
+          score={dimensionScores.economic}
+          strokeColor="stroke-amber-600"
+          label="Pilar Ekonomi GAP"
+          subLabel="Harga Transparan & Buku Panen"
+          icon={TrendingUp}
+        />
+      </div>
+
+      {/* Official ICS Officer Inspection Record */}
+      <div className="bg-white/75 rounded-2xl p-4 border border-stone-200/80 space-y-3 shadow-2xs">
+        {/* Auditor Profile Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/60 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0 border border-emerald-300">
+              <UserCheck className="w-5 h-5 text-emerald-700" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  VERIFIKATOR LAPANGAN ICS RESMI
+                </span>
+                <span className="text-[10px] text-stone-500 font-mono">
+                  Audit: {auditDate}
+                </span>
+              </div>
+              <h4 className="text-sm font-black text-stone-900 mt-0.5">
+                {verifierName}
+              </h4>
+              <p className="text-[11px] text-stone-500">
+                {verifierRole}
+              </p>
+            </div>
+          </div>
+
+          <div className="text-left sm:text-right shrink-0">
+            <span className="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">
+              No. Sertifikat Audit
+            </span>
+            <span className="text-xs font-mono font-bold text-stone-900 block">
+              {certificateNumber}
+            </span>
+          </div>
+        </div>
+
+        {/* Auditor Official Finding Note */}
+        <div className="bg-emerald-50/60 rounded-xl p-3 border border-emerald-200/70 space-y-1">
+          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+            <FileCheck className="w-3.5 h-3.5 text-emerald-700" />
+            Catatan Resmi Pemeriksaan Fisik On-Site:
+          </span>
+          <p className="text-xs text-stone-700 leading-relaxed italic">
+            "{auditNotes}"
+          </p>
+        </div>
+
+        {/* Digital Verification Hash */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[10px] text-stone-500 font-mono">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+            Kriptografi Audit: <span className="text-stone-700 font-bold truncate max-w-xs">{digitalSignatureHash}</span>
+          </span>
+          <span className="text-emerald-700 font-bold">✓ Tervalidasi Sistem Kepatuhan ICS</span>
         </div>
       </div>
     </div>

@@ -156,32 +156,34 @@ export const LandingPage: React.FC = () => {
                 {content.hero.subtitlePre}<strong className="text-white font-semibold">{content.hero.subtitleStrong1}</strong>{content.hero.subtitleMid}<strong className="text-amber-300 font-semibold">{content.hero.subtitleStrong2}</strong>{content.hero.subtitleEnd}
               </p>
 
-              {/* Main Action Buttons (Left Aligned) */}
-              <div className="pt-1 flex flex-wrap items-center gap-3 sm:gap-4">
+              {/* Main Action Buttons (Left Aligned, Mobile Friendly) */}
+              <div className="pt-1 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3.5">
                 <button
                   onClick={scrollToServices}
-                  className="px-6 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-sm sm:text-base shadow-xl shadow-amber-500/25 hover:shadow-2xl hover:scale-102 transition-all flex items-center gap-2.5 border border-amber-400 group cursor-pointer"
+                  className="w-full sm:w-auto px-6 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-sm sm:text-base shadow-xl shadow-amber-500/25 hover:shadow-2xl hover:scale-102 transition-all flex items-center justify-center gap-2.5 border border-amber-400 group cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-stone-950 group-hover:scale-110 transition-transform" />
                   <span>{content.hero.ctaRegister}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
 
-                <button
-                  onClick={() => setActiveView('marketplace')}
-                  className="px-5 sm:px-6 py-3.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm sm:text-base shadow-lg border border-white/25 backdrop-blur-md hover:scale-102 transition-all flex items-center gap-2 cursor-pointer"
-                >
-                  <Store className="w-4 h-4 text-amber-400" />
-                  <span>{content.hero.ctaMarketplace}</span>
-                </button>
+                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3">
+                  <button
+                    onClick={() => setActiveView('marketplace')}
+                    className="w-full sm:w-auto px-4 sm:px-6 py-3 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs sm:text-base shadow-lg border border-white/25 backdrop-blur-md hover:scale-102 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Store className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>{content.hero.ctaMarketplace}</span>
+                  </button>
 
-                <button
-                  onClick={() => setActiveView('transactions')}
-                  className="px-4 sm:px-5 py-3.5 rounded-2xl bg-black/40 hover:bg-black/60 text-stone-200 hover:text-white font-semibold text-sm border border-white/15 backdrop-blur-md transition-all flex items-center gap-2 cursor-pointer"
-                >
-                  <History className="w-4 h-4 text-stone-400" />
-                  <span>{content.hero.ctaLedger}</span>
-                </button>
+                  <button
+                    onClick={() => setActiveView('transactions')}
+                    className="w-full sm:w-auto px-3.5 sm:px-5 py-3 rounded-2xl bg-black/40 hover:bg-black/60 text-stone-200 hover:text-white font-semibold text-xs sm:text-sm border border-white/15 backdrop-blur-md transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
+                  >
+                    <History className="w-4 h-4 text-stone-400 shrink-0" />
+                    <span>{content.hero.ctaLedger}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Trust Ticker Microcopy (Left Aligned) */}
@@ -273,15 +275,15 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 5 Stage Navigation Pills */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-6">
+            {/* 5 Stage Navigation Pills (Horizontal scroll on mobile, 5 cols on sm+) */}
+            <div className="flex sm:grid sm:grid-cols-5 gap-2 pt-4 sm:pt-6 overflow-x-auto pb-1.5 scrollbar-thin">
               {pipelineStages.map((stage, idx) => {
                 const isActive = activePipelineStep === idx;
                 return (
                   <button
                     key={stage.step}
                     onClick={() => setActivePipelineStep(idx)}
-                    className={`p-3 rounded-2xl text-left transition-all border ${
+                    className={`p-2.5 sm:p-3 rounded-2xl text-left transition-all border shrink-0 min-w-[130px] sm:min-w-0 ${
                       isActive
                         ? 'bg-amber-500 text-stone-950 border-amber-400 shadow-md font-bold'
                         : 'bg-stone-900/90 text-stone-300 border-stone-800 hover:bg-stone-800 hover:text-white'

@@ -13,6 +13,9 @@ import {
   Flame,
   Sprout,
   CreditCard,
+  Menu,
+  X,
+  LogIn,
 } from 'lucide-react';
 import { ProfileMenu } from './shared/ProfileMenu';
 import { LanguageSwitch } from './shared/LanguageSwitch';
@@ -29,10 +32,18 @@ export const Navbar: React.FC = () => {
 
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const registerDropdownRef = useRef<HTMLDivElement>(null);
   const servicesDropdownRef = useRef<HTMLDivElement>(null);
   const servicesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Close all mobile & desktop dropdowns on route or hash navigation
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsServicesOpen(false);
+    setIsRegisterOpen(false);
+  }, [location.pathname, location.hash]);
 
   const handleServicesMouseEnter = () => {
     if (servicesTimeoutRef.current) {
@@ -159,8 +170,8 @@ export const Navbar: React.FC = () => {
             </div>
           </Link>
 
-          {/* Center Navigation Buttons: Clean, Flat Modern Minimalism (No heavy black block) */}
-          <nav className="flex items-center gap-1 sm:gap-2">
+          {/* Center Navigation Buttons: Clean, Flat Modern Minimalism (Hidden on mobile, shown on lg+) */}
+          <nav className="hidden lg:flex items-center gap-1 sm:gap-2">
             {/* 1. Layanan Dropdown with direct links to #sec-kebun, #sec-gudang, #sec-roastery, #sec-cafe */}
             <div
               className="relative"
@@ -493,15 +504,199 @@ export const Navbar: React.FC = () => {
 
                 <Link
                   to="/login"
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs shadow-xs whitespace-nowrap transition-all"
+                  className="px-3.5 sm:px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs shadow-xs whitespace-nowrap transition-all"
                 >
                   {t('navbar.login')}
                 </Link>
               </div>
             )}
+
+            {/* Mobile Hamburger Menu Toggle Button (Visible on <lg) */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`lg:hidden p-2 rounded-xl border transition-colors cursor-pointer shrink-0 ${
+                isDarkNav
+                  ? 'border-white/20 text-stone-100 hover:bg-white/10'
+                  : 'border-stone-200 text-stone-700 hover:bg-stone-100'
+              }`}
+              aria-label={isMobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Dropdown Menu Drawer */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden border-t border-[#E6DFD5]/80 bg-white/98 dark:bg-stone-950/98 backdrop-blur-xl px-4 py-4 shadow-2xl animate-in slide-in-from-top-2 duration-200 max-h-[85vh] overflow-y-auto">
+          <div className="space-y-3">
+            {/* Cakupan Layanan Header */}
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-stone-400 dark:text-stone-500 px-1 mb-1.5">
+                Cakupan 4 Layanan Terintegrasi
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                <a
+                  href="#sec-kebun"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMobileMenuOpen(false);
+                    handleNavSectionClick('sec-kebun');
+                  }}
+                  className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-stone-800 dark:text-stone-200 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Sprout className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-stone-900 dark:text-white">1. Hulu &amp; Kelompok Tani</div>
+                    <div className="text-[10px] text-stone-500">Ceri Brix, Petani &amp; EUDR</div>
+                  </div>
+                </a>
+
+                <a
+                  href="#sec-gudang"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMobileMenuOpen(false);
+                    handleNavSectionClick('sec-gudang');
+                  }}
+                  className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-sky-50 dark:hover:bg-sky-950/30 text-stone-800 dark:text-stone-200 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400 flex items-center justify-center shrink-0">
+                    <Warehouse className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-stone-900 dark:text-white">2. Gudang &amp; QA Logistik</div>
+                    <div className="text-[10px] text-stone-500">Kadar Air &amp; Defect Green Bean</div>
+                  </div>
+                </a>
+
+                <a
+                  href="#sec-roastery"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMobileMenuOpen(false);
+                    handleNavSectionClick('sec-roastery');
+                  }}
+                  className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/30 text-stone-800 dark:text-stone-200 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Flame className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-stone-900 dark:text-white">3. Roastery &amp; Processing</div>
+                    <div className="text-[10px] text-stone-500">Roast Profile &amp; Cupping Q-Grader</div>
+                  </div>
+                </a>
+
+                <a
+                  href="#sec-cafe"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMobileMenuOpen(false);
+                    handleNavSectionClick('sec-cafe');
+                  }}
+                  className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-stone-800 dark:text-stone-200 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-400 flex items-center justify-center shrink-0">
+                    <Coffee className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-stone-900 dark:text-white">4. Coffee Shop &amp; Kedai</div>
+                    <div className="text-[10px] text-stone-500">QR Cup Paspor Digital Meja</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            {/* Main Nav Links: Pasar Kopi & Pricing */}
+            <div className="pt-2 border-t border-stone-200 dark:border-stone-800 grid grid-cols-2 gap-2">
+              <a
+                href="https://marketplace.circulartrace.id/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 text-xs font-bold text-stone-800 dark:text-stone-200"
+              >
+                <Store className="w-4 h-4 text-amber-600" />
+                <span>Pasar Kopi</span>
+                <ExternalLink className="w-3 h-3 text-stone-400" />
+              </a>
+
+              <a
+                href="#pricing"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsMobileMenuOpen(false);
+                  handleNavSectionClick('pricing');
+                }}
+                className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 text-xs font-bold text-stone-800 dark:text-stone-200"
+              >
+                <CreditCard className="w-4 h-4 text-amber-600" />
+                <span>Pricing</span>
+              </a>
+            </div>
+
+            {/* Auth / Register Actions */}
+            {!currentUser && (
+              <div className="pt-2 border-t border-stone-200 dark:border-stone-800 space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-stone-400 dark:text-stone-500 px-1">
+                  Daftar Sebagai Pengguna Baru
+                </p>
+                <div className="grid grid-cols-2 gap-1.5 text-left">
+                  <Link
+                    to="/register/kelompok-tani"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span className="truncate">Kelompok Tani</span>
+                  </Link>
+                  <Link
+                    to="/register/gudang"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5"
+                  >
+                    <Warehouse className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                    <span className="truncate">Gudang &amp; QA</span>
+                  </Link>
+                  <Link
+                    to="/register/roastery"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5"
+                  >
+                    <Flame className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span className="truncate">Roastery</span>
+                  </Link>
+                  <Link
+                    to="/register/coffee-shop"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5"
+                  >
+                    <Coffee className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                    <span className="truncate">Coffee Shop</span>
+                  </Link>
+                </div>
+
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full mt-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Masuk ke Akun Anda</span>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };
